@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="700" viewBox="0 0 1000 700" role="img" aria-label="GridMarket V1 context and boundary view">
+<title>V1 context and boundary</title>
+<desc>Market reads ERCOT only through Jordans Worker, which holds the ERCOT credential; NWS keyless outbound; Worker 3D views read market public reads via CORS; offline ML sources outside the live path. Trust boundaries TB-1 tunnel, TB-2 API key, TB-3 Worker credential.</desc>
+<defs>
+<marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#333333"></path></marker>
+<marker id="ad" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#666666"></path></marker>
+</defs>
+<text x="500" y="28" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="bold" fill="#111111">V1 — Context and Boundary</text>
+<text x="20" y="58" font-family="sans-serif" font-size="14" font-weight="bold" fill="#111111">External actors (untrusted)</text>
+<g font-family="sans-serif" font-size="12" fill="#111111">
+<rect x="20" y="70" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="94" font-family="sans-serif" font-size="12" fill="#111111">ERCOT Public API (Worker only)</text>
+<rect x="20" y="114" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="138" font-family="sans-serif" font-size="12" fill="#111111">NWS api.weather.gov (keyless)</text>
+<rect x="20" y="158" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="182" font-family="sans-serif" font-size="12" fill="#111111">Owner / operator</text>
+<rect x="20" y="202" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="226" font-family="sans-serif" font-size="12" fill="#111111">Judge / developer (sandbox key)</text>
+<rect x="20" y="246" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="270" font-family="sans-serif" font-size="12" fill="#111111">Human trader (dashboard)</text>
+<rect x="20" y="290" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="314" font-family="sans-serif" font-size="12" fill="#111111">3D viewer (Jordan views)</text>
+<rect x="20" y="334" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="358" font-family="sans-serif" font-size="12" fill="#111111">Seeded bots (public API)</text>
+<rect x="20" y="378" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="402" font-family="sans-serif" font-size="12" fill="#111111">Provider fleets (simulated)</text>
+<rect x="20" y="422" width="250" height="38" fill="#f2f2f2" stroke="#666666" stroke-width="1" stroke-dasharray="5,3"></rect><text x="32" y="446" font-family="sans-serif" font-size="12" fill="#111111">Offline ML: Open-Meteo, Census, LODES</text>
+</g>
+<rect x="280" y="70" width="200" height="170" fill="#fff7e6" stroke="#b34700" stroke-width="2" stroke-dasharray="8,4"></rect>
+<text x="380" y="94" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a2e00">TB-1: Cloudflare</text>
+<text x="380" y="110" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a2e00">named tunnel</text>
+<rect x="310" y="122" width="140" height="56" fill="#ffffff" stroke="#b34700" stroke-width="2"></rect>
+<text x="380" y="145" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">cloudflared</text>
+<text x="380" y="162" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">(outbound only)</text>
+<text x="380" y="204" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a2e00">host port on 127.0.0.1 only</text>
+<text x="380" y="220" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a2e00">open recording to Sun 15:00</text>
+<rect x="280" y="250" width="200" height="216" fill="#f5f0ff" stroke="#5b2ea6" stroke-width="2"></rect>
+<text x="380" y="272" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#5b2ea6">ERCOT Worker (external,</text>
+<text x="380" y="288" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#5b2ea6">Jordan owns + deploys)</text>
+<text x="380" y="306" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b34700">TB-3: ERCOT creds live here</text>
+<text x="380" y="324" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">/api/snapshot (5-min cache)</text>
+<text x="380" y="341" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">/api/report/* allowlist + key</text>
+<text x="380" y="358" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">3D views: /, /diagram/, /planet/</text>
+<text x="380" y="382" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">guards: 30/60 s per client,</text>
+<text x="380" y="398" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">25/60 s ERCOT, 429 backoff</text>
+<text x="380" y="422" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666666">market -&gt; Worker -&gt; ERCOT</text>
+<text x="380" y="438" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666666">views read market via CORS</text>
+<text x="380" y="454" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666666">(public reads only)</text>
+<rect x="500" y="70" width="480" height="450" fill="#f2f6ff" stroke="#003399" stroke-width="3"></rect>
+<text x="740" y="94" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#003399">GridMarket boundary: Compose, non-root</text>
+<g font-family="sans-serif" font-size="12" fill="#111111">
+<rect x="520" y="104" width="440" height="56" fill="#ffffff" stroke="#003399" stroke-width="2"></rect>
+<text x="740" y="126" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">FastAPI app + REST API</text>
+<text x="740" y="144" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b34700">TB-2: API-key auth; CORS: Worker origin on public reads</text>
+<rect x="520" y="168" width="440" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="740" y="190" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">Worker client poller (in-process)</text>
+<text x="740" y="208" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">&lt;= 12 req/60 s, x-gridmarket-key, no ERCOT creds</text>
+<rect x="520" y="232" width="440" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="740" y="254" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">NWS poller (in-process)</text>
+<text x="740" y="272" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">keyless + User-Agent, &lt;= 6 req/60 s</text>
+<rect x="520" y="296" width="440" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="740" y="318" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">Policy / risk + MatchingEngine</text>
+<text x="740" y="336" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">SQLite WAL ledger, append-only events</text>
+<rect x="520" y="360" width="440" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="740" y="382" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">Provider adapters</text>
+<text x="740" y="400" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">base-sim (phase 1), LoneStar (phase 2)</text>
+<rect x="520" y="424" width="440" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="740" y="446" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">Dashboard (React + Vite + Astryx, static)</text>
+<text x="740" y="464" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">served by app, polls REST every &lt;= 3 s</text>
+</g>
+<text x="740" y="502" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#003399">sdk/python (import gridmarket): stdlib client of public API; bots run as separate process</text>
+<g stroke="#333333" stroke-width="1">
+<line x1="270" y1="177" x2="278" y2="172" marker-end="url(#a)"></line>
+<line x1="270" y1="221" x2="278" y2="180" marker-end="url(#a)"></line>
+<line x1="270" y1="265" x2="278" y2="188" marker-end="url(#a)"></line>
+<line x1="270" y1="353" x2="278" y2="232" marker-end="url(#a)"></line>
+<line x1="480" y1="180" x2="498" y2="132" marker-end="url(#a)"></line>
+<line x1="532" y1="160" x2="532" y2="294" marker-end="url(#a)"></line>
+<line x1="548" y1="160" x2="548" y2="422" marker-end="url(#a)"></line>
+<line x1="948" y1="224" x2="948" y2="294" marker-end="url(#a)"></line>
+<line x1="740" y1="288" x2="740" y2="294" marker-end="url(#a)"></line>
+<line x1="740" y1="352" x2="740" y2="358" marker-end="url(#a)"></line>
+<line x1="500" y1="196" x2="482" y2="310" marker-end="url(#a)"></line>
+<line x1="300" y1="252" x2="272" y2="94" marker-end="url(#a)"></line>
+<line x1="500" y1="260" x2="272" y2="138" marker-end="url(#a)"></line>
+</g>
+<g stroke="#666666" stroke-width="1" stroke-dasharray="5,3">
+<line x1="270" y1="397" x2="498" y2="388" marker-end="url(#ad)"></line>
+<line x1="478" y1="356" x2="498" y2="140" marker-end="url(#ad)"></line>
+<line x1="270" y1="441" x2="498" y2="505" marker-end="url(#ad)"></line>
+</g>
+<text x="285" y="492" font-family="sans-serif" font-size="11" fill="#333333">snapshot + reports (market key); Worker -&gt; ERCOT on 25/60 s budget</text>
+<text x="285" y="508" font-family="sans-serif" font-size="11" fill="#333333">NWS keyless; CORS: 3D views GET market public reads; ML sources offline only</text>
+<rect x="20" y="560" width="960" height="120" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="35" y="584" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">Trust boundaries:</text>
+<text x="35" y="604" font-family="sans-serif" font-size="12" fill="#111111">TB-1 tunnel: internet reaches the app only through the outbound named tunnel (open recording to Sun 15:00 CDT).</text>
+<text x="35" y="624" font-family="sans-serif" font-size="12" fill="#111111">TB-2 API key: no valid key = 401, no state change; keys stored as SHA-256. CORS: Worker origin on public reads only.</text>
+<text x="35" y="644" font-family="sans-serif" font-size="12" fill="#111111">TB-3 ERCOT credential lives in the Worker: the market holds NO ERCOT creds (market client key only, untracked .env).</text>
+<text x="35" y="664" font-family="sans-serif" font-size="12" fill="#111111">Worker guards: report allowlist, 30/60 s per client, 25/60 s ERCOT budget, 429 backoff. NWS keyless. ML offline only.</text>
+</svg>

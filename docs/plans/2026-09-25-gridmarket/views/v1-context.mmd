@@ -1,0 +1,51 @@
+flowchart LR
+    subgraph EXT["External actors (untrusted)"]
+        ERCOT["ERCOT Public API (Worker only)"]
+        NWS["NWS api.weather.gov (keyless)"]
+        OFFLINE["Offline ML sources: Open-Meteo, Census, LODES (outside live path)"]
+        OWNER["Owner / operator"]
+        JUDGE["Judge / developer (sandbox key, reads spec)"]
+        HUMAN["Human trader (dashboard viewer)"]
+        VIEWER["3D viewer (Jordan's views)"]
+        BOTS["Seeded bots (public HTTP API)"]
+        FLEETS["Provider fleets (base-sim, LoneStar)"]
+    end
+
+    subgraph WORKER["ERCOT Worker (external system, Jordan owns): holds ERCOT credentials (TB-3)"]
+        WSNAP["GET /api/snapshot (5-min cache)"]
+        WREP["GET /api/report/* (allowlist + market client key)"]
+        W3D["3D views (/, /diagram/, /planet/): read market public reads via CORS"]
+        WLIM["Guards: per-client 30/60 s, ERCOT upstream 25/60 s, 429 backoff"]
+    end
+
+    subgraph TB1["TB-1: outbound Cloudflare named tunnel (only public path)"]
+        TUN["cloudflared"]
+    end
+
+    subgraph SYS["GridMarket boundary: Compose, non-root, host port 127.0.0.1 only"]
+        API["FastAPI app + REST API (TB-2: API-key auth; CORS: Worker origin on public reads)"]
+        WPOLL["Worker client poller (in-process): <= 12 req/60 s, x-gridmarket-key, never fresh; holds NO ERCOT credentials"]
+        NPOLL["NWS poller (in-process): keyless + User-Agent, <= 6 req/60 s"]
+        CORE["Policy/risk + MatchingEngine + SQLite WAL ledger"]
+        ADAPT["Provider adapters: base-sim (phase 1), LoneStar (phase 2)"]
+        DASH["Dashboard static (React+Vite+Astryx), polls REST <= 3 s"]
+    end
+
+    JUDGE -->|HTTPS + sandbox key| TUN
+    HUMAN -->|HTTPS, no login| TUN
+    BOTS -->|HTTPS + account keys| TUN
+    OWNER -->|operates keys, tunnel, ledger| TUN
+    TUN --> API
+    API --> CORE
+    API --> DASH
+    CORE --> ADAPT
+    FLEETS -.->|simulated assets via adapter interface| ADAPT
+    WPOLL -->|snapshot + reports| WSNAP
+    WPOLL -->|allowlisted reports + key| WREP
+    WSNAP -->|ERCOT calls within 25/60 s budget| ERCOT
+    WREP -->|ERCOT calls within 25/60 s budget| ERCOT
+    WPOLL -->|stored ERCOT signals| CORE
+    NPOLL -->|hourly temp + active alerts| NWS
+    NPOLL -->|stored weather signals| CORE
+    W3D -.->|CORS GET public reads| API
+    OFFLINE -.->|offline ML lane only, never live| CORE

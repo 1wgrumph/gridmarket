@@ -1,0 +1,2848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <!-- dod-manifest-template 1.0.1 -->
+  <title>GridMarket hackathon MVP</title>
+  <style>
+    :root {
+      --paper: #e7edf1;
+      --panel: #f4f7f9;
+      --panel-strong: #fbfcfd;
+      --ink: #1a2836;
+      --ink-muted: #3d4c5b;
+      --rule: #8a99a8;
+      --rule-strong: #5d6d7c;
+      --accent: #0e5c66;
+      --accent-wash: #d4e4e6;
+      --spine: #0e5c66;
+      --focus: #0e5c66;
+      --pass-ink: #154b36;
+      --pass-fill: #d7ebe2;
+      --pass-rule: #1b5e45;
+      --gap-ink: #6b2a22;
+      --gap-fill: #f3e2dc;
+      --gap-rule: #8b3a30;
+      --hold-ink: #5a4718;
+      --hold-fill: #f0e8d4;
+      --hold-rule: #8a6d28;
+      --na-ink: #3a4550;
+      --na-fill: #e2e6ea;
+      --na-rule: #6a7580;
+      --plan-ink: #1a2836;
+      --plan-fill: #e8eef2;
+      --plan-rule: #5d6d7c;
+      --font-display: Palatino, "Palatino Linotype", "Book Antiqua", "URW Palladio L", "TeX Gyre Pagella", Georgia, serif;
+      --font-body: "Segoe UI", "Liberation Sans", "Nimbus Sans L", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.5rem;
+      --space-6: 2rem;
+      --space-7: 3rem;
+      --measure: 68ch;
+      --content: 74rem;
+      --radius: 2px;
+      --table-min: 46rem;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      line-height: 1.55;
+      min-height: 100%;
+    }
+
+    :focus { outline: none; }
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .skip {
+      position: absolute;
+      left: var(--space-4);
+      top: -3rem;
+      z-index: 20;
+      padding: var(--space-2) var(--space-4);
+      background: var(--panel-strong);
+      color: var(--ink);
+      border: 2px solid var(--accent);
+      text-decoration: underline;
+    }
+    .skip:focus, .skip:focus-visible {
+      top: var(--space-4);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 0.15em;
+    }
+    a:hover { text-decoration-thickness: 2px; }
+
+    code {
+      font-family: ui-monospace, "Cascadia Mono", "Liberation Mono", Menlo, Consolas, monospace;
+      font-size: 0.92em;
+      white-space: nowrap;
+    }
+
+    .page {
+      max-width: var(--content);
+      margin: 0 auto;
+      padding: var(--space-5) var(--space-5) var(--space-7);
+      border-left: 8px solid var(--spine);
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(14, 92, 102, 0.06), rgba(14, 92, 102, 0) 11rem),
+        var(--paper);
+    }
+
+    header.mast {
+      position: relative;
+      padding-bottom: var(--space-5);
+      margin-bottom: var(--space-5);
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .mast-wave {
+      display: block;
+      width: 100%;
+      height: 3.25rem;
+      margin: 0 0 var(--space-4);
+      overflow: visible;
+    }
+
+    .kicker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin: 0 0 var(--space-4);
+    }
+
+    .stamp {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 0.2rem 0.55rem;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      background: var(--panel);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1.3;
+    }
+    .stamp-warn {
+      border-color: var(--gap-rule);
+      color: var(--gap-ink);
+      background: var(--gap-fill);
+    }
+    .stamp-state {
+      border-style: solid;
+      border-width: 2px 2px 2px 8px;
+    }
+
+    h1 {
+      margin: 0 0 var(--space-3);
+      font-family: var(--font-display);
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--ink);
+      max-width: 28ch;
+    }
+
+    .lede {
+      margin: 0;
+      max-width: var(--measure);
+      color: var(--ink-muted);
+      font-size: 1.0625rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 15.5rem minmax(0, 1fr);
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    nav.toc {
+      position: sticky;
+      top: var(--space-4);
+      padding: var(--space-4);
+      background: var(--panel);
+      border: 1px solid var(--rule);
+      border-left: 4px solid var(--accent);
+    }
+    nav.toc .toc-title {
+      margin: 0 0 var(--space-3);
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    nav.toc ol {
+      margin: 0;
+      padding: 0 0 0 1.25rem;
+    }
+    nav.toc li {
+      margin: 0 0 var(--space-2);
+      font-size: 0.875rem;
+      line-height: 1.35;
+    }
+    nav.toc a { color: var(--ink); }
+
+    main { min-width: 0; }
+
+    section.block {
+      margin: 0 0 var(--space-7);
+      scroll-margin-top: var(--space-5);
+    }
+
+    h2 {
+      margin: 0 0 var(--space-4);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--rule-strong);
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    h2 .secno {
+      display: inline-block;
+      min-width: 2.1rem;
+      margin-right: var(--space-2);
+      color: var(--accent);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+
+    h3 {
+      margin: var(--space-5) 0 var(--space-3);
+      font-family: var(--font-body);
+      font-size: 1.0625rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    p { margin: 0 0 var(--space-4); max-width: var(--measure); }
+    p.wide, .note { max-width: none; }
+
+    .bluf {
+      padding: var(--space-5);
+      background: var(--panel);
+      border: 1px solid var(--rule);
+      border-top: 6px solid var(--accent);
+    }
+    .bluf p:last-child { margin-bottom: 0; }
+    .bluf strong { font-weight: 700; }
+
+    .banner {
+      margin: 0 0 var(--space-4);
+      padding: var(--space-3) var(--space-4);
+      background: var(--gap-fill);
+      border: 2px solid var(--gap-rule);
+      color: var(--gap-ink);
+      max-width: none;
+    }
+
+    dl.meta {
+      display: grid;
+      grid-template-columns: minmax(9rem, 14rem) minmax(0, 1fr);
+      gap: var(--space-2) var(--space-4);
+      margin: 0 0 var(--space-4);
+      padding: var(--space-4);
+      background: var(--panel);
+      border: 1px solid var(--rule);
+    }
+    dl.meta dt {
+      margin: 0;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    dl.meta dd {
+      margin: 0;
+      color: var(--ink);
+      overflow-wrap: break-word;
+    }
+
+    .table-hint {
+      display: none;
+      margin: 0 0 var(--space-2);
+      color: var(--ink-muted);
+      font-size: 0.8125rem;
+    }
+
+    .table-scroll {
+      margin: 0 0 var(--space-4);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid var(--rule-strong);
+      background: var(--panel-strong);
+    }
+    .table-scroll:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    table {
+      width: 100%;
+      min-width: var(--table-min);
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+    caption {
+      caption-side: top;
+      text-align: left;
+      padding: var(--space-3) var(--space-3) var(--space-2);
+      font-weight: 700;
+      color: var(--ink);
+      background: var(--panel);
+      border-bottom: 1px solid var(--rule);
+    }
+    th, td {
+      padding: 0.55rem 0.7rem;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--rule);
+      overflow-wrap: break-word;
+      hyphens: manual;
+    }
+    thead th {
+      background: var(--accent-wash);
+      color: var(--ink);
+      font-weight: 700;
+      border-bottom: 2px solid var(--ink);
+    }
+    tbody th {
+      background: transparent;
+      font-weight: 700;
+    }
+    tbody tr:last-child th,
+    tbody tr:last-child td { border-bottom: 0; }
+    th.id, td.id {
+      font-weight: 700;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .cell-digest {
+      font-family: ui-monospace, "Liberation Mono", Menlo, Consolas, monospace;
+      font-size: 0.8125rem;
+      overflow-wrap: anywhere;
+    }
+
+    .row-pass { border-left: 6px solid var(--pass-rule); background: var(--pass-fill); }
+    .row-gap { border-left: 6px double var(--gap-rule); background: var(--gap-fill); }
+    .row-hold { border-left: 6px dashed var(--hold-rule); background: var(--hold-fill); }
+    .row-na {
+      border-left: 6px dashed var(--na-rule);
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--na-fill),
+        var(--na-fill) 6px,
+        #eef1f4 6px,
+        #eef1f4 12px
+      );
+    }
+    .row-plan { border-left: 6px solid var(--plan-rule); background: var(--panel-strong); }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.1rem 0.45rem 0.1rem 0.3rem;
+      border: 1.5px solid currentColor;
+      border-radius: var(--radius);
+      font-weight: 700;
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+    .status .mark {
+      display: inline-block;
+      width: 0.7rem;
+      height: 0.7rem;
+      flex: 0 0 0.7rem;
+      background: currentColor;
+    }
+    .status-pass { color: var(--pass-ink); background: var(--panel-strong); }
+    .status-pass .mark { clip-path: none; }
+    .status-gap { color: var(--gap-ink); background: var(--panel-strong); }
+    .status-gap .mark {
+      width: 0.72rem;
+      height: 0.72rem;
+      background: transparent;
+      border: 2px solid currentColor;
+      transform: rotate(45deg);
+    }
+    .status-hold { color: var(--hold-ink); background: var(--panel-strong); }
+    .status-hold .mark {
+      border-radius: 50%;
+      background: transparent;
+      border: 2px solid currentColor;
+    }
+    .status-na { color: var(--na-ink); background: var(--panel-strong); }
+    .status-na .mark {
+      height: 0.18rem;
+      width: 0.75rem;
+      align-self: center;
+    }
+    .status-plan { color: var(--plan-ink); background: var(--panel-strong); }
+    .status-plan .mark {
+      background: transparent;
+      border: 2px solid currentColor;
+    }
+
+    .reason {
+      display: block;
+      margin-top: var(--space-1);
+      color: var(--ink-muted);
+      font-weight: 400;
+      white-space: normal;
+    }
+
+    figure.model {
+      margin: 0 0 var(--space-5);
+      padding: var(--space-4);
+      background: var(--panel-strong);
+      border: 1px solid var(--rule-strong);
+    }
+    .model-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid var(--rule);
+      background: var(--panel);
+    }
+    .model-scroll:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+    figure.model img {
+      display: block;
+      width: 100%;
+      min-width: 48rem;
+      max-width: none;
+      height: auto;
+      background: var(--panel);
+    }
+    figure.model svg {
+      display: block;
+      width: 100%;
+      min-width: 48rem;
+      max-width: none;
+      height: auto;
+      background: var(--panel);
+    }
+    figcaption {
+      margin-top: var(--space-3);
+      font-size: 0.875rem;
+      line-height: 1.45;
+    }
+    figcaption dl {
+      display: grid;
+      grid-template-columns: minmax(8rem, 11rem) minmax(0, 1fr);
+      gap: var(--space-1) var(--space-3);
+      margin: var(--space-2) 0 0;
+    }
+    figcaption dt { font-weight: 700; }
+    figcaption dd { margin: 0; overflow-wrap: break-word; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3) var(--space-5);
+      margin: 0 0 var(--space-4);
+      padding: 0;
+      list-style: none;
+      font-size: 0.875rem;
+    }
+    .legend li { display: flex; align-items: center; gap: var(--space-2); }
+    .swatch {
+      display: inline-block;
+      width: 1.1rem;
+      height: 0.7rem;
+      border: 2px solid var(--ink);
+      background: var(--panel);
+      flex: 0 0 1.1rem;
+    }
+    .swatch-ext { border-style: dashed; }
+    .swatch-flow {
+      height: 0;
+      border-width: 0 0 2px 0;
+      background: transparent;
+      width: 1.4rem;
+    }
+
+    .status-key {
+      margin: var(--space-4) 0 0;
+      padding: var(--space-3) 0 0;
+      border-top: 1px solid var(--rule);
+    }
+    .status-key .legend { margin: 0; }
+
+    ul.plain, ol.plain { margin: 0 0 var(--space-4); max-width: var(--measure); }
+    li { margin-bottom: var(--space-1); }
+
+    footer.colophon {
+      margin-top: var(--space-6);
+      padding-top: var(--space-4);
+      border-top: 2px solid var(--ink);
+      font-size: 0.875rem;
+      color: var(--ink-muted);
+    }
+    footer.colophon p { max-width: none; }
+
+    @media screen and (max-width: 64rem) {
+      .layout {
+        grid-template-columns: 1fr;
+        gap: var(--space-5);
+      }
+      nav.toc { position: static; }
+      nav.toc ol {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        gap: var(--space-1) var(--space-4);
+        padding-left: 1.25rem;
+      }
+      h1 { max-width: none; }
+    }
+
+    @media screen and (max-width: 52rem) {
+      .table-hint { display: block; }
+    }
+
+    @media screen and (max-width: 40rem) {
+      .page {
+        padding: var(--space-4) var(--space-3) var(--space-6);
+        border-left-width: 6px;
+      }
+      dl.meta,
+      figcaption dl {
+        grid-template-columns: 1fr;
+        gap: 0.15rem 0;
+      }
+      dl.meta dt { margin-top: var(--space-2); }
+      dl.meta dt:first-child { margin-top: 0; }
+    }
+
+    @media print {
+      :root {
+        --paper: #ffffff;
+        --panel: #ffffff;
+        --panel-strong: #ffffff;
+        --accent-wash: #e6ecee;
+      }
+      body { background: #ffffff; color: #000; }
+      .page {
+        max-width: none;
+        padding: 0;
+        border-left: 0;
+        background: #ffffff;
+        min-height: 0;
+      }
+      .skip { display: none; }
+      .mast-wave { height: 1.6rem; margin-bottom: var(--space-3); }
+      header.mast {
+        break-after: avoid;
+        border-bottom-color: #000;
+      }
+      nav.toc {
+        position: static;
+        background: #fff;
+        border: 1px solid #000;
+        break-inside: avoid;
+        padding: 0.6rem 0.8rem;
+        margin: 0 0 1rem;
+      }
+      nav.toc ol {
+        display: block;
+        columns: 2;
+        column-gap: 1.5rem;
+        padding-left: 1.2rem;
+      }
+      nav.toc li { break-inside: avoid; margin-bottom: 0.35rem; }
+      .layout { display: block; }
+      section.block { break-inside: auto; margin-bottom: 1.4rem; }
+      h2 { break-after: avoid; border-bottom-color: #000; }
+      h3 { break-after: avoid; }
+      .banner, dl.meta {
+        background: #fff;
+        break-inside: avoid;
+      }
+      .bluf { background: #fff; }
+      .table-hint { display: none; }
+      .table-scroll {
+        overflow: visible;
+        border-color: #000;
+        break-inside: auto;
+      }
+      table {
+        min-width: 0;
+        font-size: 8.5pt;
+      }
+      thead { display: table-header-group; }
+      tr { break-inside: avoid; }
+      thead th { background: #eee; color: #000; border-bottom-color: #000; }
+      tbody th { background: transparent; }
+      a { color: #000; }
+      .stamp { background: #fff; }
+      .row-pass, .row-gap, .row-hold, .row-na, .row-plan {
+        background: #fff;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .row-na {
+        background: repeating-linear-gradient(
+          -45deg,
+          #fff,
+          #fff 5px,
+          #ececec 5px,
+          #ececec 10px
+        );
+      }
+      .model-scroll {
+        overflow: visible;
+        border: 0;
+        background: #fff;
+      }
+      figure.model {
+        background: #fff;
+        break-inside: avoid;
+      }
+      figure.model svg,
+      figure.model img {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        background: #fff;
+      }
+      footer.colophon { break-before: avoid; color: #000; border-top-color: #000; }
+      @page {
+        size: A4;
+        margin: 12mm 10mm 14mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="page">
+    <header class="mast">
+      <div class="kicker">
+        <span class="stamp stamp-state">State: planning</span>
+        <span class="stamp">Template 1.0.1</span>
+        <span class="stamp stamp-warn">Not authority</span>
+      </div>
+      <h1>GridMarket hackathon MVP</h1>
+      <p class="lede">Provider-neutral simulated exchange for battery flexibility on live ERCOT data; phased delivery with a frozen TDD slice graph.</p>
+    </header>
+    <div class="layout">
+      <nav class="toc" aria-label="Manifest sections">
+        <p class="toc-title" id="toc-title">On this page</p>
+        <ol>
+          <li><a href="#s1">BLUF and Lifecycle state</a></li>
+          <li><a href="#s2">Source, baseline, candidate, and template identity</a></li>
+          <li><a href="#s3">Outcome, scope, exclusions, and Definition of Done</a></li>
+          <li><a href="#s4">Requirements, architecture, design, interfaces, model inventory, and embedded model views</a></li>
+          <li><a href="#s5">Development strategy, task graph, roles, dependencies, and write sets</a></li>
+          <li><a href="#s6">V&amp;V cases, assurance cadence, evidence, and status</a></li>
+          <li><a href="#s7">Documentation impact and completion</a></li>
+          <li><a href="#s8">Risks, gaps, exceptions, anomaly handling, rollback, and recovery</a></li>
+          <li><a href="#s9">Authority, owner decisions, approvals, and closeout status</a></li>
+        </ol>
+      </nav>
+      <main id="main">
+        <section class="block" id="s1" aria-labelledby="h-s1">
+          <h2 id="h-s1"><span class="secno">1</span>BLUF and Lifecycle state</h2>
+          <div class="bluf">
+            <p><strong>TDD: 25 slices in 3 waves (foundation plus Worker security; phase 1 plus spec; phase 2 plus stretch). Test slices author red tests, product slices turn them green, three Integration Engineer slices assemble with post-step V&amp;V on gridmarket/integration. The ERCOT Worker security fix (S24-S25) runs in wave 1 with a PR into jordaaan; Jordan deploys. Stretch lanes merge only when green by Sun 04:30 CDT. Reviewer at phase cadence, Test Engineer assurance and Integration Engineer execution assessment at lifecycle cadence; one integrated owner review gates dispatch.</strong></p>
+            <p><strong>Lifecycle state.</strong> <span class="status status-plan"><span class="mark" aria-hidden="true"></span>planning</span></p>
+            <p>This manifest compares authorized intent with planned work, evidence, and gaps. It does not grant execution, acceptance, release, or deployment.</p>
+          <ul class="legend status-key" aria-label="Status key">
+            <li><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span> not yet evidenced</li>
+            <li><span class="status status-pass"><span class="mark" aria-hidden="true"></span>Confirmed</span> or embedded</li>
+            <li><span class="status status-hold"><span class="mark" aria-hidden="true"></span>Hold</span> waiting on owner or candidate</li>
+            <li><span class="status status-gap"><span class="mark" aria-hidden="true"></span>Gap</span> selected content missing</li>
+            <li><span class="status status-na"><span class="mark" aria-hidden="true"></span>Not applicable</span> with a visible reason</li>
+          </ul>
+          </div>
+        </section>
+
+        <section class="block" id="s2" aria-labelledby="h-s2">
+          <h2 id="h-s2"><span class="secno">2</span>Source, baseline, candidate, and template identity</h2>
+          <dl class="meta">
+            <dt>Lifecycle</dt>
+            <dd><code>GM-2026-09-25</code></dd>
+            <dt>Plan directory</dt>
+            <dd><code>docs/plans/2026-09-25-gridmarket/</code></dd>
+            <dt>Candidate ref</dt>
+            <dd><code>gridmarket/lifecycle-setup</code></dd>
+            <dt>Candidate revision</dt>
+            <dd><code>0bfa50a300fe79a2b2722854438e7915aec158dc</code></dd>
+            <dt>Candidate digest</dt>
+            <dd><code>1a0b6c0d3c93140e283901801f1f6947ce04f9c483ba2c056f4a84838e215260</code></dd>
+            <dt>Profile</dt>
+            <dd><code>primary (named:owner-in-chat)</code></dd>
+            <dt>Profile configuration digest</dt>
+            <dd><code>14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721</code></dd>
+            <dt>Development strategy</dt>
+            <dd><code>tdd</code></dd>
+            <dt>Planning review policy</dt>
+            <dd><code>skills/bearing-lite/references/review-policy.md</code></dd>
+            <dt>Reviewer slot</dt>
+            <dd><code>planning-review: Cursor Agent / Grok 4.7 / high</code></dd>
+            <dt>Manifest file</dt>
+            <dd><code>gridmarket-dod-manifest.html</code></dd>
+            <dt>Template</dt>
+            <dd><code>dod-manifest-v1 1.0.1</code></dd>
+            <dt>Source artifact</dt>
+            <dd><code>implementation.json.dod_manifest</code></dd>
+          </dl>
+        </section>
+
+        <section class="block" id="s3" aria-labelledby="h-s3">
+          <h2 id="h-s3"><span class="secno">3</span>Outcome, scope, exclusions, and Definition of Done</h2>
+          <h3>Planned outcome</h3>
+          <p>A provider-neutral, API-first simulated exchange for battery flexibility, driven by live ERCOT Public API data, that completes the demo story of gridmarket-intent.html section 20 without crashing; entered in Open Grid Data and Most Commercializable.</p>
+          <h3>Scope</h3>
+          <ul class="plain">
+            <li>Phase 1 core: live ERCOT data via Jordan&#39;s Worker, NWS weather, seven-factor explainable score, matching engine with never-cut risk controls, SDK plus bots, Astryx dashboard (S01-S09).</li>
+            <li>ERCOT Worker security fix as first-wave agent slices S24-S25 on branch gridmarket/lane-worker with a PR into jordaaan; Jordan deploys (DEC-GM-022).</li>
+            <li>Phase 2: LoneStar Storage second provider adapter on the same books (S10-S12).</li>
+            <li>Stretch lanes merged only when green: adversarial scenario with kill switch, score backtest, Rust PyO3 core with benchmark, ML model comparison (S13-S18, S22-S23).</li>
+            <li>Spec lane: azdiagram generator, spec_build/spec_lint, spec skills, and GridMarket&#39;s own specification for the judges (S19-S21).</li>
+            <li>Ordered assembly with post-step V&amp;V on gridmarket/integration, phase checkpoints, owner-run acceptance, and Lifecycle assurance.</li>
+          </ul>
+          <h3>Exclusions</h3>
+          <ul class="plain">
+            <li>Intent section 21: real settlement, billing, money, KYC/AML, QSE, blockchain, options, leverage, sophisticated margin.</li>
+            <li>Intent section 18 P2 items except item 26 (ML stretch): Google OAuth, personal bot, AI trading agent, WebSockets, backtesting dashboard, sophisticated clearing.</li>
+            <li>TypeScript trading example and TypeScript SDK (DEC-GM-013).</li>
+            <li>Wind/solar forecast signals, renewable-deficit factor, special-events feed, TxDOT traffic, NWS alert history as an ML feature.</li>
+            <li>Record-and-replay or replay-only data in the live data path (DEC-GM-007).</li>
+            <li>Agent edits under ercot-hackathon/ outside S24-S25; Worker deployment and secrets (Jordan); ERCOT credentials in the market.</li>
+            <li>Owner actions: tunnel credentials and tunnel up, public flip plus ruleset, ERCOT account registration, GitHub link plus description plus 3-5 minute Loom video, team size at most 5.</li>
+          </ul>
+          <p class="table-hint">Tables scroll horizontally on a narrow screen.</p>
+          <div class="table-scroll" role="region" tabindex="0" aria-labelledby="cap-dod">
+            <table>
+              <caption id="cap-dod">Definition of Done criteria</caption>
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Criterion</th>
+                  <th scope="col">Evidence</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DOD-01</th>
+                  <td>Phase 1 acceptance: SC-1..SC-5 and SC-7..SC-11 shown in one uninterrupted session through the tunnel URL (AC-GM-ACC-01).</td>
+                  <td>PROC-ACCEPT-P1 receipt with the SC checklist</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DOD-02</th>
+                  <td>Phase 2 acceptance: SC-1..SC-11 shown in one uninterrupted session through the tunnel URL (AC-GM-ACC-02).</td>
+                  <td>PROC-ACCEPT-P2 receipt with the SC checklist</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DOD-03</th>
+                  <td>Each stretch lane (adversary, backtest, Rust, ML) merged green or recorded dropped with its reason by the Sun 04:30 CDT cut-off.</td>
+                  <td>evidence/assembly-stretch.md drop records</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DOD-04</th>
+                  <td>TDD gates hold: red-then-green bound on the same test ids, changed-line coverage &gt;=80%, mutation score &gt;=0.70, conditional Reverify on the PyO3 extension.</td>
+                  <td>Lifecycle assurance receipts (CMD-COVERAGE, CMD-MUTATION, CMD-REVERIFY-RUST)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DOD-05</th>
+                  <td>AC-GM-SEC-01 passes before any owner publication: zero secret-scan findings over full history and an MIT LICENSE at the root.</td>
+                  <td>CMD-SECRETS full-history result; LICENSE inspection</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DOD-06</th>
+                  <td>Reviewer (phase), Test Engineer assurance (lifecycle) and Integration Engineer execution assessment (lifecycle) complete; DoD Manifest closeout appended.</td>
+                  <td>assurance receipts; closeout section</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="block" id="s4" aria-labelledby="h-s4">
+          <h2 id="h-s4"><span class="secno">4</span>Requirements, architecture, design, interfaces, model inventory, and embedded model views</h2>
+          <h3>Requirements and acceptance</h3>
+          <p class="table-hint">Tables scroll horizontally on a narrow screen.</p>
+          <div class="table-scroll" role="region" tabindex="0" aria-labelledby="cap-req">
+            <table>
+              <caption id="cap-req">Requirements and acceptance</caption>
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Statement</th>
+                  <th scope="col">Source</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-DATA-01</th>
+                  <td>While the ERCOT Worker is reachable, the system shall poll `/api/snapshot` and shall store that response&#39;s demand, hub real-time prices, HB_NORTH day-ahead price, and SCED lambda with the snapshot `asOf` and the fetch time, and shall poll allowlisted `/api/report/&lt;emil-id&gt;/&lt;report&gt;` routes for real-time settlement point prices (NP6-905-CD), day-ahead settlement point prices (NP4-190-CD), the seven-day load forecast by weather zone (NP3-565-CD), hourly resource outage capacity (NP3-233-CD), and SCED shadow prices and binding constraints (NP6-86-CD), and shall store each settlement-point price with its settlement-point name, each load-forecast value with its ERCOT weather-zone name, each outage-capacity value with its load zone, and each shadow price with its constraint identity, and shall store each of those report values with its interval, ERCOT publish time, and fetch time.</td>
+                  <td>Lifecycle-local; DEC-GM-007, DEC-GM-012, DEC-GM-021, intent §8, SC-1</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-DATA-02</th>
+                  <td>The market&#39;s ERCOT Worker client shall send no more than 12 requests in any rolling 60-second window, and shall never send the `fresh` query parameter.</td>
+                  <td>Lifecycle-local; DEC-GM-007, DEC-GM-021</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-DATA-03</th>
+                  <td>If an ERCOT Worker request returns HTTP 401, HTTP 404, HTTP 429, or a 5xx status, or the connection fails before a complete HTTP response, then the system shall retry that request with exponential backoff whose delay is at most 5 minutes, shall keep serving the last stored values marked stale with their age in seconds, and shall keep every API endpoint able to return an HTTP response.</td>
+                  <td>Lifecycle-local; DEC-GM-007 recorded risk</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-DATA-04</th>
+                  <td>The live data path shall read ERCOT signals only through the ERCOT Worker, shall hold no ERCOT credentials, and shall read the Worker URL and the market client key only from an untracked environment file whose values never appear in the repository, in logs, or in API responses.</td>
+                  <td>Lifecycle-local; DEC-GM-007, DEC-GM-014, DEC-GM-011, DEC-GM-021</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-DATA-05</th>
+                  <td>While the application runs, the system shall poll the NWS API (api.weather.gov) for the hourly temperature forecast and the active alerts at each zone&#39;s representative point, sending a User-Agent header, no more than 6 requests in any rolling 60-second window, and applying the retry and stale-marking rule of AC-GM-DATA-03 to NWS failures.</td>
+                  <td>Lifecycle-local; DEC-GM-017</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-SCORE-01</th>
+                  <td>The system shall publish, for each zone and each future delivery hour, an opportunity score from 0 to 100, a scarcity level (LOW below 40, MEDIUM from 40 to below 70, HIGH at 70 or above), a confidence from 0 to 1, an expected flexibility value in $/credit, and a signed point contribution with a one-line explanation for each of the price-spread, load-pressure, outage-pressure, congestion-pressure, heat-stress, peak-period, and weather-alert factors.</td>
+                  <td>Lifecycle-local; DEC-GM-012, intent §9, SC-4, SC-5</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-SCORE-02</th>
+                  <td>When the hourly resource outage capacity stored for a load zone increases while every other input to that zone&#39;s opportunity score is unchanged, the opportunity score for that zone shall not decrease. When a shadow price cited by that zone&#39;s congestion-pressure explanation increases while every other input to that zone&#39;s opportunity score is unchanged, the opportunity score for that zone shall not decrease.</td>
+                  <td>Lifecycle-local; intent §8, §9.2, SC-4</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-SCORE-03</th>
+                  <td>The system shall state in every prediction API response and every dashboard prediction view that the score is a simulation estimate and not guaranteed profit.</td>
+                  <td>Lifecycle-local; intent §9.2</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-SCORE-04</th>
+                  <td>The system shall give the peak-period factor a positive signed point contribution when the delivery hour is an on-peak hour, and a negative signed point contribution otherwise, using the standard library calendar and no added dependency.</td>
+                  <td>Lifecycle-local; DEC-GM-017</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-SCORE-05</th>
+                  <td>When the NWS forecast temperature at a zone&#39;s representative point for the delivery hour increases and the higher temperature is at or above 85 °F, or the number of active NWS alerts at that point increases, while every other input to that zone&#39;s opportunity score is unchanged, the opportunity score for that zone shall not decrease.</td>
+                  <td>Lifecycle-local; DEC-GM-017</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-ACCT-01</th>
+                  <td>When the database is empty at startup, the system shall create at least 50 simulated users, each with $1,000.00 simulated cash, zero Flex Credits, one API key, and at least one simulated battery with provider, zone, capacity in kWh, state of charge in kWh, minimum reserve in kWh, and charge and discharge limits in kW.</td>
+                  <td>Lifecycle-local; intent §4, DEC-GM-012, SC-2</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-MKT-01</th>
+                  <td>The system shall list one spot product for every zone for each delivery hour starting 1 or 2 hours after the current hour and one future product for every zone for each delivery hour starting 3 to 24 hours after the current hour, and shall trade both product types through one matching engine.</td>
+                  <td>Lifecycle-local; DEC-GM-012, intent §6, §7, SC-3</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-MKT-02</th>
+                  <td>When an incoming limit order crosses resting orders, the matching engine shall fill it in price-time priority at each resting order&#39;s price, and the system shall record each fill exactly once in an append-only trade ledger.</td>
+                  <td>Lifecycle-local; intent §6, SC-3</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-MKT-03</th>
+                  <td>If a spot sell order&#39;s quantity exceeds the seller&#39;s available capacity for the delivery hour, then the system shall reject the order, and concurrent sell orders shall never reserve more than the available capacity of any battery.</td>
+                  <td>Lifecycle-local; intent §4.2, §15, DEC-GM-012, SC-10</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-MKT-04</th>
+                  <td>If an order exceeds 50 credits, would raise the account&#39;s absolute net position in the product above 200 credits, or requires more cash than the account&#39;s cash minus cash held for that account&#39;s open orders, then the system shall reject it with a typed reason and change no balances.</td>
+                  <td>Lifecycle-local; intent §7, §15, DEC-GM-012, SC-10</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-MKT-05</th>
+                  <td>When all four 15-minute real-time settlement point prices of a future product&#39;s delivery hour are stored, the system shall settle every open position in that product at the reference price (their average in $/MWh ÷ 1000) with cash P&amp;L equal to (reference − trade price) × signed quantity, and shall report realized and unrealized P&amp;L per account.</td>
+                  <td>Lifecycle-local; DEC-GM-008, intent §7</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-MKT-06</th>
+                  <td>When a spot fill occurs, the system shall transfer simulated cash from the buyer to the seller of that fill in the amount fill price × filled quantity and shall increase the buyer&#39;s Flex Credit inventory by that filled quantity.</td>
+                  <td>Lifecycle-local; intent §6, DEC-GM-012, SC-2, SC-3</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-API-01</th>
+                  <td>If a request to an account or trading endpoint carries no valid API key, then the system shall return HTTP 401 and change no state; the system shall store API keys only as SHA-256 hashes.</td>
+                  <td>Lifecycle-local; DEC-GM-012, intent §14, §15</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-API-02</th>
+                  <td>When an order is submitted with an Idempotency-Key already used by the same account, the system shall return the original result without creating a second order if the request body is identical, and shall return HTTP 409 if the body differs; an order without an Idempotency-Key shall be rejected with HTTP 400.</td>
+                  <td>Lifecycle-local; DEC-GM-012, intent §15</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-API-03</th>
+                  <td>If a client exceeds its request rate limit (standard keys 20 requests per second, sandbox keys 5 requests per second, unauthenticated reads 10 requests per second per client address), then the system shall return HTTP 429 and change no state.</td>
+                  <td>Lifecycle-local; DEC-GM-009, DEC-GM-012, intent §15</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-API-04</th>
+                  <td>The system shall serve the REST endpoints of intent §11 except the WebSocket streams, with a generated OpenAPI document, and a Python example of at most 30 lines using the repository SDK and a sandbox key shall submit an order that the dashboard activity feed shows within 5 seconds.</td>
+                  <td>Lifecycle-local; intent §11, §13, DEC-GM-013, SC-7, SC-8</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-API-05</th>
+                  <td>When a GET request to `/v1/market`, `/v1/market/{symbol}`, `/v1/market/history`, `/v1/market/activity`, `/v1/predictions`, or `/v1/predictions/{zone}` carries the `Origin` named in the untracked environment variable `GRIDMARKET_CORS_ORIGIN`, the system shall return `Access-Control-Allow-Origin` set to that origin, and shall return no `Access-Control-Allow-Origin` header for any other origin or for a request to an account or trading endpoint.</td>
+                  <td>Lifecycle-local; DEC-GM-021</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-BOT-01</th>
+                  <td>While seeded traffic runs, it shall submit at least 10 orders per minute from at least 3 seeded accounts only through the public HTTP API with those accounts&#39; own API keys.</td>
+                  <td>Lifecycle-local; intent §12, §18 P0-14, SC-9</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-UI-01</th>
+                  <td>The dashboard shall show on one page, without login, the ERCOT signals with publish time and staleness, per-zone predictions with their factor contributions, product order books and recent trades, participant counts per provider, market status, and the order activity feed, and shall refresh every 3 seconds or more often.</td>
+                  <td>Lifecycle-local; intent §20, SC-1, SC-11</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-UI-02</th>
+                  <td>The dashboard shall display that future products are simulated forward flexibility contracts and not regulated commodity futures, and that a Flex Credit is not a renewable energy certificate, a cryptocurrency, or a claim on specific electrons.</td>
+                  <td>Lifecycle-local; intent §5, §7</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-EDGE-01</th>
+                  <td>The ERCOT Worker shall return HTTP 404 without calling ERCOT for a `/api/report/*` path outside the report allowlist, and shall return HTTP 401 without calling ERCOT for a `/api/report/*` or `/api/products` request, or a `/api/snapshot` request with the `fresh` parameter, that lacks a valid market client key.</td>
+                  <td>Lifecycle-local; DEC-GM-021 required fix, DEC-GM-022</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-EDGE-02</th>
+                  <td>The ERCOT Worker shall return HTTP 429 without calling ERCOT when one client address sends more than 30 requests to `/api/*` in any 60-second window.</td>
+                  <td>Lifecycle-local; DEC-GM-021 required fix, DEC-GM-022</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-EDGE-03</th>
+                  <td>The ERCOT Worker shall send no more than 25 requests to ERCOT, token requests and retries included, in any 60-second window for any number of clients and requests, and shall return HTTP 429 without calling ERCOT for a request whose ERCOT call would exceed that budget and that no cached response can answer.</td>
+                  <td>Lifecycle-local; DEC-GM-022</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-EDGE-04</th>
+                  <td>If ERCOT returns HTTP 429 to a call made while building `/api/snapshot`, then the ERCOT Worker shall retry that call at most 4 times, and the wait before retry attempt n shall be the lesser of 4 seconds and the `Retry-After` value in seconds when that header is a positive number, and otherwise the lesser of 4 seconds and 0.9 seconds times n.</td>
+                  <td>Lifecycle-local; DEC-GM-022</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-OPS-01</th>
+                  <td>The system shall run as Docker Compose services under a non-root user, shall bind its HTTP port only to 127.0.0.1 on the host, and shall be reachable from the internet only through an outbound Cloudflare named tunnel.</td>
+                  <td>Lifecycle-local; DEC-GM-009, DEC-GM-010</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-ACC-01</th>
+                  <td>The phase 1 acceptance run shall show SC-1 to SC-5 and SC-7 to SC-11 in one uninterrupted session through the tunnel URL.</td>
+                  <td>Lifecycle-local; DEC-GM-016</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-PROV-01</th>
+                  <td>The market shall read and reserve battery capacity only through the provider adapter interface (list customers, list assets, available capacity, reserve capacity, release capacity, verify delivery, asset status).</td>
+                  <td>Lifecycle-local; intent §10, DEC-GM-006</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-PROV-02</th>
+                  <td>When the LoneStar Storage adapter is enabled, at least 20 LoneStar Storage customers shall trade on the same order books as Base simulator customers, and the dashboard shall show participant counts for both providers.</td>
+                  <td>Lifecycle-local; DEC-GM-006, SC-6</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-ACC-02</th>
+                  <td>The phase 2 acceptance run shall show SC-1 through SC-11 in one uninterrupted session through the tunnel URL.</td>
+                  <td>Lifecycle-local; DEC-GM-016</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-ADV-01</th>
+                  <td>When the adversarial scenario runs, the system shall reject an over-capacity spot sell and change no balances, shall create no second order when an identical request reuses an Idempotency-Key, and shall return HTTP 429 and change no state once one account exceeds its AC-GM-API-03 rate limit, and shall show each of those three outcomes as an anomaly on the dashboard.</td>
+                  <td>Lifecycle-local; DEC-GM-012, intent §15, §20 step 8</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-ADV-02</th>
+                  <td>When a request authenticated as the admin API key named in the untracked environment file invokes the kill switch for the market or for one account, the system shall reject every later order in that scope with a typed reason and change no balances until a request authenticated as that same admin API key lifts the halt, and shall append the halt and the lift to the append-only trade ledger.</td>
+                  <td>Lifecycle-local; DEC-GM-012, intent §15</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-BT-01</th>
+                  <td>The backtest command shall compute, over at least 7 days of ERCOT history fetched through the ERCOT Worker&#39;s allowlisted report routes, the Spearman rank correlation between zone-hour opportunity scores and realized real-time settlement point prices, and shall report the correlation, the sample size, and the date range.</td>
+                  <td>Lifecycle-local; DEC-GM-012, intent §9.4</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-PERF-01</th>
+                  <td>Where the Rust matching core is enabled, it shall produce the same fills as the Python engine on the shared matching test suite, and a benchmark shall report orders per second for both engines on one identical workload; the Rust core shall be enabled only if its throughput is higher.</td>
+                  <td>Lifecycle-local; DEC-GM-010, DEC-GM-012</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-ML-01</th>
+                  <td>The ML command shall train a model on at least 28 days of ERCOT archive data fetched through the ERCOT Worker&#39;s allowlisted report routes with the score inputs, Open-Meteo weather history, Census county population estimates, and LEHD LODES8 Texas WAC and RAC job counts as a daytime population weight per zone, and the backtest shall report the Spearman rank correlation of both the model and the deterministic score against realized real-time settlement point prices over the same held-out range of at least 7 days after the training range, together with the model&#39;s feature importances.</td>
+                  <td>Lifecycle-local; DEC-GM-017, DEC-GM-012 (partial supersession), intent §9.4</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-SPEC-01</th>
+                  <td>When azdiagram renders a per-class YAML figure input, it shall write an SVG file and a draw.io file from one Graphviz layout when the class is F1, F2, F3, F4, F6, or F7, and from the grid renderer when the class is F5 or F8, and its lint shall fail when two node boxes overlap or the figure exceeds the size limit named in that input.</td>
+                  <td>Lifecycle-local; DEC-GM-019, DEC-SPEC-006, DEC-SPEC-007</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-SPEC-02</th>
+                  <td>The spec lint shall fail a specification section that lacks a BLUF, lacks any of the six Frame fields (Who, What, Why, How, When, Where), binds more than 5 requirements, cites a table or figure class outside T1–T8 and F1–F8, has no table when it lists 3 or more items that share 2 or more attributes, or has no figure when it names 3 or more entities with a relationship, a time order, or states.</td>
+                  <td>Lifecycle-local; DEC-GM-019, DEC-SPEC-005, DEC-SPEC-006</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-SPEC-03</th>
+                  <td>The repository shall contain the spec template (generated front matter, the DEC-SPEC-004 outline, and the DEC-SPEC-010 additions of the COE-ASA-001 floor elements as subsections plus Stakeholders and their concerns, Model correspondence, and Rationale), the spec-author, spec-diagram, and spec-lint skills, and GridMarket&#39;s own specification written in that template with its figures, and the specification shall pass the spec lint and the azdiagram lint.</td>
+                  <td>Lifecycle-local; DEC-GM-019, DEC-SPEC-004</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-LANE-01</th>
+                  <td>The implementation shall change, in each slice, only the paths in that slice&#39;s write set, and slices of one wave that can run at the same time shall have disjoint write sets.</td>
+                  <td>Lifecycle-local; DEC-GM-006, profile concurrency</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-LANE-02</th>
+                  <td>When an assembly step merges a lane, the integrated branch shall pass the backend tests, the dashboard tests and build, and the compose smoke run before the next lane is merged.</td>
+                  <td>Lifecycle-local; DEC-GM-006</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-SEC-01</th>
+                  <td>When the owner prepares to make the repository public, the repository shall have zero secret-scan findings over its full Git history and an MIT `LICENSE` file at its root.</td>
+                  <td>Lifecycle-local; DEC-GM-011, DEC-GM-015</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-RULE-02</th>
+                  <td>The ERCOT Worker views shall label their decision checks as baseline rules and shall call no Jev decision engine unless journey.json records an owner decision that the Jev code was written on or after 2026-09-25 17:00 CDT or has been open source for at least 14 days.</td>
+                  <td>Lifecycle-local; DEC-GM-020, DEC-GM-021</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">AC-GM-RULE-01</th>
+                  <td>The repository shall contain only code written from 2026-09-25 17:00 CDT onward plus open-source dependencies whose release has been public for at least 14 days, and shall contain no code ported from private repositories.</td>
+                  <td>Lifecycle-local; DEC-GM-020</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-01</th>
+                  <td>Risk: ERCOT or ERCOT Worker outage, HTTP 429, or token expiry during the demo recording. Control: AC-GM-DATA-02/03: market request budget and stale display with age; the Worker caches its ID token for 55 minutes and backs off on 429.</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-02</th>
+                  <td>Risk: The ERCOT Worker is not deployed with the report allowlist and the market client key when phase 1 acceptance runs, so live score inputs cannot flow. Control: Tests use fixtures shaped like the Worker responses (DEC-GM-014); the security fix (AC-GM-EDGE-01..04) is the first-wave agent slice pair S24–S25 (DEC-GM-022); deployment is Jordan&#39;s action on his Cloudflare account, surfaced when it blocks ready work.</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-03</th>
+                  <td>Risk: The spectre-dev workstation is a single point of failure (DEC-GM-009). Control: Compose restart policy `unless-stopped`; SQLite on a named volume.</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-04</th>
+                  <td>Risk: Credential leak when the repository goes public. Control: `.env` git-ignored, `.env.example` only; secret scan gate AC-GM-SEC-01 before owner publication.</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-05</th>
+                  <td>Risk: Parallel lanes conflict or break the demoable branch. Control: Contract-first wave 1; disjoint write sets; ordered assembly with post-step V&amp;V (AC-GM-LANE-02).</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-06</th>
+                  <td>Risk: The schedule overruns the Sun 07:00 CDT freeze. Control: Phase checkpoints; stretch lanes merge only when green; stretch cut-off Sun 04:30 CDT.</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-07</th>
+                  <td>Risk: Abuse of the public tunnel or judge keys. Control: API keys, sandbox rate limits, maximum order size, tunnel open only from recording through 15:00 CDT Sunday.</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-08</th>
+                  <td>Risk: A new dependency (Python, npm, Astryx, maturin, PyO3) carries a supply-chain defect. Control: Dependency admission scan when a dependency is added (wave 1 and the Rust lane).</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-10</th>
+                  <td>Risk: NWS API outage or throttling, or Open-Meteo free-tier terms that do not fit a public repository. Control: AC-GM-DATA-05 budget and stale marking; Open-Meteo used only by the offline ML lane with CC BY 4.0 attribution; the ML lane checks the terms first and drops Open-Meteo history if they do not allow this use.</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-11</th>
+                  <td>Risk: Spec, ML, and the Rust lane exceed the 3-lane concurrency limit if they run beside the lanes already in that window. Control: Slot edges serialize them: Spec runs after the data lane in wave 2; ML runs after LoneStar in wave 3; Rust runs after the adversary lane.</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-09</th>
+                  <td>Risk: Fixture shape differs from live ERCOT Worker responses. Control: Parsers read the documented ERCOT report fields and the snapshot shape of `ercot-hackathon/src/snapshot.js` at `bae0a16` (CONTRACT-GM-WORKER); one live response per Worker route is checked during phase 1 assembly once the Worker fix is deployed.</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-12</th>
+                  <td>Risk: The Worker&#39;s open report proxy lets any caller exhaust the shared ERCOT limit of 30 requests per minute during the demo. Control: AC-GM-EDGE-01..04 built in wave 1 (S24–S25) and deployed by Jordan before the recording.</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-13</th>
+                  <td>Risk: The Worker lane is run by a human teammate on his own schedule; a snapshot shape change or a missing allowlist entry breaks the market data lane. Control: CONTRACT-GM-WORKER fixes the routes, the allowlist, and the snapshot shape; agent lanes edit `ercot-hackathon/` only in S24–S25 (DEC-GM-022).</td>
+                  <td>Lifecycle-local; technical plan Risk table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Architecture, design, and interfaces</h3>
+          <p class="table-hint">Tables scroll horizontally on a narrow screen.</p>
+          <div class="table-scroll" role="region" tabindex="0" aria-labelledby="cap-des">
+            <table>
+              <caption id="cap-des">Architecture, design, and interfaces</caption>
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Decision</th>
+                  <th scope="col">Interfaces</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-ARCH</th>
+                  <td>One FastAPI/uvicorn process plus SQLite WAL on a named volume; main.py composition root wires providers, engine, scoring and pollers; placeholders replaced by owning lanes.</td>
+                  <td>main.py, contracts.py, schema.sql; GRIDMARKET_ENGINE/WORKER_URL/NWS env</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-MARKET</th>
+                  <td>Order submission in one BEGIN IMMEDIATE transaction: auth, rate limit, idempotency, halt, risk, match, ledger append.</td>
+                  <td>POST /v1/orders; CONTRACT-GM-ENGINE; FLEX-&lt;zone&gt;-&lt;HH&gt; alias</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-RISK</th>
+                  <td>Never-cut controls: 1..50 size, 200 position, cash holds, capacity reservation in-tx, SHA-256 keys, idempotency, rate buckets, append-only triggers.</td>
+                  <td>keys CLI; 401/409/422/423/429 codes</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-SETTLE</th>
+                  <td>Spot fill moves cash and Flex Credits; future expiry settles at RT average/1000 with signed-quantity P&amp;L; unrealized marks to last/mid/prediction.</td>
+                  <td>trades/events tables; hourly settlement tick</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-ERCOT</th>
+                  <td>HTTP client of the ERCOT Worker (no ERCOT credentials): 12 req/60 s budget, never fresh, 20 s timeout, backoff to 300 s, stale with age_s.</td>
+                  <td>CONTRACT-GM-WORKER routes; signal store; weather-to-load-zone map</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-EDGE</th>
+                  <td>Worker report allowlist, market client key on report/products/snapshot?fresh, per-client 30/60 s, upstream 25/60 s, kept 429 backoff; agent slices S24-S25.</td>
+                  <td>x-gridmarket-key; RATE_LIMITER/ERCOT_BUDGET bindings</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-NWS</th>
+                  <td>Keyless api.weather.gov client with User-Agent: hourly temp per zone, Severe/Extreme alerts; &lt;=6 req/60 s; GRIDMARKET_NWS=off in smoke.</td>
+                  <td>NWS-TEMP/NWS-ALERTS signal ids</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-SCORE</th>
+                  <td>Seven tanh-squashed factors, score 50+50*sum(w*f), LOW/MEDIUM/HIGH levels, freshness*agreement confidence, expected value, disclaimer.</td>
+                  <td>scoring.predict; CONTRACT-GM-PREDICTION</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-UI</th>
+                  <td>One Astryx page without login polling every 2 s via api.ts: signals, predictions, books, participants, status/anomalies, activity, disclosures.</td>
+                  <td>CONTRACT-GM-API reads; test-fixtures.json</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-SDK</th>
+                  <td>Stdlib-only urllib Client; &lt;=30-line judge example; bots (market maker, score follower) over seeded accounts&#39; own keys.</td>
+                  <td>sdk/python gridmarket Client; examples/python-trader</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-OPS</th>
+                  <td>Multi-stage Dockerfile (uid 10001, HEALTHCHECK), compose app/bots/cloudflared-tunnel, 127.0.0.1 bind, GM_ENV_FILE smoke isolation.</td>
+                  <td>deploy/compose.yaml; deploy/Dockerfile</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-PROV</th>
+                  <td>ProviderAdapter registry as the only capacity path; base_sim phase 1; lonestar phase 2 with &gt;=20 customers and one offline asset.</td>
+                  <td>CONTRACT-GM-PROVIDER; seed.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-ADV</th>
+                  <td>Adversary CLI drives three attacks via the public API; anomalies at /v1/market/status; admin halt/resume appended to the ledger.</td>
+                  <td>POST /v1/admin/halt and /v1/admin/resume</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-BT</th>
+                  <td>Backtest CLI recomputes scores over &gt;=7 days of Worker history (own &lt;=5 req/min budget); Spearman vs realized RT SPP with n and range.</td>
+                  <td>backtest module; metrics-only output</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-RUST</th>
+                  <td>PyO3 match_order with exact ENGINE semantics via uvx maturin; shared parity suite; 100k-order benchmark; GRIDMARKET_ENGINE=rust only if faster.</td>
+                  <td>CONTRACT-GM-ENGINE; bench/bench_matching.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-ML</th>
+                  <td>Offline HistGradientBoostingRegressor on ERCOT, Open-Meteo, Census, LODES8 WAC-RAC weights; &gt;=28d train, &gt;=7d held-out; both Spearmans plus importances.</td>
+                  <td>ml.py/ml_data.py; docs/ml-report.md</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-SPEC</th>
+                  <td>Markdown spec format per DEC-SPEC-004/005/006/010; spec_build front matter and Appendix A; azdiagram Graphviz/grid SVG+drawio; spec_lint; three skills.</td>
+                  <td>tools/ CLIs; skills/spec-author|diagram|lint</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DES-GM-LANES</th>
+                  <td>Coordinator waves with lane branches and worktrees, integration branch, --no-ff ordered assembly with post-step V&amp;V, cap of 3 lanes with slot edges.</td>
+                  <td>gridmarket/integration; evidence/assembly-*.md</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">CONTRACT-GM-API</th>
+                  <td>REST surface: unauthenticated public reads, keyed account/trading, admin halt/resume; OpenAPI at /openapi.json; typed UPPER_SNAKE error codes.</td>
+                  <td>/v1/* paths</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">CONTRACT-GM-ENGINE</th>
+                  <td>match(resting, incoming) pure function; resting sorted best price then earliest sequence; fill price equals resting price.</td>
+                  <td>MatchResult(fills, remaining_qty)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">CONTRACT-GM-PROVIDER</th>
+                  <td>Adapter protocol: provider id, customers, assets, available/reserve/release capacity, verify delivery, asset status; tx stays atomic with the order.</td>
+                  <td>ProviderAdapter methods</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">CONTRACT-GM-SIGNALS</th>
+                  <td>Signal(report, zone, interval, value, unit, published_at, fetched_at); latest/series/staleness reads.</td>
+                  <td>SignalStore API</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">CONTRACT-GM-WORKER</th>
+                  <td>Worker base URL; /api/snapshot shape of snapshot.js at bae0a16 cached 5 min; keyed allowlisted report passthrough; 401/404/429/502/503 errors.</td>
+                  <td>x-gridmarket-key; market CORS origin</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">CONTRACT-GM-PREDICTION</th>
+                  <td>Prediction(zone, delivery_hour, score, level, confidence, expected_value, market_price, drivers, disclaimer, generated_at).</td>
+                  <td>/v1/predictions reads</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">CONTRACT-GM-SCHEMA</th>
+                  <td>SQLite tables accounts through settlements; triggers abort UPDATE/DELETE on trades and events; frozen in wave 1.</td>
+                  <td>schema.sql</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Model inventory</h3>
+          <p class="table-hint">Tables scroll horizontally on a narrow screen.</p>
+          <div class="table-scroll" role="region" tabindex="0" aria-labelledby="cap-model">
+            <table>
+              <caption id="cap-model">System-model inventory. Systems Modeler owns semantics; this page only projects prepared views.</caption>
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Mode</th>
+                  <th scope="col">Source</th>
+                  <th scope="col">Digest</th>
+                  <th scope="col">Viewpoint</th>
+                  <th scope="col">Trace</th>
+                  <th scope="col">Limitation</th>
+                  <th scope="col">Render</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-pass">
+                  <th scope="row" class="id">MODEL-GM-V1</th>
+                  <td>diagram-assisted</td>
+                  <td>docs/plans/2026-09-25-gridmarket/views/v1-context.mmd</td>
+                  <td class="cell-digest">sha256:3e836cd7618b246f0aa8b0b62467f19f41c5620d7ed7239298a5dc72fd432113</td>
+                  <td>context/boundary: market -&gt; ERCOT Worker -&gt; ERCOT; NWS keyless outbound; Worker 3D views read market public reads via CORS; offline ML sources outside live path; trust boundaries (tunnel, API key, ERCOT credential in Worker)</td>
+                  <td>AC-GM-DATA-01, AC-GM-DATA-02, AC-GM-DATA-03, AC-GM-DATA-04, AC-GM-DATA-05, AC-GM-API-01, AC-GM-API-03, AC-GM-API-05, AC-GM-EDGE-01, AC-GM-EDGE-02, AC-GM-EDGE-03, AC-GM-EDGE-04, AC-GM-OPS-01, AC-GM-PROV-01, AC-GM-ML-01, AC-GM-SEC-01, RISK-GM-01, RISK-GM-02, RISK-GM-04, RISK-GM-07, RISK-GM-12, RISK-GM-13, DES-GM-ARCH, DES-GM-ERCOT, DES-GM-EDGE, DES-GM-NWS, DES-GM-OPS, DES-GM-ML, CONTRACT-GM-WORKER</td>
+                  <td>Explanatory diagrams only; no SysML v2 semantic model, no RS/SysON persistence.; Trace to AC-/RISK-/DES- IDs is final against gridmarket-technical-plan.md and design.md as of this delta.; Data model, API detail, demo steps summarized, not fully elaborated.; Stretch items (kill switch, backtest, Rust core) and offline lanes (ML, spec tooling) shown as boundary notes or use cases only.</td>
+                  <td><span class="status status-pass"><span class="mark" aria-hidden="true"></span>Embedded</span></td>
+                </tr>
+                <tr class="row-pass">
+                  <th scope="row" class="id">MODEL-GM-V2</th>
+                  <td>diagram-assisted</td>
+                  <td>docs/plans/2026-09-25-gridmarket/views/v2-use-cases.mmd</td>
+                  <td class="cell-digest">sha256:99824212c6c939e0c2b26603bb74cd5f2e5acf9b1c13047851efb7e69392a5c7</td>
+                  <td>use-case/outcome: actors to 9 use cases (incl. read GridMarket spec, watch 3D views) to SC-1..SC-11 outcomes</td>
+                  <td>AC-GM-DATA-01, AC-GM-DATA-05, AC-GM-SCORE-01, AC-GM-SCORE-03, AC-GM-ACCT-01, AC-GM-MKT-01, AC-GM-API-04, AC-GM-API-05, AC-GM-BOT-01, AC-GM-UI-01, AC-GM-PROV-02, AC-GM-ADV-02, AC-GM-SPEC-03, AC-GM-ACC-01, RISK-GM-07, DES-GM-SCORE, DES-GM-UI, DES-GM-SDK, DES-GM-SPEC, CONTRACT-GM-API</td>
+                  <td>Explanatory diagrams only; no SysML v2 semantic model, no RS/SysON persistence.; Trace to AC-/RISK-/DES- IDs is final against gridmarket-technical-plan.md and design.md as of this delta.; Data model, API detail, demo steps summarized, not fully elaborated.; Stretch items (kill switch, backtest, Rust core) and offline lanes (ML, spec tooling) shown as boundary notes or use cases only.</td>
+                  <td><span class="status status-pass"><span class="mark" aria-hidden="true"></span>Embedded</span></td>
+                </tr>
+                <tr class="row-pass">
+                  <th scope="row" class="id">MODEL-GM-V3</th>
+                  <td>diagram-assisted</td>
+                  <td>docs/plans/2026-09-25-gridmarket/views/v3-operational-flow.mmd</td>
+                  <td class="cell-digest">sha256:328e5f1aecb64fcaa18eb996da4859f809761510934e63735a07a28db53740e0</td>
+                  <td>operational flow: order intent through policy/risk to matching, ledger, dashboard; Worker snapshot/report plus NWS polls to signals, seven-factor score, predictions</td>
+                  <td>AC-GM-DATA-01, AC-GM-DATA-02, AC-GM-DATA-03, AC-GM-DATA-05, AC-GM-SCORE-01, AC-GM-SCORE-02, AC-GM-SCORE-03, AC-GM-SCORE-04, AC-GM-SCORE-05, AC-GM-MKT-02, AC-GM-MKT-03, AC-GM-MKT-04, AC-GM-MKT-05, AC-GM-MKT-06, AC-GM-API-01, AC-GM-API-02, AC-GM-API-03, AC-GM-API-04, AC-GM-BOT-01, AC-GM-UI-01, AC-GM-EDGE-01, AC-GM-EDGE-02, AC-GM-EDGE-03, AC-GM-EDGE-04, AC-GM-ADV-02, RISK-GM-01, RISK-GM-09, DES-GM-MARKET, DES-GM-RISK, DES-GM-SETTLE, DES-GM-ERCOT, DES-GM-EDGE, DES-GM-NWS, DES-GM-SCORE, CONTRACT-GM-WORKER, CONTRACT-GM-ENGINE, CONTRACT-GM-SIGNALS, CONTRACT-GM-PREDICTION</td>
+                  <td>Explanatory diagrams only; no SysML v2 semantic model, no RS/SysON persistence.; Trace to AC-/RISK-/DES- IDs is final against gridmarket-technical-plan.md and design.md as of this delta.; Data model, API detail, demo steps summarized, not fully elaborated.; Stretch items (kill switch, backtest, Rust core) and offline lanes (ML, spec tooling) shown as boundary notes or use cases only.</td>
+                  <td><span class="status status-pass"><span class="mark" aria-hidden="true"></span>Embedded</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Embedded model views</h3>
+          <figure class="model" id="view-model-gm-v1">
+            <div class="model-scroll" role="region" tabindex="0" aria-label="context/boundary: market -&gt; ERCOT Worker -&gt; ERCOT; NWS keyless outbound; Worker 3D views read market public reads via CORS; offline ML sources outside live path; trust boundaries (tunnel, API key, ERCOT credential in Worker)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="700" viewBox="0 0 1000 700" role="img" aria-label="GridMarket V1 context and boundary view">
+<title>V1 context and boundary</title>
+<desc>Market reads ERCOT only through Jordans Worker, which holds the ERCOT credential; NWS keyless outbound; Worker 3D views read market public reads via CORS; offline ML sources outside the live path. Trust boundaries TB-1 tunnel, TB-2 API key, TB-3 Worker credential.</desc>
+<defs>
+<marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#333333"></path></marker>
+<marker id="ad" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#666666"></path></marker>
+</defs>
+<text x="500" y="28" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="bold" fill="#111111">V1 — Context and Boundary</text>
+<text x="20" y="58" font-family="sans-serif" font-size="14" font-weight="bold" fill="#111111">External actors (untrusted)</text>
+<g font-family="sans-serif" font-size="12" fill="#111111">
+<rect x="20" y="70" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="94" font-family="sans-serif" font-size="12" fill="#111111">ERCOT Public API (Worker only)</text>
+<rect x="20" y="114" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="138" font-family="sans-serif" font-size="12" fill="#111111">NWS api.weather.gov (keyless)</text>
+<rect x="20" y="158" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="182" font-family="sans-serif" font-size="12" fill="#111111">Owner / operator</text>
+<rect x="20" y="202" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="226" font-family="sans-serif" font-size="12" fill="#111111">Judge / developer (sandbox key)</text>
+<rect x="20" y="246" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="270" font-family="sans-serif" font-size="12" fill="#111111">Human trader (dashboard)</text>
+<rect x="20" y="290" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="314" font-family="sans-serif" font-size="12" fill="#111111">3D viewer (Jordan views)</text>
+<rect x="20" y="334" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="358" font-family="sans-serif" font-size="12" fill="#111111">Seeded bots (public API)</text>
+<rect x="20" y="378" width="250" height="38" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="32" y="402" font-family="sans-serif" font-size="12" fill="#111111">Provider fleets (simulated)</text>
+<rect x="20" y="422" width="250" height="38" fill="#f2f2f2" stroke="#666666" stroke-width="1" stroke-dasharray="5,3"></rect><text x="32" y="446" font-family="sans-serif" font-size="12" fill="#111111">Offline ML: Open-Meteo, Census, LODES</text>
+</g>
+<rect x="280" y="70" width="200" height="170" fill="#fff7e6" stroke="#b34700" stroke-width="2" stroke-dasharray="8,4"></rect>
+<text x="380" y="94" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a2e00">TB-1: Cloudflare</text>
+<text x="380" y="110" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a2e00">named tunnel</text>
+<rect x="310" y="122" width="140" height="56" fill="#ffffff" stroke="#b34700" stroke-width="2"></rect>
+<text x="380" y="145" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">cloudflared</text>
+<text x="380" y="162" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">(outbound only)</text>
+<text x="380" y="204" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a2e00">host port on 127.0.0.1 only</text>
+<text x="380" y="220" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a2e00">open recording to Sun 15:00</text>
+<rect x="280" y="250" width="200" height="216" fill="#f5f0ff" stroke="#5b2ea6" stroke-width="2"></rect>
+<text x="380" y="272" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#5b2ea6">ERCOT Worker (external,</text>
+<text x="380" y="288" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#5b2ea6">Jordan owns + deploys)</text>
+<text x="380" y="306" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b34700">TB-3: ERCOT creds live here</text>
+<text x="380" y="324" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">/api/snapshot (5-min cache)</text>
+<text x="380" y="341" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">/api/report/* allowlist + key</text>
+<text x="380" y="358" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">3D views: /, /diagram/, /planet/</text>
+<text x="380" y="382" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">guards: 30/60 s per client,</text>
+<text x="380" y="398" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">25/60 s ERCOT, 429 backoff</text>
+<text x="380" y="422" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666666">market -&gt; Worker -&gt; ERCOT</text>
+<text x="380" y="438" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666666">views read market via CORS</text>
+<text x="380" y="454" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666666">(public reads only)</text>
+<rect x="500" y="70" width="480" height="450" fill="#f2f6ff" stroke="#003399" stroke-width="3"></rect>
+<text x="740" y="94" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#003399">GridMarket boundary: Compose, non-root</text>
+<g font-family="sans-serif" font-size="12" fill="#111111">
+<rect x="520" y="104" width="440" height="56" fill="#ffffff" stroke="#003399" stroke-width="2"></rect>
+<text x="740" y="126" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">FastAPI app + REST API</text>
+<text x="740" y="144" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b34700">TB-2: API-key auth; CORS: Worker origin on public reads</text>
+<rect x="520" y="168" width="440" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="740" y="190" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">Worker client poller (in-process)</text>
+<text x="740" y="208" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">&lt;= 12 req/60 s, x-gridmarket-key, no ERCOT creds</text>
+<rect x="520" y="232" width="440" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="740" y="254" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">NWS poller (in-process)</text>
+<text x="740" y="272" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">keyless + User-Agent, &lt;= 6 req/60 s</text>
+<rect x="520" y="296" width="440" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="740" y="318" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">Policy / risk + MatchingEngine</text>
+<text x="740" y="336" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">SQLite WAL ledger, append-only events</text>
+<rect x="520" y="360" width="440" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="740" y="382" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">Provider adapters</text>
+<text x="740" y="400" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">base-sim (phase 1), LoneStar (phase 2)</text>
+<rect x="520" y="424" width="440" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="740" y="446" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">Dashboard (React + Vite + Astryx, static)</text>
+<text x="740" y="464" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">served by app, polls REST every &lt;= 3 s</text>
+</g>
+<text x="740" y="502" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#003399">sdk/python (import gridmarket): stdlib client of public API; bots run as separate process</text>
+<g stroke="#333333" stroke-width="1">
+<line x1="270" y1="177" x2="278" y2="172" marker-end="url(#a)"></line>
+<line x1="270" y1="221" x2="278" y2="180" marker-end="url(#a)"></line>
+<line x1="270" y1="265" x2="278" y2="188" marker-end="url(#a)"></line>
+<line x1="270" y1="353" x2="278" y2="232" marker-end="url(#a)"></line>
+<line x1="480" y1="180" x2="498" y2="132" marker-end="url(#a)"></line>
+<line x1="532" y1="160" x2="532" y2="294" marker-end="url(#a)"></line>
+<line x1="548" y1="160" x2="548" y2="422" marker-end="url(#a)"></line>
+<line x1="948" y1="224" x2="948" y2="294" marker-end="url(#a)"></line>
+<line x1="740" y1="288" x2="740" y2="294" marker-end="url(#a)"></line>
+<line x1="740" y1="352" x2="740" y2="358" marker-end="url(#a)"></line>
+<line x1="500" y1="196" x2="482" y2="310" marker-end="url(#a)"></line>
+<line x1="300" y1="252" x2="272" y2="94" marker-end="url(#a)"></line>
+<line x1="500" y1="260" x2="272" y2="138" marker-end="url(#a)"></line>
+</g>
+<g stroke="#666666" stroke-width="1" stroke-dasharray="5,3">
+<line x1="270" y1="397" x2="498" y2="388" marker-end="url(#ad)"></line>
+<line x1="478" y1="356" x2="498" y2="140" marker-end="url(#ad)"></line>
+<line x1="270" y1="441" x2="498" y2="505" marker-end="url(#ad)"></line>
+</g>
+<text x="285" y="492" font-family="sans-serif" font-size="11" fill="#333333">snapshot + reports (market key); Worker -&gt; ERCOT on 25/60 s budget</text>
+<text x="285" y="508" font-family="sans-serif" font-size="11" fill="#333333">NWS keyless; CORS: 3D views GET market public reads; ML sources offline only</text>
+<rect x="20" y="560" width="960" height="120" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="35" y="584" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">Trust boundaries:</text>
+<text x="35" y="604" font-family="sans-serif" font-size="12" fill="#111111">TB-1 tunnel: internet reaches the app only through the outbound named tunnel (open recording to Sun 15:00 CDT).</text>
+<text x="35" y="624" font-family="sans-serif" font-size="12" fill="#111111">TB-2 API key: no valid key = 401, no state change; keys stored as SHA-256. CORS: Worker origin on public reads only.</text>
+<text x="35" y="644" font-family="sans-serif" font-size="12" fill="#111111">TB-3 ERCOT credential lives in the Worker: the market holds NO ERCOT creds (market client key only, untracked .env).</text>
+<text x="35" y="664" font-family="sans-serif" font-size="12" fill="#111111">Worker guards: report allowlist, 30/60 s per client, 25/60 s ERCOT budget, 429 backoff. NWS keyless. ML offline only.</text>
+</svg>
+            </div>
+            <figcaption>
+              <strong>MODEL-GM-V1.</strong> Explanatory diagrams only; no SysML v2 semantic model, no RS/SysON persistence.; Trace to AC-/RISK-/DES- IDs is final against gridmarket-technical-plan.md and design.md as of this delta.; Data model, API detail, demo steps summarized, not fully elaborated.; Stretch items (kill switch, backtest, Rust core) and offline lanes (ML, spec tooling) shown as boundary notes or use cases only.
+              <dl>
+                <dt>Mode</dt>
+                <dd>diagram-assisted</dd>
+                <dt>Source</dt>
+                <dd>docs/plans/2026-09-25-gridmarket/views/v1-context.mmd</dd>
+                <dt>Digest</dt>
+                <dd class="cell-digest">sha256:3e836cd7618b246f0aa8b0b62467f19f41c5620d7ed7239298a5dc72fd432113</dd>
+                <dt>Viewpoint</dt>
+                <dd>context/boundary: market -&gt; ERCOT Worker -&gt; ERCOT; NWS keyless outbound; Worker 3D views read market public reads via CORS; offline ML sources outside live path; trust boundaries (tunnel, API key, ERCOT credential in Worker)</dd>
+                <dt>Trace links</dt>
+                <dd>AC-GM-DATA-01, AC-GM-DATA-02, AC-GM-DATA-03, AC-GM-DATA-04, AC-GM-DATA-05, AC-GM-API-01, AC-GM-API-03, AC-GM-API-05, AC-GM-EDGE-01, AC-GM-EDGE-02, AC-GM-EDGE-03, AC-GM-EDGE-04, AC-GM-OPS-01, AC-GM-PROV-01, AC-GM-ML-01, AC-GM-SEC-01, RISK-GM-01, RISK-GM-02, RISK-GM-04, RISK-GM-07, RISK-GM-12, RISK-GM-13, DES-GM-ARCH, DES-GM-ERCOT, DES-GM-EDGE, DES-GM-NWS, DES-GM-OPS, DES-GM-ML, CONTRACT-GM-WORKER</dd>
+                <dt>Limitation</dt>
+                <dd>Explanatory diagrams only; no SysML v2 semantic model, no RS/SysON persistence.; Trace to AC-/RISK-/DES- IDs is final against gridmarket-technical-plan.md and design.md as of this delta.; Data model, API detail, demo steps summarized, not fully elaborated.; Stretch items (kill switch, backtest, Rust core) and offline lanes (ML, spec tooling) shown as boundary notes or use cases only.</dd>
+              </dl>
+            </figcaption>
+          </figure>
+          <figure class="model" id="view-model-gm-v2">
+            <div class="model-scroll" role="region" tabindex="0" aria-label="use-case/outcome: actors to 9 use cases (incl. read GridMarket spec, watch 3D views) to SC-1..SC-11 outcomes">
+            <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="720" viewBox="0 0 1000 720" role="img" aria-label="GridMarket V2 use case and outcome view">
+<title>V2 use cases and outcomes</title>
+<desc>Actors to nine use cases, including reading the GridMarket spec and watching market activity in Jordans 3D views, to success criteria SC-1 through SC-11.</desc>
+<defs>
+<marker id="b" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#333333"></path></marker>
+<marker id="bd" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#666666"></path></marker>
+</defs>
+<text x="500" y="28" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="bold" fill="#111111">V2 — Use Cases and Outcomes</text>
+<text x="20" y="58" font-family="sans-serif" font-size="14" font-weight="bold" fill="#111111">Actors</text>
+<text x="440" y="58" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#111111">Use cases</text>
+<text x="660" y="58" font-family="sans-serif" font-size="14" font-weight="bold" fill="#111111">Outcomes (intent S22)</text>
+<g font-family="sans-serif" font-size="12" fill="#111111">
+<rect x="20" y="110" width="190" height="40" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="115" y="134" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Human trader</text>
+<rect x="20" y="170" width="190" height="40" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="115" y="194" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Judge / developer</text>
+<rect x="20" y="230" width="190" height="40" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="115" y="254" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Seeded bots</text>
+<rect x="20" y="290" width="190" height="40" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="115" y="314" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Owner / operator</text>
+<rect x="20" y="350" width="190" height="40" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="115" y="374" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">3D viewer</text>
+<rect x="20" y="410" width="190" height="40" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="115" y="434" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">ERCOT Public API (via Worker)</text>
+<rect x="20" y="470" width="190" height="40" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="115" y="494" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">NWS API (keyless)</text>
+<rect x="20" y="530" width="190" height="40" fill="#ffffff" stroke="#333333" stroke-width="1"></rect><text x="115" y="554" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Provider fleets</text>
+</g>
+<g font-family="sans-serif" font-size="12" fill="#111111">
+<ellipse cx="440" cy="100" rx="150" ry="28" fill="#f2f6ff" stroke="#003399" stroke-width="1"></ellipse><text x="440" y="104" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">View live ERCOT signals</text>
+<ellipse cx="440" cy="162" rx="150" ry="28" fill="#f2f6ff" stroke="#003399" stroke-width="1"></ellipse><text x="440" y="166" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">View predictions + reasons</text>
+<ellipse cx="440" cy="224" rx="150" ry="28" fill="#f2f6ff" stroke="#003399" stroke-width="1"></ellipse><text x="440" y="228" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Submit / cancel orders (REST)</text>
+<ellipse cx="440" cy="286" rx="150" ry="28" fill="#f2f6ff" stroke="#003399" stroke-width="1"></ellipse><text x="440" y="290" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Automate via public API</text>
+<ellipse cx="440" cy="348" rx="150" ry="28" fill="#f2f6ff" stroke="#003399" stroke-width="1"></ellipse><text x="440" y="352" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Trade across provider fleets</text>
+<ellipse cx="440" cy="410" rx="150" ry="28" fill="#f2f6ff" stroke="#003399" stroke-width="1"></ellipse><text x="440" y="414" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Enforce policy / risk + halts</text>
+<ellipse cx="440" cy="472" rx="150" ry="28" fill="#f2f6ff" stroke="#003399" stroke-width="1"></ellipse><text x="440" y="476" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Operate tunnel, keys, ledger</text>
+<ellipse cx="440" cy="534" rx="150" ry="28" fill="#fff7e6" stroke="#b34700" stroke-width="1"></ellipse><text x="440" y="538" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Read GridMarket spec (judge)</text>
+<ellipse cx="440" cy="596" rx="150" ry="28" fill="#f5f0ff" stroke="#5b2ea6" stroke-width="1"></ellipse><text x="440" y="600" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">Watch activity in 3D views</text>
+</g>
+<g font-family="sans-serif" font-size="12" fill="#111111">
+<rect x="660" y="70" width="320" height="44" fill="#eaffea" stroke="#1a7a1a" stroke-width="1"></rect><text x="672" y="88" font-family="sans-serif" font-size="12" fill="#111111">SC-1: real ERCOT data drives sim</text>
+<rect x="660" y="120" width="320" height="44" fill="#eaffea" stroke="#1a7a1a" stroke-width="1"></rect><text x="672" y="138" font-family="sans-serif" font-size="12" fill="#111111">SC-2: seeded users, $1,000, trade</text>
+<rect x="660" y="170" width="320" height="44" fill="#eaffea" stroke="#1a7a1a" stroke-width="1"></rect><text x="672" y="188" font-family="sans-serif" font-size="12" fill="#111111">SC-3: spot + future products work</text>
+<rect x="660" y="220" width="320" height="44" fill="#eaffea" stroke="#1a7a1a" stroke-width="1"></rect><text x="672" y="238" font-family="sans-serif" font-size="12" fill="#111111">SC-4: outages/congestion shape score</text>
+<rect x="660" y="270" width="320" height="44" fill="#eaffea" stroke="#1a7a1a" stroke-width="1"></rect><text x="672" y="288" font-family="sans-serif" font-size="12" fill="#111111">SC-5: predictions explain drivers</text>
+<rect x="660" y="320" width="320" height="44" fill="#eaffea" stroke="#1a7a1a" stroke-width="1"></rect><text x="672" y="338" font-family="sans-serif" font-size="12" fill="#111111">SC-6: multiple provider fleets</text>
+<rect x="660" y="370" width="320" height="44" fill="#eaffea" stroke="#1a7a1a" stroke-width="1"></rect><text x="672" y="388" font-family="sans-serif" font-size="12" fill="#111111">SC-7: external API clients</text>
+<rect x="660" y="420" width="320" height="44" fill="#eaffea" stroke="#1a7a1a" stroke-width="1"></rect><text x="672" y="438" font-family="sans-serif" font-size="12" fill="#111111">SC-8: short example submits trade</text>
+<rect x="660" y="470" width="320" height="44" fill="#eaffea" stroke="#1a7a1a" stroke-width="1"></rect><text x="672" y="488" font-family="sans-serif" font-size="12" fill="#111111">SC-9: bots use same API as humans</text>
+<rect x="660" y="520" width="320" height="44" fill="#eaffea" stroke="#1a7a1a" stroke-width="1"></rect><text x="672" y="538" font-family="sans-serif" font-size="12" fill="#111111">SC-10: unsafe trades prevented</text>
+<rect x="660" y="570" width="320" height="44" fill="#eaffea" stroke="#1a7a1a" stroke-width="1"></rect><text x="672" y="588" font-family="sans-serif" font-size="12" fill="#111111">SC-11: coherent UI story</text>
+</g>
+<g stroke="#333333" stroke-width="1">
+<line x1="210" y1="130" x2="292" y2="102" marker-end="url(#b)"></line>
+<line x1="210" y1="140" x2="292" y2="160" marker-end="url(#b)"></line>
+<line x1="210" y1="190" x2="292" y2="222" marker-end="url(#b)"></line>
+<line x1="210" y1="200" x2="292" y2="532" marker-end="url(#b)"></line>
+<line x1="210" y1="250" x2="292" y2="226" marker-end="url(#b)"></line>
+<line x1="210" y1="260" x2="292" y2="284" marker-end="url(#b)"></line>
+<line x1="210" y1="310" x2="292" y2="408" marker-end="url(#b)"></line>
+<line x1="210" y1="320" x2="292" y2="470" marker-end="url(#b)"></line>
+<line x1="210" y1="370" x2="292" y2="594" marker-end="url(#b)"></line>
+<line x1="210" y1="550" x2="292" y2="350" marker-end="url(#b)"></line>
+<line x1="588" y1="100" x2="658" y2="92" marker-end="url(#b)"></line>
+<line x1="588" y1="104" x2="658" y2="592" marker-end="url(#b)"></line>
+<line x1="588" y1="160" x2="658" y2="242" marker-end="url(#b)"></line>
+<line x1="588" y1="166" x2="658" y2="292" marker-end="url(#b)"></line>
+<line x1="588" y1="218" x2="658" y2="142" marker-end="url(#b)"></line>
+<line x1="588" y1="224" x2="658" y2="192" marker-end="url(#b)"></line>
+<line x1="588" y1="230" x2="658" y2="392" marker-end="url(#b)"></line>
+<line x1="588" y1="234" x2="658" y2="442" marker-end="url(#b)"></line>
+<line x1="588" y1="286" x2="658" y2="492" marker-end="url(#b)"></line>
+<line x1="588" y1="348" x2="658" y2="342" marker-end="url(#b)"></line>
+<line x1="588" y1="410" x2="658" y2="542" marker-end="url(#b)"></line>
+<line x1="588" y1="472" x2="658" y2="592" marker-end="url(#b)"></line>
+<line x1="588" y1="534" x2="658" y2="594" marker-end="url(#b)"></line>
+<line x1="588" y1="596" x2="658" y2="598" marker-end="url(#b)"></line>
+</g>
+<g stroke="#666666" stroke-width="1" stroke-dasharray="5,3">
+<line x1="210" y1="430" x2="292" y2="102" marker-end="url(#bd)"></line>
+<line x1="210" y1="490" x2="292" y2="164" marker-end="url(#bd)"></line>
+</g>
+<text x="222" y="252" font-family="sans-serif" font-size="11" fill="#666666">drives</text>
+<text x="20" y="660" font-family="sans-serif" font-size="12" fill="#111111">Delta: judge reads the GridMarket spec (Spec lane product); viewer watches market activity in Jordan’s 3D views via CORS public reads.</text>
+<text x="20" y="684" font-family="sans-serif" font-size="12" fill="#111111">Note: diagram-assisted explanatory view; trace to AC-*/RISK-*/DES-* is final per views.json.</text>
+</svg>
+            </div>
+            <figcaption>
+              <strong>MODEL-GM-V2.</strong> Explanatory diagrams only; no SysML v2 semantic model, no RS/SysON persistence.; Trace to AC-/RISK-/DES- IDs is final against gridmarket-technical-plan.md and design.md as of this delta.; Data model, API detail, demo steps summarized, not fully elaborated.; Stretch items (kill switch, backtest, Rust core) and offline lanes (ML, spec tooling) shown as boundary notes or use cases only.
+              <dl>
+                <dt>Mode</dt>
+                <dd>diagram-assisted</dd>
+                <dt>Source</dt>
+                <dd>docs/plans/2026-09-25-gridmarket/views/v2-use-cases.mmd</dd>
+                <dt>Digest</dt>
+                <dd class="cell-digest">sha256:99824212c6c939e0c2b26603bb74cd5f2e5acf9b1c13047851efb7e69392a5c7</dd>
+                <dt>Viewpoint</dt>
+                <dd>use-case/outcome: actors to 9 use cases (incl. read GridMarket spec, watch 3D views) to SC-1..SC-11 outcomes</dd>
+                <dt>Trace links</dt>
+                <dd>AC-GM-DATA-01, AC-GM-DATA-05, AC-GM-SCORE-01, AC-GM-SCORE-03, AC-GM-ACCT-01, AC-GM-MKT-01, AC-GM-API-04, AC-GM-API-05, AC-GM-BOT-01, AC-GM-UI-01, AC-GM-PROV-02, AC-GM-ADV-02, AC-GM-SPEC-03, AC-GM-ACC-01, RISK-GM-07, DES-GM-SCORE, DES-GM-UI, DES-GM-SDK, DES-GM-SPEC, CONTRACT-GM-API</dd>
+                <dt>Limitation</dt>
+                <dd>Explanatory diagrams only; no SysML v2 semantic model, no RS/SysON persistence.; Trace to AC-/RISK-/DES- IDs is final against gridmarket-technical-plan.md and design.md as of this delta.; Data model, API detail, demo steps summarized, not fully elaborated.; Stretch items (kill switch, backtest, Rust core) and offline lanes (ML, spec tooling) shown as boundary notes or use cases only.</dd>
+              </dl>
+            </figcaption>
+          </figure>
+          <figure class="model" id="view-model-gm-v3">
+            <div class="model-scroll" role="region" tabindex="0" aria-label="operational flow: order intent through policy/risk to matching, ledger, dashboard; Worker snapshot/report plus NWS polls to signals, seven-factor score, predictions">
+            <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="750" viewBox="0 0 1000 750" role="img" aria-label="GridMarket V3 operational flow view">
+<title>V3 operational flow</title>
+<desc>Order path through policy, risk, matching and ledger; Worker snapshot and allowlisted report polls plus NWS polls through signals, seven-factor score and predictions.</desc>
+<defs>
+<marker id="c" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#333333"></path></marker>
+<marker id="cd" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#666666"></path></marker>
+</defs>
+<text x="500" y="28" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="bold" fill="#111111">V3 — Operational Flow</text>
+<rect x="20" y="48" width="460" height="656" fill="#f2f6ff" stroke="#003399" stroke-width="2"></rect>
+<text x="250" y="72" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#003399">Order path (one BEGIN IMMEDIATE txn)</text>
+<rect x="520" y="48" width="460" height="656" fill="#fff7e6" stroke="#b34700" stroke-width="2"></rect>
+<text x="750" y="72" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#7a2e00">Signal path (Worker + NWS polls)</text>
+<g font-family="sans-serif" font-size="12" fill="#111111">
+<rect x="40" y="86" width="420" height="56" fill="#ffffff" stroke="#003399" stroke-width="2"></rect>
+<text x="250" y="108" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">1. POST /v1/orders + API key</text>
+<text x="250" y="126" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">+ Idempotency-Key (required)</text>
+<rect x="40" y="154" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="250" y="176" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">2. Auth then rate limit</text>
+<text x="250" y="194" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">no key = 401; over limit = 429</text>
+<rect x="40" y="222" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="250" y="244" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">3. Idempotency check</text>
+<text x="250" y="262" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">replay original; 409 if body differs</text>
+<rect x="40" y="290" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="250" y="312" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">4. Market halt check</text>
+<text x="250" y="330" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">kill switch = typed reject (stretch)</text>
+<rect x="40" y="358" width="420" height="66" fill="#ffffff" stroke="#b34700" stroke-width="2"></rect>
+<text x="250" y="380" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">5. Risk: size, position,</text>
+<text x="250" y="398" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">cash holds, spot capacity reserve</text>
+<text x="250" y="414" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">reject: size &gt; 50, position &gt; 200, short cash</text>
+<rect x="40" y="436" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="250" y="458" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">6. MatchingEngine price-time</text>
+<text x="250" y="476" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">fills at resting price (Python; Rust opt.)</text>
+<rect x="40" y="504" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="250" y="526" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">7. Append-only ledger + events</text>
+<text x="250" y="544" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">SQLite WAL; realized / unrealized P&amp;L</text>
+<rect x="40" y="572" width="420" height="56" fill="#ffffff" stroke="#1a7a1a" stroke-width="2"></rect>
+<text x="250" y="594" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">8. Response + activity feed</text>
+<text x="250" y="612" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">judge order visible &lt;= 5 s</text>
+</g>
+<g font-family="sans-serif" font-size="12" fill="#111111">
+<rect x="540" y="86" width="420" height="56" fill="#ffffff" stroke="#5b2ea6" stroke-width="2"></rect>
+<text x="750" y="108" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">A1. Poll Worker /api/snapshot</text>
+<text x="750" y="126" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">every 5 min; market budget &lt;= 12/60 s</text>
+<rect x="540" y="154" width="420" height="56" fill="#ffffff" stroke="#5b2ea6" stroke-width="2"></rect>
+<text x="750" y="176" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">A2. Allowlisted reports + NWS</text>
+<text x="750" y="194" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">reports 5/60 min; NWS keyless &lt;= 6/60 s</text>
+<rect x="540" y="222" width="420" height="66" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="750" y="244" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">B. Store signals + times</text>
+<text x="750" y="262" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">zone, interval, publish + fetch time;</text>
+<text x="750" y="278" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">on fault: backoff, stale + age, stay up</text>
+<rect x="540" y="300" width="420" height="66" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="750" y="322" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">C. Score per zone-hour 0-100</text>
+<text x="750" y="340" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">7 factors: spread, load, outage,</text>
+<text x="750" y="356" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">congestion, heat, peak, alerts + level</text>
+<rect x="540" y="378" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="750" y="400" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">D. Factor contributions</text>
+<text x="750" y="418" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">signed points + one-line note each</text>
+<rect x="540" y="446" width="420" height="66" fill="#ffffff" stroke="#1a7a1a" stroke-width="2"></rect>
+<text x="750" y="468" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">E. GET /v1/predictions + dashboard</text>
+<text x="750" y="486" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">dashboard polls &lt;= 3 s; “estimate,</text>
+<text x="750" y="502" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">not guaranteed profit” always shown</text>
+<rect x="540" y="524" width="420" height="66" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="750" y="546" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">F. FLEX cash settlement</text>
+<text x="750" y="564" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">RT avg / 1000, no clamp;</text>
+<text x="750" y="580" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">P&amp;L = (reference - price) x qty</text>
+</g>
+<text x="750" y="622" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a2e00">signals: RT + DA price, load fcst,</text>
+<text x="750" y="638" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a2e00">outages, shadow px, NWS temp + alerts</text>
+<text x="750" y="664" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a2e00">monotone: outage / shadow-px /</text>
+<text x="750" y="680" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a2e00">heat / alerts up, score never down</text>
+<text x="250" y="664" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#003399">risk rejects: 422 typed reason,</text>
+<text x="250" y="680" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#003399">no balance change</text>
+<g stroke="#333333" stroke-width="1">
+<line x1="250" y1="142" x2="250" y2="152" marker-end="url(#c)"></line>
+<line x1="250" y1="210" x2="250" y2="220" marker-end="url(#c)"></line>
+<line x1="250" y1="278" x2="250" y2="288" marker-end="url(#c)"></line>
+<line x1="250" y1="346" x2="250" y2="356" marker-end="url(#c)"></line>
+<line x1="250" y1="424" x2="250" y2="434" marker-end="url(#c)"></line>
+<line x1="250" y1="492" x2="250" y2="502" marker-end="url(#c)"></line>
+<line x1="250" y1="560" x2="250" y2="570" marker-end="url(#c)"></line>
+<line x1="750" y1="142" x2="750" y2="152" marker-end="url(#c)"></line>
+<line x1="750" y1="210" x2="750" y2="220" marker-end="url(#c)"></line>
+<line x1="750" y1="288" x2="750" y2="298" marker-end="url(#c)"></line>
+<line x1="750" y1="366" x2="750" y2="376" marker-end="url(#c)"></line>
+<line x1="750" y1="434" x2="750" y2="444" marker-end="url(#c)"></line>
+<line x1="610" y1="255" x2="610" y2="556" marker-end="url(#c)"></line>
+</g>
+<g stroke="#666666" stroke-width="1" stroke-dasharray="5,3">
+<line x1="518" y1="479" x2="482" y2="114" marker-end="url(#cd)"></line>
+</g>
+<text x="498" y="300" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666666">traders</text>
+<text x="498" y="314" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666666">react</text>
+<text x="622" y="410" font-family="sans-serif" font-size="11" fill="#333333">settles from B</text>
+<text x="20" y="730" font-family="sans-serif" font-size="12" fill="#111111">Bots and judges enter at step 1 through the same public API (sdk/python, import gridmarket); AI never bypasses policy (intent S12).</text>
+</svg>
+            </div>
+            <figcaption>
+              <strong>MODEL-GM-V3.</strong> Explanatory diagrams only; no SysML v2 semantic model, no RS/SysON persistence.; Trace to AC-/RISK-/DES- IDs is final against gridmarket-technical-plan.md and design.md as of this delta.; Data model, API detail, demo steps summarized, not fully elaborated.; Stretch items (kill switch, backtest, Rust core) and offline lanes (ML, spec tooling) shown as boundary notes or use cases only.
+              <dl>
+                <dt>Mode</dt>
+                <dd>diagram-assisted</dd>
+                <dt>Source</dt>
+                <dd>docs/plans/2026-09-25-gridmarket/views/v3-operational-flow.mmd</dd>
+                <dt>Digest</dt>
+                <dd class="cell-digest">sha256:328e5f1aecb64fcaa18eb996da4859f809761510934e63735a07a28db53740e0</dd>
+                <dt>Viewpoint</dt>
+                <dd>operational flow: order intent through policy/risk to matching, ledger, dashboard; Worker snapshot/report plus NWS polls to signals, seven-factor score, predictions</dd>
+                <dt>Trace links</dt>
+                <dd>AC-GM-DATA-01, AC-GM-DATA-02, AC-GM-DATA-03, AC-GM-DATA-05, AC-GM-SCORE-01, AC-GM-SCORE-02, AC-GM-SCORE-03, AC-GM-SCORE-04, AC-GM-SCORE-05, AC-GM-MKT-02, AC-GM-MKT-03, AC-GM-MKT-04, AC-GM-MKT-05, AC-GM-MKT-06, AC-GM-API-01, AC-GM-API-02, AC-GM-API-03, AC-GM-API-04, AC-GM-BOT-01, AC-GM-UI-01, AC-GM-EDGE-01, AC-GM-EDGE-02, AC-GM-EDGE-03, AC-GM-EDGE-04, AC-GM-ADV-02, RISK-GM-01, RISK-GM-09, DES-GM-MARKET, DES-GM-RISK, DES-GM-SETTLE, DES-GM-ERCOT, DES-GM-EDGE, DES-GM-NWS, DES-GM-SCORE, CONTRACT-GM-WORKER, CONTRACT-GM-ENGINE, CONTRACT-GM-SIGNALS, CONTRACT-GM-PREDICTION</dd>
+                <dt>Limitation</dt>
+                <dd>Explanatory diagrams only; no SysML v2 semantic model, no RS/SysON persistence.; Trace to AC-/RISK-/DES- IDs is final against gridmarket-technical-plan.md and design.md as of this delta.; Data model, API detail, demo steps summarized, not fully elaborated.; Stretch items (kill switch, backtest, Rust core) and offline lanes (ML, spec tooling) shown as boundary notes or use cases only.</dd>
+              </dl>
+            </figcaption>
+          </figure>
+        </section>
+
+        <section class="block" id="s5" aria-labelledby="h-s5">
+          <h2 id="h-s5"><span class="secno">5</span>Development strategy, task graph, roles, dependencies, and write sets</h2>
+          <dl class="meta">
+            <dt>Development strategy</dt>
+            <dd><code>tdd</code></dd>
+            <dt>Concurrency</dt>
+            <dd>Dispatch every dependency-ready, proven-independent task within host and resource limits.</dd>
+          </dl>
+          <h3>Task graph</h3>
+          <p class="table-hint">Tables scroll horizontally on a narrow screen.</p>
+          <div class="table-scroll" role="region" tabindex="0" aria-labelledby="cap-task">
+            <table>
+              <caption id="cap-task">Implementation tasks, roles, dependencies, and exact write sets</caption>
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Role</th>
+                  <th scope="col">Depends on</th>
+                  <th scope="col">Write set</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S01</th>
+                  <td>Product Implementer</td>
+                  <td></td>
+                  <td>backend/pyproject.toml, backend/uv.lock, backend/gridmarket_server/__init__.py, backend/gridmarket_server/contracts.py, backend/gridmarket_server/schema.sql, backend/gridmarket_server/main.py, backend/gridmarket_server/market.py, backend/gridmarket_server/api.py, backend/gridmarket_server/ercot.py, backend/gridmarket_server/nws.py, backend/gridmarket_server/scoring.py, backend/gridmarket_server/seed.py, backend/gridmarket_server/providers/__init__.py, backend/gridmarket_server/providers/base_sim.py, backend/tests/conftest.py, backend/tests/test_contracts.py, dashboard/package.json, dashboard/package-lock.json, dashboard/vite.config.ts, dashboard/tsconfig.json, dashboard/index.html, dashboard/src/main.tsx, dashboard/src/api.ts, Makefile, .gitignore, .env.example, .gitleaks.toml, LICENSE</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S24</th>
+                  <td>Test Implementer</td>
+                  <td></td>
+                  <td>ercot-hackathon/test/security.test.mjs</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S25</th>
+                  <td>Product Implementer</td>
+                  <td>S24</td>
+                  <td>ercot-hackathon/src/index.js, ercot-hackathon/wrangler.jsonc, ercot-hackathon/README.md</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S02</th>
+                  <td>Test Implementer</td>
+                  <td>S01</td>
+                  <td>backend/tests/test_market.py, backend/tests/test_api.py, backend/tests/test_sdk_bots.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S03</th>
+                  <td>Test Implementer</td>
+                  <td>S01</td>
+                  <td>backend/tests/test_ercot.py, backend/tests/test_nws.py, backend/tests/test_scoring.py, backend/tests/fixtures/ercot/, backend/tests/fixtures/nws/</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S04</th>
+                  <td>Test Implementer</td>
+                  <td>S01, S25</td>
+                  <td>dashboard/src/App.test.tsx, dashboard/src/test-fixtures.json</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S05</th>
+                  <td>Product Implementer</td>
+                  <td>S02</td>
+                  <td>backend/gridmarket_server/market.py, backend/gridmarket_server/api.py, backend/gridmarket_server/keys.py, backend/gridmarket_server/seed.py, backend/gridmarket_server/providers/__init__.py, backend/gridmarket_server/providers/base_sim.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S06</th>
+                  <td>Product Implementer</td>
+                  <td>S03</td>
+                  <td>backend/gridmarket_server/ercot.py, backend/gridmarket_server/nws.py, backend/gridmarket_server/scoring.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S07</th>
+                  <td>Product Implementer</td>
+                  <td>S04</td>
+                  <td>dashboard/src/App.tsx, dashboard/src/components/, dashboard/src/styles.css</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S08</th>
+                  <td>Product Implementer</td>
+                  <td>S05</td>
+                  <td>sdk/python/, examples/python-trader/, backend/gridmarket_server/bots.py, deploy/Dockerfile, deploy/compose.yaml, deploy/cloudflared.example.yml, README.md</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S19</th>
+                  <td>Test Implementer</td>
+                  <td>S01, S06</td>
+                  <td>tools/tests/test_azdiagram.py, tools/tests/test_spec_tools.py, tools/tests/fixtures/</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S20</th>
+                  <td>Product Implementer</td>
+                  <td>S19</td>
+                  <td>tools/azdiagram/, tools/spec_build.py, tools/spec_lint.py, spec/template/, skills/spec-author/, skills/spec-diagram/, skills/spec-lint/</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S21</th>
+                  <td>Product Implementer</td>
+                  <td>S20</td>
+                  <td>spec/gridmarket/, spec/GridMarket-Specification.md</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S09</th>
+                  <td>Integration Engineer</td>
+                  <td>S08, S06, S07, S25</td>
+                  <td>docs/plans/2026-09-25-gridmarket/evidence/assembly-phase-1.md</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S10</th>
+                  <td>Test Implementer</td>
+                  <td>S09</td>
+                  <td>backend/tests/test_providers.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S13</th>
+                  <td>Test Implementer</td>
+                  <td>S09</td>
+                  <td>backend/tests/test_adversarial.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S15</th>
+                  <td>Test Implementer</td>
+                  <td>S21, S09</td>
+                  <td>backend/tests/test_backtest.py, backend/tests/test_matching_parity.py, backend/tests/fixtures/ercot_history/, bench/bench_matching.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S11</th>
+                  <td>Product Implementer</td>
+                  <td>S10</td>
+                  <td>backend/gridmarket_server/providers/lonestar.py, backend/gridmarket_server/providers/__init__.py, backend/gridmarket_server/seed.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S14</th>
+                  <td>Product Implementer</td>
+                  <td>S13</td>
+                  <td>backend/gridmarket_server/adversary.py, backend/gridmarket_server/market.py, backend/gridmarket_server/api.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S16</th>
+                  <td>Product Implementer</td>
+                  <td>S15</td>
+                  <td>backend/gridmarket_server/backtest.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S22</th>
+                  <td>Test Implementer</td>
+                  <td>S11</td>
+                  <td>backend/tests/test_ml.py, backend/tests/fixtures/ml/</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S17</th>
+                  <td>Product Implementer</td>
+                  <td>S14, S15</td>
+                  <td>rust/matching_core/, deploy/Dockerfile, deploy/compose.yaml, bench/results.md</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S12</th>
+                  <td>Integration Engineer</td>
+                  <td>S11, S21</td>
+                  <td>docs/plans/2026-09-25-gridmarket/evidence/assembly-phase-2.md</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S23</th>
+                  <td>Product Implementer</td>
+                  <td>S22, S16</td>
+                  <td>backend/gridmarket_server/ml.py, backend/gridmarket_server/ml_data.py, docs/ml-report.md</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">S18</th>
+                  <td>Integration Engineer</td>
+                  <td>S12, S14, S16, S17, S23</td>
+                  <td>docs/plans/2026-09-25-gridmarket/evidence/assembly-stretch.md</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Roles and routes</h3>
+          <p class="table-hint">Tables scroll horizontally on a narrow screen.</p>
+          <div class="table-scroll" role="region" tabindex="0" aria-labelledby="cap-lineup">
+            <table>
+              <caption id="cap-lineup">Role and session routing</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Role</th>
+                  <th scope="col">Session</th>
+                  <th scope="col">Configured primary</th>
+                  <th scope="col">Effective route</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Requirements Engineer</th>
+                  <td>planning</td>
+                  <td>Cursor Agent / Grok 4.7 / high</td>
+                  <td>Cursor Agent / Grok 4.7 / high</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Ran (gate, r1, r2b; replacements applied)</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Systems Modeler</th>
+                  <td>planning</td>
+                  <td>Muse Code / Muse Spark 1.3 / max</td>
+                  <td>Muse Code / Muse Spark 1.3 / max</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Ran (READY, views final)</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Test Engineer</th>
+                  <td>planning</td>
+                  <td>Claude Code / Claude Opus 5.5 / high</td>
+                  <td>Claude Code / Claude Opus 5.5 / high (separate headless session)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Ran (PASS seit.json)</span></td>
+                </tr>
+                <tr class="row-gap">
+                  <th scope="row" class="id">Integration Engineer</th>
+                  <td>planning</td>
+                  <td>Claude Code / Claude Opus 5.5 / high</td>
+                  <td>Claude Code / Claude Opus 5.5 / high (separate headless session)</td>
+                  <td><span class="status status-gap"><span class="mark" aria-hidden="true"></span>Ran (GAPS CF-01..CF-21; CF-13/15/16/18/20 applied)</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Plan Integrator</th>
+                  <td>planning</td>
+                  <td>Muse Code / Muse Spark 1.3 / max</td>
+                  <td>Muse Code / Muse Spark 1.3 / max</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Ran (this run)</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Product Implementer</th>
+                  <td>implementation</td>
+                  <td>Muse Code / Muse Spark 1.3 / max</td>
+                  <td>frozen primary (no fallback activated)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Test Implementer</th>
+                  <td>implementation</td>
+                  <td>Codex CLI / GPT-6 Sol / xhigh</td>
+                  <td>frozen primary (no fallback activated)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Light Implementer</th>
+                  <td>implementation</td>
+                  <td>AGY / Gemini 3.8 Flash / medium</td>
+                  <td>unused in implementation (no light slice)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Unused</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Coordinator</th>
+                  <td>wave dispatch</td>
+                  <td>AGY / Gemini 3.8 Flash / medium</td>
+                  <td>frozen primary (no fallback activated)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Reviewer</th>
+                  <td>phase</td>
+                  <td>Cursor Agent / Grok 4.7 / high</td>
+                  <td>frozen primary (no fallback activated)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Scribe</th>
+                  <td>receipts</td>
+                  <td>AGY / Gemini 3.8 Flash / medium</td>
+                  <td>frozen primary (no fallback activated)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Test Engineer</th>
+                  <td>assurance (lifecycle)</td>
+                  <td>Codex CLI / GPT-6 Astra / high</td>
+                  <td>frozen primary (no fallback activated)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Integration Engineer</th>
+                  <td>execution (lifecycle)</td>
+                  <td>Codex CLI / GPT-6 Astra / high</td>
+                  <td>frozen primary (no fallback activated)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="block" id="s6" aria-labelledby="h-s6">
+          <h2 id="h-s6"><span class="secno">6</span>V&amp;V cases, assurance cadence, evidence, and pass/fail status</h2>
+          <dl class="meta">
+            <dt>Test Engineer assurance</dt>
+            <dd><code>lifecycle</code></dd>
+            <dt>Reviewer</dt>
+            <dd><code>phase</code></dd>
+            <dt>Integration Engineer execution</dt>
+            <dd><code>lifecycle</code></dd>
+          </dl>
+          <p class="table-hint">Tables scroll horizontally on a narrow screen.</p>
+          <div class="table-scroll" role="region" tabindex="0" aria-labelledby="cap-seit">
+            <table>
+              <caption id="cap-seit">SEIT cases and projected evidence</caption>
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Method</th>
+                  <th scope="col">Cadence</th>
+                  <th scope="col">Evidence</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-DATA-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_ercot.py JUnit ids tagged SEIT-GM-DATA-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-DATA-01-LIVE</th>
+                  <td>demonstration</td>
+                  <td>phase</td>
+                  <td>docs/plans/2026-09-25-gridmarket/evidence/assembly-phase-1.md S09-E live-check table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-DATA-02</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_ercot.py ids tagged SEIT-GM-DATA-02</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-DATA-03</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_ercot.py ids tagged SEIT-GM-DATA-03</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-DATA-04</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_ercot.py ids tagged SEIT-GM-DATA-04</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-DATA-04-SCAN</th>
+                  <td>inspection</td>
+                  <td>slice</td>
+                  <td>gitleaks output in the S01 receipt and each S09/S18 assembly evidence file</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-DATA-05</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_nws.py ids tagged SEIT-GM-DATA-05</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-SCORE-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_scoring.py ids tagged SEIT-GM-SCORE-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-SCORE-02</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_scoring.py ids tagged SEIT-GM-SCORE-02</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-SCORE-03</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_scoring.py ids tagged SEIT-GM-SCORE-03</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-SCORE-03-UI</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>dashboard/src/App.test.tsx vitest ids tagged SEIT-GM-SCORE-03-UI</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-SCORE-04</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_scoring.py ids tagged SEIT-GM-SCORE-04</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-SCORE-05</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_scoring.py ids tagged SEIT-GM-SCORE-05</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-ACCT-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_market.py ids tagged SEIT-GM-ACCT-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-MKT-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_market.py ids tagged SEIT-GM-MKT-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-MKT-02</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_market.py ids tagged SEIT-GM-MKT-02</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-MKT-03</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_market.py ids tagged SEIT-GM-MKT-03</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-MKT-04</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_market.py ids tagged SEIT-GM-MKT-04</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-MKT-05</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_market.py ids tagged SEIT-GM-MKT-05</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-MKT-06</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_market.py ids tagged SEIT-GM-MKT-06</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-API-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_api.py ids tagged SEIT-GM-API-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-API-02</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_api.py ids tagged SEIT-GM-API-02</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-API-03</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_api.py ids tagged SEIT-GM-API-03</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-API-04</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_sdk_bots.py ids tagged SEIT-GM-API-04</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-API-05</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_api.py ids tagged SEIT-GM-API-05</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-BOT-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_sdk_bots.py ids tagged SEIT-GM-BOT-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-UI-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>dashboard/src/App.test.tsx ids tagged SEIT-GM-UI-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-UI-02</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>dashboard/src/App.test.tsx ids tagged SEIT-GM-UI-02</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-EDGE-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>ercot-hackathon/test/security.test.mjs TAP ids tagged SEIT-GM-EDGE-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-EDGE-01-LIVE</th>
+                  <td>demonstration</td>
+                  <td>phase</td>
+                  <td>assembly-phase-1.md S09-E live-check table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-EDGE-02</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>ercot-hackathon/test/security.test.mjs TAP ids tagged SEIT-GM-EDGE-02</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-EDGE-03</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>ercot-hackathon/test/security.test.mjs TAP ids tagged SEIT-GM-EDGE-03</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-EDGE-04</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>ercot-hackathon/test/security.test.mjs TAP ids tagged SEIT-GM-EDGE-04</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-OPS-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>CMD-SMOKE output in the S08 receipt and every assembly evidence file</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-OPS-01-TUNNEL</th>
+                  <td>demonstration</td>
+                  <td>phase</td>
+                  <td>owner statement + command output recorded by the Scribe</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-ACC-01</th>
+                  <td>demonstration</td>
+                  <td>phase</td>
+                  <td>owner-ticked checklist appended to assembly-phase-1.md by the Scribe with candidate SHA</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-PROV-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_providers.py ids tagged SEIT-GM-PROV-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-PROV-02</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_providers.py ids tagged SEIT-GM-PROV-02</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-ACC-02</th>
+                  <td>demonstration</td>
+                  <td>phase</td>
+                  <td>owner-ticked checklist appended to assembly-phase-2.md by the Scribe</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-ADV-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_adversarial.py ids tagged SEIT-GM-ADV-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-ADV-01-DEMO</th>
+                  <td>demonstration</td>
+                  <td>phase</td>
+                  <td>screen observation recorded in the PROC-ACCEPT-P2 checklist</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-ADV-02</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_adversarial.py ids tagged SEIT-GM-ADV-02</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-BT-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_backtest.py ids tagged SEIT-GM-BT-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-PERF-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_matching_parity.py ids tagged SEIT-GM-PERF-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-PERF-01-BENCH</th>
+                  <td>analysis</td>
+                  <td>slice</td>
+                  <td>bench/results.md + deploy/compose.yaml diff in the S17 receipt</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-PERF-01-BIN</th>
+                  <td>analysis</td>
+                  <td>lifecycle</td>
+                  <td>Reverify JSON sealed as an assurance receipt by the Assurance Test Engineer</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-ML-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_ml.py ids tagged SEIT-GM-ML-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-SPEC-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>tools/tests/test_azdiagram.py ids tagged SEIT-GM-SPEC-01</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-SPEC-02</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>tools/tests/test_spec_tools.py ids tagged SEIT-GM-SPEC-02</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-SPEC-03</th>
+                  <td>inspection</td>
+                  <td>slice</td>
+                  <td>CMD-SPEC-LINT output in the S21 receipt and S12-B evidence</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-LANE-01</th>
+                  <td>inspection</td>
+                  <td>slice</td>
+                  <td>CMD-WRITESET output in every slice receipt</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-LANE-02</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>assembly-phase-1.md, assembly-phase-2.md, assembly-stretch.md step tables</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-SEC-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>gitleaks output in assembly-stretch.md S18-E</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RULE-02</th>
+                  <td>inspection</td>
+                  <td>slice</td>
+                  <td>CMD-RULES output in assembly-phase-1.md S09-E and assembly-stretch.md S18-E</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RULE-01</th>
+                  <td>inspection</td>
+                  <td>slice</td>
+                  <td>CMD-DEPSCAN output (S01, S17) + CMD-RULES output (S18-E) + Reviewer phase finding list</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-01</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_ercot.py ids tagged SEIT-GM-DATA-03</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-02</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_ercot.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-03</th>
+                  <td>inspection</td>
+                  <td>slice</td>
+                  <td>CMD-SMOKE output</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-04</th>
+                  <td>inspection</td>
+                  <td>slice</td>
+                  <td>gitleaks output</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-05</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>assembly evidence files</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-06</th>
+                  <td>inspection</td>
+                  <td>slice</td>
+                  <td>assembly-stretch.md drop table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-07</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_api.py ids tagged SEIT-GM-API-03</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-08</th>
+                  <td>inspection</td>
+                  <td>slice</td>
+                  <td>CMD-DEPSCAN output</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-09</th>
+                  <td>demonstration</td>
+                  <td>phase</td>
+                  <td>assembly-phase-1.md live-check table</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-10</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>backend/tests/test_nws.py</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-11</th>
+                  <td>inspection</td>
+                  <td>slice</td>
+                  <td>Coordinator dispatch log + CMD-WRITESET receipts</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-12</th>
+                  <td>test</td>
+                  <td>slice</td>
+                  <td>ercot-hackathon/test/security.test.mjs</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">SEIT-GM-RISK-13</th>
+                  <td>inspection</td>
+                  <td>slice</td>
+                  <td>assembly-phase-1.md S09-E, assembly-stretch.md S18-E</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="block" id="s7" aria-labelledby="h-s7">
+          <h2 id="h-s7"><span class="secno">7</span>Documentation impact and completion</h2>
+          <p class="table-hint">Tables scroll horizontally on a narrow screen.</p>
+          <div class="table-scroll" role="region" tabindex="0" aria-labelledby="cap-doc">
+            <table>
+              <caption id="cap-doc">Documentation impact, timing, and verification</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Surface</th>
+                  <th scope="col">Impact</th>
+                  <th scope="col">Owner</th>
+                  <th scope="col">Timing</th>
+                  <th scope="col">Verification</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-plan">
+                  <th scope="row" class="id">README.md</th>
+                  <td>Run, judge quickstart, disclosures incl. Open-Meteo CC BY 4.0 attribution when used</td>
+                  <td>market lane (S08)</td>
+                  <td>wave 2</td>
+                  <td>inspection during PROC-ACCEPT-P1</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">.env.example</th>
+                  <td>Environment variable names only; no values</td>
+                  <td>foundation lane (S01)</td>
+                  <td>wave 1</td>
+                  <td>CMD-SECRETS</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">dashboard disclosures</th>
+                  <td>AC-GM-UI-02 statements plus score disclaimer on the page</td>
+                  <td>ui lane (S07)</td>
+                  <td>wave 2</td>
+                  <td>CMD-TEST-DASH</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">spec/GridMarket-Specification.md</th>
+                  <td>GridMarket&#39;s own specification with azdiagram figures for the judges</td>
+                  <td>spec lane (S21)</td>
+                  <td>wave 2</td>
+                  <td>CMD-SPEC-LINT</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">docs/ml-report.md</th>
+                  <td>ML vs deterministic Spearman report, or marked fixture-only</td>
+                  <td>ml lane (S23)</td>
+                  <td>wave 3</td>
+                  <td>inspection at S18-C</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">evidence/assembly-*.md</th>
+                  <td>Per-step merge identities, V&amp;V outputs, checkpoints, drop records</td>
+                  <td>Integration Engineer (S09/S12/S18)</td>
+                  <td>per phase</td>
+                  <td>PROC-ASSEMBLY</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">DoD Manifest closeout</th>
+                  <td>Append-only actuals: candidate, receipts, acceptance, anomalies, owner acceptance</td>
+                  <td>Orchestrator + Scribe</td>
+                  <td>after implementation</td>
+                  <td>closeout review</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="block" id="s8" aria-labelledby="h-s8">
+          <h2 id="h-s8"><span class="secno">8</span>Risks, gaps, exceptions, anomaly handling, rollback, and recovery</h2>
+          <p class="table-hint">Tables scroll horizontally on a narrow screen.</p>
+          <div class="table-scroll" role="region" tabindex="0" aria-labelledby="cap-risk">
+            <table>
+              <caption id="cap-risk">Risks, gaps, exceptions, anomaly handling, rollback, and recovery</caption>
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Risk</th>
+                  <th scope="col">Control</th>
+                  <th scope="col">Recovery</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Current mitigation</th>
+                  <th scope="col">Current evidence</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-01</th>
+                  <td>ERCOT or ERCOT Worker outage, HTTP 429, or token expiry during the demo recording.</td>
+                  <td>AC-GM-DATA-02/03: market request budget and stale display with age; the Worker caches its ID token for 55 minutes and backs off on 429.</td>
+                  <td>Re-record the affected demo step; the dashboard keeps running on last stored values.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-02</th>
+                  <td>The ERCOT Worker is not deployed with the report allowlist and the market client key when phase 1 acceptance runs, so live score inputs cannot flow.</td>
+                  <td>Tests use fixtures shaped like the Worker responses (DEC-GM-014); the security fix (AC-GM-EDGE-01..04) is the first-wave agent slice pair S24–S25 (DEC-GM-022); deployment is Jordan&#39;s action on his Cloudflare account, surfaced when it blocks ready work.</td>
+                  <td>Jordan deploys; no market change.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-03</th>
+                  <td>The spectre-dev workstation is a single point of failure (DEC-GM-009).</td>
+                  <td>Compose restart policy `unless-stopped`; SQLite on a named volume.</td>
+                  <td>Restart the stack; re-run the demo from the last good integrated commit.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-04</th>
+                  <td>Credential leak when the repository goes public.</td>
+                  <td>`.env` git-ignored, `.env.example` only; secret scan gate AC-GM-SEC-01 before owner publication.</td>
+                  <td>Owner rotates the market client key, Jordan rotates the ERCOT credentials, and history is rewritten only with owner approval.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-05</th>
+                  <td>Parallel lanes conflict or break the demoable branch.</td>
+                  <td>Contract-first wave 1; disjoint write sets; ordered assembly with post-step V&amp;V (AC-GM-LANE-02).</td>
+                  <td>Revert the failing merge commit on the integration branch and return the lane to its implementer.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-06</th>
+                  <td>The schedule overruns the Sun 07:00 CDT freeze.</td>
+                  <td>Phase checkpoints; stretch lanes merge only when green; stretch cut-off Sun 04:30 CDT.</td>
+                  <td>Drop unfinished stretch lanes; freeze the last integrated green commit.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-07</th>
+                  <td>Abuse of the public tunnel or judge keys.</td>
+                  <td>API keys, sandbox rate limits, maximum order size, tunnel open only from recording through 15:00 CDT Sunday.</td>
+                  <td>Owner revokes keys or stops the tunnel.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-08</th>
+                  <td>A new dependency (Python, npm, Astryx, maturin, PyO3) carries a supply-chain defect.</td>
+                  <td>Dependency admission scan when a dependency is added (wave 1 and the Rust lane).</td>
+                  <td>Pin or remove the dependency; stretch lane dropped if unresolved.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-10</th>
+                  <td>NWS API outage or throttling, or Open-Meteo free-tier terms that do not fit a public repository.</td>
+                  <td>AC-GM-DATA-05 budget and stale marking; Open-Meteo used only by the offline ML lane with CC BY 4.0 attribution; the ML lane checks the terms first and drops Open-Meteo history if they do not allow this use.</td>
+                  <td>Score runs on ERCOT and calendar factors; ML lane falls back to NWS-free features.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-11</th>
+                  <td>Spec, ML, and the Rust lane exceed the 3-lane concurrency limit if they run beside the lanes already in that window.</td>
+                  <td>Slot edges serialize them: Spec runs after the data lane in wave 2; ML runs after LoneStar in wave 3; Rust runs after the adversary lane.</td>
+                  <td>Drop Rust first, then ML, at the Sun 04:30 CDT cut-off.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-09</th>
+                  <td>Fixture shape differs from live ERCOT Worker responses.</td>
+                  <td>Parsers read the documented ERCOT report fields and the snapshot shape of `ercot-hackathon/src/snapshot.js` at `bae0a16` (CONTRACT-GM-WORKER); one live response per Worker route is checked during phase 1 assembly once the Worker fix is deployed.</td>
+                  <td>Fix the parser in the data lane; fixtures stay test-only.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-12</th>
+                  <td>The Worker&#39;s open report proxy lets any caller exhaust the shared ERCOT limit of 30 requests per minute during the demo.</td>
+                  <td>AC-GM-EDGE-01..04 built in wave 1 (S24–S25) and deployed by Jordan before the recording.</td>
+                  <td>Jordan disables `/api/report/*` for anonymous callers; the market keeps last stored values.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">RISK-GM-13</th>
+                  <td>The Worker lane is run by a human teammate on his own schedule; a snapshot shape change or a missing allowlist entry breaks the market data lane.</td>
+                  <td>CONTRACT-GM-WORKER fixes the routes, the allowlist, and the snapshot shape; agent lanes edit `ercot-hackathon/` only in S24–S25 (DEC-GM-022).</td>
+                  <td>Jordan restores the contract; the market marks the affected signals stale.</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="block" id="s9" aria-labelledby="h-s9">
+          <h2 id="h-s9"><span class="secno">9</span>Authority, owner decisions, approvals, and closeout status</h2>
+          <p>Closeout is append-only over the owner-approved planning projection. Changing planning content requires an explicit owner-approved plan amendment. This page does not grant execution, acceptance, release, or deployment.</p>
+          <p class="table-hint">Tables scroll horizontally on a narrow screen.</p>
+          <div class="table-scroll" role="region" tabindex="0" aria-labelledby="cap-auth">
+            <table>
+              <caption id="cap-auth">Authority, decisions, and approvals</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Event</th>
+                  <th scope="col">Owner</th>
+                  <th scope="col">Evidence</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-hold">
+                  <th scope="row" class="id">Integrated owner review of the five-artifact package (owner-stops class E)</th>
+                  <td>William (owner)</td>
+                  <td>implementation.json + gridmarket-dod-manifest.html at candidate 0bfa50a</td>
+                  <td><span class="status status-hold"><span class="mark" aria-hidden="true"></span>Hold</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Continuation grant (proposal)</th>
+                  <td>William (owner)</td>
+                  <td>—</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Proposed</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Owner-only: tunnel credentials, tunnel up, public flip plus ruleset, Loom video plus submission set, ERCOT account, judge keys, integration .env</th>
+                  <td>William (owner)</td>
+                  <td>approval_boundaries.owner_only</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Queued</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Human teammate: Worker secrets, Worker deployment, lane-worker PR merge into jordaaan, PR #3</th>
+                  <td>Jordan Hill</td>
+                  <td>approval_boundaries.human_teammate_jordan; S25 human_decision</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Queued</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Orchestrator commits the planning artifacts in the approved planning revision (CF-21)</th>
+                  <td>Orchestrator</td>
+                  <td>recovery.planning_inputs_commit</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Queued</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Closeout actuals</h3>
+          <p class="table-hint">Tables scroll horizontally on a narrow screen.</p>
+          <div class="table-scroll" role="region" tabindex="0" aria-labelledby="cap-close">
+            <table>
+              <caption id="cap-close">Append-only closeout</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Candidate</th>
+                  <th scope="col">Changed paths</th>
+                  <th scope="col">Evidence</th>
+                  <th scope="col">Open gaps</th>
+                  <th scope="col">Owner acceptance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-hold">
+                  <th scope="row" class="id"><span class="status status-hold"><span class="mark" aria-hidden="true"></span>pending</span></th>
+                  <td>pending</td>
+                  <td>pending</td>
+                  <td>none recorded</td>
+                  <td><span class="status status-hold"><span class="mark" aria-hidden="true"></span>pending</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+
+
+          <p class="banner"><strong>Non-authoritative projection.</strong> Source artifacts remain the authority. State: planning.</p>
+        </section>
+      </main>
+    </div>
+    <footer class="colophon">
+      <p>GridMarket hackathon MVP. State: planning. Template 1.0.1. Self-contained HTML and CSS with no script, no external font, no CDN, and no network image.</p>
+    </footer>
+  </div>
+</body>
+</html>

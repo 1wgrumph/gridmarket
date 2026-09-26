@@ -1,0 +1,26 @@
+flowchart TD
+    subgraph ORD["Order path: one BEGIN IMMEDIATE transaction"]
+        O1["POST /v1/orders + API key + Idempotency-Key"]
+        O2["Auth (401) -> rate limit (429)"]
+        O3["Idempotency: replay original / 409 on mismatch"]
+        O4["Market halt? kill switch -> typed reject"]
+        O5["Risk: size <= 50, position <= 200, cash holds, capacity reserve"]
+        O6["MatchingEngine: price-time fills at resting price"]
+        O7["Append-only ledger / events + P&L"]
+        O8["Response + dashboard activity feed <= 5 s"]
+        O1 --> O2 --> O3 --> O4 --> O5 --> O6 --> O7 --> O8
+    end
+
+    subgraph SIG["Signal path: Worker + NWS polls to predictions"]
+        E1["Poll Worker /api/snapshot every 5 min (market budget <= 12 req/60 s, never fresh)"]
+        E2["Poll allowlisted Worker reports (5/60 min) + NWS temp/ alerts (keyless, <= 6/60 s)"]
+        E3["Store signals + publish/fetch time; stale + age on fault"]
+        E4["Score per zone-hour 0-100: 7 factors (spread, load, outage, congestion, heat, peak, alerts)"]
+        E5["Factor contributions: signed points + one-line explanation each"]
+        E6["GET /v1/predictions + dashboard poll <= 3 s (always: estimate, not guaranteed profit)"]
+        E7["FLEX cash-settle vs RT avg / 1000 (no clamp)"]
+        E1 --> E2 --> E3 --> E4 --> E5 --> E6
+        E3 --> E7
+    end
+
+    E6 -.->|traders react to predictions| O1

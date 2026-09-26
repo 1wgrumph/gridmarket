@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="750" viewBox="0 0 1000 750" role="img" aria-label="GridMarket V3 operational flow view">
+<title>V3 operational flow</title>
+<desc>Order path through policy, risk, matching and ledger; Worker snapshot and allowlisted report polls plus NWS polls through signals, seven-factor score and predictions.</desc>
+<defs>
+<marker id="c" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#333333"></path></marker>
+<marker id="cd" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#666666"></path></marker>
+</defs>
+<text x="500" y="28" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="bold" fill="#111111">V3 — Operational Flow</text>
+<rect x="20" y="48" width="460" height="656" fill="#f2f6ff" stroke="#003399" stroke-width="2"></rect>
+<text x="250" y="72" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#003399">Order path (one BEGIN IMMEDIATE txn)</text>
+<rect x="520" y="48" width="460" height="656" fill="#fff7e6" stroke="#b34700" stroke-width="2"></rect>
+<text x="750" y="72" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#7a2e00">Signal path (Worker + NWS polls)</text>
+<g font-family="sans-serif" font-size="12" fill="#111111">
+<rect x="40" y="86" width="420" height="56" fill="#ffffff" stroke="#003399" stroke-width="2"></rect>
+<text x="250" y="108" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">1. POST /v1/orders + API key</text>
+<text x="250" y="126" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">+ Idempotency-Key (required)</text>
+<rect x="40" y="154" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="250" y="176" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">2. Auth then rate limit</text>
+<text x="250" y="194" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">no key = 401; over limit = 429</text>
+<rect x="40" y="222" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="250" y="244" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">3. Idempotency check</text>
+<text x="250" y="262" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">replay original; 409 if body differs</text>
+<rect x="40" y="290" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="250" y="312" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">4. Market halt check</text>
+<text x="250" y="330" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">kill switch = typed reject (stretch)</text>
+<rect x="40" y="358" width="420" height="66" fill="#ffffff" stroke="#b34700" stroke-width="2"></rect>
+<text x="250" y="380" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">5. Risk: size, position,</text>
+<text x="250" y="398" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">cash holds, spot capacity reserve</text>
+<text x="250" y="414" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">reject: size &gt; 50, position &gt; 200, short cash</text>
+<rect x="40" y="436" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="250" y="458" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">6. MatchingEngine price-time</text>
+<text x="250" y="476" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">fills at resting price (Python; Rust opt.)</text>
+<rect x="40" y="504" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="250" y="526" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">7. Append-only ledger + events</text>
+<text x="250" y="544" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">SQLite WAL; realized / unrealized P&amp;L</text>
+<rect x="40" y="572" width="420" height="56" fill="#ffffff" stroke="#1a7a1a" stroke-width="2"></rect>
+<text x="250" y="594" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">8. Response + activity feed</text>
+<text x="250" y="612" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">judge order visible &lt;= 5 s</text>
+</g>
+<g font-family="sans-serif" font-size="12" fill="#111111">
+<rect x="540" y="86" width="420" height="56" fill="#ffffff" stroke="#5b2ea6" stroke-width="2"></rect>
+<text x="750" y="108" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">A1. Poll Worker /api/snapshot</text>
+<text x="750" y="126" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">every 5 min; market budget &lt;= 12/60 s</text>
+<rect x="540" y="154" width="420" height="56" fill="#ffffff" stroke="#5b2ea6" stroke-width="2"></rect>
+<text x="750" y="176" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">A2. Allowlisted reports + NWS</text>
+<text x="750" y="194" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">reports 5/60 min; NWS keyless &lt;= 6/60 s</text>
+<rect x="540" y="222" width="420" height="66" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="750" y="244" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">B. Store signals + times</text>
+<text x="750" y="262" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">zone, interval, publish + fetch time;</text>
+<text x="750" y="278" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">on fault: backoff, stale + age, stay up</text>
+<rect x="540" y="300" width="420" height="66" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="750" y="322" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">C. Score per zone-hour 0-100</text>
+<text x="750" y="340" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">7 factors: spread, load, outage,</text>
+<text x="750" y="356" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">congestion, heat, peak, alerts + level</text>
+<rect x="540" y="378" width="420" height="56" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="750" y="400" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">D. Factor contributions</text>
+<text x="750" y="418" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">signed points + one-line note each</text>
+<rect x="540" y="446" width="420" height="66" fill="#ffffff" stroke="#1a7a1a" stroke-width="2"></rect>
+<text x="750" y="468" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">E. GET /v1/predictions + dashboard</text>
+<text x="750" y="486" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">dashboard polls &lt;= 3 s; “estimate,</text>
+<text x="750" y="502" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">not guaranteed profit” always shown</text>
+<rect x="540" y="524" width="420" height="66" fill="#ffffff" stroke="#333333" stroke-width="1"></rect>
+<text x="750" y="546" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#111111">F. FLEX cash settlement</text>
+<text x="750" y="564" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111111">RT avg / 1000, no clamp;</text>
+<text x="750" y="580" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#111111">P&amp;L = (reference - price) x qty</text>
+</g>
+<text x="750" y="622" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a2e00">signals: RT + DA price, load fcst,</text>
+<text x="750" y="638" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a2e00">outages, shadow px, NWS temp + alerts</text>
+<text x="750" y="664" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a2e00">monotone: outage / shadow-px /</text>
+<text x="750" y="680" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a2e00">heat / alerts up, score never down</text>
+<text x="250" y="664" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#003399">risk rejects: 422 typed reason,</text>
+<text x="250" y="680" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#003399">no balance change</text>
+<g stroke="#333333" stroke-width="1">
+<line x1="250" y1="142" x2="250" y2="152" marker-end="url(#c)"></line>
+<line x1="250" y1="210" x2="250" y2="220" marker-end="url(#c)"></line>
+<line x1="250" y1="278" x2="250" y2="288" marker-end="url(#c)"></line>
+<line x1="250" y1="346" x2="250" y2="356" marker-end="url(#c)"></line>
+<line x1="250" y1="424" x2="250" y2="434" marker-end="url(#c)"></line>
+<line x1="250" y1="492" x2="250" y2="502" marker-end="url(#c)"></line>
+<line x1="250" y1="560" x2="250" y2="570" marker-end="url(#c)"></line>
+<line x1="750" y1="142" x2="750" y2="152" marker-end="url(#c)"></line>
+<line x1="750" y1="210" x2="750" y2="220" marker-end="url(#c)"></line>
+<line x1="750" y1="288" x2="750" y2="298" marker-end="url(#c)"></line>
+<line x1="750" y1="366" x2="750" y2="376" marker-end="url(#c)"></line>
+<line x1="750" y1="434" x2="750" y2="444" marker-end="url(#c)"></line>
+<line x1="610" y1="255" x2="610" y2="556" marker-end="url(#c)"></line>
+</g>
+<g stroke="#666666" stroke-width="1" stroke-dasharray="5,3">
+<line x1="518" y1="479" x2="482" y2="114" marker-end="url(#cd)"></line>
+</g>
+<text x="498" y="300" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666666">traders</text>
+<text x="498" y="314" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666666">react</text>
+<text x="622" y="410" font-family="sans-serif" font-size="11" fill="#333333">settles from B</text>
+<text x="20" y="730" font-family="sans-serif" font-size="12" fill="#111111">Bots and judges enter at step 1 through the same public API (sdk/python, import gridmarket); AI never bypasses policy (intent S12).</text>
+</svg>

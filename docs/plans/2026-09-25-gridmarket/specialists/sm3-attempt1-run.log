@@ -1,0 +1,6 @@
+muse: workspace root: /home/spectre/alphazede/Hackathons/Base (cwd default)
+muse: workspace trust: trusted source=run-flag
+muse: Skills: 67 loaded · 1 warning
+muse:   `skills_catalog` was trimmed to fit its size limit (32 KB): 16 descriptions compacted, 0 skill ids omitted
+muse:   Run `muse skills list --source all` for full diagnostics.
+agent loop failed: model failed: model stream idle timeout after 180000ms

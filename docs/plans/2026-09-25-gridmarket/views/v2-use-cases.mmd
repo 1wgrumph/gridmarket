@@ -1,0 +1,64 @@
+flowchart LR
+    subgraph ACT["Actors"]
+        A_HUMAN["Human trader"]
+        A_JUDGE["Judge / developer"]
+        A_BOTS["Seeded bots"]
+        A_OWNER["Owner / operator"]
+        A_VIEWER["3D viewer"]
+        A_ERCOT["ERCOT Public API (via Worker)"]
+        A_NWS["NWS API (keyless)"]
+        A_FLEET["Provider fleets"]
+    end
+
+    subgraph UC["Use cases"]
+        U1["View live ERCOT signals"]
+        U2["View predictions with explanations"]
+        U3["Submit / cancel orders via REST"]
+        U4["Run automated strategies via public API"]
+        U5["Trade across provider fleets"]
+        U6["Enforce policy / risk + halts"]
+        U7["Operate tunnel, keys, ledger"]
+        U8["Read GridMarket spec"]
+        U9["Watch market activity in 3D views"]
+    end
+
+    subgraph SC["Outcomes (intent S22)"]
+        S1["SC-1: real ERCOT data drives sim"]
+        S2["SC-2: seeded users, $1,000, can trade"]
+        S3["SC-3: spot + future products work"]
+        S4["SC-4: outages/congestion shape prediction"]
+        S5["SC-5: predictions explain drivers"]
+        S6["SC-6: multiple provider fleets"]
+        S7["SC-7: external API clients"]
+        S8["SC-8: short example submits trade"]
+        S9["SC-9: bots use same API as humans"]
+        S10["SC-10: unsafe trades prevented"]
+        S11["SC-11: coherent UI story"]
+    end
+
+    A_HUMAN --> U1
+    A_HUMAN --> U2
+    A_JUDGE --> U3
+    A_JUDGE --> U8
+    A_BOTS --> U3
+    A_BOTS --> U4
+    A_OWNER --> U6
+    A_OWNER --> U7
+    A_VIEWER --> U9
+    A_ERCOT -.->|drives| U1
+    A_NWS -.->|drives| U2
+    A_FLEET --> U5
+    U1 --> S1
+    U1 --> S11
+    U2 --> S4
+    U2 --> S5
+    U3 --> S2
+    U3 --> S3
+    U3 --> S7
+    U3 --> S8
+    U4 --> S9
+    U5 --> S6
+    U6 --> S10
+    U7 --> S11
+    U8 --> S11
+    U9 --> S11

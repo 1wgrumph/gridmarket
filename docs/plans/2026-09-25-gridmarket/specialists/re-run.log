@@ -1,0 +1,17 @@
+The gate is in `docs/plans/2026-09-25-gridmarket/specialists/requirements-engineer-gate.md`. The mechanical lint is clean (32 rows, 0 flagged). Nine rows still fail, and one obligation is missing.
+
+- **AC-GM-DATA-01** stores every signal under load-zone **Zone**. Weather-zone forecasts and constraint shadow prices are not load zones.
+- **AC-GM-DATA-03** triggers on an unnamed timeout.
+- **AC-GM-SCORE-02** uses a shadow price "for a zone" with no link from constraint to load zone.
+- **AC-GM-MKT-01** reads as both product types on hours 1–24. Definitions split spot (1–2) and future (3–24).
+- **AC-GM-MKT-04** adds collateral holds. Intent §7 forbids weekend margin.
+- **AC-GM-MKT-05** clamps the reference price. DEC-GM-008 does not.
+- **AC-GM-ADV-01** rejects a replay that AC-GM-API-02 must accept, and its burst does not exceed the standard rate limit.
+- **AC-GM-ADV-02** uses an undefined admin key and audit trail.
+- **AC-GM-ACC-02** says "every phase 1 criterion," which is not the SC set in DEC-GM-016.
+- **Gap:** no row moves cash and Flex Credits on a spot fill (proposed **AC-GM-MKT-06**).
+
+Each failing row has exact replacement text in the gate file. No owner decision is required to apply it.
+
+Verdict: REPAIRABLE_FAILURE
+exit=0
