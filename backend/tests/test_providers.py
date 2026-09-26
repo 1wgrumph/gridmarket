@@ -52,9 +52,11 @@ def market(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
             delivery = (datetime.now(UTC) + timedelta(hours=1)).replace(
                 minute=0, second=0, microsecond=0
             )
+            symbol = f"SPOT-LZ_HOUSTON-{delivery:%Y%m%d%H}"
+            db.execute("DELETE FROM products WHERE symbol=?", (symbol,))
             db.execute(
                 "INSERT INTO products (id, symbol, zone, delivery_hour) VALUES (?, ?, ?, ?)",
-                ("spot", f"SPOT-LZ_HOUSTON-{delivery:%Y%m%d%H}", "LZ_HOUSTON", delivery.isoformat()),
+                ("spot", symbol, "LZ_HOUSTON", delivery.isoformat()),
             )
         yield client, db_path
 
