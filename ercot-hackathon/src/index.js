@@ -3,6 +3,7 @@
 
 import { buildSnapshot } from "./snapshot.js";
 import { buildNodes, SP_PATTERN } from "./node.js";
+import { SP_ALLOWLIST } from "./sp-allowlist.js";
 
 const TOKEN_URL =
   "https://ercotb2c.b2clogin.com/ercotb2c.onmicrosoft.com/B2C_1_PUBAPI-ROPC-FLOW/oauth2/v2.0/token";
@@ -114,17 +115,22 @@ async function ercotGet(env, path, search, opts = {}) {
 }
 
 // Raw JSON fetch used by the snapshot builder
-async function ercotJSON(env, path, params = {}) {
+async function ercotJSON(env, path, params = {}, budget = null) {
   const qs = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]));
   const url = `${API_BASE}${path}?${qs}`;
-  const call = async (token) =>
-    fetch(url, { headers: { Authorization: `Bearer ${token}`, "Ocp-Apim-Subscription-Key": env.ERCOT_SUBSCRIPTION_KEY, Accept: "application/json" } });
-  let res = await call(await getToken(env));
-  if (res.status === 401) res = await call(await getToken(env, true));
+  const call = async (forceToken = false) => {
+    if (budget && !(await budget.limit({ key: "ercot" })).success) {
+      throw new Error("Upstream ERCOT budget exceeded");
+    }
+    const token = await getToken(env, forceToken);
+    return fetch(url, { headers: { Authorization: `Bearer ${token}`, "Ocp-Apim-Subscription-Key": env.ERCOT_SUBSCRIPTION_KEY, Accept: "application/json" } });
+  };
+  let res = await call();
+  if (res.status === 401) res = await call(true);
   for (let attempt = 1; res.status === 429 && attempt <= 4; attempt++) {
     const wait = Number(res.headers.get("retry-after")) * 1000 || 900 * attempt;
     await new Promise((r) => setTimeout(r, Math.min(wait, 4000)));
-    res = await call(await getToken(env));
+    res = await call();
   }
   if (!res.ok) throw new Error(`${path} returned ${res.status}`);
   return res.json();
@@ -191,12 +197,14 @@ export default {
 
       // Live price at one or more settlement points, for the plant drill-down
       if (p === "/api/node") {
-        const sps = (url.searchParams.get("sp") || "").split(",").map((x) => x.trim()).filter((x) => SP_PATTERN.test(x)).slice(0, 4);
-        if (!sps.length) return json({ error: "Pass ?sp=SETTLEMENT_POINT (comma-separated, up to 4)" }, 400);
+        const sps = [...new Set((url.searchParams.get("sp") || "").split(",").map((x) => x.trim().toUpperCase()))].sort();
+        if (sps.length > 4 || sps.some((sp) => !SP_PATTERN.test(sp) || !SP_ALLOWLIST.has(sp))) {
+          return json({ error: "Pass ?sp=SETTLEMENT_POINT (comma-separated, up to 4 known points)" }, 400);
+        }
         const key = "node:v1:" + sps.join(",");
         const hit = await env.CACHE.get(key);
         if (hit) return json(JSON.parse(hit), 200, { "x-cache": "HIT" });
-        const out = await buildNodes((path, params) => ercotJSON(env, path, params), sps);
+        const out = await buildNodes((path, params) => ercotJSON(env, path, params, env.ERCOT_BUDGET), sps);
         await env.CACHE.put(key, JSON.stringify(out), { expirationTtl: 300 });
         return json(out, 200, { "x-cache": "MISS" });
       }
