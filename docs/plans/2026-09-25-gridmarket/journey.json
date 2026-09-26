@@ -215,7 +215,7 @@
     "intake": "accepted",
     "architectural_alignment": "accepted",
     "scope_definition": "accepted",
-    "planning_and_design": "pending"
+    "planning_and_design": "in_progress"
   },
   "profile_selection": {
     "selected_at": "2026-09-26T01:10:55Z",
@@ -946,18 +946,21 @@
       "session_id": "159fa458-273d-4fbe-b041-b4074e8cf7aa",
       "result": "SHARED_UNDERSTANDING_CONFIRMED",
       "recorded_at": "2026-09-26T01:10:55Z"
+    },
+    {
+      "stage": "planning_and_design",
+      "event": "owner_requested_resume",
+      "at": "2026-09-26T01:41:41Z",
+      "stopped": "first P&D session and its in-flight specialist runs (ie2, re-r2, sm2, te2, plan integrator), at the owner's request",
+      "resumed_with": [
+        "DEC-GM-017",
+        "DEC-GM-012 partial supersession",
+        "DEC-GM-018",
+        "DEC-GM-019",
+        "DEC-GM-020",
+        "DEC-GM-021"
+      ],
+      "note": "Accepted specialist artifacts on disk are reused, not replayed."
     }
-  ],
-  "pending_planning_delta": {
-    "reason": "Owner scope additions after Planning and Design dispatch",
-    "decisions": [
-      "DEC-GM-017",
-      "DEC-GM-012 partial supersession",
-      "DEC-GM-018",
-      "DEC-GM-019",
-      "DEC-GM-020",
-      "DEC-GM-021"
-    ],
-    "action": "Dispatch planning_and_design delta when the running P&D session returns"
-  }
+  ]
 }
