@@ -3,14 +3,16 @@ import { Button } from '@astryxdesign/core';
 import { CartesianGrid, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts';
 import Panel from '../components/Panel';
 import { useBotDiversity, useBots } from '../hooks';
-import { send, type ApiError, type Bot } from '../api';
+import { send, type ApiError } from '../api';
 import { FeedBody, PageHeading, Stale } from './Market';
 
-type PublicBot = Bot & { blend: Record<string, number>; trades: number };
-type Diversity = { trait_space_coverage: number; behavior_entropy: number; risk_patience: { bot_id: string; risk_appetite: number; patience: number }[] };
+/** GET /v1/bots lists id, bot_index, bot_type, provider_id, dormant; economy columns render "—" until served. */
+type PublicBot = { id: string; bot_type: string; provider_id: string; dormant: boolean }
+  & Partial<{ blend: Record<string, number>; cash: number; net_worth: number; pnl: number; trades: number; losses: number }>;
+type Diversity = { coverage: number; entropy: number; points: { risk_appetite: number; patience: number }[] };
 
 const pct = (p: number) => `${Math.round(p * 100)}%`;
-const usd = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+const usd = (n?: number) => n === undefined ? '—' : n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 const blend = (b: Record<string, number>) => Object.entries(b).map(([type, w]) => `${type} ${pct(w)}`).join(' · ');
 const tick = { fill: 'var(--muted)', fontSize: 11 };
 const tooltip = { background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', fontSize: 12, borderRadius: 'var(--r-2)' };
@@ -23,8 +25,8 @@ function DiversityPanel() {
     <FeedBody feed={diversity} unavailable="Diversity measures not yet enabled.">
       {data && <>
         <dl className="facts">
-          <div><dt>Trait-space coverage</dt><dd>{pct(data.trait_space_coverage)}</dd></div>
-          <div><dt>Behavior entropy</dt><dd>{data.behavior_entropy.toFixed(2)} bits</dd></div>
+          <div><dt>Trait-space coverage</dt><dd>{pct(data.coverage)}</dd></div>
+          <div><dt>Behavior entropy</dt><dd>{data.entropy.toFixed(2)} bits</dd></div>
         </dl>
         <h3 className="sub-head">Risk appetite vs patience</h3>
         <div className="chart">
@@ -34,7 +36,7 @@ function DiversityPanel() {
               <XAxis type="number" dataKey="risk_appetite" name="risk" domain={[0, 1]} axisLine={false} tickLine={false} tick={tick}/>
               <YAxis type="number" dataKey="patience" name="wait" domain={[0, 1]} axisLine={false} tickLine={false} tick={tick}/>
               <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltip} itemStyle={{ color: 'var(--text)' }} isAnimationActive={false}/>
-              <Scatter data={data.risk_patience} fill="var(--accent)" isAnimationActive={false}/>
+              <Scatter data={data.points} fill="var(--accent)" isAnimationActive={false}/>
             </ScatterChart>
           </ResponsiveContainer>
         </div>
@@ -55,7 +57,7 @@ function SpawnForm() {
     e.preventDefault();
     setBusy(true);
     try {
-      await send('POST', '/v1/admin/bots', { count: Number(count), ...(seed.trim() ? { seed: Number(seed) } : {}) }, adminKey);
+      await send('POST', '/v1/admin/bots', { count: Number(count), ...(seed.trim() ? { seed: seed.trim() } : {}) }, adminKey);
       setResult({ ok: true, text: `Spawn of ${count} bot(s) accepted.` });
     } catch (err) {
       setResult({ ok: false, text: (err as ApiError)?.error?.message ?? String(err) });
@@ -66,7 +68,7 @@ function SpawnForm() {
     <form className="form-row" onSubmit={submit}>
       <label className="field">Admin key<input type="password" autoComplete="off" required value={adminKey} onChange={e => setAdminKey(e.target.value)}/></label>
       <label className="field">Count (1–10)<input style={{ width: '6rem' }} type="number" min={1} max={10} required value={count} onChange={e => setCount(e.target.value)}/></label>
-      <label className="field">Seed (optional)<input style={{ width: '8rem' }} type="number" value={seed} onChange={e => setSeed(e.target.value)}/></label>
+      <label className="field">Seed (optional)<input style={{ width: '8rem' }} value={seed} onChange={e => setSeed(e.target.value)}/></label>
       <Button type="submit" label="Spawn bots" variant="primary" isLoading={busy}/>
     </form>
     {result && <p className={`form-result ${result.ok ? 'muted' : 'warning-text'}`} role="status">{result.text}</p>}
@@ -106,9 +108,9 @@ export default function Bots() {
               <td>{b.provider_id}</td>
               <td className="end num">{usd(b.cash)}</td>
               <td className="end num">{usd(b.net_worth)}</td>
-              <td className={`end num ${b.pnl < 0 ? 'down-text' : 'up-text'}`}>{usd(b.pnl)}</td>
-              <td className="end num">{b.trades}</td>
-              <td className="end num">{b.losses}</td>
+              <td className={`end num ${(b.pnl ?? 0) < 0 ? 'down-text' : 'up-text'}`}>{usd(b.pnl)}</td>
+              <td className="end num">{b.trades ?? '—'}</td>
+              <td className="end num">{b.losses ?? '—'}</td>
               <td><span className={`tag ${b.dormant ? 'down' : 'up'}`}>{b.dormant ? 'dormant' : 'active'}</span></td>
             </tr>)}</tbody>
           </table></div> : <div className="empty">No bots yet</div>}

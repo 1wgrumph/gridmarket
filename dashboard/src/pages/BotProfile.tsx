@@ -8,7 +8,7 @@ import { FeedBody, PageHeading, Stale } from './Market';
 /** Contract Bot fields plus the profile extras; extras may be absent, so they render as "—". */
 type Profile = Bot & Partial<{
   blend: Record<string, number>; trades: number; loss_share: number; worst_loss: number;
-  traits: { risk_appetite: number; patience: number };
+  traits: { 'risk appetite'?: number; risk_appetite?: number; patience?: number };
   household: { batteries: number[]; zone: string; reserve_pct: number; schedule: number[] };
   employed: boolean; job: string | null; pay: number; deposits: number;
   balance_history: { at: string; balance: number }[];
@@ -40,7 +40,7 @@ export default function BotProfile({ id }: { id: string }) {
     </Panel></div> : <>
       <div className="page-grid thirds">
         <Panel title="Traits" index="01" meta={meta}>
-          <Facts rows={[['Risk appetite', pct(b.traits?.risk_appetite)], ['Patience', pct(b.traits?.patience)]]}/>
+          <Facts rows={[['Risk appetite', pct(b.traits?.['risk appetite'] ?? b.traits?.risk_appetite)], ['Patience', pct(b.traits?.patience)]]}/>
           <h3 className="sub-head">Strategy blend</h3>
           <Facts rows={Object.entries(b.blend ?? {}).map(([type, w]) => [type, pct(w)])}/>
         </Panel>
