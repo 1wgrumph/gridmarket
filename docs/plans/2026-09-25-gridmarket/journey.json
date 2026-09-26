@@ -553,6 +553,14 @@
       "source": "Orchestrator as owner delegate (DEC-GM-043); owner asked to 'pull the schedule back to the left'",
       "decision": "Schedule pull-left, with scope unchanged. (1) Overlapped assembly: the next phase's Integration Engineer may pre-assemble on the previous phase's assembled candidate, then merge origin/main after that phase lands. Review and Test Engineer run only on a candidate that contains main. (2) S08 (SDK, Dockerfile) runs in parallel with S05 in a side worktree and merges into lane-market after the S05 exit; the write sets are disjoint. (3) S30 (diversity red tests) runs in parallel with S28/S29 in a side worktree and merges into lane-bots after the S29 exit; the write sets are disjoint. (4) S09 assembly starts now with the foundation and worker merges, and each remaining lane merges as it exits. (5) A directives channel lets Coordinators take Orchestrator instructions mid-wave. All four wave 2 Coordinators were relaunched in resume mode to get it. Their in-flight jobs kept running. (6) Coordinators no longer queue behind worker slices for placement.",
       "why": "Only phase assembly is serial. Overlapping it and parallelising disjoint slices on the 1a and bots critical paths recovers about 3h. Review, tests, caps and scope are unchanged."
+    },
+    {
+      "id": "DEC-GM-052",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T11:27:52Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043)",
+      "decision": "Gate-order correction for phase assembly S09: in steps S09-A to S09-D, `make test-dash` is not applicable, because the skeleton has no dashboard test files and vitest exits non-zero with 'No test files found'. Those steps run every other test-all target. test-dash and test-all run in full from S09-E, when the ui lane (S04 tests, S07) merges. The Integration Engineer's S09-A revert (c55ede7) is re-applied by revert-of-revert.",
+      "why": "S09-A was reverted with setup, lint, test-contracts and secrets all green. The only failure was vitest finding no test files, a plan ordering defect. No test is weakened: the dashboard gate still applies once dashboard tests exist."
     }
   ],
   "stages": {
