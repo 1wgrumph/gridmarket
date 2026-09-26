@@ -280,3 +280,24 @@ def test_predict_selects_signal_for_delivery_hour(
     predictions = {item.delivery_hour: item for item in scoring.predict()}
     assert driver_detail(predictions[HOUR], "price-spread").startswith("Day-ahead 100 vs")
     assert driver_detail(predictions[unmatched], "price-spread").startswith("Day-ahead 0 vs")
+
+
+def test_predict_missing_temperature_marked_unavailable(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    db_path = tmp_path / "signals.db"
+    monkeypatch.setenv("GRIDMARKET_DB", str(db_path))
+    seed_predictions_db(
+        db_path,
+        [("p1", "HOUSTON-FLEX", ZONE, HOUR)],
+        [
+            ("s1", "NP4-190-CD", ZONE, HOUR, 60, 80, "$/MWh", HOUR, HOUR),
+        ],
+    )
+    (prediction,) = scoring.predict()
+    heat = next(
+        entry for entry in prediction.drivers if factor_id(entry["factor"]) == "heat-stress"
+    )
+    assert heat["contribution"] == pytest.approx(0)
+    assert "0 F" not in heat["detail"]
+    assert "unavailable" in heat["detail"].lower() or "missing" in heat["detail"].lower()
