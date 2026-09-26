@@ -430,6 +430,17 @@
         "DEC-GM-036",
         "CONF-GM-PAGES"
       ]
+    },
+    {
+      "id": "DEC-GM-038",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T04:07:05Z",
+      "source": "Owner in chat: 'We are reviewer per phase. For this journey we can test and integration engineer per phase also. 1 review and 1 repair. Also make sure the planning agents is doing the same thing to avoid review loops'",
+      "decision": "Split phase 1 into phase 1a, a walking skeleton targeted for about Sat 10:00 CDT (foundation, market engine S02/S05, data client and score S03/S06, SDK and a minimal overview page, Worker fix S24-S25), and phase 1b, the rich core targeted for about Sat 16:00 CDT (bots with diversity and economy, the remaining pages, bot profiles, the router with market checks, the spec lane). Cadence for this journey: the reviewer, Test Engineer assurance, and Integration Engineer execution each run once per declared phase (1a, 1b, 2, stretch), with exactly 1 review and at most 1 repair per phase, and the repair verified deterministically with no re-review. Each phase ends with push, PR, and merge to main. This supersedes the review-cadence part of DEC-GM-023 (one lifecycle review Saturday evening); commit-per-slice and PR-per-phase stand. Planning agents follow the same rule: one review round and at most one repair per planning review, with no review loops.",
+      "amends": [
+        "DEC-GM-023",
+        "CONF-GM-PHASE-PLACEMENT"
+      ]
     }
   ],
   "stages": {
