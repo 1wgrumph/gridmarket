@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import math
 import sqlite3
 import subprocess
 import sys
@@ -134,6 +135,13 @@ def test_seit_gm_mcp_01_read_tools_match_dashboard_api(backend):
                     status, expected = rest(url, path)
                     assert status == 200, (name, expected)
                     actual = tool_data(await session.call_tool(name, arguments))
+                    if name == "provider_health":
+                        # Ages advance between calls; stored heartbeat times must match.
+                        for response in (actual, expected):
+                            for provider in response:
+                                age = provider.pop("heartbeat_age_s")
+                                assert type(age) in (int, float), (name, age)
+                                assert math.isfinite(age) and age >= 0, (name, age)
                     actual_times, expected_times = {}, {}
                     assert without_call_times(actual, actual_times) == without_call_times(
                         without_user_text(expected), expected_times
