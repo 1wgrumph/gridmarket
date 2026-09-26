@@ -472,6 +472,16 @@
       "decided_at": "2026-09-26T04:15:15Z",
       "source": "Owner in chat",
       "decision": "Lower every 'max' reasoning route in this journey's frozen profile snapshots to 'xhigh', effective immediately."
+    },
+    {
+      "id": "DEC-GM-042",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T04:17:18Z",
+      "source": "Owner in chat: 'Muse is fast. we can keep muse at max sorry'",
+      "decision": "Revoke DEC-GM-041. The frozen snapshot reasoning levels stand as captured: Muse routes run at max; all other routes keep their catalog levels (high, xhigh or medium).",
+      "supersedes": [
+        "DEC-GM-041"
+      ]
     }
   ],
   "stages": {
@@ -1717,6 +1727,11 @@
         "source": "Owner in chat: 'why are we using max reasoning levels please stop that' then chose 'xhigh, apply now'",
         "change": "For this journey, every route in the frozen snapshots (primary, tech-writing, frontend; primaries and fallbacks) whose reasoning is 'max' runs at 'xhigh' instead. The catalog file is unchanged.",
         "applied": "Stopped the running P&D delta and its Muse max Systems Modeler runs and the Requirements Engineer run; relaunched at xhigh."
+      },
+      {
+        "amended_at": "2026-09-26T04:17:18Z",
+        "id": "DEC-GM-042",
+        "change": "Revokes DEC-GM-041; the frozen snapshot levels apply unchanged."
       }
     ]
   },
