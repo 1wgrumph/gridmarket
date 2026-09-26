@@ -569,6 +569,14 @@
       "source": "Orchestrator as owner delegate (DEC-GM-043)",
       "decision": "The SDK example test (SEIT-GM-API-04) calls GET /v1/predictions, which belongs to the data lane (CONTRACTS.md). It cannot pass in market-lane isolation, so it is verified at S09-D post-step V&V on integration-1a, after the data lane merges. The S08 exit is taken with 24 of 25 market tests green, and this test is recorded as a typed cross-lane gap. The test is not weakened.",
       "why": "The Orchestrator reproduced the failure: 404 NOT_FOUND on /v1/predictions in lane-market after the S08 merge. The route owner is the data lane."
+    },
+    {
+      "id": "DEC-GM-054",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T11:50:04Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043)",
+      "decision": "The S09-D integration defect is a circular import (api -> scoring -> ercot -> api) that appears only after the market and data lanes merge. It is repaired in the market lane (S05-repair, heavyweight route): api.py imports scoring inside functions instead of at module top. This is one file with no contract change. The S09-D merge is then re-applied and re-verified, including an import of main and the compose smoke test.",
+      "why": "Seen in the Integration Engineer's S09-D post-step V&V: test-contracts and smoke failed with 'partially initialized module gridmarket_server.api'. The Integration Engineer correctly reverted the merge (PROC-ASSEMBLY)."
     }
   ],
   "stages": {
