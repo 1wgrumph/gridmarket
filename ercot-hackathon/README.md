@@ -30,5 +30,6 @@ wrangler kv namespace create ercot-hackathon-cache   # put the id in wrangler.js
 wrangler secret put ERCOT_USERNAME          # API Explorer sign-in email
 wrangler secret put ERCOT_PASSWORD
 wrangler secret put ERCOT_SUBSCRIPTION_KEY  # Primary key from apiexplorer.ercot.com profile
+wrangler secret put MARKET_KEY              # Shared key clients send as x-gridmarket-key
 wrangler deploy
 ```

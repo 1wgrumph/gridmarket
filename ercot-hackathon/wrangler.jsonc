@@ -10,5 +10,9 @@
   "kv_namespaces": [
     { "binding": "CACHE", "id": "4160071505024c7eadee41aaa38a2b01" }
   ],
+  "ratelimits": [
+    { "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
+    { "name": "ERCOT_BUDGET", "namespace_id": "1002", "simple": { "limit": 25, "period": 60 } }
+  ],
   "observability": { "enabled": true }
 }

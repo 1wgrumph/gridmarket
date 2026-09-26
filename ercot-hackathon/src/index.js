@@ -1,5 +1,5 @@
 // ercot-hackathon — Cloudflare Worker proxy for the ERCOT Public Data API
-// Secrets (set with `wrangler secret put`): ERCOT_USERNAME, ERCOT_PASSWORD, ERCOT_SUBSCRIPTION_KEY
+// Secrets (set with `wrangler secret put`): ERCOT_USERNAME, ERCOT_PASSWORD, ERCOT_SUBSCRIPTION_KEY, MARKET_KEY
 
 import { buildSnapshot } from "./snapshot.js";
 
@@ -10,6 +10,21 @@ const API_BASE = "https://api.ercot.com/api/public-reports";
 const TOKEN_KEY = "ercot:id_token";
 const TOKEN_TTL = 55 * 60; // ERCOT ID tokens last 60 min and can't be refreshed
 const DATA_TTL = 10 * 60; // cache report responses for 10 min
+
+// Only these five reports may be proxied; anything else under /api/report/ is 404.
+const ALLOWED_REPORTS = new Set([
+  "/api/report/np6-905-cd/spp_node_zone_hub",
+  "/api/report/np4-190-cd/dam_stlmnt_pnt_prices",
+  "/api/report/np3-565-cd/lf_by_model_weather_zone",
+  "/api/report/np3-233-cd/hourly_res_outage_cap",
+  "/api/report/np6-86-cd/shdw_prices_bnd_trns_const",
+]);
+
+// Query params the EDC view sends; nothing else is forwarded to ERCOT.
+const EDC_PARAMS = ["deliveryDateFrom", "deliveryDateTo", "hourEndingFrom", "hourEndingTo", "size"];
+
+// Coalesce concurrent snapshot builds per isolate.
+let snapshotInflight = null;
 
 const json = (body, status = 200, extra = {}) =>
   new Response(JSON.stringify(body, null, 2), {
@@ -61,6 +76,11 @@ async function ercotGet(env, path, search) {
   const hit = await env.CACHE.get(cacheKey);
   if (hit) return json(JSON.parse(hit), 200, { "x-cache": "HIT" });
 
+  if (env.ERCOT_BUDGET) {
+    const budget = await env.ERCOT_BUDGET.limit({ key: "ercot" });
+    if (!budget.success) return json({ error: "Upstream ERCOT budget exceeded" }, 429);
+  }
+
   const call = async (token) =>
     fetch(url, {
       headers: {
@@ -102,9 +122,6 @@ async function ercotJSON(env, path, params = {}) {
   return res.json();
 }
 
-// only allow safe path segments like np3-907-ex / 2d_agg_edc
-const SEG = /^[a-z0-9_-]+$/i;
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -120,6 +137,22 @@ export default {
     }
 
     try {
+      // Per-client rate limit on every API route.
+      if (p.startsWith("/api/") && env.RATE_LIMITER) {
+        const ip = request.headers.get("cf-connecting-ip") || "unknown";
+        const limited = await env.RATE_LIMITER.limit({ key: ip });
+        if (!limited.success) return json({ error: "Rate limit exceeded" }, 429);
+      }
+
+      // Market-key auth for protected routes; health/edc/cached snapshot stay keyless.
+      const needsKey =
+        p.startsWith("/api/report/") ||
+        p === "/api/products" ||
+        (p === "/api/snapshot" && url.searchParams.has("fresh"));
+      if (needsKey && request.headers.get("x-gridmarket-key") !== env.MARKET_KEY) {
+        return json({ error: "Unauthorized" }, 401);
+      }
+
       if (p === "/api/health") {
         const missing = missingSecrets(env);
         return json({
@@ -141,14 +174,34 @@ export default {
       if (p === "/api/snapshot") {
         const cached = url.searchParams.has("fresh") ? null : await env.CACHE.get("snapshot:v1");
         if (cached) return json(JSON.parse(cached), 200, { "x-cache": "HIT" });
-        const snap = await buildSnapshot((path, params) => ercotJSON(env, path, params));
-        await env.CACHE.put("snapshot:v1", JSON.stringify(snap), { expirationTtl: 300 });
+        if (env.ERCOT_BUDGET && !snapshotInflight) {
+          const budget = await env.ERCOT_BUDGET.limit({ key: "ercot" });
+          if (!budget.success) return json({ error: "Upstream ERCOT budget exceeded" }, 429);
+        }
+        if (!snapshotInflight) {
+          snapshotInflight = (async () => {
+            try {
+              const snap = await buildSnapshot((path, params) => ercotJSON(env, path, params));
+              await env.CACHE.put("snapshot:v1", JSON.stringify(snap), { expirationTtl: 300 });
+              return snap;
+            } finally {
+              snapshotInflight = null;
+            }
+          })();
+        }
+        const snap = await snapshotInflight;
         return json(snap, 200, { "x-cache": "MISS" });
       }
 
       // 2-Day Aggregate Energy Demand Curves (NP3-907-EX)
       if (p === "/api/edc") {
-        return await ercotGet(env, "/np3-907-ex/2d_agg_edc", url.search);
+        const fwd = new URLSearchParams();
+        for (const k of EDC_PARAMS) {
+          const v = url.searchParams.get(k);
+          if (v !== null) fwd.set(k, v);
+        }
+        const qs = fwd.toString();
+        return await ercotGet(env, "/np3-907-ex/2d_agg_edc", qs ? `?${qs}` : "");
       }
 
       // List all EMIL products
@@ -156,10 +209,10 @@ export default {
         return await ercotGet(env, "", url.search);
       }
 
-      // Generic: /api/report/<emil-id>/<report> e.g. /api/report/np3-907-ex/2d_agg_esc
-      const m = p.match(/^\/api\/report\/([^/]+)(?:\/([^/]+))?$/);
-      if (m && SEG.test(m[1]) && (!m[2] || SEG.test(m[2]))) {
-        return await ercotGet(env, `/${m[1]}${m[2] ? "/" + m[2] : ""}`, url.search);
+      // Allowlisted reports only: /api/report/<emil-id>/<report>
+      if (p.startsWith("/api/report/")) {
+        if (!ALLOWED_REPORTS.has(p)) return json({ error: "Not found" }, 404);
+        return await ercotGet(env, p.slice("/api/report".length), url.search);
       }
 
       if (p.startsWith("/api/")) return json({ error: "Not found" }, 404);
