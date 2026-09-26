@@ -1208,6 +1208,14 @@
       "decided_by": "Orchestrator (delegate)",
       "decision": "S45 docs pulled left: it starts now on lane docs2 from the in-progress stretch assembly (cb2ef7d) and re-merges the assembly before committing. README leads with the owner-approved sentence, a 3-minute path, local run, live data (Worker, ERCOT key, NWS, what works without keys), SDK/MCP, how it works, what is real versus simulated and quality gates; docs/judges.md is a one-page judge script; screenshots from a local run. Live-data verification so far: the deployed Worker serves real ERCOT data (demand 77,459 MW, hubs, lambda) and S76's parser stored all 7 snapshot values from a real response.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-139",
+      "decided_at": "2026-09-26T18:52:00-05:00",
+      "decided_by": "Owner (in chat)",
+      "decision": "Codex fast mode off for all new dispatches (usage); Test Implementer role moves to Claude Code / Claude Opus 5.5 / medium with Muse Spark 1.3 max fallback. Running sessions keep the tier they launched with.",
+      "owner_quote": "Stop using fast mode on codex my usage is shot. Switch to opus medium for test implementer",
+      "reversible": true
     }
   ],
   "stages": {
@@ -2812,12 +2820,15 @@
             },
             "to": {
               "model": "GPT-6 Astra",
-              "reasoning": "medium",
-              "service_tier": "priority"
+              "reasoning": "medium"
             }
           }
         ],
-        "scope": "every role and lane route whose harness is Codex CLI and model GPT-6 Sol, primary or fallback, for dispatches from 13:29 on; service_tier priority is Codex fast mode (2x speed, increased usage)"
+        "scope": "every role and lane route whose harness is Codex CLI and model GPT-6 Sol, primary or fallback, for dispatches from 13:29 on; service_tier priority is Codex fast mode (2x speed, increased usage)",
+        "fast_mode_revoked": {
+          "by": "DEC-GM-139",
+          "at": "2026-09-26T18:52:00-05:00"
+        }
       },
       {
         "id": "DEC-GM-102",
@@ -2847,6 +2858,30 @@
         "expired": true,
         "expired_at": "2026-09-26T15:16:00-05:00",
         "expired_by": "DEC-GM-104"
+      },
+      {
+        "id": "DEC-GM-139",
+        "dated": "2026-09-26T18:52:00-05:00",
+        "owner_confirmed": true,
+        "owner_quote": "Stop using fast mode on codex my usage is shot. Switch to opus medium for test implementer",
+        "role_routes": {
+          "test_implementer": {
+            "primary": {
+              "harness": "Claude Code",
+              "model": "Claude Opus 5.5",
+              "reasoning": "medium"
+            },
+            "ordered_fallbacks": [
+              {
+                "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                "harness": "Muse Code",
+                "model": "Muse Spark 1.3",
+                "reasoning": "max"
+              }
+            ]
+          }
+        },
+        "scope": "Codex fast mode (service_tier priority) is removed from every substitution and default route for dispatches from this time on (the DEC-GM-096 Sol-to-Astra-medium substitution stays, at the default tier). Test Implementer role routes to Claude Code / Claude Opus 5.5 / medium, fallback Muse Spark 1.3 max."
       }
     ]
   },
