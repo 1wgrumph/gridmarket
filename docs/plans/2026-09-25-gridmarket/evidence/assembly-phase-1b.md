@@ -580,3 +580,132 @@ because this packet permits it on green only. The coordinator-owned
 owner runtime/deployment action, issue closure, credential access or
 Co-Authored-By line. The active blocker is the incoming frozen-file delta;
 this record does not waive it or establish independent assurance.
+
+## Attempt 7: REPAIRABLE_FAILURE — design reverted; assembly stopped
+
+Journey GM-2026-09-25, S49 phase 1b, Integration Engineer execution,
+DIR-P1b-20. Entry: `7502542700600f7a517775ade47622c7e5409e45`,
+`gridmarket/integration-1b`, clean tree. Evidence root:
+`/tmp/gm-evidence/P1b/attempt-7/`. No S49-L action was taken.
+
+### Step identities and disposition
+
+| Step | Exact lane exit | Merge / disposition |
+|---|---|---|
+| 1 design | `8f6843a69117ff3c2145ddf400a7a8d96572a0d3` | `20ca03d886078491a8b61702d223a2e4f7ddea67`, RED; reverted by `58a7f8902e4023cdf7571086f7fb711d6bbbb34e` |
+| 2 pages-v2 | `bf9252fd25b7275ba54e65d931b8b15138a77195` | NOT_RUN: stopped after step 1 |
+| 3 spec | `8989e539e7499dccbcbe49ad06fbfbe4c30ea747` | NOT_RUN: S49-E not reached |
+
+All three exact commit objects exist. Step 1 entry, branch, clean-tree,
+non-merge write-set, two merge parents and frozen-file checks pass. See
+`design-entry.json`, `design-post.json`, `design-merge.log` and
+`design-revert.log`. The design write-set union is `dashboard/` (S52a/S52b).
+
+DEC-GM-074 exempts **only** `dashboard/src/api.ts` and
+`dashboard/src/hooks.ts` for step 1, reflecting DEC-GM-062 type exports,
+poll deduplication and error text. They are the only incoming frozen changes;
+every other frozen file, including CONTRACTS.md and uv.lock, is unchanged.
+The exception does not extend to steps 2 or 3. The rollback restores both
+exempted files too. Merged frozen blob identities are in `design-post.json`;
+`design-revert-assembly.json` proves exact restoration to the entry tree.
+
+### Gate receipts
+
+| Gate | Design merge exit | Revert exit |
+|---|---:|---:|
+| CMD-TEST-CONTRACTS | 0 | 0 |
+| CMD-TEST-ALL | 2 | 0 |
+| CMD-TEST-DASH | 2 | 0 |
+| CMD-SMOKE | 2 | 0 |
+| PROC-ASSEMBLY | 1 | 0 |
+
+Logs are `<step>-<target>.log`, where step is `design` or `design-revert`
+and target is `test-contracts`, `test-all`, `test-dash` or `smoke`.
+`design-results.json` and `design-revert-results.json` bind each command,
+exit, duration and log to its exact tested SHA. PROC-ASSEMBLY aggregation
+receipts are `design-proc-assembly.json` and
+`design-revert-proc-assembly.json`; frozen/write-set structural checks on
+both states pass. The merged procedure is red because its behavioral gates
+are red, not because the exemption failed.
+
+Existing setup was reused. Tests retain `GRIDMARKET_NWS=off` and
+`UV_EXCLUDE_NEWER=2026-09-11T22:00:00Z`; Make targets use `--frozen`.
+Smoke uses the SEIT-assigned `gm-smoke-1b:18003`, as in attempt 5,
+superseding the stale step annotation `gm-smoke-integration:18000`.
+No real owner environment file was read. The merged smoke stops at its
+Docker dashboard build failure; runtime smoke assertions are not claimed
+for that merge.
+
+### Failure and lane return
+
+The design exit replaces Panel's interface: `index` becomes required and
+`state` is removed. Existing BotProfile, Bots, Market, Predictions, Sandbox
+and Spec callers still use the prior interface. Dashboard tests report
+47 passed, but TypeScript emits TS2322/TS2741 and fails the build. Docker
+smoke reproduces the same incompatibility in its dashboard build.
+`panel-interface.log`, `panel-callers.log` and `failure-diagnostics.json`
+record this integration boundary. Return design to its lane/Orchestrator;
+no product, test or conflict-resolution edit was made here. A future
+re-entry must account for this recorded revert, per the plan's
+revert-of-revert procedure; no such re-entry is authorized in this attempt.
+
+Separately, merged CMD-TEST-ALL reports 105 passed and four failed market
+tests (MKT-03, MKT-04, MKT-06, PROV-04), with spot orders rejected as
+PRODUCT_CLOSED. `backend-unchanged.log` proves design changed no backend
+file. The fixture computes SPOT_HOUR once at collection as the next hour;
+the run crossed the hour boundary. Fixture expiry is consistent with the
+source, timing and errors, but was not separately reproduced with a
+controlled clock. It is not attributed to design. On the exact restored
+tree, all 109 backend tests pass, including these four;
+29 dashboard and 34 Worker tests pass, and the separate dashboard build
+and smoke gates pass. The restored smoke completes every runtime assertion
+and tears down only its own stack, volume, network and throwaway env file.
+No issue was filed. Full test-all stopped before its dashboard/Worker
+constituents on the merged SHA; the separate dashboard gate did run.
+
+### Candidate, remaining work and capability gaps
+
+Last green **merge candidate** remains
+`ab8f825b5c1aec25f87a4105ef66c37b37d74c01` (attempt-5 S49-D).
+Recovery ref is `58a7f8902e4023cdf7571086f7fb711d6bbbb34e`;
+its tree `ba7df9e91e15e5548a4c23ac01f2c7063c199551` equals entry `7502542`.
+There is no new green lane merge in attempt 7. The non-force rollback push
+exited 0 (`revert-push.log`).
+The evidence commit is pushed on this branch only; final identity, clean-tree
+and push receipts are recorded in `final-verification.json` and `final-push.log`.
+
+Spec is **un-deferred/eligible by DIR-P1b-20** at the supplied green
+S21+S21-fix exit, superseding the earlier write-set deferral. It remains
+unassembled solely because step 1 stopped this sequence; no S49-E gates,
+CMD-SECRETS or CMD-RULES were executed in this attempt. The incoming
+`spec-tool-versions.md` records Graphviz 2.43.0 versus designed 2.42.2 and
+draw.io 31.5.2. That Graphviz version difference remains disclosed.
+Pages-v2, spec and **market2** assembly remain outstanding. Verification of
+the anomalies panel against the real `status.anomalies` row shape still
+belongs to the market2 step.
+
+Pending owner items, never performed: `PROC-ERCOT-LIVE-CHECK`,
+`AC-GM-ACC-01`, and Worker deployment (`VIEWS_NOT_DEPLOYED`).
+`BRAN_UNAVAILABLE`: no native policy; Git and repository evidence used.
+Independent phase review, browser visual review and Assurance Test Engineer
+remain pending; this assembly does not self-certify them. Attempt-5
+`ENTROPY_PROOF_CONFLICT`, `PAGES_APP_ERROR_BOUNDARY_GAP`, and live smoke
+coverage limits remain unclosed, not revalidated by this attempt.
+
+Frozen profile digest remains
+`14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`;
+Integration Engineer route remains Codex CLI / GPT-6 Astra / high.
+`frozen-profile.json` preserves roles **and** capability settings; no live
+profile import, model or harness substitution occurred.
+`review.coverage_assist`: enabled, required=false, OpenCodeReview delegation
+backend; executable available, **not_run** because this is assembly, not
+independent code review. `deterministic_verification.reverify`: enabled,
+conditional Rust ELF backend retained; executable available. Reverify:
+**not applicable — no Rust/native compiled binary claim**. Gate receipts
+are not Reverify evidence. See `capability-availability.json` and
+`toolchain.json`.
+
+Blocker: the authorized design-first candidate cannot build against the
+currently integrated page consumers. Steps 2 and 3 were not used to bridge
+that red step. No PR, main merge, branch deletion, force push, git switch,
+owner deployment, credential access, issue closure or Co-Authored-By line.
