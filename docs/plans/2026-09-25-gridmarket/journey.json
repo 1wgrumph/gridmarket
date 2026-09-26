@@ -833,6 +833,14 @@
       "decision": "New docs-only slice S56 on lane-design-docs from origin/main: docs/design/DESIGN.md (the as-built design system), docs/design/screenshots/ (as-built 1280/390 dark/light) and skills/gridmarket-frontend-design/SKILL.md, plus a README link, so Jordan can review the UI. It is privacy-scrubbed (no internal tooling, paths or design-poc content) and lands via its own PR. GitHub issues #6 (Overview onboarding and greeting) and #7 (notification inbox, savings alert and opt-in opportunity scanner) are filed as enhancements. They are not scheduled into the pre-freeze plan unless the owner asks.",
       "owner_quote": "add the frontend design skill and references so Jordan can take alook; add a gh issue to optimize onboarding and greeting on the main screen",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-087",
+      "decided_at": "2026-09-26T12:21:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "Phase 1b LANDED: PR #9 merged to main as d6cfdc3 at 12:21 CDT (plan target 16:00). Candidate 3f5b964 (plus the docs-only main merge 36549fe); main's tree equals the gated tree. Assurance: one review (F1\u2013F10) and one TE round (ATE-P1b-01..03), all repaired in round 1. The final deterministic gate (attempt 14, NWS off) had all 14 commands exit 0, with mutation at 80.28%. Merged lanes bots, router, views, pages, design, market2 and integration-1b were deleted (DEC-GM-040). Spec moves to phase 2 S12-E. Visual review was a typed gap here and is required in phase 2.",
+      "rationale": "Deterministic verification decided after the single repair round; no second review (policy).",
+      "reversible": true
     }
   ],
   "stages": {
@@ -2582,6 +2590,13 @@
       "candidate": "4985356",
       "decision": "DEC-GM-063",
       "landed_at": "2026-09-26T13:59:31Z"
+    },
+    {
+      "phase": "1b",
+      "candidate": "3f5b964",
+      "landing_pr": 9,
+      "main": "d6cfdc3",
+      "decision": "DEC-GM-087"
     }
   ]
 }
