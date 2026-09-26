@@ -753,6 +753,14 @@
       "decision": "The S53 write set adds dashboard/src/styles.css, limited to additive page-scoped rules using the existing tokens. The S53 packet already authorized this, but implementation.json was not updated, so the IE9 write-set contract check failed correctly.",
       "rationale": "This is a manifest omission by the Orchestrator. S53 only adds lines to styles.css (0 deletions), so it is additive as authorized.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-077",
+      "decided_at": "2026-09-26T10:14:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043), on an owner question",
+      "decision": "The README opens with the hosted demo for judges: what it is, the live URL (placeholder until the owner activates the tunnel), a 60-second API tour with a sandbox key, and links to the guide, llms.txt, the prompt kit and MCP. Self-hosting and local development move to a closing 'Run it yourself' section or docs/self-host.md. Directive DIR-ALL-08.",
+      "rationale": "Owner asked why the Docker/self-host steps are in the README when judges use the hosted demo. They stay for reproducibility and code review, but not as the first thing a judge reads.",
+      "reversible": true
     }
   ],
   "stages": {
