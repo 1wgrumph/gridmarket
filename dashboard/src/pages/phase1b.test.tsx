@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from '../App';
-import fixture from '../fixtures/phase1b.json';
+import fixture from './phase1b.fixture.json';
 
 type Responses = Record<string, unknown>;
 let responses: Responses;
