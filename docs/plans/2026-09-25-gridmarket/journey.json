@@ -793,6 +793,14 @@
       "decision": "The owner created the KV namespace CACHE on their Cloudflare account: id 76531f2a806d487a856d6fb7e21120cc. The old id 4160071505024c7eadee41aaa38a2b01 in ercot-hackathon/wrangler.jsonc does not exist on the owner's account (kv namespace list returned []). Right after the 1b landing, a light slice S25-kv on a branch from main replaces the id and lands via a quick PR, so the owner can deploy immediately. S55 builds on top of it.",
       "rationale": "A deploy to the owner's account would fail with namespace-not-found. KV ids are not secrets.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-082",
+      "decided_at": "2026-09-26T10:47:00-05:00",
+      "decided_by": "Owner (in chat)",
+      "decision": "Realistic price cap: MAX_PRICE_CENTS = 500 ($5.00 per Flex Credit = $5,000/MWh, ERCOT's system-wide offer cap), with a floor of 0. Price above the cap is rejected with the existing VALIDATION_ERROR, so there is no contract change. New phase 2 slice S05-cap on lane-market3 after S05-prov. Docs, onboarding, the SDK and MCP state the cap.",
+      "owner_quote": "yes add a realistic price cap",
+      "reversible": true
     }
   ],
   "stages": {
