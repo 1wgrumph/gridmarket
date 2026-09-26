@@ -112,7 +112,7 @@ export async function buildSnapshot(get) {
   // Weather assumptions (°F) for the hour in progress
   if (fail("weather", wxR)) {
     const w = rows(wxR.v);
-    const same = w.filter((r) => hourOf(r.hourEnding) === now.hour);
+    const same = w.filter((r) => hourOf(r.hourEnding) === heNow);
     const hit = same[same.length - 1] || w[w.length - 1];
     if (hit) {
       const zones = Object.entries(WEATHER_ZONES).map(([k, name]) => ({ zone: name, tempF: round(hit[k], 1) }));
