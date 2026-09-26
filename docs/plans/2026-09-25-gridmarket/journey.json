@@ -585,6 +585,14 @@
       "source": "Orchestrator as owner delegate (DEC-GM-043)",
       "decision": "Second S09-D integration defect. Once the data lane is merged, an upstream failure in the NWS background poller escapes main.py repeat() and crashes the app lifespan, and test_nws depends on test order. Repair goes to the data lane (S06-repair): pollers contain all per-poll exceptions, with backoff; add a lifespan-resilience regression test; make test_nws independent of order. No contract change.",
       "why": "The Orchestrator reproduced this on a scratch merge of market 20f1e98 and data 8294903: 1 failure and 21 errors, all traced to nws.poll raising inside the lifespan TaskGroup. It is also a production robustness bug: a down upstream must not take down the exchange."
+    },
+    {
+      "id": "DEC-GM-056",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T12:00:50Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043)",
+      "decision": "Authorized glue: the Makefile test-dash target runs `npm --prefix dashboard run test` instead of `npm --prefix dashboard exec -- vitest run`, so Vitest's root is dashboard/ and it no longer collects the Worker's node:test file.",
+      "why": "Seen in the Integration Engineer's S09-E evidence ('No test suite found' for ercot-hackathon/test/security.test.mjs). The Orchestrator ran the replacement on candidate b044b8a: 12/12 dashboard tests pass. No test is weakened."
     }
   ],
   "stages": {
