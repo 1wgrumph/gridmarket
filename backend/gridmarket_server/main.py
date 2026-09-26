@@ -40,9 +40,14 @@ def create_app() -> FastAPI:
 
         async def repeat(seconds: int, fn):
             while True:
-                result = fn()
-                if asyncio.iscoroutine(result):
-                    await result
+                try:
+                    result = fn()
+                    if asyncio.iscoroutine(result):
+                        await result
+                except Exception:
+                    import logging
+
+                    logging.getLogger(__name__).exception("Scheduled tick failed: %s", fn.__name__)
                 await asyncio.sleep(seconds)
 
         jobs = [

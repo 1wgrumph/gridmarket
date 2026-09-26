@@ -1,6 +1,7 @@
 """Observable market outcomes missed by the broader exchange tests."""
 
 import sqlite3
+from zoneinfo import ZoneInfo
 
 import pytest
 import test_market
@@ -45,7 +46,7 @@ def test_matching_skips_unrelated_orders_and_respects_price_time(exchange):
 
 def test_future_hour_alias_resolves_only_valid_open_product(exchange):
     _, client = exchange
-    alias = f"FLEX-LZ_HOUSTON-{test_market.HOUR:%H}"
+    alias = f"FLEX-LZ_HOUSTON-{test_market.HOUR.astimezone(ZoneInfo('America/Chicago')):%H}"
     detail = client.get(f"/v1/market/{alias}")
     assert detail.status_code == 200
     assert detail.json()["id"] == "future"

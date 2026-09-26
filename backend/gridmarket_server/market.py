@@ -7,7 +7,9 @@ import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from decimal import ROUND_FLOOR, Decimal
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, HTTPException
 
@@ -15,9 +17,11 @@ from . import adversary, health
 from .contracts import ProviderOffline
 from .providers import commit_capacity as _commit_capacity
 from .providers import due_capacity, enabled, reserved_capacity, set_delivery_status
+from .providers import registry as provider_registry
 
 router = APIRouter()
 ZONES = ("LZ_HOUSTON", "LZ_NORTH", "LZ_SOUTH", "LZ_WEST")
+CENTRAL = ZoneInfo("America/Chicago")
 MAX_ORDER_QUANTITY = 50
 MAX_POSITION = 200
 MAX_PRICE_CENTS = 500  # $5.00/FC (1 FC = 1 kWh) mirrors the ERCOT $5,000/MWh offer cap
@@ -98,6 +102,11 @@ class MatchingEngine:
                 break
             if order["side"] == incoming["side"] or order["product_id"] != incoming["product_id"]:
                 continue
+            if (
+                incoming.get("account_id") is not None
+                and order.get("account_id") == incoming["account_id"]
+            ):
+                continue
             price = order["price_cents"]
             if (buy and price > incoming["price_cents"]) or (
                 not buy and price < incoming["price_cents"]
@@ -121,9 +130,15 @@ def product(db, name: str) -> dict:
             found = rows(
                 db,
                 "SELECT * FROM products WHERE zone=? AND symbol LIKE 'FLEX-%' "
-                "AND strftime('%H',delivery_hour)=? AND status='open' ORDER BY delivery_hour LIMIT 1",
-                (parts[0][5:], parts[-1]),
+                "AND status='open' ORDER BY julianday(delivery_hour)",
+                (parts[0][5:],),
             )
+            found = [
+                p
+                for p in found
+                if datetime.fromisoformat(p["delivery_hour"]).astimezone(CENTRAL).strftime("%H")
+                == parts[-1]
+            ]
     if not found:
         reject("UNKNOWN_PRODUCT")
     return found[0]
@@ -131,7 +146,8 @@ def product(db, name: str) -> dict:
 
 def list_products(db, now: datetime | None = None) -> None:
     now = now or datetime.now(UTC)
-    hour = now.replace(minute=0, second=0, microsecond=0)
+    # Delivery is hour-beginning Central; UTC instants drive duration and expiry.
+    hour = now.astimezone(UTC).replace(minute=0, second=0, microsecond=0)
     expired = rows(
         db,
         "SELECT id FROM products WHERE status='open' AND julianday(delivery_hour)<=julianday(?)",
@@ -149,12 +165,15 @@ def list_products(db, now: datetime | None = None) -> None:
         for offset in range(1, 25):
             delivery = hour + timedelta(hours=offset)
             kind = "SPOT" if offset <= 2 else "FLEX"
-            symbol = f"{kind}-{zone}-{delivery:%Y%m%d%H}"
+            symbol = f"{kind}-{zone}-{delivery.astimezone(CENTRAL):%Y-%m-%d-%H}"
             # Existing futures retain their kind; the approaching hour also gets spot supply.
-            if not db.execute(
-                "SELECT 1 FROM products WHERE zone=? AND delivery_hour=? AND symbol LIKE ?",
+            existing = db.execute(
+                "SELECT id FROM products WHERE zone=? AND delivery_hour=? AND symbol LIKE ?",
                 (zone, delivery.isoformat(), kind + "-%"),
-            ).fetchone():
+            ).fetchone()
+            if existing:
+                db.execute("UPDATE products SET symbol=? WHERE id=?", (symbol, existing[0]))
+            else:
                 db.execute(
                     "INSERT INTO products(id,symbol,zone,delivery_hour) VALUES (?,?,?,?)",
                     (symbol, symbol, zone, delivery.isoformat()),
@@ -258,7 +277,13 @@ def _place_order(db, account_id: str, incoming: Order) -> dict:
         "SELECT rowid AS sequence,* FROM orders WHERE product_id=? AND side!=? AND status='open' ORDER BY rowid",
         (item["id"], side),
     )
-    incoming = {**incoming, "id": order_id, "product_id": item["id"]}
+    # Cancel older crossing orders from the same account before matching.
+    for other in resting:
+        crosses = other["price_cents"] <= price if side == "buy" else other["price_cents"] >= price
+        if other["account_id"] == account_id and crosses:
+            cancel(db, account_id, other["id"])
+    resting = [other for other in resting if other["account_id"] != account_id]
+    incoming = {**incoming, "id": order_id, "product_id": item["id"], "account_id": account_id}
     result = registry["python"].match(resting, incoming)
     for fill in result.fills:
         other = next(order for order in resting if order["id"] == fill.resting_order_id)
@@ -309,12 +334,6 @@ def _place_order(db, account_id: str, incoming: Order) -> dict:
                     "cash_cents": balance,
                 },
             )
-            position = db.execute(
-                "SELECT quantity FROM positions WHERE account_id=? AND product_id=?",
-                (account, item["id"]),
-            ).fetchone()[0]
-            if position == 0:
-                _record_position(db, item, account, 0, fill.price_cents, spot)
     return rows(db, "SELECT * FROM orders WHERE id=?", (order_id,))[0]
 
 
@@ -324,9 +343,11 @@ def cancel(db, account_id: str, order_id: str) -> dict:
         reject("NOT_FOUND", 404)
     if found[0]["status"] == "open":
         db.execute("UPDATE orders SET status='cancelled' WHERE id=?", (order_id,))
-        adapters = _adapters(db)
         for reservation in reserved_capacity(db, order_id):
-            adapters[reservation["provider_id"]].release_capacity(db, reservation["id"])
+            # Cancellation releases ledger reservations even when new trading is disabled.
+            provider_registry[reservation["provider_id"]](db).release_capacity(
+                db, reservation["id"]
+            )
     return rows(db, "SELECT * FROM orders WHERE id=?", (order_id,))[0]
 
 
@@ -339,26 +360,7 @@ def trade_value(db, account_id: str, product_id: str) -> int:
     ).fetchone()[0]
 
 
-def _record_position(
-    db,
-    item: dict,
-    account: str,
-    quantity: int,
-    price: int,
-    spot: bool,
-    settlement_id: str | None = None,
-) -> None:
-    prior = db.execute(
-        "SELECT COALESCE(SUM(pnl_cents),0) FROM settled_positions WHERE account_id=? AND product_id=?",
-        (account, item["id"]),
-    ).fetchone()[0]
-    pnl = trade_value(db, account, item["id"]) + quantity * price - prior
-    if settlement_id is None:
-        settlement_id = uuid.uuid4().hex
-        db.execute(
-            "INSERT INTO settlements(id,product_id,price_cents) VALUES (?,?,?)",
-            (settlement_id, item["id"], price),
-        )
+def _record_position(db, item, account, quantity, pnl, spot, settlement_id) -> None:
     db.execute(
         "INSERT INTO settled_positions(id,settlement_id,account_id,product_id,quantity,pnl_cents) VALUES (?,?,?,?,?,?)",
         (uuid.uuid4().hex, settlement_id, account, item["id"], quantity, pnl),
@@ -386,24 +388,36 @@ def settle(db, now: datetime | None = None) -> None:
             prices.append(price[0])
         if len(prices) != 4:
             continue
-        reference = round(sum(prices) / 40)
+        reference = sum(Decimal(str(price)) for price in prices) / 40
         settlement_id = uuid.uuid4().hex
         db.execute(
             "INSERT INTO settlements(id,product_id,price_cents) VALUES (?,?,?)",
-            (settlement_id, item["id"], reference),
+            (settlement_id, item["id"], float(reference)),
         )
         spot = item["symbol"].startswith("SPOT-")
-        for position in rows(
-            db, "SELECT * FROM positions WHERE product_id=? AND quantity!=0", (item["id"],)
-        ):
+        positions = rows(
+            db, "SELECT * FROM positions WHERE product_id=? ORDER BY account_id", (item["id"],)
+        )
+        exact = []
+        for position in positions:
+            prior = db.execute(
+                "SELECT COALESCE(SUM(pnl_cents),0) FROM settled_positions WHERE account_id=? AND product_id=?",
+                (position["account_id"], item["id"]),
+            ).fetchone()[0]
+            exact.append(
+                Decimal(trade_value(db, position["account_id"], item["id"]) - prior)
+                + position["quantity"] * reference
+            )
+        # Largest remainders allocate whole cents with a deterministic account-id tie break.
+        payouts = [int(value.to_integral_value(rounding=ROUND_FLOOR)) for value in exact]
+        residue = round(sum(exact)) - sum(payouts)
+        for index in sorted(range(len(exact)), key=lambda i: exact[i] - payouts[i], reverse=True)[
+            :residue
+        ]:
+            payouts[index] += 1
+        for position, pnl in zip(positions, payouts, strict=True):
             _record_position(
-                db,
-                item,
-                position["account_id"],
-                position["quantity"],
-                reference,
-                spot,
-                settlement_id,
+                db, item, position["account_id"], position["quantity"], pnl, spot, settlement_id
             )
         for order in rows(
             db,
@@ -413,7 +427,13 @@ def settle(db, now: datetime | None = None) -> None:
             cancel(db, order["account_id"], order["id"])
         db.execute("UPDATE positions SET quantity=0 WHERE product_id=?", (item["id"],))
         db.execute("UPDATE products SET status='settled' WHERE id=?", (item["id"],))
-        event(db, "settlement", None, item["id"], {"price_cents": reference})
+        event(
+            db,
+            "settlement",
+            None,
+            item["id"],
+            {"price_cents": float(reference), "exact_price_cents": str(reference)},
+        )
     _deliver(db, now)
 
 
@@ -430,15 +450,42 @@ def _deliver(db, now: datetime) -> None:
             )
             total = sum(fill["quantity"] for fill in fills)
             for fill in fills:
-                refund = round(fill["price_cents"] * fill["quantity"] * reservation["kwh"] / total)
+                credits = Decimal(fill["quantity"]) * Decimal(str(reservation["kwh"])) / total
+                prior = [
+                    json.loads(row[0])
+                    for row in db.execute(
+                        "SELECT payload_json FROM events WHERE entry_type='delivery_refund' AND account_id=? AND subject_id=?",
+                        (fill["buyer"], fill["id"]),
+                    )
+                ]
+                defaulted = credits + sum(Decimal(row["defaulted_quantity"]) for row in prior)
+                refund = round(defaulted * fill["price_cents"]) - sum(
+                    row["cash_delta_cents"] for row in prior
+                )
                 db.execute(
-                    "UPDATE accounts SET cash_cents=cash_cents+? WHERE id=?",
-                    (refund, fill["buyer"]),
+                    "UPDATE accounts SET cash_cents=cash_cents+?,flex_credits=flex_credits-? WHERE id=?",
+                    (refund, float(credits), fill["buyer"]),
                 )
                 db.execute(
                     "UPDATE accounts SET cash_cents=cash_cents-? WHERE id=?",
                     (refund, fill["seller"]),
                 )
+                for account, delta, credit_delta in (
+                    (fill["buyer"], refund, -float(credits)),
+                    (fill["seller"], -refund, 0),
+                ):
+                    event(
+                        db,
+                        "delivery_refund",
+                        account,
+                        fill["id"],
+                        {
+                            "reservation_id": reservation["id"],
+                            "cash_delta_cents": delta,
+                            "flex_credit_delta": credit_delta,
+                            "defaulted_quantity": str(credits),
+                        },
+                    )
         if adapter is not None:
             adapter.release_capacity(db, reservation["id"])
         set_delivery_status(db, reservation["id"], delivered)

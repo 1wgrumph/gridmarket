@@ -185,7 +185,8 @@ def test_exact_reference_and_closed_positions_settle(exchange):
         after = dict(db.execute("SELECT id,cash_cents FROM accounts"))
         assert (
             db.execute(
-                "SELECT price_cents FROM settlements WHERE product_id=? ORDER BY rowid DESC LIMIT 1", (p["id"],)
+                "SELECT price_cents FROM settlements WHERE product_id=? ORDER BY rowid DESC LIMIT 1",
+                (p["id"],),
             ).fetchone()[0]
             == 2.345
         )

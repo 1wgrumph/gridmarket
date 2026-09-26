@@ -176,7 +176,12 @@ async def lifespan(app):
 
     async def repeat():
         while True:
-            await asyncio.to_thread(market.tick)
+            try:
+                await asyncio.to_thread(market.tick)
+            except Exception:
+                import logging
+
+                logging.getLogger(__name__).exception("Market tick failed; retrying next tick")
             await asyncio.sleep(60)
 
     task = asyncio.create_task(repeat())
