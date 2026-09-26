@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/* S80 red tests: story hero, guided tour and grouped navigation (C8).
+/* S80 red tests: story hero, first-run checklist and grouped navigation (DEC-GM-128).
    s80-replay-days.json: public HTTP response of GET /v1/replay/days from a
    local backend running the S69 replay engine (dataset day 2026-08-26),
    retrieved 2026-09-26T22:36:44Z, stored unchanged.
@@ -22,6 +22,7 @@ const GODSEYE = 'https://views.example.test/godseye/';
 
 beforeEach(() => {
   replay = 'served';
+  localStorage.clear();
   window.location.hash = '#/';
   vi.stubEnv('VITE_GODSEYE_URL', GODSEYE);
   vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
@@ -54,13 +55,6 @@ async function storyHero() {
   return hero;
 }
 
-async function tourStep(n: number) {
-  const tour = await screen.findByRole('region', { name: 'Guided tour' });
-  await within(tour).findByText(new RegExp(`step ${n} of 4`, 'i'));
-  await waitFor(() => expect(tour.getAttribute('aria-busy')).toBe('false'));
-  return tour;
-}
-
 const priceLike = /\$\s?\d|MWh/;
 
 describe('S80 Overview hero', () => {
@@ -88,7 +82,7 @@ describe('S80 Overview hero', () => {
     expect(hero.textContent).toMatch(/Wednesday, August 26, 2026/);
     expect(hero.textContent).toMatch(/West Texas/);
     expect(hero.textContent).toMatch(/10:00\s?PM CT/);
-    expect(within(hero).getByRole('link', { name: /Watch batteries play that day/ }).getAttribute('href')).toBe('#/replay');
+    expect(within(hero).getByRole('link', { name: /Watch batteries play that day/ }).getAttribute('href')).toBe('#/replay?day=2026-08-26');
   });
 
   it.each<Replay>(['missing', 'failing'])('S80-04 the replay card omits the number when the replay API is %s', async mode => {
@@ -96,104 +90,87 @@ describe('S80 Overview hero', () => {
     render(<Overview/>);
     const hero = await storyHero();
     await waitFor(() => expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).includes('/v1/replay/days'))).toBe(true));
-    expect(within(hero).getByRole('link', { name: /Watch batteries play that day/ }).getAttribute('href')).toBe('#/replay');
+    expect(within(hero).getByRole('link', { name: /Watch batteries play that day/ }).getAttribute('href')).toBe('#/replay?day=2026-08-26');
     expect(hero.textContent).not.toMatch(priceLike);
   });
 });
 
-const steps: Array<[RegExp, string | null, string | null]> = [
-  [/Texas, when the grid is tight/, "Open God's Eye", GODSEYE],
-  [/Replay a real day/, 'Open the replay', '#/replay'],
-  [/Your turn/, 'Try it in the replay', '#/replay'],
-  [/Proof: a live market/, 'Open the judge sandbox', '#/sandbox'],
-];
-
-describe('S80 guided tour', () => {
-  it('S80-05 four steps, each with progress, one heading with focus, one sentence and exactly one action', async () => {
+describe('S80 first-run checklist', () => {
+  it('S80-05 legacy tour redirects to the Overview checklist with three real task links', async () => {
     window.location.hash = '#/tour';
     render(<App/>);
-    for (const [i, [heading, action, href]] of steps.entries()) {
-      const tour = await tourStep(i + 1);
-      const title = within(tour).getByRole('heading', { level: 1, name: heading });
-      await waitFor(() => expect(document.activeElement).toBe(title));
-      const actions = within(tour).getAllByRole('link').filter(a => !/skip tour|finish tour/i.test(a.textContent ?? ''));
-      expect(actions.map(a => a.textContent)).toEqual([action]);
-      expect(actions[0].getAttribute('href')).toBe(href);
-      if (i < 3) fireEvent.click(within(tour).getByRole('button', { name: /^Next/ }));
-    }
-    const last = await tourStep(4);
-    expect(within(last).queryByRole('button', { name: /^Next/ })).toBeNull();
-    expect(within(last).getByRole('link', { name: 'Finish tour' }).getAttribute('href')).toBe('#/');
-  });
-
-  it('S80-06 Back returns focus to the previous step heading; Skip tour and Escape return to the Overview', async () => {
-    window.location.hash = '#/tour';
-    render(<App/>);
-    let tour = await tourStep(1);
-    expect((within(tour).getByRole('button', { name: 'Back' }) as HTMLButtonElement).disabled).toBe(true);
-    expect(within(tour).getByRole('link', { name: 'Skip tour' }).getAttribute('href')).toBe('#/');
-    fireEvent.click(within(tour).getByRole('button', { name: /^Next/ }));
-    tour = await tourStep(2);
-    fireEvent.click(within(tour).getByRole('button', { name: 'Back' }));
-    tour = await tourStep(1);
-    const title = within(tour).getByRole('heading', { level: 1, name: steps[0][0] });
-    await waitFor(() => expect(document.activeElement).toBe(title));
-    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
-    await waitFor(() => expect(window.location.hash).toBe('#/'));
-    go('#/');
-    await storyHero();
+    const checklist = await screen.findByRole('region', { name: 'Your first 3 minutes' });
+    await waitFor(() => expect(window.location.hash).toBe('#/?start=1'));
+    const links = within(checklist).getAllByRole('link');
+    expect(links.map(a => a.textContent)).toEqual(['See the real day', 'Change the outcome', 'Place a first order']);
+    expect(links.map(a => a.getAttribute('href'))).toEqual(['#/replay?day=2026-08-26', '#/replay?day=2026-08-26&step=2', '#/sandbox']);
     expect(screen.queryByRole('region', { name: 'Guided tour' })).toBeNull();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
-  it('S80-07 the hook step states the peak price, point and interval from the API', async () => {
-    window.location.hash = '#/tour';
+  it('S80-06 dismissal persists; Start here reopens and focuses the checklist', async () => {
     render(<App/>);
-    const tour = await tourStep(1);
-    await waitFor(() => expect(tour.textContent).toMatch(/\$798\.50/));
-    expect(tour.textContent).toMatch(/West Texas/);
-    expect(tour.textContent).toMatch(/10:00\s?PM CT/);
-    expect(tour.textContent).toMatch(/August 26, 2026/);
+    let panel = await screen.findByRole('region', { name: 'Your first 3 minutes' });
+    fireEvent.click(within(panel).getByRole('button', { name: 'Dismiss checklist' }));
+    expect(screen.queryByRole('region', { name: 'Your first 3 minutes' })).toBeNull();
+    go('#/market'); go('#/');
+    expect(screen.queryByRole('region', { name: 'Your first 3 minutes' })).toBeNull();
+    go('#/tour');
+    panel = await screen.findByRole('region', { name: 'Your first 3 minutes' });
+    await waitFor(() => expect(document.activeElement).toBe(within(panel).getByRole('heading', { name: 'Your first 3 minutes' })));
   });
 
-  it.each<Replay>(['missing', 'failing'])('S80-08 the hook step omits the number when the replay API is %s', async mode => {
-    replay = mode;
-    window.location.hash = '#/tour';
+  it('S80-07 opening a destination does not falsely complete a checklist action', async () => {
     render(<App/>);
-    const tour = await tourStep(1);
-    await waitFor(() => expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).includes('/v1/replay/days'))).toBe(true));
-    within(tour).getByRole('heading', { level: 1, name: steps[0][0] });
-    expect(tour.textContent).not.toMatch(priceLike);
+    go('#/replay?day=2026-08-26');
+    const main = screen.getByRole('main');
+    expect(await within(main).findByText(/Step 1 of 3/)).toBeTruthy();
+    expect(within(main).getByRole('link', { name: /Next: Change the outcome/ }).getAttribute('href')).toBe('#/replay?day=2026-08-26&step=2');
+    go('#/');
+    const panel = await screen.findByRole('region', { name: 'Your first 3 minutes' });
+    expect(within(panel).queryByText('Complete')).toBeNull();
+  });
+
+  it('S80-08 the checklist still works when browser storage is blocked', async () => {
+    const read = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('Storage blocked'); });
+    const write = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Storage blocked'); });
+    try {
+      render(<App/>);
+      const panel = await screen.findByRole('region', { name: 'Your first 3 minutes' });
+      fireEvent.click(within(panel).getByRole('button', { name: 'Dismiss checklist' }));
+      expect(screen.queryByRole('region', { name: 'Your first 3 minutes' })).toBeNull();
+    } finally { read.mockRestore(); write.mockRestore(); }
   });
 
   it("S80-09 hides the God's Eye link when VITE_GODSEYE_URL is unset", async () => {
     vi.stubEnv('VITE_GODSEYE_URL', '');
-    window.location.hash = '#/tour';
     render(<App/>);
-    const tour = await tourStep(1);
-    expect(within(tour).queryByRole('link', { name: /God's Eye/ })).toBeNull();
+    await storyHero();
+    expect(screen.queryByRole('link', { name: /God's Eye/ })).toBeNull();
   });
 
-  it('S80-10 (lane state) the Replay route says it arrives with the full build', async () => {
-    window.location.hash = '#/replay';
+  it('S80-10 Replay has an honest lane state and contextual next steps', async () => {
+    window.location.hash = '#/replay?day=2026-08-26&step=2';
     render(<App/>);
     const main = screen.getByRole('main');
-    expect(within(main).getByRole('heading', { level: 1, name: /replay/i })).toBeTruthy();
     expect(within(main).getByText(/Replay arrives with the full build/)).toBeTruthy();
+    expect(within(main).getByRole('link', { name: /Next: Place a first order/ }).getAttribute('href')).toBe('#/sandbox');
   });
 });
 
 const label = (a: HTMLElement) => (a.textContent ?? '').replace(/^\d+\s*/, '').trim();
 
 describe('S80 navigation', () => {
-  it('S80-11 primary links are Overview, Tour, Replay, Market and Judge sandbox; More groups the rest', async () => {
+  it('S80-11 primary links are Overview, Start here, Replay, Market and Judge sandbox; More groups the rest', async () => {
     render(<App/>);
     const nav = screen.getByRole('navigation', { name: 'Primary' });
     const more = within(nav).getByRole('button', { name: 'More' });
+    fireEvent.click(more);
     const group = within(nav).getByRole('group', { name: 'More pages' });
     expect(more.getAttribute('aria-controls')).toBe(group.id);
     const inGroup = new Set(within(group).getAllByRole('link'));
     const primary = within(nav).getAllByRole('link').filter(a => !inGroup.has(a));
-    expect(primary.map(label)).toEqual(['Overview', 'Tour', 'Replay', 'Market', 'Judge sandbox']);
+    expect(primary.map(label)).toEqual(['Overview', 'Start here', 'Replay', 'Market', 'Judge sandbox']);
     expect(primary.map(a => a.getAttribute('href'))).toEqual(['#/', '#/tour', '#/replay', '#/market', '#/sandbox']);
     expect([...inGroup].map(label)).toEqual(['Predictions', 'Providers', 'Bots', 'Spec']);
     expect([...inGroup].map(a => a.getAttribute('href'))).toEqual(['#/predictions', '#/providers', '#/bots', '#/spec']);
@@ -219,11 +196,17 @@ describe('S80 navigation', () => {
     expect(within(group).getByRole('link', { name: /Bots/ }).getAttribute('aria-current')).toBe('page');
   });
 
-  it('S80-14 the tour route marks Tour as the current page', async () => {
-    window.location.hash = '#/tour?step=2';
+  it('S80-14 routes have a title and carry zone and time through navigation', async () => {
+    window.location.hash = '#/predictions?zone=LZ_HOUSTON&hour=2026-08-27T03%3A00%3A00Z';
     render(<App/>);
-    await tourStep(2);
+    await waitFor(() => expect(document.title).toMatch(/Predictions.*LZ_HOUSTON.*GridMarket/));
     const nav = screen.getByRole('navigation', { name: 'Primary' });
-    expect(within(nav).getByRole('link', { name: /Tour/ }).getAttribute('aria-current')).toBe('page');
+    for (const name of ['Overview', 'Replay', 'Market']) {
+      const href = within(nav).getByRole('link', { name: new RegExp(name) }).getAttribute('href')!;
+      const params = new URLSearchParams(href.split('?')[1]);
+      expect(params.get('zone')).toBe('LZ_HOUSTON');
+      expect(params.get('hour')).toBe('2026-08-27T03:00:00Z');
+    }
+    expect(within(nav).getAllByRole('link').filter(a => a.getAttribute('aria-current') === 'page')).toHaveLength(1);
   });
 });

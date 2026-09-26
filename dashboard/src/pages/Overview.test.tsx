@@ -16,7 +16,7 @@ import fixture from "../fixtures/overview.json";
 import Overview from "./Overview";
 const styles = readFileSync("src/styles.css", "utf8");
 
-const VIEWS_URL = "https://views.example.test";
+const VIEWS_URL = "https://views.example.test/godseye/";
 
 type Signal = { report_id: string; zone: string; value: number; published_at: string; stale: boolean };
 type Prediction = { delivery_hour: string; zone: string; score: number; level: string };
@@ -113,11 +113,11 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
     expect(screen.queryByText(/^\d+ bots$/)).toBeNull();
   });
 
-  it("[SEIT-GM-UI-01] links to Godseye from VITE_VIEWS_URL", async () => {
-    vi.stubEnv("VITE_VIEWS_URL", VIEWS_URL);
+  it("[SEIT-GM-UI-01] links to Godseye from VITE_GODSEYE_URL", async () => {
+    vi.stubEnv("VITE_GODSEYE_URL", VIEWS_URL);
     render(<Overview />);
-    const link = (await screen.findByRole("link", { name: /(?:3d views|explore in 3d)/i })) as HTMLAnchorElement;
-    expect(link.getAttribute("href")).toBe(`${VIEWS_URL}/godseye/`);
+    const link = (await screen.findByRole("link", { name: /god's eye/i })) as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe(VIEWS_URL);
   });
 
   it("[SEIT-GM-UI-01] shell navigates to every frozen page route without login", async () => {
@@ -366,16 +366,16 @@ describe("S52a design v2 Overview and rail", () => {
     expect(within(control).getByText(/^light$/i)).toBeTruthy();
   });
 
-  it("Explore in 3D link appears only with VITE_VIEWS_URL", async () => {
-    vi.stubEnv("VITE_VIEWS_URL", "");
+  it("God's Eye link appears only with VITE_GODSEYE_URL", async () => {
+    vi.stubEnv("VITE_GODSEYE_URL", "");
     const view = render(<Overview />);
     expect(await screen.findByText(new RegExp(predictions[0].zone))).toBeTruthy();
-    expect(screen.queryByRole("link", { name: /explore in 3d/i })).toBeNull();
-    vi.stubEnv("VITE_VIEWS_URL", VIEWS_URL);
+    expect(screen.queryByRole("link", { name: /god's eye/i })).toBeNull();
+    vi.stubEnv("VITE_GODSEYE_URL", VIEWS_URL);
     view.unmount();
     render(<Overview />);
-    const link = await screen.findByRole("link", { name: /explore in 3d/i });
-    expect(link.getAttribute("href")).toBe(`${VIEWS_URL}/godseye/`);
+    const link = await screen.findByRole("link", { name: /god's eye/i });
+    expect(link.getAttribute("href")).toBe(VIEWS_URL);
   });
 
   it("fixture badge appears only with VITE_FIXTURES=1", async () => {

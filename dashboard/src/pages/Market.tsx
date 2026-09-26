@@ -1,7 +1,8 @@
-import { Component, useState, type ReactNode } from 'react';
+import { Component, useRef, useState, type ReactNode } from 'react';
+import { centralTime, contextLink, setViewQuery, useViewQuery } from '../components/navigation';
 import Panel from '../components/Panel';
 import { useMarket, useResource } from '../hooks';
-import type { MarketProduct } from '../api';
+import type { Activity, MarketProduct } from '../api';
 
 type Level = { price_cents: number; quantity: number };
 type Trade = { id: string; quantity: number; price_cents: number; created_at: string };
@@ -29,7 +30,7 @@ function bookOf(detail: ProductDetail | null): { bids: Level[]; asks: Level[] } 
 }
 
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
-const time = (iso: string) => iso.replace('T', ' ').replace(/:\d\dZ$/, 'Z');
+const time = centralTime;
 
 /** Panel-meta tag: the last poll failed and the panel still shows last-known data. Shared by the phase 1b pages. */
 export const Stale = ({ feed }: { feed: Feed }) => feed.error && feed.data ? <span className="stale">Stale · last known</span> : null;
@@ -60,12 +61,19 @@ function Depth({ title, side, levels, max, unavailable }: { title: string; side:
 }
 
 function Board({ products }: { products: MarketProduct[] }) {
-  const [picked, setPicked] = useState(() => new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('symbol') ?? products[0].symbol);
-  const selected = products.find(p => p.symbol === picked) ?? products[0];
+  const params = useViewQuery();
+  const [local, setLocal] = useState<Record<string, string>>({});
+  const filter = (name: string) => (window.location.hash.split('?')[0] === '#/market' ? params.get(name) : local[name]) ?? '';
+  const [limit, setLimit] = useState(12);
+  const bookFocus = useRef<HTMLHeadingElement>(null);
+  const filtered = products.filter(p => (!filter('zone') || p.zone === filter('zone')) && (!filter('hour') || p.delivery_hour === filter('hour')) && (!filter('type') || p.symbol.startsWith(filter('type') + '-')));
+  const selected = filtered.find(p => p.symbol === filter('symbol')) ?? filtered[0] ?? products.find(p => p.symbol === filter('symbol')) ?? products[0];
+  const update = (name: string, value: string) => { setLocal(v => ({ ...v, [name]: value })); if (window.location.hash.split('?')[0] === '#/market') setViewQuery({ [name]: value }); setLimit(12); };
+  const select = (symbol: string) => { update('symbol', symbol); bookFocus.current?.focus(); };
+
   const detail = useResource<ProductDetail>(`/v1/market/${encodeURIComponent(selected.symbol)}`);
   const history = useResource<Trade[]>(`/v1/market/history?product_id=${encodeURIComponent(selected.id)}`);
   // Hold the board until the selected book arrives so products and depth appear together.
-  if (detail.loading) return <div className="empty loading reserve-market-board">Connecting to the exchange…</div>;
   const book = bookOf(detail.data);
   const max = Math.max(1, ...[...book.bids, ...book.asks].map(l => l.quantity));
   const spread = book.bids.length && book.asks.length ? book.asks[0].price_cents - book.bids[0].price_cents : null;
@@ -74,26 +82,35 @@ function Board({ products }: { products: MarketProduct[] }) {
   const trades = inline ? list<Trade>(detail.data?.recent_trades) : list<Trade>(history.data);
   const tradeFeed = inline ? detail : history;
   const where = `${selected.zone} · ${time(selected.delivery_hour)}`;
-  return <div className="page-grid">
-    <Panel title="Products" index="01" className="span-all" meta={<span>{products.length} LISTED</span>}>
+  return <div className="page-grid market-board">
+    <Panel title="Products" index="01" className="products-panel" meta={<span>{products.length} LISTED</span>}>
+      <div className="forecast-filters">
+        <label>Zone<select value={filter('zone')} onChange={e => update('zone', e.target.value)}><option value="">All zones</option>{[...new Set(products.map(p => p.zone))].map(z => <option key={z}>{z}</option>)}</select></label>
+        <label>Delivery window<select value={filter('hour')} onChange={e => update('hour', e.target.value)}><option value="">All windows</option>{[...new Set(products.map(p => p.delivery_hour))].sort().map(h => <option key={h} value={h}>{time(h)}</option>)}</select></label>
+        <label>Product type<select value={filter('type')} onChange={e => update('type', e.target.value)}><option value="">All types</option><option value="FLEX">Flex Credit</option><option value="SPOT">Spot</option></select></label>
+      </div>
       <div className="table-scroll"><table className="data-table">
         <thead><tr><th scope="col">Symbol</th><th scope="col">Zone</th><th scope="col">Delivery</th><th scope="col">Status</th><th scope="col" className="end"><span className="sr-only">Book</span></th></tr></thead>
-        <tbody>{products.map(p => <tr key={p.id} className={p === selected ? 'selected' : ''}>
-          <td><span>{p.symbol}</span></td>
+        <tbody>{filtered.slice(0, limit).map(p => <tr key={p.id} className={p === selected ? 'selected' : ''}>
+          <td><strong>{p.symbol.startsWith('FLEX-') ? 'Flex Credit' : 'Spot'}</strong><small className="product-id">{p.symbol}</small></td>
           <td>{p.zone}</td>
-          <td><time dateTime={p.delivery_hour}>{time(p.delivery_hour)}</time></td>
+          <td><time dateTime={p.delivery_hour} title={p.delivery_hour}>{time(p.delivery_hour)}</time></td>
           <td><span className={`tag ${p.status === 'open' ? 'up' : ''}`}>{p.status}</span></td>
-          <td className="end"><button type="button" className="show-book" aria-pressed={p === selected} onClick={() => setPicked(p.symbol)}>{p === selected ? 'Shown' : 'Show book'}</button></td>
+          <td className="end"><button type="button" className="show-book" aria-pressed={p === selected} onClick={() => select(p.symbol)}>{p === selected ? 'Shown' : 'Show book'}</button></td>
         </tr>)}</tbody>
       </table></div>
+      {!filtered.length && <p className="panel-copy">No products match these filters. Choose another zone or window.</p>}
+      {filtered.length > limit && <button className="action-secondary" onClick={() => setLimit(n => n + 12)}>Show more products</button>}
     </Panel>
-    <Panel title="Book depth" index="02" busy={detail.loading} meta={<><Stale feed={detail}/><span>{where}</span></>}>
+    <Panel title="Book depth" index="02" className="selected-book" busy={detail.loading} meta={<><Stale feed={detail}/><span>{where}</span></>}>
+      <section aria-label={`Selected product · ${selected.symbol}`}><h3 className="sub-head" ref={bookFocus} tabIndex={-1}>{selected.symbol.startsWith('FLEX-') ? 'Flex Credit' : 'Spot'} · {selected.zone} · {time(selected.delivery_hour)}</h3><p className="panel-copy">Product: {selected.symbol}</p></section>
       <p className="panel-subtitle">Resting orders · simulated $ / Flex Credit</p>
       <div className="depth-sides">
         <Depth title="Bids" side="bid" levels={book.bids} max={max} unavailable={!!detail.error && !detail.data}/>
         <Depth title="Asks" side="ask" levels={book.asks} max={max} unavailable={!!detail.error && !detail.data}/>
       </div>
       <div className="panel-end"><span>Spread {spread == null && (detail.error && !detail.data ? 'unavailable: order book could not be loaded' : 'unavailable: requires bids and sell orders')}</span>{spread != null && <strong className="num">{usd(spread)}</strong>}</div>
+      <p className="context-actions"><a href={contextLink('#/predictions', { zone: selected.zone, hour: selected.delivery_hour })}>Why this forecast?</a> · <a href={contextLink('#/sandbox', { zone: selected.zone, hour: selected.delivery_hour })}>Place an order</a></p>
     </Panel>
     <Panel title="Recent trades" index="03" busy={tradeFeed.loading} meta={<><Stale feed={tradeFeed}/><span>{where}</span></>}>
       <FeedBody feed={tradeFeed} reserve="reserve-market-trades">
@@ -108,7 +125,7 @@ function Board({ products }: { products: MarketProduct[] }) {
   </div>;
 }
 
-const heading = <PageHeading eyebrow="02 / FLEX CREDIT FUTURES" title="Market"/>;
+const heading = <PageHeading eyebrow="04 / FLEX CREDIT FUTURES" title="Market"/>;
 
 /** Page-level boundary: a bad response shape shows an alert here instead of blanking the whole app. */
 class MarketBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
@@ -124,9 +141,13 @@ class MarketBoundary extends Component<{ children: ReactNode }, { error: Error |
 
 function MarketPage() {
   const market = useMarket();
+  const params = useViewQuery();
+  const activity = useResource<Activity[]>('/v1/market/activity');
+  const event = activity.data?.find(a => a.subject_id === params.get('event') || a.id === params.get('event'));
   const products = list<MarketProduct>(market.data);
   return <>
     {heading}
+    {params.get('at') && <p className="panel-copy">Selected event: {time(params.get('at')!)}{event && ` · ${event.label} · ${event.type}`}. Book and orders below show the current market.</p>}
     {products.length ? <Board products={products}/>
       : <div className="page-grid"><Panel title="Products" index="01" className="span-all" busy={market.loading}>
         <FeedBody feed={market} reserve="reserve-market-products"><div className="empty">No products listed.</div></FeedBody>

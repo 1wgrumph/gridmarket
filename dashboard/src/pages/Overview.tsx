@@ -1,11 +1,14 @@
 /// <reference types="vite/client" />
-import { lazy, Suspense, useRef, useState, type CSSProperties } from 'react';
-import type { Activity, Bot, MarketProduct, MarketStatus, Prediction, ProductDetail, Provider, Signal, Trade } from '../api';
-import { useResource } from '../hooks';
+import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties } from 'react';
+import type { Activity, MarketProduct, MarketStatus, Prediction, ProductDetail, Provider, RouterCheck, Signal, Trade } from '../api';
+import { useBots, useResource } from '../hooks';
 import { Disclosures } from '../components/Shell';
 import Icon from '../components/Icon';
 import Panel from '../components/Panel';
 import { missingInputs } from '../components/predictionInputs';
+import { useReplayPeak } from '../components/replayPeak';
+import FirstSteps from '../components/FirstSteps';
+import { contextLink, setViewQuery, useViewQuery } from '../components/navigation';
 import ZoneDetail from '../components/ZoneDetail';
 import ZoneMap, { zoneName, mapZones } from '../components/ZoneMap';
 
@@ -18,7 +21,7 @@ const clockFormat = central({ hour: '2-digit', minute: '2-digit', hour12: false 
 const dateFormat = central({ day: 'numeric', month: 'short', year: 'numeric' });
 /** Backend timestamps are ISO 8601 or SQLite UTC text ("YYYY-MM-DD HH:MM:SS"). */
 const parseTime = (value: string) => Date.parse(value.includes('T') ? value : `${value.replace(' ', 'T')}Z`);
-const usd = (value: number) => `${value < 0 ? '−' : ''}$${Math.abs(value).toFixed(Math.abs(value) < 1 && value !== 0 ? 4 : 2)}`;
+const usd = (value: number) => !Number.isFinite(value) ? 'Unavailable' : `${value < 0 ? '−' : ''}$${Math.abs(value).toFixed(Math.abs(value) < 1 && value !== 0 ? 4 : 2)}`;
 const mw = (value: number) => `${value < 0 ? '−' : ''}${Math.abs(value).toLocaleString('en-US', { maximumFractionDigits: 1 })}`;
 const upperZones = ['AEN', 'CPS', 'LCRA', 'RAYBN'];
 const zoneTitle = (zone: string) => {
@@ -79,14 +82,17 @@ export default function Overview() {
   const providers = useResource<Provider[]>('/v1/providers');
   const predictions = useResource<Prediction[]>('/v1/predictions');
   const market = useResource<MarketProduct[]>('/v1/market');
-  const bots = useResource<Bot[]>('/v1/bots');
+  const bots = useBots();
+  const params = useViewQuery();
   const activity = useResource<Activity[]>('/v1/market/activity');
+  const checks = useResource<{ checks: RouterCheck[] }>('/v1/router');
   // /v1/bots is not served in phase 1b (404); its panel says so instead of raising the outage banner.
   const resources = [signals, history, status, providers, predictions, market, activity];
   const firstError = resources.find(r => r.error)?.error;
   const [paused, setPaused] = useState(false);
 
   const [selectedZone, setSelectedZone] = useState<string | null>(zoneFromHash);
+  useEffect(() => { setSelectedZone(zoneFromHash()); }, [params]);
   const zoneTrigger = useRef<SVGElement | HTMLElement | null>(null);
   const closeZone = () => {
     setSelectedZone(null);
@@ -102,11 +108,11 @@ export default function Overview() {
     }
   };
   const hasPrices = signals.data?.some(s => s.report_id === 'NP6-905-CD' && mapZones.includes(s.zone));
-  const nextWindow = predictions.data?.map(p => p.delivery_hour).sort()[0];
-  const lead = predictions.data?.filter(p => p.delivery_hour === nextWindow).reduce<Prediction | undefined>((best, p) => !best || p.score > best.score ? p : best, undefined);
+  const nextWindow = params.get('hour') || predictions.data?.map(p => p.delivery_hour).sort()[0];
+  const lead = predictions.data?.filter(p => p.delivery_hour === nextWindow && (!params.get('zone') || p.zone === params.get('zone'))).reduce<Prediction | undefined>((best, p) => !best || p.score > best.score ? p : best, undefined);
   const delivery = lead ? hourFormat.format(new Date(lead.delivery_hour)) : '—';
   const product = market.data?.find(p => p.zone === lead?.zone && p.delivery_hour === lead?.delivery_hour && p.symbol.startsWith('FLEX-')) ?? market.data?.find(p => p.zone === lead?.zone && p.delivery_hour === lead?.delivery_hour) ?? market.data?.[0];
-  const marketLink = product ? `#/market?symbol=${encodeURIComponent(product.symbol)}` : '#/market';
+  const marketLink = contextLink('#/market', { symbol: product?.symbol, zone: product?.zone, hour: product?.delivery_hour });
   const scoreOf = (zone: string) => predictions.data?.find(p => p.zone === zone && p.delivery_hour === lead?.delivery_hour)?.score;
   const zones = [...new Set([...(predictions.data ?? []).map(p => p.zone), ...(signals.data ?? []).map(s => s.zone)])]
     .filter(zone => mapZones.includes(zone))
@@ -123,13 +129,42 @@ export default function Overview() {
   const forecastRows = (signals.data ?? []).filter(s => s.report_id === 'NP4-190-CD' && s.zone === (product?.zone ?? lead?.zone));
   const latestForecast = forecastRows.reduce<Signal | undefined>((max, s) => !max || s.published_at > max.published_at ? s : max, undefined);
   const chartData = [...trades, ...forecastRows.map(s => ({ at: parseTime(s.interval_start), forecast: s.value }))].sort((a, b) => a.at - b.at);
-  const anomalies = (status.data?.anomalies ?? []) as { id?: string; kind?: string; detail?: string | null }[];
+  const anomalies = (status.data?.anomalies ?? []) as { id?: string; kind?: string; detail?: string | null; subject_id?: string; created_at?: string }[];
   const providerName = (id: string) => providers.data?.find(p => p.id === id)?.display_name ?? id;
-  const views = import.meta.env.VITE_VIEWS_URL as string | undefined;
+  const views = import.meta.env.VITE_GODSEYE_URL as string | undefined;
+  const replay = useReplayPeak();
+  const signalLink = (subject?: string | null, symbol?: string | null, at?: string, label?: string) => {
+    const check = checks.data?.checks.find(c => c.check_id === subject);
+    const object = check?.subject ?? subject ?? '';
+    const product = market.data?.find(p => p.symbol === symbol || p.id === object || p.id === history.data?.find(t => t.id === object)?.product_id);
+    if (product) return contextLink('#/market', { symbol: product.symbol, zone: product.zone, hour: product.delivery_hour, at });
+    const zone = object.split(':')[0];
+    if (mapZones.includes(zone)) return contextLink('#/', { zone, hour: object.includes(':') ? object.slice(object.indexOf(':') + 1) : nextWindow, at });
+    if (providers.data?.some(p => p.id === object)) return contextLink('#/providers', { provider: object, at });
+    const bot = bots.data?.find(b => b.id === object || b.id === label);
+    if (bot) return contextLink(`#/bots/${encodeURIComponent(bot.id)}`, { at });
+    return contextLink('#/market', { symbol: symbol ?? undefined, event: subject ?? undefined, at });
+  };
 
   return <>
+    <section className="story" aria-labelledby="story-title" aria-busy={replay.loading}>
+      <div className="story-copy">
+        <h1 id="story-title"><span className="story-kicker">Overview</span> Texas home batteries, paid to help when the grid is tight.</h1>
+        <p className="story-subline">A simulated flexibility exchange running on real ERCOT conditions.</p>
+        <p className="story-body">Homes promise to hold back or share battery power in the hours Texas runs short. Traders and AI agents buy those promises. Real grid prices decide what they were worth.</p>
+        <div className="story-actions"><a className="action-primary" href={contextLink('#/tour')}>Start the 3-minute tour</a><a className="action-secondary" href={contextLink('#/sandbox')}>Try the sandbox</a></div>
+      </div>
+      <div className="story-replay">
+        <p className="story-replay-label">Replay a real day{replay.peak && ` · ${replay.peak.day}`}</p>
+        {replay.peak
+          ? <><p className="story-price"><strong className="num">{replay.peak.price}</strong> /MWh</p><p>Real-time power price in {replay.peak.place} at {replay.peak.time}, the day's highest.</p></>
+          : <p>Simulated home batteries face one real Texas grid day, hour by hour.</p>}
+        <a href={contextLink('#/replay', { day: '2026-08-26' })}>Watch batteries play that day <Icon name="up-right"/></a>
+      </div>
+    </section>
+    <FirstSteps/>
     <div className="page-heading">
-      <div><p className="eyebrow">THE MARKET, AT A GLANCE</p><h1>Grid overview<span className="title-period">.</span></h1></div>
+      <div><p className="eyebrow">THE MARKET, AT A GLANCE</p><h2 className="page-title">Grid overview<span className="title-period">.</span></h2></div>
       <span className="market-status"><span className={`status-dot ${firstError ? 'warning' : ''}`}/>{firstError ? 'Connection interrupted' : status.data ? `Simulation ${status.data.status === 'open' ? 'running' : status.data.status}` : 'Connecting'}<span className="market-date">{dateFormat.format(Date.now()).toUpperCase()}</span></span>
     </div>
     <div className={`connection-line ${firstError ? 'has-error' : ''}`} role="status">{firstError
@@ -141,6 +176,7 @@ export default function Overview() {
         <div className="prediction">
           <div className="hero-top"><span className="eyebrow">01 / NEXT DELIVERY WINDOW</span><StaleTag res={predictions}/><span className="prediction-tag">SCARCITY OUTLOOK</span></div>
           <h2>{lead ? zoneTitle(lead.zone) : 'Awaiting predictions'}{lead && <span className="delivery"> / {delivery}</span>}</h2>
+          <div className="hero-actions"><a className="judge-button" href={marketLink}>View this market</a><a href={contextLink('#/sandbox')}>Try sandbox</a></div>
           <div className="prediction-numbers">
             <div className="scarcity-number"><strong>{hasPrices ? lead?.score ?? '—' : '—'}{hasPrices && lead && <span>%</span>}</strong><span>predicted scarcity</span></div>
             <div className="value-comparison">
@@ -155,13 +191,12 @@ export default function Overview() {
             : <span>{predictions.loading ? 'Reading prediction factors…' : 'No prediction factors available'}</span>}</div>
           <p className="estimate-note">Simulation estimate{lead?.drivers.some(d => missingInputs(d.factor, lead.zone, signals.data ?? []).length) && ' · incomplete inputs'}, not guaranteed profit. Scarcity is a heuristic percentage, not a calibrated probability.</p>
           <details className="estimate-details"><summary>Why this estimate?</summary><p>Simulation estimates use incomplete inputs when any required signal is missing. Missing inputs are not measured zeros.</p><ul>{lead?.drivers.map(d => <li key={d.factor}>{d.factor}: {missingInputs(d.factor, lead.zone, signals.data ?? []).length ? `Inputs not reported: ${missingInputs(d.factor, lead.zone, signals.data ?? []).join(', ')}` : d.detail}</li>)}</ul></details>
-          <div className="hero-actions"><a className="judge-button" href={marketLink}>View this market</a><a href="#/sandbox">Try sandbox</a></div>
         </div>
         <div className="map-panel">
           <div className="map-heading"><span className="eyebrow">SCARCITY ACROSS TEXAS</span><button className="motion-toggle" aria-pressed={paused} onClick={() => setPaused(!paused)} aria-label={paused ? 'Resume map motion' : 'Pause map motion'}>{paused ? 'Play' : 'Pause'}</button></div>
-          <ZoneMap selectedZone={selectedZone} deliveryHour={lead?.delivery_hour} predictions={hasPrices ? (predictions.data ?? []).filter(p => p.delivery_hour === lead?.delivery_hour) : []} paused={paused || !!firstError} onSelect={(zone, trigger) => { zoneTrigger.current = trigger; setSelectedZone(zone); }}/>
+          <ZoneMap selectedZone={selectedZone} deliveryHour={lead?.delivery_hour} predictions={hasPrices ? (predictions.data ?? []).filter(p => p.delivery_hour === lead?.delivery_hour) : []} paused={paused || !!firstError} onSelect={(zone, trigger) => { zoneTrigger.current = trigger; setSelectedZone(zone); setViewQuery({ zone, hour: nextWindow }); }}/>
           <div className="map-data-status">{hasPrices ? `Grid feed connected${!systemLoad.length ? ' · pending inputs: system load' : ''}` : 'Grid feed pending · ERCOT price inputs not yet received'}</div>
-          <div className="map-footer"><span>Schematic · ERCOT load zones</span>{views && <a href={`${views.replace(/\/$/, '')}/godseye/`} target="_blank" rel="noreferrer">Explore in 3D <Icon name="up-right"/></a>}</div>
+          <div className="map-footer"><span>Schematic · ERCOT load zones</span>{views && <a href={views} target="_blank" rel="noreferrer">Open God's Eye <Icon name="up-right"/></a>}</div>
         </div>
       </section>
       <section className="number-strip" aria-label="Market key numbers">
@@ -199,7 +234,7 @@ export default function Overview() {
             const rt = zoneSignals.find(s => s.report_id === 'NP6-905-CD');
             const latest = zoneSignals.reduce<Signal | undefined>((max, s) => !max || s.published_at > max.published_at ? s : max, undefined);
             return <tr key={zone} style={{ '--heat': Math.min(1, Math.max(0, ((score ?? 0) - 30) / 60)) } as CSSProperties}>
-              <th scope="row">{zoneTitle(zone)}{zone === lead?.zone && <span className="zone-focus" aria-label="Highest scarcity"> <Icon name="up-right"/></span>}</th>
+              <th scope="row"><a href={contextLink('#/', { zone, hour: nextWindow })}>{zoneTitle(zone)}</a>{zone === lead?.zone && <span className="zone-focus" aria-label="Highest scarcity"> <Icon name="up-right"/></span>}</th>
               <td><strong className="num">{rt ? usd(rt.value) : '—'}</strong></td>
               <td className="trend-column muted">—</td>
               <td className="num">{score == null ? '—' : `${score}%`}</td>
@@ -212,10 +247,10 @@ export default function Overview() {
       <Panel title="Bots setting the pace" index="05" className="bots-panel" busy={bots.loading} meta={<span>P&L · SIMULATED</span>}>
         <div className="bots-body">{bots.data?.length ? <table className="bot-table">
           <thead><tr><th>Trader</th><th>Provider</th><th>P&L</th></tr></thead>
-          <tbody>{[...bots.data].sort((a, b) => b.pnl - a.pnl).slice(0, 6).map((b, i) => <tr key={b.id}>
-            <td><a href={`#/bots/${encodeURIComponent(b.id)}`} className="bot-identity"><span className="avatar">{String(i + 1).padStart(2, '0')}</span><span><strong>{b.id}</strong><small>{b.bot_type}</small></span></a></td>
+          <tbody>{[...bots.data].sort((a, b) => (Number.isFinite(b.pnl) ? b.pnl : -Infinity) - (Number.isFinite(a.pnl) ? a.pnl : -Infinity)).slice(0, 6).map((b, i) => <tr key={b.id}>
+            <td><a href={`#/bots/${encodeURIComponent(b.id)}`} className="bot-identity"><span className="avatar">{Number.isFinite(b.pnl) ? String(i + 1).padStart(2, '0') : '—'}</span><span><strong>{b.id}</strong><small>{b.bot_type}</small></span></a></td>
             <td><span className="provider-name">{providerName(b.provider_id)}</span></td>
-            <td className={`num ${b.pnl < 0 ? 'down-text' : 'up-text'}`}>{b.pnl >= 0 ? '+' : ''}{usd(b.pnl)}</td>
+            <td className={`num ${!Number.isFinite(b.pnl) ? 'muted' : b.pnl < 0 ? 'down-text' : 'up-text'}`}>{Number.isFinite(b.pnl) && b.pnl >= 0 ? '+' : ''}{usd(b.pnl)}</td>
           </tr>)}</tbody>
         </table> : <Empty loading={bots.loading} label={bots.error ? 'Bots not yet available' : 'No bots yet'}/>}</div>
         <div className="panel-end"><span>Ranked by simulated P&L</span><a href="#/bots">All traders <Icon name="up-right"/></a></div>
@@ -223,7 +258,7 @@ export default function Overview() {
       <Panel title="Market anomalies" index="06" className={`risk-panel ${!anomalies.length ? 'risk-empty' : ''}`} busy={status.loading} meta={<><StaleTag res={status}/><span>{anomalies.length} REPORTED</span></>}>
         <p className="panel-subtitle">Anomalies reported by the market status feed</p>
         <div className="risk-events">{anomalies.length
-          ? anomalies.map((a, i) => <article key={a.id ?? i} className="risk-event"><div><span className="event-code">{(a.kind ?? 'anomaly').replaceAll('_', ' ')}</span><h3>{a.detail ?? 'No detail provided'}</h3></div></article>)
+          ? anomalies.map((a, i) => <article key={a.id ?? i} className="risk-event"><div><span className="event-code">{(a.kind ?? 'anomaly').replaceAll('_', ' ')}</span><h3><a href={signalLink(a.subject_id, null, a.created_at)}>{a.detail ?? 'No detail provided'}</a></h3></div></article>)
           : <p role="status">{status.loading ? 'Checking anomalies…' : 'No anomalies reported'}</p>}</div>
       </Panel>
       <Panel title="Exchange tape" index="07" className="activity-panel" busy={activity.loading} meta={<><StaleTag res={activity}/><span>RECENT ACTIVITY</span></>}>
@@ -231,7 +266,7 @@ export default function Overview() {
           <div className="tape-symbol">{symbol}</div>
           <ul className="activity-feed">{events.map(a => <li key={a.id}>
             <span className={`tape-kind ${a.type}`}>{a.type.toUpperCase()}</span>
-            <strong>{a.label}</strong>
+            <strong><a href={signalLink(a.subject_id, a.symbol, a.created_at, a.label)}>{a.label}</a></strong>
             <span className="tape-detail">{a.quantity != null && a.price_cents != null && <span>{a.side} {a.quantity} @ ${(a.price_cents / 100).toFixed(2)}</span>}{a.reason && <span className="tape-reason">{a.reason.replaceAll('_', ' ').toLowerCase()}</span>}</span>
             <time dateTime={a.created_at}>{clockFormat.format(parseTime(a.created_at))}</time>
           </li>)}</ul>
@@ -252,7 +287,7 @@ export default function Overview() {
         <h2 id="judge-title">Trade it yourself<span className="title-period">.</span></h2>
         <p>Developers get a sandbox key and <strong>$1,000</strong> of simulated funds. Orders show up on this page within 2 s.</p>
         <code className="judge-code">client.buy("FLEX-LZ_HOUSTON-18", 2)</code>
-        <a className="judge-button" href="#/sandbox">Get API key <Icon name="up-right"/></a>
+        <a className="judge-button" href={contextLink('#/sandbox')}>Get API key <Icon name="up-right"/></a>
       </section>
     </div>
   </>;

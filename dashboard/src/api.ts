@@ -1,5 +1,5 @@
 /** Typed HTTP boundary for the frozen public routes. */
-export type ApiError = { error: { code: string; message: string } };
+export type ApiError = { error: { code: string; message: string }; retryAfter?: string };
 export type MarketStatus = { status: string; anomalies: unknown[]; open_interest?: number; active_traders?: number };
 export type Signal = { report_id: string; zone: string; value: number; unit: string; interval_start: string; interval_minutes: number; published_at: string; fetched_at: string; age_s: number; stale: boolean };
 export type Activity = { id: string; type: string; label: string; symbol: string | null; side: string | null; quantity: number | null; price_cents: number | null; reason: string | null; created_at: string; entry_type: string; subject_id: string | null };
@@ -15,7 +15,7 @@ export type RouterCheck = { check_id: string; family: 'market' | 'health'; subje
 
 export async function get<T>(path: string, key?: string): Promise<T> {
   const response = await fetch(path, { headers: key ? { Authorization: `Bearer ${key}` } : {} });
-  if (!response.ok) throw await response.json() as ApiError;
+  if (!response.ok) throw { ...await response.json(), retryAfter: response.headers?.get('Retry-After') ?? undefined } as ApiError;
   return await response.json() as T;
 }
 
@@ -25,6 +25,8 @@ export async function send<T>(method: 'POST' | 'DELETE', path: string, body?: un
     headers: { 'Content-Type': 'application/json', ...(key ? { Authorization: `Bearer ${key}` } : {}), ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  if (!response.ok) throw await response.json() as ApiError;
+  if (!response.ok) throw { ...await response.json(), retryAfter: response.headers?.get('Retry-After') ?? undefined } as ApiError;
   return await response.json() as T;
 }
+export type ReplayPeak = { point: string; interval_start: string; interval_end: string; value: number; unit: string };
+export type ReplayDays = { days: { day: string; timezone: string; peak_rt_price: ReplayPeak | null }[] };

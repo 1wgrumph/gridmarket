@@ -6,14 +6,14 @@ import { useBotDiversity, useBots } from '../hooks';
 import { send, type ApiError } from '../api';
 import { FeedBody, PageHeading, Stale } from './Market';
 
-/** GET /v1/bots lists id, bot_index, bot_type, provider_id, dormant; economy columns render "—" until served. */
+/** GET /v1/bots serves the public economy fields; missing ones render "Unavailable". */
 type PublicBot = { id: string; bot_type: string; provider_id: string; dormant: boolean }
   & Partial<{ blend: Record<string, number>; cash: number; net_worth: number; pnl: number; trades: number; losses: number }>;
 type Diversity = { coverage: number; entropy: number; points: { risk_appetite: number; patience: number }[] };
 
 const pct = (p: number) => `${Math.round(p * 100)}%`;
-const usd = (n?: number) => n === undefined ? '—' : n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-const blend = (b: Record<string, number>) => Object.entries(b).map(([type, w]) => `${type} ${pct(w)}`).join(' · ');
+const usd = (n?: number) => !Number.isFinite(n) ? 'Unavailable' : n!.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+const blend = (b: Record<string, number>) => Object.entries(b).map(([type, w]) => `${type} ${pct(w)}`).join(' · ') || 'unavailable';
 const tick = { fill: 'var(--muted)', fontSize: 11 };
 const tooltip = { background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', fontSize: 12, borderRadius: 'var(--r-2)' };
 
@@ -84,16 +84,13 @@ export default function Bots() {
     : <strong className="unavailable">{bots.loading ? 'loading' : 'not yet available'}</strong>;
 
   return <>
-    <PageHeading eyebrow="05 / BOT POPULATION" title="Bots"/>
-    <div className="page-grid">
-      {/* The owner form sits above the polled panels so their first load never shifts it. */}
-      <SpawnForm/>
-    </div>
+    <PageHeading eyebrow="08 / BOT POPULATION" title="Bots"/>
     <section className="stat-strip" aria-label="Population key numbers">
       <div><span>Population</span>{value(String(rows.length))}<span>bots listed</span></div>
       <div><span>Dormant rate</span>{value(rows.length ? pct(dormant / rows.length) : '—')}<span>{bots.data ? `${dormant} of ${rows.length} bots` : 'share of population'}</span></div>
     </section>
     <div className="page-grid">
+      <section className="panel span-all performance-summary" aria-label="Population performance"><p className="panel-copy">Net reported simulated P&amp;L: <strong>{rows.some(b => Number.isFinite(b.pnl)) ? usd(rows.reduce((total, b) => total + (Number.isFinite(b.pnl) ? b.pnl! : 0), 0)) : 'unavailable'}</strong> · {rows.filter(b => Number.isFinite(b.pnl)).length} of {rows.length} bots reporting. Compare cash, net worth and trades below. Summaries refresh every 2 seconds.</p></section>
       <Panel title="All bots" index="02" className="span-all" busy={bots.loading} meta={<><Stale feed={bots}/><span>SIMULATED ACCOUNTS</span></>}>
         <FeedBody feed={bots} unavailable="Bots not yet available" reserve="reserve-bots">
           {rows.length ? <div className="table-scroll"><table className="data-table">
@@ -109,7 +106,7 @@ export default function Bots() {
               <td>{b.provider_id}</td>
               <td className="end num">{usd(b.cash)}</td>
               <td className="end num">{usd(b.net_worth)}</td>
-              <td className={`end num ${(b.pnl ?? 0) < 0 ? 'down-text' : 'up-text'}`}>{usd(b.pnl)}</td>
+              <td className={`end num ${!Number.isFinite(b.pnl) ? 'muted' : b.pnl! < 0 ? 'down-text' : 'up-text'}`}>{usd(b.pnl)}</td>
               <td className="end num">{b.trades ?? '—'}</td>
               <td className="end num">{b.losses ?? '—'}</td>
               <td><span className={`tag ${b.dormant ? 'down' : 'up'}`}>{b.dormant ? 'dormant' : 'active'}</span></td>
@@ -117,6 +114,7 @@ export default function Bots() {
           </table></div> : <div className="empty">No bots yet</div>}
         </FeedBody>
       </Panel>
+      <details className="admin-disclosure span-all" open><summary>Owner administration</summary><SpawnForm/></details>
       {!bots.loading && <DiversityPanel/>}
     </div>
   </>;

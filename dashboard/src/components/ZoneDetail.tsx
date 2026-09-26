@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { MarketProduct, Prediction, Signal } from '../api';
+import { contextLink } from './navigation';
 import Panel from './Panel';
 import { mapZones } from './ZoneMap';
 import { missingInputs } from './predictionInputs';
@@ -56,9 +57,9 @@ export default function ZoneDetail({ zone, title, deliveryHour, predictions, sig
           </> : signals.loading ? 'Loading…' : signals.error ? 'Signal unavailable' : 'not reported'}</span></li>;
         })}</ul>
         <h3>Open Flex Credit products</h3><StaleTag feed={market}/>
-        {products.length ? <ul className="zone-products">{products.map(p => <li key={p.symbol}><span>{p.symbol}</span> · <time dateTime={p.delivery_hour}>{hour.format(new Date(p.delivery_hour))} CT</time></li>)}</ul>
+        {products.length ? <ul className="zone-products">{products.map(p => <li key={p.symbol}><a href={contextLink('#/market', { zone, hour: p.delivery_hour, symbol: p.symbol })}>{p.symbol}</a> · <time dateTime={p.delivery_hour}>{hour.format(new Date(p.delivery_hour))} CT</time></li>)}</ul>
           : <p>{market.loading ? 'Loading products…' : market.error ? 'Products unavailable' : 'No open FLEX products'}</p>}
-        <a href="#/market">Open in Market</a>
+        <a href={contextLink('#/market', { zone, hour: deliveryHour })}>Open in Market</a>
       </div>
     </Panel>
   </div>;

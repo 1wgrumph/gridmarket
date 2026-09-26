@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { get, type Activity, type Bot, type MarketProduct, type MarketStatus, type Prediction, type Provider, type RouterCheck, type Signal } from './api';
 
-type Snapshot = { data: unknown; error: string | null };
+type Snapshot = { path: string; data: unknown; error: string | null };
 type Poll = Snapshot & { listeners: Set<() => void>; timer: number };
 
 /** One poll per path: components that read the same path share its fetches and last-known data. */
@@ -10,11 +10,16 @@ const polls = new Map<string, Poll>();
 function subscribe(path: string, intervalMs: number, listener: () => void) {
   let poll = polls.get(path);
   if (!poll) {
-    const created: Poll = { data: null, error: null, listeners: new Set(), timer: 0 };
-    const load = () => get(path)
+    const created: Poll = { path, data: null, error: null, listeners: new Set(), timer: 0 };
+    let pending = false;
+    const load = () => {
+      if (pending) return;
+      pending = true;
+      return get(path)
       .then(value => { created.data = value; created.error = null; })
       .catch((reason: { error?: { message?: string } }) => { created.error = reason?.error?.message ?? String(reason); })
-      .finally(() => created.listeners.forEach(notify => notify()));
+      .finally(() => { pending = false; created.listeners.forEach(notify => notify()); });
+    };
     created.timer = window.setInterval(load, intervalMs);
     polls.set(path, poll = created);
     load();
@@ -27,13 +32,14 @@ function subscribe(path: string, intervalMs: number, listener: () => void) {
 }
 
 export function useResource<T>(path: string, intervalMs = 2000) {
-  const [snapshot, setSnapshot] = useState<Snapshot>(() => polls.get(path) ?? { data: null, error: null });
+  const [snapshot, setSnapshot] = useState<Snapshot>(() => polls.get(path) ?? { path, data: null, error: null });
   useEffect(() => subscribe(path, intervalMs, () => {
     const poll = polls.get(path);
-    if (poll) setSnapshot({ data: poll.data, error: poll.error });
+    if (poll) setSnapshot({ path, data: poll.data, error: poll.error });
   }), [path, intervalMs]);
-  const data = snapshot.data as T | null;
-  return { data, error: snapshot.error, loading: data === null && snapshot.error === null };
+  const current = snapshot.path !== path ? { data: null, error: null } : snapshot;
+  const data = current.data as T | null;
+  return { data, error: current.error, loading: data === null && current.error === null };
 }
 
 export const useMarket = () => useResource<MarketProduct[]>('/v1/market');

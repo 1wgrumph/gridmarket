@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { contextLink, setViewQuery, useViewQuery } from '../components/navigation';
 import Panel from '../components/Panel';
 import { missingInputs } from '../components/predictionInputs';
 import { usePredictions, useResource } from '../hooks';
@@ -46,14 +47,18 @@ function Zone({ p, signals, expanded, onToggle }: { p: Prediction; signals: Sign
         <p className="factor-detail">{missingInputs(d.factor, p.zone, signals).length ? `Inputs not reported: ${missingInputs(d.factor, p.zone, signals).join(', ')}` : d.detail}</p>
       </li>)}
     </ul>}
+    <p className="context-actions"><a href={contextLink('#/market', { zone: p.zone, hour: p.delivery_hour })}>View this market</a> · <a href={contextLink('#/replay', { zone: p.zone, hour: p.delivery_hour, day: '2026-08-26' })}>Replay a real day</a></p>
   </article>;
 }
 
 export default function Predictions() {
   const predictions = usePredictions();
   const signals = useResource<Signal[]>('/v1/signals');
-  const [zone, setZone] = useState('');
-  const [window, setWindow] = useState('');
+  const params = useViewQuery();
+  const zone = params.get('zone') ?? '';
+  const window = params.get('hour') ?? '';
+  const setZone = (zone: string) => setViewQuery({ zone });
+  const setWindow = (hour: string) => setViewQuery({ hour });
   const [expanded, setExpanded] = useState('');
   const [all, setAll] = useState(false);
   const rows = predictions.data ?? [];
@@ -69,7 +74,7 @@ export default function Predictions() {
   const checks = router.data?.checks ?? [];
 
   return <>
-    <PageHeading eyebrow="03 / SCARCITY OUTLOOK" title="Predictions"/>
+    <PageHeading eyebrow="06 / SCARCITY OUTLOOK" title="Predictions"/>
     <div className="page-grid">
       <Panel title="Zone scores · factor contributions" index="01" className="span-all" busy={predictions.loading}
         meta={<><Stale feed={predictions}/><span>{rows.length} forecasts across {zones.length} zones</span></>}>
@@ -91,7 +96,7 @@ export default function Predictions() {
               <th scope="col">Band</th><th scope="col" className="end">Brier</th><th scope="col">Decided by</th><th scope="col">Resolves</th>
             </tr></thead>
             <tbody>{checks.map(c => <tr key={c.check_id}>
-              <td>{c.subject}</td>
+              <td><a href={c.family === 'health' ? contextLink('#/providers', { provider: c.subject, at: c.created_at }) : contextLink('#/', { zone: c.subject.split(':')[0], hour: c.subject.slice(c.subject.indexOf(':') + 1), at: c.created_at })}>{c.subject}</a></td>
               <td className="muted">{c.family}</td>
               <td className="end num">{pct(c.probability)}</td>
               {jev && <td className="end num">{c.jev_probability === null ? '—' : pct(c.jev_probability)}</td>}

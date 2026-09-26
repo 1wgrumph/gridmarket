@@ -1,6 +1,7 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Button, TextInput } from '@astryxdesign/core';
 import { send, type Provider, type RouterCheck } from '../api';
+import { centralTime, query } from '../components/navigation';
 import Panel from '../components/Panel';
 import { useProviderHealth, useProviders, useResource } from '../hooks';
 
@@ -36,6 +37,9 @@ export default function Providers() {
   const providers = useProviders();
   const health = useProviderHealth();
   const router = useResource<{ checks: RouterCheck[] }>('/v1/router');
+  const selectedProvider = query().get('provider');
+  const providerReady = !!providers.data;
+  useEffect(() => { if (providerReady && selectedProvider) document.getElementById(`provider-${selectedProvider}`)?.focus(); }, [providerReady, selectedProvider]);
   const [adminKey, setAdminKey] = useState('');
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState('');
@@ -63,6 +67,7 @@ export default function Providers() {
     <div className="page-heading"><div><h1>Providers</h1></div></div>
     <div className="connection-line"><span className="mini-line"/> Simulated provider health · refreshes every 2 s</div>
 
+    {query().get('at') && <p className="panel-copy">Selected event: {centralTime(query().get('at')!)}. Provider status below is current.</p>}
     <div className="market-grid">
       <Panel title="Provider health" index="01" busy={providers.loading}>
         {providers.error || providers.loading ? <PanelEmpty state={providers}/> : <>
@@ -74,7 +79,7 @@ export default function Providers() {
               const row = health.error ? undefined : (health.data as Health[] | null)?.find(h => h.id === provider.id);
               const check = router.error ? undefined : router.data?.checks.find(c => c.family === 'health' && c.subject === provider.id);
               const heartbeat = row?.last_heartbeat ? Date.parse(row.last_heartbeat) : NaN;
-              return <article key={provider.id}>
+              return <article key={provider.id} id={`provider-${provider.id}`} tabIndex={-1}>
                 <header style={providerHead}>
                   <h3 style={{ fontSize: 16, fontWeight: 500, letterSpacing: 'var(--track-tight)' }}>{provider.display_name}</h3>
                   <span style={status}><span className={`status-dot ${row && !row.online ? 'warning' : ''}`} style={row ? undefined : unknownDot}/>{row ? (row.online ? 'Online' : 'Offline') : 'Unknown'}</span>

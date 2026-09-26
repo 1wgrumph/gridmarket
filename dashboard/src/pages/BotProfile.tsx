@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { centralTime, contextLink, query } from '../components/navigation';
 import Panel from '../components/Panel';
 import { useBotProfile } from '../hooks';
 import type { Bot } from '../api';
@@ -15,8 +16,8 @@ type Profile = Bot & Partial<{
 }>;
 
 const pct = (p?: number) => p === undefined ? '—' : `${Math.round(p * 100)}%`;
-const usd = (n?: number) => n === undefined ? '—' : n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-const day = (iso: string) => iso.slice(5, 16).replace('T', ' ');
+const usd = (n?: number) => !Number.isFinite(n) ? 'Unavailable' : n!.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+const day = centralTime;
 const tick = { fill: 'var(--muted)', fontSize: 11 };
 const tooltip = { background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', fontSize: 12, borderRadius: 'var(--r-2)' };
 
@@ -32,9 +33,10 @@ export default function BotProfile({ id }: { id: string }) {
   const meta = <><Stale feed={profile}/><span>SIMULATED</span></>;
 
   return <>
-    <PageHeading eyebrow="05 / BOT POPULATION" title={`Bot profile · ${id}`}>
+    <PageHeading eyebrow="08 / BOT POPULATION" title={`Bot profile · ${id}`}>
       <a className="back-link" href="#/bots">All bots</a>
     </PageHeading>
+    {query().get('at') && <p className="panel-copy">Selected event: {centralTime(query().get('at')!)}. Performance below is the latest simulation snapshot.</p>}
     {!b ? <div className="page-grid"><Panel title="Profile" index="01" className="span-all profile-reserve" busy={profile.loading}>
       <FeedBody feed={profile} unavailable="Bot profile not yet available"><div className="empty">No profile.</div></FeedBody>
     </Panel></div> : <>
@@ -49,7 +51,7 @@ export default function BotProfile({ id }: { id: string }) {
             ['Employment', b.employed === undefined ? '—' : b.employed ? b.job ?? 'employed' : 'unemployed'],
             ['Pay per period', usd(b.pay)],
             ['Deposits', usd(b.deposits)],
-            ['Provider', b.provider_id],
+            ['Provider', <a key="provider" href={contextLink('#/providers', { provider: b.provider_id })}>{b.provider_id}</a>],
           ]}/>
         </Panel>
         <Panel title="Household" index="03" meta={meta}>
@@ -59,9 +61,10 @@ export default function BotProfile({ id }: { id: string }) {
             ['Reserve', pct(b.household?.reserve_pct)],
           ]}/>
           <h3 className="sub-head">Hourly load schedule</h3>
-          <div className="schedule" aria-label="Hourly load schedule" role="img">
+          <div className="schedule" aria-label={`Hourly load schedule: ${(b.household?.schedule ?? []).map((load, hour) => `${hour}:00 ${load}`).join(', ')}`} role="img">
             {(b.household?.schedule ?? []).map((load, hour) => <span key={hour} title={`${hour}:00 · load ${load}`} style={{ opacity: 0.25 + 0.75 * Math.min(1, load) }}/>)}
           </div>
+          <div className="schedule-hours">{[0, 6, 12, 18, 23].map(h => <span key={h}>{h}</span>)}</div><p className="panel-copy">Load weight legend: low (pale) to high (solid). Hours in CT.</p>
         </Panel>
       </div>
       <div className="page-grid thirds">
@@ -92,5 +95,6 @@ export default function BotProfile({ id }: { id: string }) {
         </Panel>
       </div>
     </>}
+    <p className="context-actions"><a href={contextLink('#/market', { zone: b?.household?.zone })}>View this household’s market</a> · <a href="#/bots">Compare bots</a></p>
   </>;
 }

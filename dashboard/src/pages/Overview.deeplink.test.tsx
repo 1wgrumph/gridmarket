@@ -43,7 +43,7 @@ it('S61b-01 deeplink renders the Overview with that zone detail open and focused
   // Same panel as clicking the zone: score, drivers and Market link.
   await waitFor(() => expect(detail.textContent).toMatch(/72\.4\s*%/));
   expect(await within(detail).findByText('price spread')).toBeTruthy();
-  expect((await within(detail).findByRole('link', { name: 'Open in Market' })).getAttribute('href')).toBe('#/market');
+  expect((await within(detail).findByRole('link', { name: 'Open in Market' })).getAttribute('href')).toBe('#/market?zone=LZ_HOUSTON&hour=2026-09-26T18%3A00%3A00Z');
   // Overview stays the current route with one disclosure line.
   const nav = screen.getByRole('navigation', { name: /primary/i });
   expect(within(nav).getByRole('link', { name: /overview/i }).getAttribute('aria-current')).toBe('page');

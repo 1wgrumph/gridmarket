@@ -75,7 +75,7 @@ it('S58-A01 all four market zones are named, focusable controls and open details
     fireEvent.click(await within(detail).findByRole('button', { name: /close/i }));
     await waitFor(() => expect(detail.isConnected).toBe(false));
     expect(document.activeElement).toBe(control);
-    expect(window.location.hash).toBe('#/');
+    expect(window.location.hash).toBe('#/?hour=2026-09-26T18%3A00%3A00Z');
   }
 });
 
@@ -94,7 +94,7 @@ it.each(['Enter', ' '])('S58-A02 keyboard %j opens a zone; Escape closes and ret
   fireEvent.keyDown(document.activeElement!, { key: 'Escape', code: 'Escape' });
   await waitFor(() => expect(detail.isConnected).toBe(false));
   expect(document.activeElement).toBe(control);
-  expect(window.location.hash).toBe('#/');
+  expect(window.location.hash).toBe('#/?hour=2026-09-26T18%3A00%3A00Z');
 });
 
 it('S58-A03 scored detail uses the lead hour and exposes score, level, confidence and every driver', async () => {
@@ -140,7 +140,7 @@ it('S58-A05 detail lists only open FLEX products for its zone with delivery and 
       expect(row.textContent).toContain(hour);
     } else expect(within(detail).queryByText(product.symbol)).toBeNull();
   }
-  expect((await within(detail).findByRole('link', { name: 'Open in Market' })).getAttribute('href')).toBe('#/market');
+  expect((await within(detail).findByRole('link', { name: 'Open in Market' })).getAttribute('href')).toBe('#/market?zone=LZ_HOUSTON&hour=2026-09-26T18%3A00%3A00Z');
 });
 
 it('S58-A06 non-market zones do not masquerade as selectable market zones (UX-10)', async () => {
