@@ -9,6 +9,7 @@ Live: https://ercot-hackathon.jordan-691.workers.dev
 | `/` | 2-Day Aggregate Energy Demand Curves (NP3-907-EX) chart |
 | `/diagram/` | Grid District: weather → renewables → dispatch → prices → decision engine → router |
 | `/planet/` | Grid Planet: the same data as a small cel-shaded planet |
+| `/godseye/` | God's Eye ERCOT: CesiumJS globe over Texas with live hub prices, weather zones, renewables and flows. Visual language from [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) (MIT) |
 | `/api/snapshot` | One cached call: demand, hub SPPs, DAM + DART, SCED lambda + headroom, wind, solar, weather, baseline checks |
 | `/api/edc` | NP3-907-EX proxy |
 | `/api/products` | All ERCOT EMIL products |
