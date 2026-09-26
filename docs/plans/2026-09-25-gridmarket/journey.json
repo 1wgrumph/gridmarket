@@ -938,6 +938,14 @@
       "decision": "Integrate Jordan Hill's God's Eye commit (origin/jordaaan 3732b0f: EIA-860 plants, node drill-down, decision-map doc) as new slice S60 on lane godseye, landing with the stretch assembly. Fairness rules: his commit merges unchanged (hash, author, message); our changes are separate follow-up commits (conflict resolution keeping both sides, /api/node settlement-point allowlist, Worker tests); nothing he added is deleted without the owner. Open owner decisions: whether docs/ercot-jev-map.html (names Jev and jev-gateway) is published with the public repo, and whether the one-off scripts/add-node-route.py stays.",
       "owner_quote": "we have to be fair and a team environment",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-102",
+      "decided_at": "2026-09-26T15:12:00-05:00",
+      "decided_by": "Owner (in chat)",
+      "decision": "Owner-confirmed dated route amendment: the Coordinator role moves from the frozen AGY Gemini 3.8 Flash / Muse Spark 1.3 xhigh chain (Muse was serving) to Codex CLI GPT-6 Sol at high reasoning with fast mode, fallback GPT-6 Astra high fast. It overrides DEC-GM-096 for this role only. The running Muse P2 and PS Coordinators are stopped and relaunched with resume packets; in-flight jobs keep running.",
+      "owner_quote": "lets use sol6 high instead",
+      "reversible": true
     }
   ],
   "stages": {
@@ -2548,6 +2556,32 @@
           }
         ],
         "scope": "every role and lane route whose harness is Codex CLI and model GPT-6 Sol, primary or fallback, for dispatches from 13:29 on; service_tier priority is Codex fast mode (2x speed, increased usage)"
+      },
+      {
+        "id": "DEC-GM-102",
+        "dated": "2026-09-26T15:12:00-05:00",
+        "owner_confirmed": true,
+        "owner_quote": "lets use sol6 high instead ... use sol 6 for the coordinator now I should have fast mode on by default",
+        "role_routes": {
+          "coordinator": {
+            "primary": {
+              "harness": "Codex CLI",
+              "model": "GPT-6 Sol",
+              "reasoning": "high",
+              "service_tier": "priority"
+            },
+            "ordered_fallbacks": [
+              {
+                "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                "harness": "Codex CLI",
+                "model": "GPT-6 Astra",
+                "reasoning": "high",
+                "service_tier": "priority"
+              }
+            ]
+          }
+        },
+        "scope": "Coordinator role for every phase from this time on; overrides the DEC-GM-096 Sol-to-Astra substitution for this role only. Fast mode (service_tier=priority) is passed per call because the owner's Codex config has service_tier=default and fast_default_opt_out=true."
       }
     ]
   },
