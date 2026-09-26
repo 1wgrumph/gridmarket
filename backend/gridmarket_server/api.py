@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict, StrictInt
 from starlette.exceptions import HTTPException
 from starlette.middleware import Middleware
 
-from . import keys, market, scoring
+from . import keys, market
 from .providers import enabled
 
 PUBLIC = ("/v1/market", "/v1/predictions", "/v1/signals", "/v1/providers", "/v1/router", "/v1/bots")
@@ -249,6 +249,8 @@ def cancel_order(request: Request, id: str) -> dict:
 
 @router.get("/v1/account")
 def account(request: Request) -> dict:
+    from . import scoring
+
     with market.connection() as db:
         account_id = request.state.account_id
         result = market.rows(db, "SELECT * FROM accounts WHERE id=?", (account_id,))[0]
