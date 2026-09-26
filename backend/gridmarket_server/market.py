@@ -17,6 +17,8 @@ from .providers import enabled
 
 router = APIRouter()
 ZONES = ("LZ_HOUSTON", "LZ_NORTH", "LZ_SOUTH", "LZ_WEST")
+MAX_ORDER_QUANTITY = 50
+MAX_POSITION = 200
 Order = RestingOrder = dict[str, Any]
 
 
@@ -185,9 +187,13 @@ def _place_order(db, account_id: str, incoming: Order) -> dict:
     ):
         reject("PRODUCT_CLOSED")
     quantity, price, side = incoming["quantity"], incoming["price_cents"], incoming["side"]
-    if quantity > 50:
+    if quantity > MAX_ORDER_QUANTITY:
         reject("ORDER_TOO_LARGE")
-    if quantity < 1 or not 0 <= price <= (2**63 - 1) // 50 or side not in ("buy", "sell"):
+    if (
+        quantity < 1
+        or not 0 <= price <= (2**63 - 1) // MAX_ORDER_QUANTITY
+        or side not in ("buy", "sell")
+    ):
         reject("VALIDATION_ERROR")
     order_id = uuid.uuid4().hex
     adapters = _adapters(db, order_id)
@@ -213,7 +219,7 @@ def _place_order(db, account_id: str, incoming: Order) -> dict:
         "SELECT COALESCE(SUM(remaining_qty),0) FROM orders WHERE account_id=? AND product_id=? AND side=? AND status='open'",
         (account_id, item["id"], side),
     ).fetchone()[0]
-    if abs(current + (1 if side == "buy" else -1) * (quantity + outstanding)) > 200:
+    if abs(current + (1 if side == "buy" else -1) * (quantity + outstanding)) > MAX_POSITION:
         reject("POSITION_LIMIT")
     spot = item["symbol"].startswith("SPOT-")
     if side == "buy" or not spot:
