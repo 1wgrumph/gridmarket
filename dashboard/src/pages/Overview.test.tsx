@@ -4,6 +4,8 @@
    The pragma pins jsdom because `make red-green` runs vitest from the repo
    root, where dashboard/vite.config.ts is not auto-loaded. */
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+// @ts-ignore TS2307: Node types are absent from the frozen tsconfig; Vitest resolves this import.
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 // @ts-ignore TS2732: resolveJsonModule is off in the frozen tsconfig; vitest/vite load JSON at runtime.
 import manifest from "../../package.json";
@@ -12,7 +14,7 @@ import Shell from "../components/Shell";
 // @ts-ignore TS2732: see above.
 import fixture from "../fixtures/overview.json";
 import Overview from "./Overview";
-import styles from "../styles.css?raw";
+const styles = readFileSync("src/styles.css", "utf8");
 
 const VIEWS_URL = "https://views.example.test";
 
@@ -81,7 +83,7 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
 
   it("[SEIT-GM-UI-01] stats cards show market status", async () => {
     render(<Overview />);
-    expect(await screen.findByText(new RegExp(`\\b${marketStatus.status}\\b`, "i"))).toBeTruthy();
+    expect(await screen.findByText(new RegExp(`^Market ${marketStatus.status}$`, "i"), { selector: ".market-status" })).toBeTruthy();
   });
 
   it("[SEIT-GM-UI-01] renders activity feed with judge-labelled order", async () => {
@@ -267,7 +269,7 @@ describe("S52a design v2 Overview and rail", () => {
   it("order book shows spread from the real detail orders shape", async () => {
     render(<Overview />);
     const panel = await screen.findByRole("region", { name: /live order book/i });
-    const spread = within(panel).getByRole("row", { name: /spread/i });
+    const spread = await within(panel).findByRole("row", { name: /spread/i });
     const bid = book.orders.find((order) => order.side === "buy")!;
     const ask = book.orders.find((order) => order.side === "sell")!;
     expect(spread.textContent).toContain(((ask.price_cents - bid.price_cents) / 100).toFixed(2));
