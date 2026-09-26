@@ -21,8 +21,8 @@ from .contracts import CheckResult
 router = APIRouter()
 registry: dict[str, Callable[[], list[CheckResult]]] = {}
 
-DA_REPORT = "np4-190-cd"
-RT_REPORT = "np6-905-cd"
+DA_REPORT = "NP4-190-CD"
+RT_REPORT = "NP6-905-CD"
 # Calibration knobs: p = logistic(K * (score - 50) / 50 + B * sign(DA - last RT)).
 K = 2.0
 B = 0.3
