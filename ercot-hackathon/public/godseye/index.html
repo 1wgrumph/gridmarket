@@ -10,22 +10,23 @@
 <link rel="stylesheet" href="./godseye.css" />
 </head>
 <body>
-<div id="globe"></div>
-<div id="fx"></div>
-<div id="targets"><div class="target" id="tgt"><div class="box"></div><div class="tag"></div></div></div>
-<div id="tip"></div>
-
+<a class="skip" href="#main">Skip to the map</a>
 <header class="hud brand">
   <div class="brand-title"><div class="wordmark">GridMarket</div><h1>God's Eye<span>.</span></h1></div>
   <div class="brand-meta"><div class="live" id="live" role="status"><span id="liveText">Connecting to ERCOT…</span></div><a class="dash" id="dashboard" href="#" hidden>Open dashboard →</a></div>
 </header>
 <section class="hud readout" aria-label="Latest market readings">
   <ul id="tickerAccessible" class="sr-only"></ul>
-  <div class="ticker-window" tabindex="0" aria-label="Market ticker; focus to pause">
+  <div class="ticker-window" role="region" tabindex="0" aria-label="Market ticker; focus to pause">
     <div class="ticker-track" aria-hidden="true"><ul class="ticker-run"></ul><ul class="ticker-run"></ul></div>
   </div>
-  <button id="tickerPause" aria-pressed="false">Pause</button>
+  <button id="tickerPause">Pause</button>
 </section>
+<main id="main" tabindex="-1" aria-label="Map explorer">
+<div id="globe"></div>
+<div id="fx"></div>
+<div id="targets"><div class="target" id="tgt"><div class="box"></div><div class="tag"></div></div></div>
+<div id="tip"></div>
 <nav class="hud panel-tabs" aria-label="Map panels">
   <button data-panel="rail" aria-controls="rail" aria-expanded="false">Plants &amp; layers</button>
   <button data-panel="intel" aria-controls="intel" aria-expanded="false">System &amp; details</button>
@@ -35,8 +36,8 @@
   <div class="panel-heading"><h2>Explore the grid</h2><span class="eyebrow">01</span></div>
   <div class="search"><input id="q" aria-label="Find a plant, operator or county" type="search" placeholder="Find a plant, operator or county" autocomplete="off" /></div>
   <div class="results" id="results"></div>
-  <section class="livebox" aria-label="Texas batteries charging now">
-    <div class="lbl">Texas batteries charging now</div>
+  <section class="livebox" aria-label="Texas battery activity">
+    <div class="lbl">Texas battery activity</div>
     <div id="batteryReading" aria-live="polite">Battery data unavailable</div>
     <div class="note">ERCOT energy storage · refreshed every 5 minutes</div>
   </section>
@@ -64,11 +65,12 @@
 
 <section class="hud intel glass" id="intel" aria-label="System and plant details"><div class="eyebrow">02 · System overview</div><h2>Connecting to ERCOT…</h2></section>
 <div class="hud dock glass" id="dock"></div>
-<div class="hud market glass" id="market" hidden aria-label="Market activity and router checks (baseline rules)"></div>
+<section class="hud market glass" id="market" hidden aria-label="GridMarket trades and scarcity alerts"></section>
+</main>
 
 <script type="module">
-import { fetchMarket, renderFeed } from "/market-feed.js";
-import { countyToZone, tradeLink, leadPrediction, isBattery, latestESR, formatESR } from "./geo.js";
+import { fetchMarket } from "/market-feed.js";
+import { countyToZone, tradeLink, leadPrediction, isBattery, latestESR, formatESR, zoneName, sectorName, ctTime, intervalText, checkName, checkQuestion, routeName, activityText } from "./geo.js";
 
 const fmt=(n,d=0)=>n==null||!isFinite(n)?'—':Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 const money=n=>n==null||!isFinite(n)?'—':(n<0?'−$':'$')+fmt(Math.abs(n),2);
@@ -135,11 +137,13 @@ viewer.screenSpaceEventHandler.removeInputAction(C.ScreenSpaceEventType.LEFT_DOU
 
 const ACC=C.Color.fromCssColorString('#b8dbd9');
 const INK=C.Color.fromCssColorString('#0e1214');
+// Map text is ghost white on near-opaque ink in both themes (17:1); resource colour stays on the silhouettes.
+const MAP_TEXT=C.Color.fromCssColorString('#f4f4f9');
 const G={}; ['outline','prices','weather','plants'].forEach(k=>{G[k]=new C.CustomDataSource(k);viewer.dataSources.add(G[k]);});
 
 G.outline.entities.add({polyline:{positions:C.Cartesian3.fromDegreesArray(TX.flat()),width:2,material:C.Color.fromCssColorString('#586f7c'),clampToGround:true}});
 G.outline.entities.add({position:C.Cartesian3.fromDegrees(...BASE_HQ),point:{pixelSize:7,color:C.Color.WHITE,outlineColor:ACC,outlineWidth:2},
-  label:{text:'Base Power HQ · 205 E Riverside',font:'500 11px Inter, sans-serif',fillColor:C.Color.WHITE.withAlpha(.85),showBackground:true,backgroundColor:INK.withAlpha(.7),pixelOffset:new C.Cartesian2(0,-18),distanceDisplayCondition:new C.DistanceDisplayCondition(0,300000)}});
+  label:{text:'Base Power HQ · 205 E Riverside',font:'500 11px Inter, sans-serif',fillColor:MAP_TEXT,showBackground:true,backgroundColor:INK.withAlpha(.88),pixelOffset:new C.Cartesian2(0,-18),distanceDisplayCondition:new C.DistanceDisplayCondition(0,300000)}});
 
 /* ---------- live state from /api/snapshot ---------- */
 let SNAP=null, snapshotPending=true;
@@ -167,7 +171,7 @@ function renderTicker(){
     .map(([hub,price])=>`${hubName(hub)} ${money(price)}/MWh${stale}`);
   if(Number.isFinite(SNAP?.sced?.systemLambda)) items.push(`System lambda ${money(SNAP.sced.systemLambda)}/MWh${stale}`);
   if(plantReading) items.push(plantReading);
-  items.push(...trades.map(t=>`GridMarket trade · ${t.label||'Trader'} · ${t.side||'fill'} ${t.quantity} ${t.symbol} at ${money(t.price_cents/100)}${marketStale?' · stale':''}`));
+  items.push(...trades.map(t=>`GridMarket trade · ${activityText(t)}${marketStale?' · stale':''}`));
   for(const list of [...runs,accessible]){
     items.forEach((text,i)=>{
       const item=list.children[i]||list.appendChild(document.createElement('li'));
@@ -186,9 +190,7 @@ new ResizeObserver(()=>{
 }).observe(ticker);
 document.fonts.ready.then(sizeTicker);
 document.getElementById('tickerPause').onclick=e=>{
-  const paused=ticker.classList.toggle('paused');
-  e.currentTarget.setAttribute('aria-pressed',String(paused));
-  e.currentTarget.textContent=paused?'Resume':'Pause';
+  e.currentTarget.textContent=ticker.classList.toggle('paused')?'Resume':'Pause';
 };
 function setPanel(panel){
   document.body.dataset.panel=panel;
@@ -211,15 +213,15 @@ Object.entries(HUBS).forEach(([hub,[lon,lat]])=>{
   G.prices.entities.add({position:new C.CallbackProperty(()=>C.Cartesian3.fromDegrees(lon,lat,colLen(hub)/2),false),
     cylinder:{length:new C.CallbackProperty(()=>colLen(hub),false),topRadius:7000,bottomRadius:7000,material:new C.ColorMaterialProperty(new C.CallbackProperty(()=>priceColor(state.hub[hub]).withAlpha(.72),false)),outline:true,outlineColor:ACC.withAlpha(.5)}});
   G.prices.entities.add({position:new C.CallbackProperty(()=>C.Cartesian3.fromDegrees(lon,lat,colLen(hub)+8000),false),
-    label:{text:new C.CallbackProperty(()=>`${hubName(hub)}  ${money(state.hub[hub])}`,false),font:'500 12px Inter, sans-serif',fillColor:C.Color.WHITE,showBackground:true,backgroundColor:INK.withAlpha(.78),
+    label:{text:new C.CallbackProperty(()=>state.hub[hub]!=null?`${hubName(hub)}  ${money(state.hub[hub])}`:hubName(hub),false),font:'500 12px Inter, sans-serif',fillColor:MAP_TEXT,showBackground:true,backgroundColor:INK.withAlpha(.88),
       backgroundPadding:new C.Cartesian2(6,4),verticalOrigin:C.VerticalOrigin.BOTTOM,pixelOffset:new C.Cartesian2(0,-6),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
 });
 Object.entries(ZONES).forEach(([zone,[lon,lat]])=>{
   G.weather.entities.add({position:C.Cartesian3.fromDegrees(lon,lat),
     ellipse:{semiMajorAxis:95000,semiMinorAxis:95000,material:new C.ColorMaterialProperty(new C.CallbackProperty(()=>state.temps[zone]!=null?tempColor(state.temps[zone]).withAlpha(.14):C.Color.WHITE.withAlpha(.04),false)),
       outline:true,outlineColor:new C.CallbackProperty(()=>state.temps[zone]!=null?tempColor(state.temps[zone]).withAlpha(.55):C.Color.WHITE.withAlpha(.2),false),height:0},
-    label:{text:new C.CallbackProperty(()=>`${zone}  ${state.temps[zone]!=null?fmt(state.temps[zone],1)+'°F':'—'}`,false),font:'500 11px Inter, sans-serif',
-      fillColor:C.Color.WHITE.withAlpha(.75),showBackground:true,backgroundColor:INK.withAlpha(.5),pixelOffset:new C.Cartesian2(0,22),distanceDisplayCondition:new C.DistanceDisplayCondition(900000,4200000)}});
+    label:{text:new C.CallbackProperty(()=>zone+(state.temps[zone]!=null?'  '+fmt(state.temps[zone],1)+'°F':''),false),font:'500 11px Inter, sans-serif',
+      fillColor:MAP_TEXT,showBackground:true,backgroundColor:INK.withAlpha(.88),pixelOffset:new C.Cartesian2(0,22),distanceDisplayCondition:new C.DistanceDisplayCondition(900000,4200000)}});
 });
 
 /* ---------- power plants (EIA-860) ---------- */
@@ -231,12 +233,11 @@ const plantEnt=new Map();
 function plantSize(mw){ return clamp(18+Math.sqrt(mw)*1.25,20,86); }
 function addPlants(){
   for(const p of PLANTS){
-    const t=TYPES[p.prim]; const col=C.Color.fromCssColorString(t.color);
     const e=G.plants.entities.add({id:'plant-'+p.code,position:C.Cartesian3.fromDegrees(p.lon,p.lat,0),
       billboard:{image:ICON[p.prim],width:plantSize(p.mw),height:plantSize(p.mw),verticalOrigin:C.VerticalOrigin.BOTTOM,
         scaleByDistance:new C.NearFarScalar(4e4,1.35,3.2e6,.38),disableDepthTestDistance:Number.POSITIVE_INFINITY,
         color:p.ba==='ERCO'?C.Color.WHITE:C.Color.WHITE.withAlpha(.5)},
-      label:{text:p.name,font:'500 11px Inter, sans-serif',fillColor:col,showBackground:true,backgroundColor:INK.withAlpha(.72),backgroundPadding:new C.Cartesian2(5,3),
+      label:{text:p.name,font:'500 11px Inter, sans-serif',fillColor:MAP_TEXT,showBackground:true,backgroundColor:INK.withAlpha(.88),backgroundPadding:new C.Cartesian2(5,3),
         verticalOrigin:C.VerticalOrigin.TOP,pixelOffset:new C.Cartesian2(0,6),disableDepthTestDistance:Number.POSITIVE_INFINITY,
         distanceDisplayCondition:new C.DistanceDisplayCondition(0,p.mw>=1500?2.2e6:p.mw>=800?9e5:p.mw>=300?3.5e5:1.2e5),show:true}});
     e.plant=p; plantEnt.set(p.code,e);
@@ -262,9 +263,11 @@ function applyFilter(){
 /* legend with counts + capacity, doubling as layer toggles */
 function renderLegend(){
   const min=MINS[filt.minIdx]; const agg={}; ORDER.forEach(t=>agg[t]={n:0,mw:0});
+  const focused=document.activeElement?.closest?.('#legend .lg')?.dataset.t;
   PLANTS.forEach(p=>{ if(p.mw>=min&&(!filt.ercotOnly||p.ba==='ERCO')){agg[p.prim].n++;agg[p.prim].mw+=p.mw;} });
   document.getElementById('legend').innerHTML=ORDER.filter(t=>agg[t].n).map(t=>`<button class="lg ${filt.types.has(t)?'':'off'}" data-t="${t}" aria-pressed="${filt.types.has(t)}"><img src="${ICON[t]}" alt=""><span>${TYPES[t].label}</span><span class="n"><b>${fmt(agg[t].mw/1000,1)} GW</b>${fmt(agg[t].n)} plants</span></button>`).join('');
   document.querySelectorAll('.lg').forEach(b=>b.onclick=()=>{ const t=b.dataset.t; filt.batteriesOnly=false; filt.types.has(t)?filt.types.delete(t):filt.types.add(t); applyFilter(); });
+  if(focused) document.querySelector(`#legend .lg[data-t="${focused}"]`)?.focus();
 }
 document.getElementById('batteriesOnly').onclick=()=>{filt.batteriesOnly=!filt.batteriesOnly;applyFilter();};
 document.getElementById('minmw').oninput=e=>{filt.minIdx=+e.target.value;applyFilter();};
@@ -299,18 +302,18 @@ function renderSystem(){
   const top=PLANTS.filter(p=>p.ba==='ERCO').slice(0,6);
   intel.innerHTML=`<div class="eyebrow">02 · System overview${s?` · ${s.ct.date} ${String(s.ct.hour).padStart(2,'0')}:${String(s.ct.minute).padStart(2,'0')} CT`:''}</div>
   <h2>ERCOT system</h2>
-  ${s?`<div class="row"><span class="k">Demand</span><span class="v">${fmt(s.demand?.mw)} MW</span></div>
-  <div class="row"><span class="k">Available capacity</span><span class="v">${fmt(s.sced?.onlineHSL)} MW</span></div>
-  <div class="row"><span class="k">Spare capacity</span><span class="v">${fmt(s.sced?.headroomPct,1)}% · ${fmt(s.sced?.headroomMW)} MW</span></div>
-  <div class="row"><span class="k">System marginal price · $/MWh</span><span class="v">${money(s.sced?.systemLambda)}</span></div>
-  <div class="row"><span class="k">Wind now · hour ending ${s.wind?.actualHE??'—'}</span><span class="v">${fmt(s.wind?.actualMW)} MW</span></div>
-  <div class="row"><span class="k">Solar now · hour ending ${s.solar?.actualHE??'—'}</span><span class="v">${fmt(s.solar?.actualMW)} MW</span></div>
+  ${s?`<div class="row"><span class="k">Demand</span><span class="v num">${fmt(s.demand?.mw)} MW</span></div>
+  <div class="row"><span class="k">Available capacity</span><span class="v num">${fmt(s.sced?.onlineHSL)} MW</span></div>
+  <div class="row"><span class="k">Spare capacity</span><span class="v num">${fmt(s.sced?.headroomPct,1)}% · ${fmt(s.sced?.headroomMW)} MW</span></div>
+  <div class="row"><span class="k">System marginal price · $/MWh</span><span class="v num">${money(s.sced?.systemLambda)}</span></div>
+  <div class="row"><span class="k">Wind now · hour ending ${s.wind?.actualHE??'—'}</span><span class="v num">${fmt(s.wind?.actualMW)} MW</span></div>
+  <div class="row"><span class="k">Solar now · hour ending ${s.solar?.actualHE??'—'}</span><span class="v num">${fmt(s.solar?.actualMW)} MW</span></div>
   <div class="sect eyebrow">Hub prices · $/MWh</div>
-  ${(s.hubs||[]).map(h=>`<div class="row"><span class="k">${hubName(h.hub)}</span><span class="v">${money(h.price)}</span></div>`).join('')}
-  <div class="row"><span class="k">North real-time − day-ahead</span><span class="v">${signed(s.dam?.dart,2)}</span></div>`:`<div class="note">${snapshotPending?'Loading live ERCOT data…':'Live ERCOT data unavailable. Plant data remains available.'}</div>`}
+  ${(s.hubs||[]).map(h=>`<div class="row"><span class="k">${hubName(h.hub)}</span><span class="v num">${money(h.price)}</span></div>`).join('')}
+  <div class="row"><span class="k">North real-time − day-ahead</span><span class="v num">${signed(s.dam?.dart,2)}</span></div>`:`<div class="note">${snapshotPending?'Loading live ERCOT data…':'Live ERCOT data unavailable. Plant data remains available.'}</div>`}
   <div class="sect eyebrow">Largest plants · select for details</div>
-  ${top.map(p=>`<button class="row" data-c="${p.code}"><span class="k"><img src="${ICON[p.prim]}" alt="" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px">${esc(p.name)}</span><span class="v">${fmt(p.mw)} MW</span></button>`).join('')}
-  ${s?`<div class="sect eyebrow">Decision checks</div>${(s.checks||[]).map(c=>`<div class="check"><div class="q">${esc(c.question)}</div><div class="m"><span>${c.id} · ${c.route}</span><span class="p" style="color:${band(c.p)}">${fmt(c.p,2)}</span></div><div class="bar"><i style="width:${c.p*100}%;background:${band(c.p)}"></i></div></div>`).join('')}`:''}
+  ${top.map(p=>`<button class="row" data-c="${p.code}"><span class="k"><img src="${ICON[p.prim]}" alt="" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px">${esc(p.name)}</span><span class="v num">${fmt(p.mw)} MW</span></button>`).join('')}
+  ${s&&s.checks?.length?`<div class="sect eyebrow">Price risk checks · simple rules, not advice</div>${s.checks.map(c=>`<div class="check"><div class="q">${esc(checkQuestion(c.id,c.question))}</div><div class="m"><span>${esc(routeName(c.route))}</span><span class="p num">${fmt(c.p*100)}%</span></div><div class="bar"><i style="width:${c.p*100}%;background:${band(c.p)}"></i></div></div>`).join('')}`:''}
   <div class="note">Plants: ${META?esc(META.source):'EIA-860'}. Click any plant silhouette for its units, grid connection and live settlement price. Checks use baseline rules, not trading advice.</div>`;
   intel.querySelectorAll('[data-c]').forEach(r=>r.onclick=()=>selectPlant(+r.dataset.c));
 }
@@ -322,49 +325,73 @@ function zoneHTML(p){
   const zone=countyToZone(p.county), prediction=leadPrediction(predictions,zone);
   const href=tradeLink(marketUrl,zone);
   return `<div class="sect eyebrow">Zone scarcity</div>
-    <div class="row"><span class="k">Load zone</span><span class="v">${zone||'Unknown county'}</span></div>
+    <div class="row"><span class="k">Load zone</span><span class="v">${zone?`${zoneName(zone)} load zone`:'Unknown county'}</span></div>
     <div class="note">Approximate, by county · navigation only</div>
-    ${prediction?`<div class="row"><span class="k">Scarcity score</span><span class="v">${fmt(prediction.score,1)} · ${esc(prediction.level)}</span></div>
-    <div class="note">Lead delivery hour: ${esc(prediction.delivery_hour)}</div>`:`<div class="note">${predictions===null?'Market not connected':'Scarcity data unavailable'}</div>`}
+    ${prediction?`<div class="row"><span class="k">Scarcity score</span><span class="v num">${fmt(prediction.score,1)} · ${esc(prediction.level)}</span></div>
+    <div class="note">Lead delivery hour: <time datetime="${esc(prediction.delivery_hour)}">${esc(ctTime(prediction.delivery_hour))}</time></div>`:`<div class="note">${predictions===null?'Market not connected':'Scarcity data unavailable'}</div>`}
     ${href?`<a class="dash" href="${esc(href)}">Trade this zone →</a>`:''}`;
 }
-async function marketGet(path){
-  const r=await fetch(marketUrl+path,{signal:AbortSignal.timeout(20000)});
+async function marketGet(base,path){
+  const r=await fetch(base+path,{signal:AbortSignal.timeout(20000)});
   if(!r.ok) throw new Error('Market unavailable');
   return r.json();
 }
+/* One status line for both sources; last-known data stays on screen, marked stale. */
+let snapshotState='pending', marketFeed=null;
+function renderStatus(){
+  const ercot={pending:'Connecting to ERCOT…',live:'Live ERCOT data',stale:'ERCOT unavailable · last known data',down:'ERCOT data unavailable'}[snapshotState];
+  const mkt=(marketUrl||marketFeed)&&marketStale?(marketFeed?'Market unavailable · last known trades':'Market unavailable'):'';
+  document.getElementById('live').className='live'+(snapshotState==='stale'||snapshotState==='down'||mkt?' down':'');
+  document.getElementById('liveText').innerHTML=esc(ercot)+(mkt?'<br>'+esc(mkt):'');
+}
+function renderMarket(){
+  if(!marketFeed){market.hidden=true;return;}
+  const activity=(Array.isArray(marketFeed.activity)?marketFeed.activity:marketFeed.activity?.items||[]).slice(0,8);
+  const checks=Array.isArray(marketFeed.router)?marketFeed.router:marketFeed.router?.checks||[];
+  const alerts=checks.filter(r=>r.band==='alert');
+  const stale=marketStale?' <span class="badge warn">Stale · last known</span>':'';
+  market.innerHTML=`<div class="mf-title">Latest GridMarket activity${stale}</div>
+    <ul class="mf-strip">${activity.map(i=>`<li>${esc(activityText(i))}</li>`).join('')||'<li>No trades yet</li>'}</ul>
+    <div class="mf-title">Scarcity alerts · simple rules, not advice${stale}</div>
+    <ul class="mf-alerts">${alerts.map(r=>`<li>${esc(checkName(r.check_id))} <b><span class="num">${Math.round(r.probability*100)}%</span> · Alert</b></li>`).join('')||`<li>${marketStale?'No alerts at last check':'No alerts right now'}</li>`}</ul>`;
+  market.hidden=false;
+}
+let marketReq=0;
 async function refreshMarket(){
   let esr=null;
-  marketUrl='';
+  const my=++marketReq;
   try{
     const cfg=await fetch('/api/config',{signal:AbortSignal.timeout(20000)}).then(r=>{if(!r.ok) throw new Error('Config unavailable');return r.json();});
     const link=tradeLink(cfg.MARKET_URL,'LZ_NORTH');
-    marketUrl=link?link.split('#')[0].replace(/\/+$/,''):'';
-    const [forecast,signals,feed]=marketUrl?await Promise.all([
-      marketGet('/v1/predictions').catch(()=>null),
-      marketGet('/v1/signals').catch(()=>null),
-      fetchMarket(marketUrl)
+    const url=link?link.split('#')[0].replace(/\/+$/,''):'';
+    const [forecast,signals,feed]=url?await Promise.all([
+      marketGet(url,'/v1/predictions').catch(()=>null),
+      marketGet(url,'/v1/signals').catch(()=>null),
+      fetchMarket(url)
     ]):[null,null,null];
+    // A slower, older refresh must not overwrite a newer one.
+    if(my!==marketReq) return;
+    marketUrl=url;
     predictions=Array.isArray(forecast)?forecast:null;
     esr=latestESR(signals);
     const dashboard=document.getElementById('dashboard');
     dashboard.hidden=!marketUrl;
     if(marketUrl) dashboard.href=marketUrl;
     if(feed&&!feed.offline){
-      renderFeed(market,feed); market.hidden=false; marketStale=false;
+      marketFeed=feed; marketStale=false;
       const activity=Array.isArray(feed.activity)?feed.activity:feed.activity?.items;
       trades=(Array.isArray(activity)?activity:[]).filter(t=>(t.type==='fill'||t.entry_type==='fill')&&Number.isFinite(t.price_cents)&&Number.isFinite(t.quantity)&&typeof t.symbol==='string').slice(0,8);
     }else{
       marketStale=true;
-      if(!marketUrl){trades=[];market.hidden=true;}
+      if(!marketUrl){trades=[];marketFeed=null;}
     }
-  }catch{predictions=null;marketStale=true;}
-  renderTicker();
+  }catch{if(my!==marketReq) return; predictions=null;marketStale=true;}
+  renderMarket(); renderStatus(); renderTicker();
   const box=document.getElementById('zoneMarket');
   if(box&&selected) box.innerHTML=zoneHTML(selected);
   const reading=formatESR(esr);
   document.getElementById('batteryReading').innerHTML=esc(reading)+
-    (reading==='Battery data unavailable'?'':`<div class="note">Updated <time datetime="${esc(esr.fetched_at)}">${esc(new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(new Date(esr.fetched_at)))}</time></div>`);
+    (reading==='Battery data unavailable'?'':`<div class="note">Updated <time datetime="${esc(esr.fetched_at)}">${esc(ctTime(esr.fetched_at))}</time></div>`);
 }
 
 /* ---------- plant drill-down ---------- */
@@ -392,75 +419,62 @@ function plantHTML(p){
     const installed=PLANTS.filter(x=>x.ba==='ERCO').reduce((a,x)=>a+(x.cap[p.prim]||0),0);
     const util=f&&f.actualMW!=null&&installed?f.actualMW/installed:null;
     fleet=`<div class="sect eyebrow">ERCOT ${p.prim} fleet now</div>
-      <div class="row"><span class="k">Fleet output · hour ending ${f?.actualHE??'—'}</span><span class="v">${fmt(f?.actualMW)} MW</span></div>
-      <div class="row"><span class="k">Fleet forecast error</span><span class="v">${signed(f?.errorMW)} MW</span></div>
-      <div class="row"><span class="k">Installed ERCOT ${p.prim} (EIA-860)</span><span class="v">${fmt(installed/1000,1)} GW</span></div>
-      ${util!=null?`<div class="row"><span class="k">Fleet running at</span><span class="v">${fmt(util*100,1)}% of installed</span></div>
-      <div class="row"><span class="k">This plant at the fleet rate</span><span class="v">≈ ${fmt(p.cap[p.prim]*util)} MW</span></div>`:''}
+      <div class="row"><span class="k">Fleet output · hour ending ${f?.actualHE??'—'}</span><span class="v num">${fmt(f?.actualMW)} MW</span></div>
+      <div class="row"><span class="k">Fleet forecast error</span><span class="v num">${signed(f?.errorMW)} MW</span></div>
+      <div class="row"><span class="k">Installed ERCOT ${p.prim} (EIA-860)</span><span class="v num">${fmt(installed/1000,1)} GW</span></div>
+      ${util!=null?`<div class="row"><span class="k">Fleet running at</span><span class="v num">${fmt(util*100,1)}% of installed</span></div>
+      <div class="row"><span class="k">This plant at the fleet rate</span><span class="v num">≈ ${fmt(p.cap[p.prim]*util)} MW</span></div>`:''}
       <div class="note">ERCOT publishes wind and solar output system-wide, not per plant, so the last line is an estimate.</div>`;
   }
   return `<div class="topline"><div class="eyebrow">Plant details · EIA ${p.code}</div><button class="back" id="back">← System</button></div>
   <div class="p-head" style="margin-top:10px"><img src="${ICON[p.prim]}" alt="${t.label}"><div><h3>${esc(p.name)}</h3><div class="sub">${esc(p.op)} · ${esc(p.county)} County${p.city?` · ${esc(p.city)}`:''}</div></div></div>
-  <div class="badges"><span class="badge">${t.label}</span><span class="badge ${p.ba==='ERCO'?'accent':'warn'}">${STAT_BA[p.ba]||esc(p.ba)}</span>${p.sector?`<span class="badge">${esc(p.sector)}</span>`:''}${p.planned.length?`<span class="badge warn">${p.planned.length} unit(s) planned</span>`:''}</div>
+  <div class="badges"><span class="badge">${t.label}</span><span class="badge ${p.ba==='ERCO'?'accent':'warn'}">${STAT_BA[p.ba]||esc(p.ba)}</span>${p.sector?`<span class="badge">${esc(sectorName(p.sector))}</span>`:''}${p.planned.length?`<span class="badge warn">${p.planned.length} unit(s) planned</span>`:''}</div>
   <div class="tiles">
-    <div class="tile"><div class="k">Rated capacity</div><div class="v">${fmt(p.mw)}</div><div class="s">MW</div></div>
-    <div class="tile"><div class="k">Summer</div><div class="v">${fmt(summer)}</div><div class="s">MW net</div></div>
+    <div class="tile"><div class="k">Rated capacity</div><div class="v num">${fmt(p.mw)}</div><div class="s">MW</div></div>
+    <div class="tile"><div class="k">Summer</div><div class="v num">${fmt(summer)}</div><div class="s">MW net</div></div>
     <div class="tile"><div class="k">Units</div><div class="v">${p.units.length}</div><div class="s">${first?(first===last?`online ${first}`:`${first}–${last}`):''}</div></div>
   </div>
   ${Object.keys(p.cap).length>1?`<div class="sect eyebrow">Capacity mix</div><div class="mix">${Object.entries(p.cap).map(([k,v])=>`<i style="width:${v/mixTotal*100}%;background:${TYPES[k].color}" title="${TYPES[k].label} ${fmt(v)} MW"></i>`).join('')}</div><div class="mixkey">${Object.entries(p.cap).map(([k,v])=>`<span style="--c:${TYPES[k].color}">${TYPES[k].label} ${fmt(v)} MW</span>`).join('')}</div>`:''}
   <div class="sect eyebrow">Live prices at this plant</div>
-  <div id="liveMarket">${p.ba!=='ERCO'?`<div class="note">This plant sits in ${STAT_BA[p.ba]||p.ba}, outside the ERCOT market, so ERCOT prices don't apply to it.</div>`:p.nodes.length?'<div class="livebox"><div class="lbl">Loading settlement point…</div></div>':''}</div>
+  <div id="liveMarket">${p.ba!=='ERCO'?`<div class="note">This plant sits in ${STAT_BA[p.ba]||p.ba}, outside the ERCOT market, so ERCOT prices don't apply to it.</div>`:p.nodes.length?'<div class="livebox"><div class="lbl">Loading settlement point…</div></div>':'<div class="note">Plant price unavailable: no ERCOT settlement point is mapped to this plant. The nearest hub price is shown below.</div>'}</div>
   ${p.ba==='ERCO'?`<div class="row"><span class="k">Nearest hub · ${Math.round(hub[1])} km</span><span class="v">${hubName(hub[0])} ${money(state.hub[hub[0]])}</span></div>
   <div class="row"><span class="k">Weather zone (nearest, approx.)</span><span class="v">${zone[0]} ${state.temps[zone[0]]!=null?fmt(state.temps[zone[0]],1)+'°F':''}</span></div>`:''}
   <div id="zoneMarket" aria-live="polite">${zoneHTML(p)}</div>
   ${fleet}
   ${w?`<div class="sect eyebrow">Wind turbines</div>
-    <div class="row"><span class="k">Turbines</span><span class="v">${fmt(p.units.reduce((a,u)=>a+(u.wind?.n||0),0))}</span></div>
+    <div class="row"><span class="k">Turbines</span><span class="v num">${fmt(p.units.reduce((a,u)=>a+(u.wind?.n||0),0))}</span></div>
     <div class="row"><span class="k">Model</span><span class="v">${esc(w.mfr||'—')} ${esc(w.model||'')}</span></div>
-    <div class="row"><span class="k">Hub height</span><span class="v">${w.hub?fmt(w.hub)+' ft':'—'}</span></div>
+    <div class="row"><span class="k">Hub height</span><span class="v num">${w.hub?fmt(w.hub)+' ft':'—'}</span></div>
     <div class="row"><span class="k">Wind quality class</span><span class="v">${w.cls??'—'}</span></div>`:''}
   ${sol.length?`<div class="sect eyebrow">Solar array</div>
     <div class="row"><span class="k">Tracking</span><span class="v">${esc([...new Set(sol.map(u=>u.solar.track).filter(Boolean))].join(', ')||'—')}</span></div>
-    <div class="row"><span class="k">DC capacity</span><span class="v">${fmt(sol.reduce((a,u)=>a+(u.solar.dc||0),0))} MWdc</span></div>
+    <div class="row"><span class="k">DC capacity</span><span class="v num">${fmt(sol.reduce((a,u)=>a+(u.solar.dc||0),0))} MWdc</span></div>
     <div class="row"><span class="k">Bifacial modules</span><span class="v">${sol.some(u=>u.solar.bifacial)?'yes':'no'}</span></div>`:''}
   ${st.length?`<div class="sect eyebrow">Battery storage</div>
-    <div class="row"><span class="k">Energy capacity</span><span class="v">${fmt(st.reduce((a,u)=>a+(u.stor.mwh||0),0))} MWh</span></div>
+    <div class="row"><span class="k">Energy capacity</span><span class="v num">${fmt(st.reduce((a,u)=>a+(u.stor.mwh||0),0))} MWh</span></div>
     <div class="row"><span class="k">Duration</span><span class="v">${esc([...new Set(st.map(u=>u.stor.hrs).filter(Boolean))].map(h=>h+' h').join(', ')||'—')}</span></div>
     <div class="row"><span class="k">Chemistry</span><span class="v">${esc([...new Set(st.map(u=>CHEM[u.stor.chem]||u.stor.chem).filter(Boolean))].join(', ')||'—')}</span></div>
     <div class="row"><span class="k">Reported uses</span><span class="v" style="max-width:60%">${esc([...new Set(st.flatMap(u=>u.stor.uses))].join(', ')||'—')}</span></div>`:''}
   <div class="sect eyebrow">Grid connection</div>
   <div class="row"><span class="k">Balancing authority</span><span class="v">${esc(p.baName||p.ba)}</span></div>
   <div class="row"><span class="k">Transmission owner</span><span class="v" style="max-width:62%">${esc(p.to||'—')}</span></div>
-  <div class="row"><span class="k">Interconnection voltage</span><span class="v">${p.kv.length?p.kv.map(k=>fmt(k)+' kV').join(' / '):'—'}</span></div>
+  <div class="row"><span class="k">Interconnection voltage</span><span class="v num">${p.kv.length?p.kv.map(k=>fmt(k)+' kV').join(' / '):'—'}</span></div>
   ${p.water?`<div class="row"><span class="k">Water source</span><span class="v" style="max-width:62%">${esc(p.water)}</span></div>`:''}
   ${p.pipes.length?`<div class="row"><span class="k">Gas pipelines</span><span class="v" style="max-width:62%">${esc(p.pipes.join(', '))}</span></div>`:''}
-  <div class="row"><span class="k">Location</span><span class="v">${p.lat.toFixed(4)}°, ${p.lon.toFixed(4)}°</span></div>
+  <div class="row"><span class="k">Location</span><span class="v num">${p.lat.toFixed(4)}°, ${p.lon.toFixed(4)}°</span></div>
   <div class="sect eyebrow">Generating units (${p.units.length})</div>
   <div class="tblwrap"><table class="units"><thead><tr><th scope="col">Unit</th><th scope="col">Technology</th><th scope="col" style="text-align:right">MW</th><th scope="col" style="text-align:right">Online</th></tr></thead><tbody>
-  ${p.units.slice(0,14).map(u=>`<tr><td class="n" style="text-align:left">${esc(u.id)}</td><td>${esc(u.tech)}${u.chp?' · combined heat and power':''}${u.ret?` <span style="color:var(--warn)">· retires ${u.ret}</span>`:''}${u.node?`<div style="font:500 11px var(--font);color:var(--accent)">${esc(u.node)}</div>`:''}</td><td class="n">${fmt(u.mw,1)}</td><td class="n">${u.yr??'—'}</td></tr>`).join('')}
+  ${p.units.slice(0,14).map(u=>`<tr><td class="n" style="text-align:left">${esc(u.id)}</td><td>${esc(u.tech)}${u.chp?' · combined heat and power':''}${u.ret?` <span style="color:var(--warn)">· retires ${u.ret}</span>`:''}${u.node?`<div class="note" style="margin-top:2px">Settlement point ${esc(u.node)}</div>`:''}</td><td class="n">${fmt(u.mw,1)}</td><td class="n">${u.yr??'—'}</td></tr>`).join('')}
   </tbody></table></div>
   ${p.units.length>14?`<div class="note">+ ${p.units.length-14} more units</div>`:''}
   ${retiring.length?`<div class="note" style="color:var(--warn)">${retiring.length} unit(s) report a planned retirement year.</div>`:''}
-  ${p.planned.length?`<div class="sect eyebrow">Planned additions</div>${p.planned.map(u=>`<div class="row"><span class="k">${esc(u.tech)}</span><span class="v">${fmt(u.mw)} MW · ${u.yr??'—'}<div style="font-size:11px;color:var(--text-dim)">${esc(u.status)}</div></span></div>`).join('')}`:''}
+  ${p.planned.length?`<div class="sect eyebrow">Planned additions</div>${p.planned.map(u=>`<div class="row"><span class="k">${esc(u.tech)}</span><span class="v num">${fmt(u.mw)} MW · ${u.yr??'—'}<div style="font-size:11px;color:var(--text-dim)">${esc(u.status)}</div></span></div>`).join('')}`:''}
   <div class="note">Source: EIA-860 2025 early release, plant ${p.code}. <a href="https://www.eia.gov/electricity/data/browser/#/plant/${p.code}" target="_blank" rel="noopener">Open in EIA Electricity Data Browser ↗</a>${p.nodes.length?`<br>Settlement point${p.nodes.length>1?'s':''}: ${p.nodes.map(esc).join(', ')} (${p.nodeSrc==='EIA-860'?'from EIA-860':'matched by ERCOT naming'}).`:''}</div>`;
 }
 async function fetchNodes(sps){
   const r=await fetch(API+'/api/node?sp='+encodeURIComponent(sps.join(',')));
-  if(r.ok) return r.json();
-  if(r.status!==404) throw new Error(r.status);
-  // Fallback: build the same answer from the generic ERCOT report proxy
-  const now=new Date(), ct=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Chicago',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',hourCycle:'h23'}).formatToParts(now).reduce((a,x)=>(a[x.type]=x.value,a),{});
-  const date=`${ct.year}-${ct.month}-${ct.day}`, he=Math.min(24,+ct.hour+1);
-  const rows=j=>{const f=(j.fields||[]).map(x=>x.name);return (j.data||[]).map(r=>Object.fromEntries(f.map((n,i)=>[n,r[i]])));};
-  const out={nodes:[],errors:{}};
-  for(const sp of sps){ const n={sp,rt:null,da:null};
-    try{ const j=await (await fetch(`${API}/api/report/np6-905-cd/spp_node_zone_hub?deliveryDateFrom=${date}&deliveryDateTo=${date}&settlementPoint=${encodeURIComponent(sp)}&size=200`)).json();
-      const rt=rows(j).sort((a,b)=>a.deliveryHour*10+a.deliveryInterval-(b.deliveryHour*10+b.deliveryInterval)); const l=rt[rt.length-1];
-      if(l) n.rt={price:l.settlementPointPrice,hour:l.deliveryHour,interval:l.deliveryInterval,series:rt.slice(-24).map(x=>x.settlementPointPrice)}; }catch(e){out.errors[sp+':rt']=e.message;}
-    try{ const j=await (await fetch(`${API}/api/report/np4-190-cd/dam_stlmnt_pnt_prices?deliveryDateFrom=${date}&deliveryDateTo=${date}&settlementPoint=${encodeURIComponent(sp)}&size=30`)).json();
-      const h=rows(j).find(x=>Number(String(x.hourEnding).slice(0,2))===he); if(h) n.da={price:h.settlementPointPrice,he}; }catch(e){out.errors[sp+':da']=e.message;}
-    out.nodes.push(n); }
-  return out;
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
 }
 let reqId=0;
 async function loadNode(p){
@@ -472,13 +486,14 @@ async function loadNode(p){
     box.innerHTML=d.nodes.map(n=>{
       const rt=n.rt?.price, basis=rt!=null&&state.hub[hub]!=null?rt-state.hub[hub]:null, dart=rt!=null&&n.da?.price!=null?rt-n.da.price:null;
       const col=rt==null?'var(--muted)':'var(--accent)';
-      return `<div class="livebox"><div class="lbl">${esc(n.sp)} · settlement price${n.rt?` · hour ${n.rt.hour}, interval ${n.rt.interval}`:''}</div>
-        <div class="big">${n.rt?money(rt):'no data today'}<span style="font-size:11px;color:var(--text-secondary);font-weight:500"> /MWh</span></div>
+      const when=n.rt&&intervalText(n.rt.hour,n.rt.interval);
+      return `<div class="livebox"><div class="lbl">Settlement point ${esc(n.sp)}${when?` · ${when}`:''}</div>
+        <div class="big num">${n.rt?money(rt):d.errors?.[n.sp+':rt']?'unavailable':'no prices yet today'}<span style="font-size:11px;color:var(--text-secondary);font-weight:500"> /MWh</span></div>
         ${spark(n.rt?.series,col)}
-        <div class="row"><span class="k">Day-ahead · hour ending ${n.da?.he??'—'}</span><span class="v">${money(n.da?.price)}</span></div>
-        <div class="row"><span class="k">Real-time − day-ahead</span><span class="v">${signed(dart,2)}</span></div>
-        <div class="row"><span class="k">Difference from ${hubName(hub)}</span><span class="v">${signed(basis,2)}</span></div></div>`;
-    }).join('')+(d.errors&&Object.keys(d.errors).length?`<div class="note">Some points didn't respond: ${esc(Object.keys(d.errors).join(', '))}</div>`:'');
+        <div class="row"><span class="k">Day-ahead · hour ending ${n.da?.he??'—'}</span><span class="v num">${money(n.da?.price)}</span></div>
+        <div class="row"><span class="k">Real-time − day-ahead</span><span class="v num">${signed(dart,2)}</span></div>
+        <div class="row"><span class="k">Difference from ${hubName(hub)}</span><span class="v num">${signed(basis,2)}</span></div></div>`;
+    }).join('')+(d.errors&&Object.keys(d.errors).length?`<div class="note">Some prices are unavailable right now: ${esc([...new Set(Object.keys(d.errors).map(k=>k.split(':')[0]))].join(', '))}. Try again in a minute.</div>`:'');
   }catch(e){ if(my===reqId) box.innerHTML=`<div class="note">Live settlement price unavailable (${esc(e.message)}). Try again in a minute.</div>`; }
 }
 function selectPlant(code,fly=true){
@@ -512,13 +527,12 @@ async function loadPlants(){
   const m=location.hash.match(/plant-(\d+)/); if(m) setTimeout(()=>selectPlant(+m[1]),1800);
 }
 async function loadSnap(){
-  const live=document.getElementById('live'), lt=document.getElementById('liveText');
   try{ const r=await fetch(API+'/api/snapshot'); if(!r.ok) throw 0; SNAP=await r.json();
     Object.keys(state.hub).forEach(k=>delete state.hub[k]); (SNAP.hubs||[]).forEach(h=>state.hub[h.hub]=h.price); (SNAP.weather?.zones||[]).forEach(z=>state.temps[z.zone]=z.tempF);
-    live.className='live'; lt.textContent='ERCOT · EIA-860';
+    snapshotState='live'; renderStatus();
     snapshotPending=false; snapshotStale=false; renderTicker();
     renderDock(); if(!selected) renderSystem(); else if(!document.querySelector('#liveMarket .livebox .big')) selectPlant(selected.code,false);
-  }catch(e){ snapshotPending=false; live.className='live down'; lt.textContent=SNAP?'ERCOT unavailable · last known data':'ERCOT data unavailable'; snapshotStale=true; renderTicker(); if(!selected) renderSystem(); }
+  }catch(e){ snapshotPending=false; snapshotState=SNAP?'stale':'down'; renderStatus(); snapshotStale=true; renderTicker(); if(!selected) renderSystem(); }
 }
 loadPlants().catch(e=>{intel.innerHTML=`<div class="note">Couldn't load plant data: ${esc(e.message)}</div>`;});
 loadSnap(); setInterval(loadSnap,5*60*1000);
@@ -530,7 +544,7 @@ const toWin=(pos)=>(C.SceneTransforms.worldToWindowCoordinates||C.SceneTransform
 viewer.clock.onTick.addEventListener(()=>{
   let lon,lat,tag;
   if(selected){ lon=selected.lon; lat=selected.lat; tag=`${esc(selected.name)} <b>${fmt(selected.mw)} MW</b> · ${TYPES[selected.prim].label}`; }
-  else { const hot=Object.entries(state.hub).filter(([k,v])=>HUBS[k]&&v!=null).sort((a,b)=>b[1]-a[1])[0]; if(hot){ [lon,lat]=HUBS[hot[0]]; tag=`${hubName(hot[0])} <b>${money(hot[1])}</b> · Highest hub price`; } }
+  else if(G.prices.show){ const hot=Object.entries(state.hub).filter(([k,v])=>HUBS[k]&&v!=null).sort((a,b)=>b[1]-a[1])[0]; if(hot){ [lon,lat]=HUBS[hot[0]]; tag=`${hubName(hot[0])} <b>${money(hot[1])}</b> · Highest hub price`; } }
   if(lon==null){tgt.style.display='none';return;}
   const w=toWin(C.Cartesian3.fromDegrees(lon,lat,0));
   if(w){ tgt.classList.toggle('label-left',w.x>scene.canvas.clientWidth/2); tgt.style.display='block'; tgt.style.left=w.x+'px'; tgt.style.top=(w.y-(selected?20:0))+'px'; tgt.querySelector('.tag').innerHTML=tag; } else tgt.style.display='none';

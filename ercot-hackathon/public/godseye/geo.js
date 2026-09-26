@@ -54,3 +54,39 @@ export function formatESR(signal) {
   const mw = Math.abs(signal.value).toLocaleString("en-US", { maximumFractionDigits: 2 });
   return `${mw} MW ${signal.value < 0 ? "discharging" : signal.value > 0 ? "charging" : "· idle"}`;
 }
+
+// Plain-language names for codes shown in the page. Codes stay in links and data.
+const ZONE_NAMES = { LZ_NORTH: "North", LZ_HOUSTON: "Houston", LZ_SOUTH: "South", LZ_WEST: "West", LZ_LCRA: "Lower Colorado River Authority", LZ_AEN: "Austin Energy", LZ_CPS: "CPS Energy", LZ_RAYBN: "Rayburn Country" };
+export const zoneName = (zone) => ZONE_NAMES[zone] ?? null;
+
+const SECTORS = { "IPP Non-CHP": "Independent power producer", "IPP CHP": "Independent power producer · combined heat and power", "Electric Utility": "Utility", "Industrial Non-CHP": "Industrial", "Industrial CHP": "Industrial · combined heat and power", "Commercial Non-CHP": "Commercial", "Commercial CHP": "Commercial · combined heat and power" };
+export const sectorName = (sector) => SECTORS[sector] ?? sector;
+
+const CT = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+export const ctTime = (iso) => (Number.isFinite(Date.parse(iso)) ? CT.format(new Date(iso)) : null);
+
+// ERCOT real-time prices: hour ending h, 15-minute interval i (1-4), Central time.
+export function intervalText(hour, interval) {
+  if (!(hour >= 1 && hour <= 24 && interval >= 1 && interval <= 4)) return null;
+  const clock = (m) => { const h = Math.floor(m / 60) % 24; return `${h % 12 || 12}:${String(m % 60).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; };
+  const start = (hour - 1) * 60 + (interval - 1) * 15;
+  return `${clock(start)}–${clock(start + 15)} CT`;
+}
+
+// Baseline snapshot checks and market router checks share these ids.
+const CHECKS = {
+  "scarcity-2h": ["North hub price spike", "Chance the North hub real-time price tops $150/MWh in the next 2 hours"],
+  "dart-north": ["North hub above day-ahead", "Chance the North hub real-time price ends above day-ahead this hour"],
+  "renew-shortfall": ["Wind and solar shortfall", "Chance wind and solar fall more than 1 GW short next hour"],
+};
+export const checkName = (id) => CHECKS[id]?.[0] ?? id;
+export const checkQuestion = (id, question) => CHECKS[id]?.[1] ?? question;
+export const routeName = (route) => ({ alert: "Alert", review: "Worth watching", log: "No action" })[route] ?? route;
+
+export function activityText(item) {
+  const zone = zoneName(/LZ_[A-Z]+/.exec(item.symbol ?? "")?.[0]);
+  const verb = item.type === "fill" ? (item.side === "sell" ? "sold" : "bought") : item.type === "order" ? (item.side === "sell" ? "offered" : "bid for") : String(item.type ?? "").replace(/_/g, " ");
+  const who = [item.label || "Trader", verb, Number.isFinite(item.quantity) ? item.quantity : null].filter((p) => p !== null && p !== "").join(" ");
+  const price = Number.isFinite(item.price_cents) ? `$${(item.price_cents / 100).toFixed(2)}` : null;
+  return [who, zone ? `${zone} zone` : item.symbol, price].filter(Boolean).join(" · ");
+}

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { countyToZone, tradeLink, leadPrediction, isBattery, latestESR, formatESR } from "../public/godseye/geo.js";
+import { countyToZone, tradeLink, leadPrediction, isBattery, latestESR, formatESR, zoneName, sectorName, ctTime, intervalText, checkName, checkQuestion, routeName, activityText } from "../public/godseye/geo.js";
 
 const plants = JSON.parse(readFileSync(new URL("../public/data/tx_plants.json", import.meta.url))).plants;
 
@@ -53,4 +53,33 @@ test("S61 #13 batteries include hybrid plants with storage units", () => {
   assert.equal(isBattery(plants.find(p => p.code === 67737)), true);
   assert.equal(isBattery(plants.find(p => p.code === 8063)), true);
   assert.equal(isBattery(plants.find(p => p.prim === "nuclear")), false);
+});
+
+test("S62r plain names cover every load zone and plant sector in the corpus", () => {
+  for (const plant of plants.filter(p => p.ba === "ERCO")) assert.ok(zoneName(countyToZone(plant.county)), plant.county);
+  for (const sector of new Set(plants.map(p => p.sector))) assert.doesNotMatch(sectorName(sector), /IPP|CHP|Non-/, sector);
+  assert.equal(zoneName("LZ_NORTH"), "North");
+  assert.equal(zoneName("HB_NORTH"), null);
+});
+
+test("S62r ERCOT times read in Central time", () => {
+  assert.equal(ctTime("2026-09-25T19:00:00Z"), "Sep 25, 2:00 PM CDT");
+  assert.equal(ctTime("2026-12-01T19:00:00Z"), "Dec 1, 1:00 PM CST");
+  assert.equal(ctTime("not a time"), null);
+  assert.equal(intervalText(14, 1), "1:00 PM–1:15 PM CT");
+  assert.equal(intervalText(1, 1), "12:00 AM–12:15 AM CT");
+  assert.equal(intervalText(24, 4), "11:45 PM–12:00 AM CT");
+  assert.equal(intervalText(25, 1), null);
+});
+
+test("S62r checks and market activity read as plain sentences", () => {
+  for (const id of ["scarcity-2h", "dart-north", "renew-shortfall"]) {
+    assert.doesNotMatch(checkQuestion(id, "P(x)"), /P\(|HB_|RT|DA\b|HE\d/);
+    assert.notEqual(checkName(id), id);
+  }
+  assert.equal(checkQuestion("new-check", "Raw question"), "Raw question");
+  assert.deepEqual(["alert", "review", "log"].map(routeName), ["Alert", "Worth watching", "No action"]);
+  // Symbols follow the market generator: SPOT-<zone>-<YYYYMMDDHH>.
+  assert.equal(activityText({ type: "fill", label: "Harbor Desk", side: "buy", quantity: 3, price_cents: 8, symbol: "SPOT-LZ_NORTH-2026092615" }), "Harbor Desk bought 3 · North zone · $0.08");
+  assert.equal(activityText({ type: "order", label: "Prairie Wind Co", side: "sell", quantity: 5, price_cents: 412, symbol: "FLEX-LZ_AEN-2026092620" }), "Prairie Wind Co offered 5 · Austin Energy zone · $4.12");
 });
