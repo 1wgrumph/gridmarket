@@ -201,3 +201,50 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `NOT_FOUND`, `BAD_REQUEST`, `INTERNAL_ERROR` | market | General HTTP errors |
 | `VALIDATION_ERROR`, `SANDBOX_CAP` | market | 422 / 503 sandbox rejection |
 | `BOT_CAP` | bots | 200-bot cap |
+
+## Flex core (C2, DEC-GM-113)
+
+`gridmarket_server.flex` exports `Battery`, `StepResult`, `Observation`,
+`FeedWindow`, `InformationSet`, `InformationView`, `Decision`, `DecisionInput`,
+`FixedSchedule`, `PriceBased`, and `EsrInformed`. This is simulated dispatch,
+not ERCOT clearing or a live order executor.
+
+- Amendment 5: stored SoC/reservations are DC kWh; power and household load are
+  AC kW. `Battery.transition(...)` is pure; `step(...)` applies its result only
+  to the caller-owned battery. Both use `E_next = E + sqrt(eta)*C*h - D*h/sqrt(eta)`.
+  Commercial discharge subtracts `reserved_dc_kwh` before computing feasibility.
+  The engine owns reservation creation/release; release the reservation being
+  delivered before its transition, retaining all other outstanding reservations.
+  `forced=True` is diagnostic only: any actual reserve breach invalidates the result.
+  Household load affects import/export, never implicitly depletes the battery.
+  No solar, standby loss or degradation is modelled. No money or monetary
+  rounding is performed in this layer.
+- Amendments 3/9: `InformationSet.at(time, feed_interrupts=...)` returns immutable,
+  deduplicated observations with known publication and availability and
+  `available_at <= time`. Unknown availability and retrospective/settlement-only
+  quality are excluded. The latest eligible version wins; conflicting versions
+  at identical timestamps are rejected. Active source interruptions suppress new
+  arrivals and expire known actuals at 30 minutes from interval end; known DAM
+  remains visible. Recovery restores then-available observations. The returned
+  view exposes neither the backing dataset nor future disruption windows.
+- Amendment 6: each policy exposes keyword-only `decide(battery, information,
+  household_load_kw, config, decision_time, feed_interrupts=())`; time must open
+  a UTC quarter. `config.zone` defaults to `LZ_HOUSTON` and
+  `config.current_commitment_kw` defaults to zero; a current delivery suppresses
+  charging. Policies do not mutate battery state or read clocks, RNG, live
+  stores or the network. Reasons describe requests, with acceptance/delivery
+  pending. `hold` and `preserve_backup` neither dispatch nor cancel commitments.
+  Returned config includes a complete `state_snapshot` (including zero load and
+  reservations); decision inputs carry all DAM observations used by thresholds.
+- FixedSchedule charges 00:00–06:00 Central and offers for next-quarter delivery
+  17:00–21:00. PriceBased requires a complete eligible local-day hourly DAM
+  vector (23/24/25 hours), uses nearest-rank Q25/Q75, prioritizes offers over
+  charging, and holds for overlapping quantiles or unavailable DAM. EsrInformed
+  additionally offers on eligible RT >= Q75 and decreasing absolute charging
+  across the latest two contiguous complete 15-minute ERCOT ESR bins. Missing
+  RT/ESR explicitly falls back to PriceBased. This is a simulated heuristic,
+  not an ERCOT scarcity declaration. Offers cannot cross the local day boundary.
+
+S69 owns procurement, accepted commitments, settlement, breach counting, and the
+Decimal day-component ledger with HALF_EVEN posting. C2 does not implement those
+APIs or claim independent review, real-source qualification, or replay acceptance.
