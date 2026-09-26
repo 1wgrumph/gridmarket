@@ -23,7 +23,7 @@ test-data:
 	$(PYTEST) backend/tests/test_ercot.py backend/tests/test_nws.py backend/tests/test_scoring.py
 
 test-dash:
-	npm --prefix dashboard exec -- vitest run
+	npm --prefix dashboard run test
 	npm --prefix dashboard run build
 
 test-providers:
