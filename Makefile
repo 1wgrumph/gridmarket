@@ -1,5 +1,5 @@
 UV := uv run --project backend --frozen
-PYTEST := $(UV) pytest -q
+PYTEST := GRIDMARKET_NWS=off $(UV) pytest -q
 LINT_PATHS := $(wildcard backend tools sdk examples bench mcp-server)
 SHELL := /bin/bash
 
