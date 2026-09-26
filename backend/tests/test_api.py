@@ -4,11 +4,12 @@ import hashlib
 import re
 import sqlite3
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from fastapi.testclient import TestClient
 
-from gridmarket_server import main
+from gridmarket_server import adversary, main, market
 
 SCHEMA = Path(__file__).resolve().parents[1] / "gridmarket_server/schema.sql"
 ORIGIN = "https://gridmarket-worker.example"
@@ -81,6 +82,69 @@ def error(response, status: int, code: str) -> None:
     assert response.status_code == status
     assert response.json()["error"]["code"] == code
     assert response.json()["error"]["message"]
+
+
+def test_dir_p1a_11_market_status_exposes_anomalies(api):
+    _, client = api
+    response = client.get("/v1/market/status")
+    assert response.status_code == 200
+    assert response.json()["anomalies"] == []
+
+
+@pytest.mark.parametrize(
+    "body,auth,status,code,account",
+    [
+        (ORDER, {}, 401, "UNAUTHENTICATED", None),
+        (ORDER, headers("member"), 400, "IDEMPOTENCY_KEY_REQUIRED", "member"),
+        ({**ORDER, "quantity": "bad"}, headers("member", "bad"), 422, "VALIDATION_ERROR", "member"),
+        ({**ORDER, "quantity": 0}, headers("member", "zero"), 422, "VALIDATION_ERROR", "member"),
+        ({**ORDER, "quantity": 51}, headers("member", "large"), 422, "ORDER_TOO_LARGE", "member"),
+        (
+            {**ORDER, "price_cents": 100001},
+            headers("member", "cash"),
+            422,
+            "INSUFFICIENT_FUNDS",
+            "member",
+        ),
+        (
+            {**ORDER, "product_id": "missing"},
+            headers("member", "missing"),
+            422,
+            "UNKNOWN_PRODUCT",
+            "member",
+        ),
+    ],
+)
+def test_dir_p1a_11_order_rejections_are_observed_once(
+    api, monkeypatch, body, auth, status, code, account
+):
+    path, client = api
+    observe = Mock(wraps=adversary.observe)
+    monkeypatch.setattr(adversary, "observe", observe)
+    before = snapshot(path)
+    error(client.post("/v1/orders", headers=auth, json=body), status, code)
+    observe.assert_called_once_with(
+        {"entry_type": "rejection", "account_id": account, "code": code}
+    )
+    assert snapshot(path) == before
+
+
+def test_dir_p1a_11_direct_order_checks_halt_and_observes_rejection(api, monkeypatch):
+    _, _client = api
+    observe = Mock(wraps=adversary.observe)
+    halted = Mock(wraps=adversary.halted)
+    monkeypatch.setattr(adversary, "observe", observe)
+    monkeypatch.setattr(adversary, "halted", halted)
+    with market.connection(write=True) as db:
+        market.place_order(db, "member", ORDER)
+        with pytest.raises(market.HTTPException) as failure:
+            market.place_order(db, "member", {**ORDER, "quantity": 51})
+        assert failure.value.detail["code"] == "ORDER_TOO_LARGE"
+        assert halted.call_count == 2
+        halted.assert_called_with(db, "member")
+    observe.assert_called_once_with(
+        {"entry_type": "rejection", "account_id": "member", "code": "ORDER_TOO_LARGE"}
+    )
 
 
 def test_seit_gm_api_01_bearer_auth_and_hash_only_storage(api):

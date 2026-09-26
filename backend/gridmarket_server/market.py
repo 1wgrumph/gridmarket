@@ -24,6 +24,13 @@ def reject(code: str, status: int = 422) -> None:
     raise HTTPException(status, {"code": code, "message": code.replace("_", " ").capitalize()})
 
 
+def observe_rejection(exc: Exception, account_id: str | None, code: str) -> None:
+    # The same exception can cross both the market and HTTP boundaries.
+    if not getattr(exc, "adversary_observed", False):
+        adversary.observe({"entry_type": "rejection", "account_id": account_id, "code": code})
+        exc.adversary_observed = True
+
+
 @contextmanager
 def connection(write: bool = False):
     db = sqlite3.connect(os.getenv("GRIDMARKET_DB", "/data/gridmarket.db"), timeout=30)
@@ -162,6 +169,14 @@ def _adapters(db, order_id=None):
 
 
 def place_order(db, account_id: str, incoming: Order) -> dict:
+    try:
+        return _place_order(db, account_id, incoming)
+    except HTTPException as exc:
+        observe_rejection(exc, account_id, exc.detail["code"])
+        raise
+
+
+def _place_order(db, account_id: str, incoming: Order) -> dict:
     if adversary.halted(db, account_id):
         reject("MARKET_HALTED", 423)
     item = product(db, incoming["product_id"])
@@ -470,12 +485,12 @@ def tick() -> None:
 
 
 @router.get("/v1/market/status")
-def status() -> dict[str, str]:
+def status() -> dict[str, Any]:
     with connection() as db:
         halted = db.execute(
             "SELECT 1 FROM halts WHERE account_id IS NULL AND ended_at IS NULL"
         ).fetchone()
-    return {"status": "halted" if halted else "open"}
+    return {"status": "halted" if halted else "open", "anomalies": []}
 
 
 @router.get("/v1/market")

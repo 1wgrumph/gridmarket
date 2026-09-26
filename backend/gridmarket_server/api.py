@@ -64,16 +64,22 @@ def error_response(status: int, code: str, message: str | None = None, headers=N
 
 async def http_error(request: Request, exc: HTTPException):
     if isinstance(exc.detail, dict) and "code" in exc.detail:
-        return error_response(
-            exc.status_code, exc.detail["code"], exc.detail["message"], exc.headers
+        code, message = exc.detail["code"], exc.detail["message"]
+    else:
+        code = {404: "NOT_FOUND", 401: "UNAUTHENTICATED", 403: "FORBIDDEN"}.get(
+            exc.status_code, "BAD_REQUEST"
         )
-    code = {404: "NOT_FOUND", 401: "UNAUTHENTICATED", 403: "FORBIDDEN"}.get(
-        exc.status_code, "BAD_REQUEST"
-    )
-    return error_response(exc.status_code, code, str(exc.detail), exc.headers)
+        message = str(exc.detail)
+    if request.method == "POST" and request.url.path == "/v1/orders":
+        market.observe_rejection(exc, getattr(request.state, "account_id", None), code)
+    return error_response(exc.status_code, code, message, exc.headers)
 
 
 async def validation_error(request: Request, exc: RequestValidationError):
+    if request.method == "POST" and request.url.path == "/v1/orders":
+        market.observe_rejection(
+            exc, getattr(request.state, "account_id", None), "VALIDATION_ERROR"
+        )
     return error_response(422, "VALIDATION_ERROR")
 
 
