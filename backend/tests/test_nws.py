@@ -168,3 +168,33 @@ def test_dir_p1a_08_lifespan_survives_poller_failure(
     with TestClient(main.create_app()) as client:
         time.sleep(1)  # Let the background poller hit the failure before shutdown.
         assert client.get("/v1/market/status").status_code == 200
+
+
+def test_dir_p1a_12_missing_updated_timestamp_falls_back(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    async def fake_get(_client: object, url: str, _budget: object) -> dict:
+        if url.startswith("/points/"):
+            return {"properties": {"forecastHourly": "https://api.weather.gov/gridpoints/X"}}
+        if "alerts" in url:
+            return {"features": []}
+        return {
+            "properties": {
+                "updateTime": "2026-09-26T14:00:00+00:00",
+                "periods": [
+                    {
+                        "startTime": "2026-09-26T15:00:00+00:00",
+                        "temperature": 91,
+                        "temperatureUnit": "F",
+                    }
+                ],
+            }
+        }
+
+    monkeypatch.setattr(nws, "_get", fake_get)
+    monkeypatch.setenv("GRIDMARKET_DB", str(tmp_path / "signals.db"))
+    asyncio.run(nws.poll())
+    latest = ercot.signals.latest("NWS-TEMP", "LZ_HOUSTON")
+    assert latest is not None
+    assert latest.value == 91
+    assert latest.published_at == "2026-09-26T14:00:00+00:00"
