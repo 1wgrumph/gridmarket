@@ -3,7 +3,7 @@
 SEIT-GM-ROUTER-01, SEIT-GM-ROUTER-02, SEIT-GM-API-05.
 
 Tick reads ``decision_router.now()``, ``scoring.predict()``, and
-``ercot.signals`` (DA ``np4-190-cd`` hourly, RT ``np6-905-cd`` 15-minute).
+``ercot.signals`` (DA ``NP4-190-CD`` hourly, RT ``NP6-905-CD`` 15-minute).
 ``series`` is half-open on ``interval_start``. Future delivery hours are the
 24 clock hours after the hour that contains ``now``. ``check_id`` is
 ``market:{zone}:{delivery_hour}`` with ``delivery_hour`` the hour-start
@@ -32,8 +32,8 @@ from gridmarket_server.contracts import CheckResult, Prediction, Signal
 from gridmarket_server.main import app
 
 ZONES = ("LZ_HOUSTON", "LZ_NORTH", "LZ_SOUTH", "LZ_WEST")
-DA_REPORT = "np4-190-cd"
-RT_REPORT = "np6-905-cd"
+DA_REPORT = "NP4-190-CD"
+RT_REPORT = "NP6-905-CD"
 NOW = datetime(2026, 9, 26, 12, 30, tzinfo=UTC)
 HOUR = datetime(2026, 9, 26, 12, tzinfo=UTC)
 SCHEMA = Path(__file__).resolve().parents[1] / "gridmarket_server" / "schema.sql"
@@ -533,3 +533,20 @@ def test_seit_gm_api_05_router_cors(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     assert allow == ORIGIN
     assert other_status == 200
     assert other_allow is None
+
+
+def test_router_matches_live_report_ids(monkeypatch: pytest.MonkeyPatch) -> None:
+    """F2: market checks resolve against the uppercase ids the poller stores."""
+    assert decision_router.DA_REPORT == "NP4-190-CD"
+    assert decision_router.RT_REPORT == "NP6-905-CD"
+    store = MemorySignals()
+    hour = delivery(2)
+    store.add("NP4-190-CD", "LZ_HOUSTON", hour, 60, 80.0)
+    store.add("NP6-905-CD", "LZ_HOUSTON", HOUR + timedelta(minutes=15), 15, 90.0)
+    install(monkeypatch, store, [prediction("LZ_HOUSTON", hour, 50.0)], {"t": NOW})
+    assert [c.check_id for c in decision_router.market_checks()] == [
+        check_id("LZ_HOUSTON", hour)
+    ]
+    for minutes in (0, 15, 30, 45):
+        store.add("NP6-905-CD", "LZ_HOUSTON", hour + timedelta(minutes=minutes), 15, 90.0)
+    assert decision_router._market_outcome(f"LZ_HOUSTON:{hour.isoformat()}") is True
