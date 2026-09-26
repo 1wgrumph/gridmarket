@@ -2,6 +2,7 @@
 // Secrets (set with `wrangler secret put`): ERCOT_USERNAME, ERCOT_PASSWORD, ERCOT_SUBSCRIPTION_KEY, ERCOT_ESR_SUBSCRIPTION_KEY, MARKET_KEY
 
 import { buildSnapshot } from "./snapshot.js";
+import { buildNodes, SP_PATTERN } from "./node.js";
 
 const TOKEN_URL =
   "https://ercotb2c.b2clogin.com/ercotb2c.onmicrosoft.com/B2C_1_PUBAPI-ROPC-FLOW/oauth2/v2.0/token";
@@ -186,6 +187,18 @@ export default {
         if (missing.length) {
           return json({ error: "Worker secrets not set", secretsMissing: missing }, 503);
         }
+      }
+
+      // Live price at one or more settlement points, for the plant drill-down
+      if (p === "/api/node") {
+        const sps = (url.searchParams.get("sp") || "").split(",").map((x) => x.trim()).filter((x) => SP_PATTERN.test(x)).slice(0, 4);
+        if (!sps.length) return json({ error: "Pass ?sp=SETTLEMENT_POINT (comma-separated, up to 4)" }, 400);
+        const key = "node:v1:" + sps.join(",");
+        const hit = await env.CACHE.get(key);
+        if (hit) return json(JSON.parse(hit), 200, { "x-cache": "HIT" });
+        const out = await buildNodes((path, params) => ercotJSON(env, path, params), sps);
+        await env.CACHE.put(key, JSON.stringify(out), { expirationTtl: 300 });
+        return json(out, 200, { "x-cache": "MISS" });
       }
 
       // One cached call for the 3D grid diagram
