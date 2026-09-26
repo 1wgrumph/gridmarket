@@ -673,7 +673,7 @@
         <section class="block" id="s1" aria-labelledby="h-s1">
           <h2 id="h-s1"><span class="secno">1</span>BLUF and Lifecycle state</h2>
           <div class="bluf">
-            <p><strong>TDD: 25 slices in 3 waves (foundation plus Worker security; phase 1 plus spec; phase 2 plus stretch). Test slices author red tests, product slices turn them green, three Integration Engineer slices assemble with post-step V&amp;V on gridmarket/integration. The ERCOT Worker security fix (S24-S25) runs in wave 1 with a PR into jordaaan; Jordan deploys. Stretch lanes merge only when green by Sun 04:30 CDT. Reviewer at phase cadence, Test Engineer assurance and Integration Engineer execution assessment at lifecycle cadence; one integrated owner review gates dispatch.</strong></p>
+            <p><strong>TDD (spec lane single_implementer on the tech-writing profile; ui lane on the frontend profile): 25 slices in 3 waves (foundation plus Worker security; phase 1, spec, and the LoneStar, adversary, backtest/parity and ML red tests against S01&#39;s frozen contracts; phase 2 plus stretch), at most 4 concurrent lanes. Test slices author red tests, product slices turn them green, three Integration Engineer slices assemble with post-step V&amp;V on gridmarket/integration. Every slice exits with a commit on its lane branch; each phase assembly ends with a PR merged to main without review. The ERCOT Worker security fix (S24-S25) runs in wave 1 with a PR into jordaaan; Jordan deploys. Stretch lanes merge only when green by Sun 04:30 CDT. One Reviewer Lifecycle review of the integrated candidate at about Sat 22:00 CDT before the Sun 07:00 freeze; Test Engineer assurance and Integration Engineer execution assessment at lifecycle cadence; one integrated owner review gates dispatch.</strong></p>
             <p><strong>Lifecycle state.</strong> <span class="status status-plan"><span class="mark" aria-hidden="true"></span>planning</span></p>
             <p>This manifest compares authorized intent with planned work, evidence, and gaps. It does not grant execution, acceptance, release, or deployment.</p>
           <ul class="legend status-key" aria-label="Status key">
@@ -698,11 +698,13 @@
             <dt>Candidate revision</dt>
             <dd><code>0bfa50a300fe79a2b2722854438e7915aec158dc</code></dd>
             <dt>Candidate digest</dt>
-            <dd><code>3f54a0a17e509081e8e96017492533c09e0deeed31f81392cf369892b48339a4</code></dd>
+            <dd><code>e9993338a22707706c157cbe02f5932a272398c930c02f1516dfe312c7544eb2</code></dd>
             <dt>Profile</dt>
             <dd><code>primary (named:owner-in-chat)</code></dd>
             <dt>Profile configuration digest</dt>
             <dd><code>14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721</code></dd>
+            <dt>Lane profiles (DEC-GM-024)</dt>
+            <dd><code>tech-writing (spec S19-S21), frontend (ui S04, S07); lane entries digest d83b583369a7bf7ce522b32572f78534ffbce41a135b2b84c0087368ec7129ae</code></dd>
             <dt>Development strategy</dt>
             <dd><code>tdd</code></dd>
             <dt>Planning review policy</dt>
@@ -786,7 +788,7 @@
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">DOD-06</th>
-                  <td>Reviewer (phase), Test Engineer assurance (lifecycle) and Integration Engineer execution assessment (lifecycle) complete; DoD Manifest closeout appended.</td>
+                  <td>Reviewer (one Lifecycle review of the integrated candidate at about Sat 2026-09-26 22:00 CDT, then one repair round), Test Engineer assurance (lifecycle) and Integration Engineer execution assessment (lifecycle) complete; DoD Manifest closeout appended.</td>
                   <td>assurance receipts; closeout section</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
@@ -1149,7 +1151,7 @@
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">RISK-GM-11</th>
-                  <td>Risk: Spec, ML, and the Rust lane exceed the 3-lane concurrency limit if they run beside the lanes already in that window. Control: Slot edges serialize them: Spec runs after the data lane in wave 2; ML runs after LoneStar in wave 3; Rust runs after the adversary lane.</td>
+                  <td>Risk: Spec, ML, and the Rust lane exceed the 4-lane concurrency limit (DEC-GM-025) if they run beside the lanes already in that window. Control: Slot edges serialize them: Spec runs after the data lane in wave 2; ML runs after LoneStar in wave 3; Rust runs after the adversary lane.</td>
                   <td>Lifecycle-local; technical plan Risk table</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
@@ -1292,7 +1294,7 @@
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">DES-GM-LANES</th>
-                  <td>Coordinator waves with lane branches and worktrees, integration branch, --no-ff ordered assembly with post-step V&amp;V, cap of 3 lanes with slot edges.</td>
+                  <td>Coordinator waves with lane branches and worktrees, integration branch, --no-ff ordered assembly with post-step V&amp;V, cap of 4 lanes with slot edges (DEC-GM-025), red tests authored in wave 2, a commit per slice and a PR to main per phase (DEC-GM-023).</td>
                   <td>gridmarket/integration; evidence/assembly-*.md</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
@@ -1819,7 +1821,7 @@
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">S19</th>
-                  <td>Test Implementer</td>
+                  <td>Product Implementer</td>
                   <td>S01, S06</td>
                   <td>tools/tests/test_azdiagram.py, tools/tests/test_spec_tools.py, tools/tests/fixtures/</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
@@ -1848,56 +1850,56 @@
                 <tr class="row-plan">
                   <th scope="row" class="id">S10</th>
                   <td>Test Implementer</td>
-                  <td>S09</td>
+                  <td>S01</td>
                   <td>backend/tests/test_providers.py</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">S13</th>
                   <td>Test Implementer</td>
-                  <td>S09</td>
+                  <td>S01</td>
                   <td>backend/tests/test_adversarial.py</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">S15</th>
                   <td>Test Implementer</td>
-                  <td>S21, S09</td>
+                  <td>S01</td>
                   <td>backend/tests/test_backtest.py, backend/tests/test_matching_parity.py, backend/tests/fixtures/ercot_history/, bench/bench_matching.py</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">S11</th>
                   <td>Product Implementer</td>
-                  <td>S10</td>
+                  <td>S09, S10</td>
                   <td>backend/gridmarket_server/providers/lonestar.py, backend/gridmarket_server/providers/__init__.py, backend/gridmarket_server/seed.py</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">S14</th>
                   <td>Product Implementer</td>
-                  <td>S13</td>
+                  <td>S09, S13</td>
                   <td>backend/gridmarket_server/adversary.py, backend/gridmarket_server/market.py, backend/gridmarket_server/api.py</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">S16</th>
                   <td>Product Implementer</td>
-                  <td>S15</td>
+                  <td>S09, S15</td>
                   <td>backend/gridmarket_server/backtest.py</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">S22</th>
                   <td>Test Implementer</td>
-                  <td>S11</td>
+                  <td>S01</td>
                   <td>backend/tests/test_ml.py, backend/tests/fixtures/ml/</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">S17</th>
                   <td>Product Implementer</td>
-                  <td>S14, S15</td>
+                  <td>S09, S14, S15</td>
                   <td>rust/matching_core/, deploy/Dockerfile, deploy/compose.yaml, bench/results.md</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
@@ -1911,7 +1913,7 @@
                 <tr class="row-plan">
                   <th scope="row" class="id">S23</th>
                   <td>Product Implementer</td>
-                  <td>S22, S16</td>
+                  <td>S11, S22, S16</td>
                   <td>backend/gridmarket_server/ml.py, backend/gridmarket_server/ml_data.py, docs/ml-report.md</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
@@ -1977,16 +1979,37 @@
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">Product Implementer</th>
-                  <td>implementation</td>
+                  <td>implementation (primary lanes)</td>
                   <td>Muse Code / Muse Spark 1.3 / max</td>
                   <td>frozen primary (no fallback activated)</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">Test Implementer</th>
-                  <td>implementation</td>
+                  <td>implementation (primary lanes)</td>
                   <td>Codex CLI / GPT-6 Sol / xhigh</td>
                   <td>frozen primary (no fallback activated)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Product Implementer</th>
+                  <td>implementation (spec S19-S21, tech-writing, single_implementer; DEC-GM-024)</td>
+                  <td>Claude Code / Claude Opus 5.5 / medium</td>
+                  <td>frozen tech-writing entry (no fallback activated)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Product Implementer</th>
+                  <td>implementation (ui S07, frontend; DEC-GM-024)</td>
+                  <td>Claude Code / Claude Opus 5.5 / high</td>
+                  <td>frozen frontend entry (no fallback activated)</td>
+                  <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
+                </tr>
+                <tr class="row-plan">
+                  <th scope="row" class="id">Test Implementer</th>
+                  <td>implementation (ui S04, frontend; DEC-GM-024)</td>
+                  <td>Codex CLI / GPT-6 Sol / xhigh</td>
+                  <td>frozen frontend entry (no fallback activated)</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
                 <tr class="row-plan">
@@ -2005,7 +2028,7 @@
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">Reviewer</th>
-                  <td>phase</td>
+                  <td>lifecycle (one review, about Sat 2026-09-26 22:00 CDT; DEC-GM-023)</td>
                   <td>Cursor Agent / Grok 4.7 / high</td>
                   <td>frozen primary (no fallback activated)</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
@@ -2042,7 +2065,7 @@
             <dt>Test Engineer assurance</dt>
             <dd><code>lifecycle</code></dd>
             <dt>Reviewer</dt>
-            <dd><code>phase</code></dd>
+            <dd><code>lifecycle</code></dd>
             <dt>Integration Engineer execution</dt>
             <dd><code>lifecycle</code></dd>
           </dl>
@@ -2442,7 +2465,7 @@
                   <th scope="row" class="id">SEIT-GM-RULE-01</th>
                   <td>inspection</td>
                   <td>slice</td>
-                  <td>CMD-DEPSCAN output (S01, S17) + CMD-RULES output (S18-E) + Reviewer phase finding list</td>
+                  <td>CMD-DEPSCAN output (S01, S17) + CMD-RULES output (S18-E) + Reviewer Lifecycle finding list</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
                 </tr>
                 <tr class="row-plan">
@@ -2720,7 +2743,7 @@
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">RISK-GM-11</th>
-                  <td>Spec, ML, and the Rust lane exceed the 3-lane concurrency limit if they run beside the lanes already in that window.</td>
+                  <td>Spec, ML, and the Rust lane exceed the 4-lane concurrency limit (DEC-GM-025) if they run beside the lanes already in that window.</td>
                   <td>Slot edges serialize them: Spec runs after the data lane in wave 2; ML runs after LoneStar in wave 3; Rust runs after the adversary lane.</td>
                   <td>Drop Rust first, then ML, at the Sun 04:30 CDT cut-off.</td>
                   <td><span class="status status-plan"><span class="mark" aria-hidden="true"></span>Planned</span></td>
@@ -2780,6 +2803,12 @@
                   <td>William (owner)</td>
                   <td>implementation.json + gridmarket-dod-manifest.html at candidate 0bfa50a</td>
                   <td><span class="status status-hold"><span class="mark" aria-hidden="true"></span>Hold</span></td>
+                </tr>
+                <tr class="row-pass">
+                  <th scope="row" class="id">Owner changes at the integrated approval gate (DEC-GM-023..026) applied; package returns to the same gate</th>
+                  <td>William (owner)</td>
+                  <td>journey.json decisions DEC-GM-023..026 and profile_selection.amendments[0]</td>
+                  <td><span class="status status-pass"><span class="mark" aria-hidden="true"></span>Confirmed</span></td>
                 </tr>
                 <tr class="row-plan">
                   <th scope="row" class="id">Continuation grant (proposal)</th>

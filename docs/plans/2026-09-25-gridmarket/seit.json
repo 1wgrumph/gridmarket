@@ -29,12 +29,12 @@
       },
       {
         "path": "docs/plans/2026-09-25-gridmarket/gridmarket-technical-plan.md",
-        "sha256": "22e113028cf9db0f2c75f08ca5f3557df1cb26cd6c21ee83e6e7ccbd046c2a89",
+        "sha256": "22b515aed4899c728b1a1915643526ebce23914993d93b965c996f544de71fc1",
         "binding_status": "bound"
       },
       {
         "path": "docs/plans/2026-09-25-gridmarket/design.md",
-        "sha256": "7efc08bf41967f6e4fbfb0aeb6d97596cb38e30adec050e67ff9cdd5d17c4841",
+        "sha256": "0d98560edbd277f3c1d2a57580f82df1e4b2c9a2a35707eb139bc33ab96d66d1",
         "binding_status": "bound"
       },
       {
@@ -94,7 +94,11 @@
       "DEC-GM-019": "confirmed",
       "DEC-GM-020": "confirmed",
       "DEC-GM-021": "confirmed",
-      "DEC-GM-022": "confirmed"
+      "DEC-GM-022": "confirmed",
+      "DEC-GM-023": "confirmed",
+      "DEC-GM-024": "confirmed",
+      "DEC-GM-025": "confirmed",
+      "DEC-GM-026": "confirmed"
     },
     "open_items": [
       {
@@ -114,7 +118,7 @@
   "responsibility_and_change_authority": {
     "seit_owner": "Planning Test Engineer owns this file; the Plan Integrator copies command and row references into implementation.json and must not invent V&V",
     "assurance": "Assurance Test Engineer (fresh session, test_engineer.assurance route, Lifecycle cadence) reruns required commands and gates on the exact integrated candidate; no author ancestry; author and Integration Engineer runs are diagnostic only",
-    "review": "Reviewer at phase cadence; independent of authors",
+    "review": "Reviewer at Lifecycle cadence (DEC-GM-023): one independent review of the integrated candidate (gridmarket/integration head recorded at about Sat 2026-09-26 22:00 CDT), then one repair round before the Sun 07:00 CDT freeze; independent of authors; phase PRs to main carry no review",
     "integration_execution": "Integration Engineer execution runs PROC-ASSEMBLY and PROC-ERCOT-LIVE-CHECK and assesses at Lifecycle cadence",
     "owner_only": "PROC-TUNNEL, PROC-ACCEPT-P1, PROC-ACCEPT-P2, publication, Worker deployment (Jordan)",
     "change_authority": "before owner approval: Planning Test Engineer delta reconciliation; after owner approval every change is a named planning delta through Planning and Design; journey.json is Orchestrator-owned"
@@ -384,7 +388,7 @@
       "id": "CMD-WRITESET",
       "command": "bash -c 'set -euo pipefail; out=$( { git diff --name-only \"$BASE\"...HEAD; git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u | while read -r f; do ok=; for p in $WRITE_SET; do case \"$f\" in \"$p\"|\"${p%/}\"/*) ok=1;; esac; done; [ -n \"$ok\" ] || echo \"$f\"; done ); [ -z \"$out\" ] || { echo OUT_OF_WRITE_SET; echo \"$out\"; exit 1; }; node /home/spectre/.claude/plugins/cache/bearing-lite/bearing-lite/1.1.5/hooks/write-set-check.cjs -- $WRITE_SET'",
       "pass_rule": "exit 0: no changed, staged, committed-since-BASE, or untracked path outside WRITE_SET, and write-set-check.cjs outcome PASS (no whitespace errors in the named paths); any OUT_OF_WRITE_SET line fails the slice",
-      "description": "Run from the lane worktree root with BASE = the slice base commit (lane base for the first slice of a lane, previous slice exit otherwise) and WRITE_SET = the slice write set from implementation.json (space-separated; directory entries end with /). Works in the worker lane (no Makefile). Integration Engineer steps use the PROC-ASSEMBLY write-set sub-check instead, because merge commits carry lane paths."
+      "description": "Run from the lane worktree root with BASE = the slice base commit (lane base for the first slice of a lane; for a wave 3 implementation slice, its lane sync merge commit of the S09 exit, or of the S16 exit for S23, DEC-GM-025; previous slice exit otherwise) and WRITE_SET = the slice write set from implementation.json (space-separated; directory entries end with /). Works in the worker lane (no Makefile). Integration Engineer steps use the PROC-ASSEMBLY write-set sub-check instead, because merge commits carry lane paths."
     },
     {
       "id": "CMD-RULES",
@@ -481,18 +485,20 @@
   },
   "anomaly_corrective_closure": {
     "anomaly": "typed finding with command id, SEIT row, file:line, and output excerpt",
-    "corrective": "one aggregated repair round per cadence unit (phase for Reviewer, Lifecycle for Assurance TE) fixing every finding; lane slices repair inside the one-repair bound; failed assembly step is reverted and the lane re-enters",
+    "corrective": "one aggregated repair round per cadence unit (Lifecycle for Reviewer and Assurance TE) fixing every finding; lane slices repair inside the one-repair bound; failed assembly step is reverted and the lane re-enters",
     "closure": "deterministic: rerun the failing and required commands on the repaired candidate; no rereview unless the owner asks or the repair changed approved scope",
     "escalation": "a finding needing a requirement or design change becomes a planning delta; owner-only items are surfaced, not decided"
   },
   "integration_vv_sequence": [
     "Wave 1: S01 CMD-SETUP, CMD-LINT, CMD-TEST-CONTRACTS, CMD-DEPSCAN, CMD-SECRETS, CMD-WRITESET; S24 CMD-RED-GREEN-WORKER red baseline + CMD-WRITESET; S25 CMD-RED-GREEN-WORKER green, CMD-TEST-WORKER (burst case), CMD-WRITESET; PR into jordaaan",
     "Wave 2 lanes: TI slice CMD-RED-GREEN red; PI slice CMD-RED-GREEN green + lane CMD-TEST-* + CMD-COVERAGE (backend/tools) + CMD-LINT + CMD-WRITESET; S08 CMD-SMOKE gm-smoke-market:18001; spec lane CMD-TEST-SPEC, CMD-SPEC-LINT",
+    "Wave 2 red-test lanes (DEC-GM-025): S10, S13, S15, S22 CMD-RED-GREEN red on the S01 exit baseline (ids passing there are regression guards) + CMD-WRITESET",
     "S09-A foundation: PROC-ASSEMBLY with CMD-TEST-ALL; CMD-SMOKE recorded NOT_APPLICABLE with reason \"deploy/compose.yaml arrives with the market lane at S09-B\"",
     "S09-B market: PROC-ASSEMBLY (CMD-TEST-ALL, CMD-SMOKE gm-smoke-integration:18000, frozen-contract diff)",
     "S09-C data: PROC-ASSEMBLY",
     "S09-D ui: PROC-ASSEMBLY (dashboard served at /)",
     "S09-E worker: PROC-ASSEMBLY incl. node --test ercot-hackathon/test/, CMD-SECRETS, CMD-RULES; after Jordan deploys: PROC-ERCOT-LIVE-CHECK; phase-1 demoable checkpoint; owner PROC-ACCEPT-P1. Worker not green by cut-off: recorded dropped, merge moves to S18-E",
+    "Wave 3 implementation slices S11, S14, S16, S17, S23: lane sync merge of the S09 exit (S23: the S16 exit), then CMD-RED-GREEN green on the identical TESTS list + lane CMD-TEST-* + CMD-WRITESET from the sync merge commit",
     "S12-A lonestar: PROC-ASSEMBLY; S12-B spec: PROC-ASSEMBLY + CMD-SPEC-LINT; phase-2 checkpoint; owner PROC-ACCEPT-P2 (with PROC-ADV-DEMO once S18-A merged)",
     "S18-A adversary, S18-B backtest, S18-C ML (after backtest merged green), S18-D Rust (after backtest merged, only with benchmark gain; CMD-TEST-PARITY on the merge): PROC-ASSEMBLY each as soon as green; completion-or-drop at Sun 04:30 CDT",
     "S18-E origin/main (with PR #3 if merged): PROC-ASSEMBLY + CMD-SECRETS + CMD-RULES; final integrated candidate",
@@ -551,8 +557,8 @@
     },
     "reviewer": {
       "status": "DECLARED",
-      "cadence": "phase",
-      "note": "coverage_assist enabled, not required"
+      "cadence": "lifecycle",
+      "note": "coverage_assist enabled, not required (disabled for the spec lane, tech-writing profile, DEC-GM-024); one review of the integrated candidate at about Sat 2026-09-26 22:00 CDT (DEC-GM-023)"
     }
   },
   "traceability_matrix": [
@@ -1104,7 +1110,7 @@
       "positive_case": "every locked dependency released >= 14 days before start; CMD-RULES shows every non-merge commit after the planning revision dated >= 2026-09-25 17:00 CDT; Reviewer finds no ported private code",
       "negative_or_failure_case": "a dependency newer than the cutoff, an earlier-dated commit, or ported code fails",
       "command_or_procedure_id": "CMD-DEPSCAN",
-      "evidence": "CMD-DEPSCAN output (S01, S17) + CMD-RULES output (S18-E) + Reviewer phase finding list"
+      "evidence": "CMD-DEPSCAN output (S01, S17) + CMD-RULES output (S18-E) + Reviewer Lifecycle finding list"
     },
     {
       "seit_row_id": "SEIT-GM-RISK-01",
@@ -1211,8 +1217,8 @@
       "acceptance_or_risk_id": "RISK-GM-11",
       "design_or_contract_id": "DES-GM-LANES",
       "boundary_or_test_layer": "scheduling inspection",
-      "positive_case": "never more than 3 active lanes; slot edges honored; write sets disjoint",
-      "negative_or_failure_case": "a fourth concurrent lane or overlapping write set fails",
+      "positive_case": "never more than 4 active lanes; slot edges honored; write sets disjoint",
+      "negative_or_failure_case": "a fifth concurrent lane or overlapping write set fails",
       "command_or_procedure_id": "CMD-WRITESET",
       "evidence": "Coordinator dispatch log + CMD-WRITESET receipts"
     },
@@ -2664,7 +2670,7 @@
       ],
       "stimulus_or_procedure": "make depscan \u2014 every locked dependency released >= 14 days before start; CMD-RULES shows every non-merge commit after the planning revision dated >= 2026-09-25 17:00 CDT; Reviewer finds no ported private code",
       "expected_result": "every locked dependency released >= 14 days before start; CMD-RULES shows every non-merge commit after the planning revision dated >= 2026-09-25 17:00 CDT; Reviewer finds no ported private code",
-      "observable_evidence": "CMD-DEPSCAN output (S01, S17) + CMD-RULES output (S18-E) + Reviewer phase finding list",
+      "observable_evidence": "CMD-DEPSCAN output (S01, S17) + CMD-RULES output (S18-E) + Reviewer Lifecycle finding list",
       "pass_fail_rule": "PASS iff exit 0; `uv lock --check --exclude-newer 2026-09-11T22:00:00Z` passes (every locked Python package released at least 14 days before 2026-09-25 17:00 CDT); every dashboard/package-lock.json package version has registry publish time <= 2026-09-11T22:00:00Z; pip-audit and npm audit report no known vulnerability of severity high or above; with RUST=1, every Cargo.lock crate version and the maturin release have publish time <= 2026-09-11T22:00:00Z, the tagged cases for SEIT-GM-RULE-01 pass, and the negative case is observed as stated; typed gap (tool missing, not_run, backend unavailable) is never PASS",
       "method_fields": {
         "test_layer": "repository inspection",
@@ -2926,8 +2932,8 @@
         "candidate is the exact recorded slice exit or integrated SHA",
         "worktree clean except the declared write set"
       ],
-      "stimulus_or_procedure": "bash -c 'set -euo pipefail; out=$( { git diff --name-only \"$BASE\"...HEAD; git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u | while read -r f; do ok=; for p in $WRITE_SET; do case \"$f\" in \"$p\"|\"${p%/}\"/*) ok=1;; esac; done; [ -n \"$ok\" ] || echo \"$f\"; done ); [ -z \"$out\" ] || { echo OUT_OF_WRITE_SET; echo \"$out\"; exit 1; }; node /home/spectre/.claude/plugins/cache/bearing-lite/bearing-lite/1.1.5/hooks/write-set-check.cjs -- $WRITE_SET' \u2014 never more than 3 active lanes; slot edges honored; write sets disjoint",
-      "expected_result": "never more than 3 active lanes; slot edges honored; write sets disjoint",
+      "stimulus_or_procedure": "bash -c 'set -euo pipefail; out=$( { git diff --name-only \"$BASE\"...HEAD; git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u | while read -r f; do ok=; for p in $WRITE_SET; do case \"$f\" in \"$p\"|\"${p%/}\"/*) ok=1;; esac; done; [ -n \"$ok\" ] || echo \"$f\"; done ); [ -z \"$out\" ] || { echo OUT_OF_WRITE_SET; echo \"$out\"; exit 1; }; node /home/spectre/.claude/plugins/cache/bearing-lite/bearing-lite/1.1.5/hooks/write-set-check.cjs -- $WRITE_SET' \u2014 never more than 4 active lanes; slot edges honored; write sets disjoint",
+      "expected_result": "never more than 4 active lanes; slot edges honored; write sets disjoint",
       "observable_evidence": "Coordinator dispatch log + CMD-WRITESET receipts",
       "pass_fail_rule": "PASS iff exit 0: no changed, staged, committed-since-BASE, or untracked path outside WRITE_SET, and write-set-check.cjs outcome PASS (no whitespace errors in the named paths); any OUT_OF_WRITE_SET line fails the slice, the tagged cases for SEIT-GM-RISK-11 pass, and the negative case is observed as stated; typed gap (tool missing, not_run, backend unavailable) is never PASS",
       "method_fields": {
@@ -2935,7 +2941,7 @@
         "tdd": "not_applicable: non-test method",
         "run_by_slice": "every slice"
       },
-      "negative_or_failure_case": "a fourth concurrent lane or overlapping write set fails"
+      "negative_or_failure_case": "a fifth concurrent lane or overlapping write set fails"
     },
     {
       "id": "SEIT-GM-RISK-12",

@@ -14,6 +14,26 @@ Command IDs come from `specialists/slice-graph.md`. The Planning Test Engineer
 finalizes them in `seit.json`. When `seit.json` changes an ID or pass rule,
 `seit.json` wins and this plan follows it.
 
+## Owner changes applied by Planning and Design (DEC-GM-023..026)
+
+The Integration Engineer planning session wrote this plan. Planning and Design
+applied the owner changes from the integrated approval gate to the text and the
+JSON block below; the IE session did not re-run.
+
+- DEC-GM-025: the cap is 4 lanes. The red-test lanes lonestar (S10),
+  adversary (S13), stretch (S15), and ml (S22) branch from the S01 exit in
+  wave 2. Before each wave 3 implementation slice, the lane's implementer
+  merges the recorded S09 exit (`lane-ml`: the S16 exit) into the lane with
+  `--no-ff` (lane sync). That merge commit is the slice's CMD-WRITESET base.
+  PROC-ASSEMBLY write-set checks are unchanged (CF-22).
+- DEC-GM-023: every slice exits with a commit on its lane branch. Each IE
+  slice (S09, S12, S18) ends with a PR `gridmarket/integration` → `main`,
+  merged with a merge commit and no review. The Reviewer runs once, at
+  Lifecycle cadence, on the integrated candidate at about Sat 2026-09-26
+  22:00 CDT. OD-WORKER-LANDING now applies from the S09 phase PR (CF-23).
+- DEC-GM-024 (lane profiles) and DEC-GM-026 (LICENSE holders) change no
+  assembly rule.
+
 ## Return
 
 - **Status:** `GAPS`
@@ -72,12 +92,12 @@ commits until a new exit SHA is handed over.
 | ui | `gridmarket/lane-ui` | S01 exit | S07 exit (contains S04) | S09-D |
 | worker | `gridmarket/lane-worker` | `origin/jordaaan` at `4853e51` | S25 exit (contains S24 and Jordan's `bae0a16`, `4853e51`) | S09-E |
 | jordan-worker (external) | `origin/jordaaan` | merge-base `a63c8d2` | `4853e51` (not authored by any slice; enters only through the worker item and through `origin/main` after PR #3) | S09-E, S18-E |
-| lonestar | `gridmarket/lane-lonestar` | S09 exit | S11 exit (contains S10) | S12-A |
+| lonestar | `gridmarket/lane-lonestar` | S01 exit; S09 exit merged before S11 | S11 exit (contains S10) | S12-A |
 | spec | `gridmarket/lane-spec` | S01 exit | S21 exit (contains S19, S20) | S12-B |
-| adversary | `gridmarket/lane-adversary` | S09 exit | S14 exit (contains S13) | S18-A |
-| backtest | `gridmarket/lane-stretch` | S09 exit | S16 exit (contains S15) | S18-B |
-| ml | `gridmarket/lane-ml` | S16 exit | S23 exit (contains S15, S16, S22) | S18-C |
-| rust | `gridmarket/lane-rust` | S15 exit | S17 exit (contains S15) | S18-D |
+| adversary | `gridmarket/lane-adversary` | S01 exit; S09 exit merged before S14 | S14 exit (contains S13) | S18-A |
+| backtest | `gridmarket/lane-stretch` | S01 exit; S09 exit merged before S16 | S16 exit (contains S15) | S18-B |
+| ml | `gridmarket/lane-ml` | S01 exit; S16 exit merged before S23 | S23 exit (contains S15, S16, S22) | S18-C |
+| rust | `gridmarket/lane-rust` | S15 exit; S09 exit merged before S17 | S17 exit (contains S15) | S18-D |
 | main | `origin/main` | — | SHA recorded at S18-E entry (contains PR #3 if merged) | S18-E |
 
 The external item is identified by SHA only. Its identity check at S09-E:
@@ -133,12 +153,16 @@ against the S24 and S25 union (`ercot-hackathon/src/index.js`,
   `assembly-phase-2.md`, and `assembly-stretch.md`, committed on the
   integration branch
 - non-force pushes of `gridmarket/integration` to `origin`
+- at the S09, S12, and S18 exits, a PR `gridmarket/integration` → `main`,
+  merged with a merge commit once any required checks are green, with no
+  review (DEC-GM-023); held while OD-WORKER-LANDING is open
 
 It may resolve a conflict only when both sides differ in whitespace alone.
 Every other conflict, code edit, configuration edit (including setting
 `GRIDMARKET_ENGINE`), test edit, or dependency edit returns to the owning lane.
 A contract edit returns to Planning and Design. The IE never pushes to
-`jordaaan`, never comments on or merges PR #3, and never deploys the Worker.
+`jordaaan` or directly to `main`, never comments on or merges PR #3, and never
+deploys the Worker.
 
 ## Stubs and simulators
 
@@ -182,7 +206,7 @@ A contract edit returns to Planning and Design. The IE never pushes to
 | Dependency | Holder | Blocks | If absent |
 |---|---|---|---|
 | OWN-WORKER-ENV: `.env` at the integration worktree root with `GRIDMARKET_WORKER_URL`, `GRIDMARKET_WORKER_KEY` (equal to Jordan's `MARKET_KEY`, exchanged owner-to-Jordan out of band), `GRIDMARKET_ADMIN_KEY`, `GRIDMARKET_CORS_ORIGIN` | owner | PROC-ERCOT-LIVE-CHECK, live data in PROC-ACCEPT-P1/P2, backtest and ML live runs | typed gap `WORKER_ENV_ABSENT`; phase 1 checkpoint stands without live data |
-| HUM-JORDAN-PR: merge or decline the lane-worker PR into `jordaaan`, with a merge commit (not squash or rebase) | Jordan | S18-E clean merge; PR #3 content | declined or open: CF-19 / OD-WORKER-LANDING at the freeze |
+| HUM-JORDAN-PR: merge or decline the lane-worker PR into `jordaaan`, with a merge commit (not squash or rebase) | Jordan | phase PRs to `main` (first at S09); S18-E clean merge; PR #3 content | declined or open when a phase PR is ready: OD-WORKER-LANDING holds the phase PRs (CF-19, CF-23) |
 | HUM-JORDAN-DEPLOY: `wrangler secret put MARKET_KEY`, create the rate-limit bindings, `wrangler deploy` the fixed Worker, report the deployed source SHA and version ID | Jordan | PROC-ERCOT-LIVE-CHECK and PROC-ACCEPT-P1 (target Sat 14:00) | typed gap `WORKER_FIX_NOT_DEPLOYED`; S09 closes without the live check; acceptance waits (running acceptance on the unfixed Worker is OD-WORKER-UNFIXED, owner) |
 | HUM-JORDAN-EDITS: no edits to `ercot-hackathon/src/index.js`, `wrangler.jsonc`, `README.md` on `jordaaan` until the lane PR merges, or tell the Coordinator | Jordan | S25 PR merge, S18-E | CF-14 procedure |
 | PR #3 merged into `main` | Jordan or owner | S18-E content | S18-E merges `origin/main` as it is; CF-19 |
@@ -204,20 +228,29 @@ credential files. It only runs processes that consume them.
   bases (planning revision vs `4853e51`); the merge-base of the two is
   `a63c8d2`, and Jordan's side changes only `ercot-hackathon/**`. 2 lanes.
 - Wave 2: market {S02, S05, S08}, data {S03, S06} then spec {S19, S20, S21}
-  (slot S06 --> S19), ui {S04, S07}. `README.md` (S08, root) and
-  `ercot-hackathon/README.md` (S25) are different paths. `tools/`, `spec/`,
-  `skills/spec-*` are spec-only. 3 lanes within the wave.
-- Wave 3: lonestar {S10, S11} then ml {S22, S23} (slot S11 --> S22),
-  adversary {S13, S14} then rust {S17} (slot S14 --> S17), stretch {S15, S16}.
-  S11 owns `seed.py` and `providers/*`; S14 owns `market.py`, `api.py`,
+  (slot S06 --> S19), ui {S04, S07}, and the red-test lanes lonestar {S10},
+  adversary {S13}, stretch {S15}, ml {S22} (DEC-GM-025). `README.md` (S08,
+  root) and `ercot-hackathon/README.md` (S25) are different paths. `tools/`,
+  `spec/`, `skills/spec-*` are spec-only. The red-test write sets
+  (`test_providers.py`, `test_adversarial.py`, `test_backtest.py`,
+  `test_matching_parity.py`, `fixtures/ercot_history/`,
+  `bench/bench_matching.py`, `test_ml.py`, `fixtures/ml/`) appear in no other
+  lane. At most 4 running lanes.
+- Wave 3: lonestar {S11} then ml {S23} (slot S11 --> S23), adversary {S14}
+  then rust {S17} (slot S14 --> S17), stretch {S16}; the spec lane may still
+  run. S11 owns `seed.py` and `providers/*`; S14 owns `market.py`, `api.py`,
   `adversary.py`; S17 owns `deploy/*`, `rust/*`, `bench/results.md`; S23 owns
-  `ml.py`, `ml_data.py`, `docs/ml-report.md`. 3 lanes within the wave.
+  `ml.py`, `ml_data.py`, `docs/ml-report.md`. At most 4 running lanes.
 - Shared lineage: rust contains S15 and ml contains S15 and S16. The same
   commits reach the integration branch more than once, which merges cleanly,
-  but it creates merge-order dependencies (CF-15).
+  but it creates merge-order dependencies (CF-15). Every wave 3 lane also
+  contains the S09 exit through its lane sync merge; those commits are already
+  on the integration branch.
 
 **Defect:** the proof counts lanes per wave. Dependencies let the worker lane
 overlap wave 2 and the spec lane overlap wave 3, so 4 lanes can run (CF-13).
+Resolved: the cap counts running lanes across waves (CF-13), and DEC-GM-025
+raises it to 4.
 
 ## Lifecycle-end integrated technical assessment (execution session)
 
@@ -239,17 +272,17 @@ candidate to the Assurance Test Engineer. Inputs are in
       {"lane": "data", "branch": "gridmarket/lane-data", "slices": ["S03", "S06"], "created_from": "S01 exit commit", "exit_commits": {"S06": "recorded by Coordinator at S06 green"}},
       {"lane": "ui", "branch": "gridmarket/lane-ui", "slices": ["S04", "S07"], "created_from": "S01 exit commit", "exit_commits": {"S07": "recorded by Coordinator at S07 green"}},
       {"lane": "spec", "branch": "gridmarket/lane-spec", "slices": ["S19", "S20", "S21"], "created_from": "S01 exit commit (wave 2 lane; starts after S06 by slot edge)", "exit_commits": {"S21": "recorded by Coordinator at S21 green"}},
-      {"lane": "lonestar", "branch": "gridmarket/lane-lonestar", "slices": ["S10", "S11"], "created_from": "S09 exit commit on gridmarket/integration", "exit_commits": {"S11": "recorded by Coordinator at S11 green"}},
-      {"lane": "adversary", "branch": "gridmarket/lane-adversary", "slices": ["S13", "S14"], "created_from": "S09 exit commit on gridmarket/integration", "exit_commits": {"S14": "recorded by Coordinator at S14 green"}},
-      {"lane": "stretch", "branch": "gridmarket/lane-stretch", "slices": ["S15", "S16"], "created_from": "S09 exit commit on gridmarket/integration", "exit_commits": {"S15": "recorded by Coordinator at S15 red-verified (base of lane-rust)", "S16": "recorded by Coordinator at S16 green (backtest item; base of lane-ml)"}},
-      {"lane": "rust", "branch": "gridmarket/lane-rust", "slices": ["S17"], "created_from": "S15 exit commit on gridmarket/lane-stretch", "exit_commits": {"S17": "recorded by Coordinator at S17 green (Rust item)"}},
-      {"lane": "ml", "branch": "gridmarket/lane-ml", "slices": ["S22", "S23"], "created_from": "S16 exit commit on gridmarket/lane-stretch", "exit_commits": {"S23": "recorded by Coordinator at S23 green (ML item)"}}
+      {"lane": "lonestar", "branch": "gridmarket/lane-lonestar", "slices": ["S10", "S11"], "created_from": "S01 exit commit (wave 2 red-test lane, DEC-GM-025); before S11 the lane merges the recorded S09 exit SHA (--no-ff, lane sync)", "exit_commits": {"S10": "recorded by Coordinator at S10 red-verified", "S11": "recorded by Coordinator at S11 green"}},
+      {"lane": "adversary", "branch": "gridmarket/lane-adversary", "slices": ["S13", "S14"], "created_from": "S01 exit commit (wave 2 red-test lane, DEC-GM-025); before S14 the lane merges the recorded S09 exit SHA (--no-ff, lane sync)", "exit_commits": {"S13": "recorded by Coordinator at S13 red-verified", "S14": "recorded by Coordinator at S14 green"}},
+      {"lane": "stretch", "branch": "gridmarket/lane-stretch", "slices": ["S15", "S16"], "created_from": "S01 exit commit (wave 2 red-test lane, DEC-GM-025); before S16 the lane merges the recorded S09 exit SHA (--no-ff, lane sync)", "exit_commits": {"S15": "recorded by Coordinator at S15 red-verified (base of lane-rust)", "S16": "recorded by Coordinator at S16 green (backtest item; base of lane-ml)"}},
+      {"lane": "rust", "branch": "gridmarket/lane-rust", "slices": ["S17"], "created_from": "S15 exit commit on gridmarket/lane-stretch; before S17 the lane merges the recorded S09 exit SHA (--no-ff, lane sync, DEC-GM-025)", "exit_commits": {"S17": "recorded by Coordinator at S17 green (Rust item)"}},
+      {"lane": "ml", "branch": "gridmarket/lane-ml", "slices": ["S22", "S23"], "created_from": "S01 exit commit (wave 2 red-test lane, DEC-GM-025); before S23 the lane merges the recorded S16 exit SHA (contains the S09 exit; --no-ff, lane sync)", "exit_commits": {"S22": "recorded by Coordinator at S22 red-verified", "S23": "recorded by Coordinator at S23 green (ML item)"}}
     ],
     "external": [
       {"item": "jordan-worker", "ref": "origin/jordaaan", "sha": "4853e51b2a5d8564631946e688e53802f83a7ab8", "contains": ["bae0a16 Add ercot-hackathon Worker", "4853e51 Add God's Eye ERCOT globe view"], "merge_base_with_planning": "a63c8d2e286c8b9bfe686552af6b430cbfc2a07e", "paths": "ercot-hackathon/** only (9 paths, verified with git diff --name-only a63c8d2 4853e51)", "secrets_precheck": "gitleaks 8.30.1 over a63c8d2..4853e51: 2 commits, no leaks", "owner": "Jordan (human lane, not a Bearing role)", "enters_via": ["S09-E (inside the S25 exit)", "S18-E (origin/main after PR #3)"]},
       {"item": "main", "ref": "origin/main", "sha": "712f63a4252ee9db5db7f9d403e64564ab44dca6 at planning time; the SHA merged is recorded at S18-E entry", "enters_via": ["S18-E"]}
     ],
-    "rule": "A merge consumes the recorded exit SHA (or recorded origin/main SHA), never a moving branch tip. No force-push, no history rewrite, no git switch in the owner checkout. The IE never pushes to jordaaan or main and never merges PR #3."
+    "rule": "A merge consumes the recorded exit SHA (or recorded origin/main SHA), never a moving branch tip. No force-push, no history rewrite, no git switch in the owner checkout. The IE never pushes to jordaaan or directly to main and never merges PR #3; main changes through the phase PRs at the S09, S12 and S18 exits (DEC-GM-023). Lane sync merges (DEC-GM-025) are made by the lane's implementer in the lane worktree, never on gridmarket/integration."
   },
   "worktrees": {
     "rule": "Every linked worktree is /home/spectre/alphazede/worktrees/base-gridmarket-<lane>; never hidden directories or /tmp. Agents create them without asking at the lane's start. The owner checkout /home/spectre/alphazede/Hackathons/Base keeps branch gridmarket/lifecycle-setup.",
@@ -308,7 +341,7 @@ candidate to the Assurance Test Engineer. Inputs are in
       "entry_criteria": ["S09-D closed green", "S25 exit SHA recorded with the jordaaan SHA it is based on and the PR URL into jordaaan; the S24 and S25 commands passed in the lane (CMD-RED-GREEN-WORKER with S24 red baseline and S25 green, CMD-TEST-WORKER incl. the burst case, CMD-WRITESET)", "external-item check: git diff --name-only $(git merge-base <integration-head> <S25-exit>) <S25-exit> lists only ercot-hackathon/**", "agent write-set check: git log --name-only --format= <S25-exit> --not <jordaaan-sha-at-lane-base> lists only ercot-hackathon/src/index.js, ercot-hackathon/wrangler.jsonc, ercot-hackathon/README.md, ercot-hackathon/test/security.test.mjs", "frozen-contract diff empty"],
       "post_step_vv": ["CMD-TEST-WORKER (node --test ercot-hackathon/test/, from the integration worktree root)", "CMD-TEST-ALL", "CMD-TEST-DASH", "CMD-SMOKE (gm-smoke-integration:18000)", "CMD-SECRETS (the merge brings Jordan's commits into scanned history)", "PROC-ASSEMBLY (AC-GM-RULE-02: the merged views under ercot-hackathon/public keep the label 'baseline rules · Jev gateway pending' and call no Jev engine)", "PROC-ERCOT-LIVE-CHECK only after HUM-JORDAN-DEPLOY and OWN-WORKER-ENV, with the demo poller stopped: one call per Worker route of DES-GM-ERCOT with the market key, one keyless /api/report call expecting 401, one non-allowlisted report expecting 404, no fresh parameter"],
       "rollback": "Red merge V&V: git revert -m 1 <S09-E merge>; rerun CMD-TEST-ALL and CMD-SMOKE on the revert commit; return the worker lane. The revert also removes Jordan's ercot-hackathon/ source; a later S18-E merge of origin/main will not restore it because the commits are already ancestors (CF-17), so re-entry uses revert-of-revert. Live-check failures do not revert: 401/404 on keyed calls is a key or allowlist mismatch returned to the worker lane (and Jordan for the deployed version); ERCOT outage or 429 is typed gap ERCOT_LIVE_UNAVAILABLE; a parser mismatch (RISK-GM-09) returns to the data lane via the re-entry procedure.",
-      "exit": "Phase 1 demoable checkpoint recorded in evidence/assembly-phase-1.md: integration head SHA, code tree SHA, configuration identity (incl. jordaaan base SHA, S25 exit, PR URL and state, deployed Worker source SHA and version ID as reported by Jordan, or typed gap WORKER_FIX_NOT_DEPLOYED / WORKER_ENV_ABSENT); evidence committed and pushed; wave 3 lanes branch from this commit; owner notified that PROC-ACCEPT-P1 is ready once the live check passed. If the live check is deferred, it reruns on this checkpoint when Jordan reports the deploy, before PROC-ACCEPT-P1, with no merge."
+      "exit": "Phase 1 demoable checkpoint recorded in evidence/assembly-phase-1.md: integration head SHA, code tree SHA, configuration identity (incl. jordaaan base SHA, S25 exit, PR URL and state, deployed Worker source SHA and version ID as reported by Jordan, or typed gap WORKER_FIX_NOT_DEPLOYED / WORKER_ENV_ABSENT); evidence committed and pushed; phase 1 PR gridmarket/integration -> main opened and merged with a merge commit, no review (DEC-GM-023; held while OD-WORKER-LANDING is open); wave 3 implementation lanes merge this commit (lane sync, DEC-GM-025); owner notified that PROC-ACCEPT-P1 is ready once the live check passed. If the live check is deferred, it reruns on this checkpoint when Jordan reports the deploy, before PROC-ACCEPT-P1, with no merge."
     },
     {
       "id": "S12-A", "slice": "S12", "order": 6,
@@ -324,7 +357,7 @@ candidate to the Assurance Test Engineer. Inputs are in
       "entry_criteria": ["S12-A closed green, or lonestar dropped at cut-off (the spec merge does not need lonestar)", "S21 exit SHA recorded by Sun 04:30 CDT; the S19, S20, S21 commands passed (CMD-RED-GREEN, CMD-TEST-SPEC, CMD-SPEC-LINT, CMD-WRITESET)", "frozen-contract diff empty", "lane write-set check passes against the union of S19, S20, S21 (tools/tests/, tools/azdiagram/, tools/spec_build.py, tools/spec_lint.py, spec/template/, spec/gridmarket/, spec/GridMarket-Specification.md, skills/spec-*/)", "Graphviz and draw.io present on the host (version recorded)"],
       "post_step_vv": ["CMD-TEST-SPEC", "CMD-SPEC-LINT", "CMD-LINT", "CMD-TEST-ALL", "CMD-TEST-DASH", "CMD-SMOKE (gm-smoke-integration:18000)", "CMD-SECRETS", "PROC-ASSEMBLY"],
       "rollback": "git revert -m 1 <S12-B merge>; rerun CMD-TEST-ALL and CMD-SMOKE on the revert commit; the phase 2 checkpoint (S12-A) stays; return the spec lane or record it dropped at cut-off",
-      "exit": "Green; the built specification and its figures are present at the merge commit; result appended to evidence/assembly-phase-2.md and pushed"
+      "exit": "Green; the built specification and its figures are present at the merge commit; result appended to evidence/assembly-phase-2.md and pushed; then the phase 2 PR gridmarket/integration -> main is opened and merged with a merge commit, no review (DEC-GM-023; also after S12-B is reverted or the spec lane dropped)"
     },
     {
       "id": "S18-A", "slice": "S18", "order": 8,
@@ -353,7 +386,7 @@ candidate to the Assurance Test Engineer. Inputs are in
     {
       "id": "S18-D", "slice": "S18", "order": 11,
       "merges": {"lane": "rust", "branch": "gridmarket/lane-rust", "exit_commit_of": "S17"},
-      "entry_criteria": ["S18-B merged (green, even if later reverted); if backtest was never merged, S18-D is skipped because lane-rust carries S15's test_backtest.py without backtest.py, which turns CMD-TEST-ALL red (CF-15)", "S17 exit SHA recorded by Sun 04:30 CDT; S17 commands passed (CMD-RED-GREEN, CMD-TEST-PARITY with the extension built, CMD-BENCH, CMD-DEPSCAN for maturin/PyO3, CMD-SMOKE on gm-smoke-stretch:18002, CMD-WRITESET over <S15-exit>..<S17-exit>)", "bench/results.md at the S17 exit SHA shows Rust orders/second strictly higher than Python on the identical workload; otherwise S18-D is skipped and recorded, not merged", "frozen-contract diff empty"],
+      "entry_criteria": ["S18-B merged (green, even if later reverted); if backtest was never merged, S18-D is skipped because lane-rust carries S15's test_backtest.py without backtest.py, which turns CMD-TEST-ALL red (CF-15)", "S17 exit SHA recorded by Sun 04:30 CDT; S17 commands passed (CMD-RED-GREEN, CMD-TEST-PARITY with the extension built, CMD-BENCH, CMD-DEPSCAN for maturin/PyO3, CMD-SMOKE on gm-smoke-stretch:18002, CMD-WRITESET from the S17 lane sync merge commit)", "bench/results.md at the S17 exit SHA shows Rust orders/second strictly higher than Python on the identical workload; otherwise S18-D is skipped and recorded, not merged", "frozen-contract diff empty"],
       "post_step_vv": ["CMD-LINT", "CMD-TEST-ALL", "CMD-TEST-PARITY (inside the built image, extension present)", "CMD-SMOKE (gm-smoke-integration:18000; the engine is rust only if compose sets GRIDMARKET_ENGINE=rust)", "CMD-SECRETS", "PROC-ASSEMBLY"],
       "rollback": "git revert -m 1 <S18-D merge>; rerun CMD-TEST-ALL and CMD-SMOKE on the revert commit (image rebuilt without the Rust stage); record the Rust item dropped",
       "exit": "Green; configuration identity records GRIDMARKET_ENGINE and the extension build; Reverify handoff to the Assurance Test Engineer for the built PyO3 extension (the only binary artifact)"
@@ -364,7 +397,7 @@ candidate to the Assurance Test Engineer. Inputs are in
       "entry_criteria": ["Every earlier step is closed green, reverted, skipped, or dropped with a recorded reason", "Not later than Sun 06:00 CDT", "git fetch origin; record origin/main SHA, PR #3 state, and the lane-worker PR state (merged with merge commit, merged by squash or rebase, open, or declined)", "git diff --name-only <integration-head>...<main-sha> lists only ercot-hackathon/** and docs/plans/** (anything else is AN-CONTRACT or AN-WRITESET)", "frozen-contract diff empty"],
       "post_step_vv": ["CMD-TEST-WORKER", "CMD-TEST-ALL", "CMD-TEST-DASH", "CMD-SMOKE (gm-smoke-integration:18000)", "CMD-SECRETS (full Git history; AC-GM-SEC-01)", "PROC-ASSEMBLY (LICENSE present at the root; .env untracked; views label per AC-GM-RULE-02)"],
       "rollback": "Non-whitespace conflict in ercot-hackathon/ (Jordan's later edits vs S25, CF-14): git merge --abort; the candidate is the pre-merge head; return the conflict to the worker lane Product Implementer as a repair on gridmarket/lane-worker (new exit SHA, re-entered at S18-E) and tell Jordan; unresolved by the freeze is CF-19. Red after merge: revert the merge and repeat S18-E without it. If the final V&V is red for another reason: revert the most recent merge step and repeat; the fallback candidate is the last green checkpoint (phase 2, else phase 1).",
-      "exit": "Final integrated candidate declared in evidence/assembly-stretch.md with its configuration identity, dropped-lane list, origin/main SHA, and PR #3 state; committed and pushed; handed to the Assurance Test Engineer (CANDIDATE_READY from the execution session). The landing PR gridmarket/integration -> main waits on OD-WORKER-LANDING when CF-19 applies."
+      "exit": "Final integrated candidate declared in evidence/assembly-stretch.md with its configuration identity, dropped-lane list, origin/main SHA, and PR #3 state; committed and pushed; handed to the Assurance Test Engineer (CANDIDATE_READY from the execution session). The S18 phase PR gridmarket/integration -> main (the landing PR) is opened and merged with a merge commit, no review, before the Sun 07:00 CDT freeze (DEC-GM-023), unless OD-WORKER-LANDING holds it."
     }
   ],
   "configuration_identity": {
@@ -389,9 +422,9 @@ candidate to the Assurance Test Engineer. Inputs are in
   },
   "authorized_glue": {
     "product_paths": "none",
-    "allowed_writes": ["git merge --no-ff <recorded exit SHA> merge commits on gridmarket/integration", "git merge --no-ff <recorded origin/main SHA> at S18-E", "git revert -m 1 <merge> revert commits and revert-of-revert commits during recovery", "evidence files docs/plans/2026-09-25-gridmarket/evidence/assembly-phase-1.md, assembly-phase-2.md, assembly-stretch.md (S09, S12, S18 write sets) committed on gridmarket/integration", "non-force git push origin gridmarket/integration"],
+    "allowed_writes": ["git merge --no-ff <recorded exit SHA> merge commits on gridmarket/integration", "git merge --no-ff <recorded origin/main SHA> at S18-E", "git revert -m 1 <merge> revert commits and revert-of-revert commits during recovery", "evidence files docs/plans/2026-09-25-gridmarket/evidence/assembly-phase-1.md, assembly-phase-2.md, assembly-stretch.md (S09, S12, S18 write sets) committed on gridmarket/integration", "non-force git push origin gridmarket/integration", "at the S09, S12 and S18 exits: open a PR gridmarket/integration -> main and merge it with a merge commit once any required checks are green; no review on phase PRs (DEC-GM-023); not while OD-WORKER-LANDING is open"],
     "conflicts": "Resolve only hunks whose sides differ in whitespace alone. Any other conflict: git merge --abort and return it to the owning lane (write sets are disjoint, so a lane conflict signals a write-set violation; an S18-E conflict in ercot-hackathon/ goes to the worker lane).",
-    "forbidden": ["editing product, test, configuration, dependency, or contract files", "setting GRIDMARKET_ENGINE or any compose value", "weakening, skipping, or deselecting tests", "force-push, reset --hard, history rewrite, git switch in the owner checkout", "reading or printing .env, MARKET_KEY, or tunnel credentials", "pushing to jordaaan or main, merging or commenting on PR #3, deploying the Worker", "tunnel start, public flip"]
+    "forbidden": ["editing product, test, configuration, dependency, or contract files", "setting GRIDMARKET_ENGINE or any compose value", "weakening, skipping, or deselecting tests", "force-push, reset --hard, history rewrite, git switch in the owner checkout", "reading or printing .env, MARKET_KEY, or tunnel credentials", "pushing to jordaaan or directly to main, squash or rebase merge of a phase PR, merging or commenting on PR #3, deploying the Worker", "tunnel start, public flip"]
   },
   "stubs": [
     {"id": "STUB-WORKER-FIXTURES", "what": "backend/tests/fixtures/ercot/ (Worker snapshot and report-route shapes), fixtures/nws/, fixtures/ercot_history/, fixtures/ml/", "scope": "tests only (DEC-GM-014)", "removed_by": "never in the live path; the live path has no fixture loader"},
@@ -425,10 +458,11 @@ candidate to the Assurance Test Engineer. Inputs are in
     "worker": "S25 exit and PR into jordaaan target Sat 2026-09-26 10:00, so Jordan can deploy before PROC-ERCOT-LIVE-CHECK; S09-A..D do not wait for it (CF-16)",
     "phase_1": "S09 target Sat 2026-09-26 14:00; no wave 3 merge before S09-E closes",
     "phase_2": "S12-A target Sat 2026-09-26 20:00. If S12-A is not closed by Sun 2026-09-27 02:00, raise OWNER_DECISION_REQUIRED OD-ORDER. Default until answered: strict order. S12-B (spec) merges when green, up to the stretch cut-off.",
+    "review": "Sat 2026-09-26 22:00: the Reviewer's one Lifecycle review of the integrated candidate (gridmarket/integration head SHA recorded then); its one repair round lands through the owning lanes and assembly before the Sun 07:00 freeze (DEC-GM-023)",
     "stretch": "A lane (including lonestar and spec) whose exit SHA is not recorded green by Sun 2026-09-27 04:30 is dropped and recorded, never forced in. A merge step may start up to 04:30. A step not green by 05:30 is reverted.",
     "final_candidate": "S18-E declared by Sun 2026-09-27 06:00",
     "freeze": "Sun 2026-09-27 07:00: no merges after the freeze; only a revert to the last green checkpoint if the demo breaks. OD-WORKER-LANDING is raised at the freeze if CF-19 applies.",
-    "submission": "Sun 2026-09-27 11:00; the landing PR gridmarket/integration -> main on origin merges after the assurance verdict and before 11:00 (PR-only by convention, DEC-GM-018); the public flip is owner-only"
+    "submission": "Sun 2026-09-27 11:00; main holds the S18 phase PR merged before the freeze (DEC-GM-023; PR-only by convention, DEC-GM-018); after the freeze only a revert PR to the last green checkpoint; the public flip is owner-only"
   },
   "final_candidate": {
     "definition": "The commit on gridmarket/integration recorded at S18-E exit: the last green merge (or revert) commit's code tree plus evidence commits, with every step closed green, reverted, skipped, or dropped with a reason",
@@ -440,20 +474,20 @@ candidate to the Assurance Test Engineer. Inputs are in
   },
   "lifecycle_assessment_inputs": {
     "session": "fresh integration_engineer.execution session on the frozen route with profile fallbacks, no ancestry from any lane author session, Lifecycle cadence",
-    "inputs": ["final candidate SHA and code tree SHA on gridmarket/integration", "evidence/assembly-phase-1.md, assembly-phase-2.md, assembly-stretch.md with per-step command outputs and identities", "configuration_identity at S18-E, incl. jordaaan base SHA, origin/main SHA, PR #3 and lane-worker PR states, and the deployed Worker identity as reported by Jordan", "seit.json rows for post-step V&V, acceptance, and gates (red-then-green incl. CMD-RED-GREEN-WORKER, changed-line coverage, mutation, Reverify on the PyO3 extension if S18-D merged, otherwise Reverify: not applicable because no binary artifact)", "anomaly log with typed gaps (WORKER_ENV_ABSENT, WORKER_FIX_NOT_DEPLOYED, WORKER_KEY_MISMATCH, ERCOT_LIVE_UNAVAILABLE, dropped lanes with reasons)", "PROC-ERCOT-LIVE-CHECK result against the deployed Worker, or its typed gap", "owner-run PROC-ACCEPT-P1 and PROC-ACCEPT-P2 results with the SC-1..SC-11 checklist, or not-run typed gaps", "AC disposition table: phase 1 incl. AC-GM-EDGE-01..04, phase 2 incl. AC-GM-SPEC-01..03, stretch incl. AC-GM-ML-01 (passed on the candidate or dropped with reason)", "CMD-SECRETS full-history result and LICENSE check (AC-GM-SEC-01)", "Reviewer phase-cadence receipts and review.coverage_assist status (presence only; the IE does not adjudicate defects)", "the approved user-facing outcome: gridmarket-technical-plan.md Outcome and intent section 20 demo story"],
+    "inputs": ["final candidate SHA and code tree SHA on gridmarket/integration", "evidence/assembly-phase-1.md, assembly-phase-2.md, assembly-stretch.md with per-step command outputs and identities", "configuration_identity at S18-E, incl. jordaaan base SHA, origin/main SHA, PR #3 and lane-worker PR states, and the deployed Worker identity as reported by Jordan", "seit.json rows for post-step V&V, acceptance, and gates (red-then-green incl. CMD-RED-GREEN-WORKER, changed-line coverage, mutation, Reverify on the PyO3 extension if S18-D merged, otherwise Reverify: not applicable because no binary artifact)", "anomaly log with typed gaps (WORKER_ENV_ABSENT, WORKER_FIX_NOT_DEPLOYED, WORKER_KEY_MISMATCH, ERCOT_LIVE_UNAVAILABLE, dropped lanes with reasons)", "PROC-ERCOT-LIVE-CHECK result against the deployed Worker, or its typed gap", "owner-run PROC-ACCEPT-P1 and PROC-ACCEPT-P2 results with the SC-1..SC-11 checklist, or not-run typed gaps", "AC disposition table: phase 1 incl. AC-GM-EDGE-01..04, phase 2 incl. AC-GM-SPEC-01..03, stretch incl. AC-GM-ML-01 (passed on the candidate or dropped with reason)", "CMD-SECRETS full-history result and LICENSE check (AC-GM-SEC-01)", "Reviewer Lifecycle review receipt (candidate recorded at about Sat 2026-09-26 22:00 CDT) with its repair round, and review.coverage_assist status (presence only; the IE does not adjudicate defects)", "the approved user-facing outcome: gridmarket-technical-plan.md Outcome and intent section 20 demo story"],
     "assessment_questions": ["Does the candidate run the section 20 demo story end to end without a crash, reading ERCOT data only through the deployed Worker?", "Is every interface in CONTRACT-GM-API, ENGINE, PROVIDER, SIGNALS, PREDICTION, SCHEMA, WORKER exercised at its final state?", "Does the configuration identity match the image, compose file, and deployed Worker actually used for acceptance and recording?"]
   },
   "owner_dependencies": [
     {"id": "OWN-WORKER-ENV", "what": "untracked .env at the integration worktree root with GRIDMARKET_WORKER_URL, GRIDMARKET_WORKER_KEY (value equal to Jordan's MARKET_KEY, exchanged owner-to-Jordan out of band), GRIDMARKET_ADMIN_KEY, GRIDMARKET_CORS_ORIGIN; supersedes the former OWN-ERCOT-KEY (DEC-GM-021)", "blocks": ["PROC-ERCOT-LIVE-CHECK (S09-E)", "PROC-ACCEPT-P1/P2 live data", "AC-GM-BT-01 and AC-GM-ML-01 live runs"], "blocks_when": "S09-E, target Sat 14:00; it blocks no lane slice", "if_absent": "typed gap WORKER_ENV_ABSENT; phase 1 checkpoint stands without live data"},
     {"id": "HUM-JORDAN-DEPLOY", "what": "Jordan sets MARKET_KEY (wrangler secret put MARKET_KEY), creates the RATE_LIMITER and ERCOT_BUDGET bindings, deploys the fixed Worker (wrangler deploy), and reports the deployed source SHA and version ID", "blocks": ["PROC-ERCOT-LIVE-CHECK", "PROC-ACCEPT-P1", "PROC-ACCEPT-P2"], "blocks_when": "after the S25 PR exists, before S09-E live check (target Sat 14:00)", "if_absent": "typed gap WORKER_FIX_NOT_DEPLOYED; S09 closes without the live check; acceptance waits; running acceptance on the unfixed Worker is owner decision OD-WORKER-UNFIXED"},
-    {"id": "HUM-JORDAN-PR", "what": "Jordan merges or declines the lane-worker PR into jordaaan, using a merge commit (not squash or rebase); Jordan or the owner merges PR #3 into main", "blocks": ["S18-E clean merge", "OD-WORKER-LANDING avoidance"], "blocks_when": "before S18-E (Sun 06:00)", "if_absent": "S18-E merges origin/main as it is and records the PR states; CF-19 decides the landing PR"},
+    {"id": "HUM-JORDAN-PR", "what": "Jordan merges or declines the lane-worker PR into jordaaan, using a merge commit (not squash or rebase); Jordan or the owner merges PR #3 into main", "blocks": ["phase PRs to main without OD-WORKER-LANDING (first at S09)", "S18-E clean merge", "OD-WORKER-LANDING avoidance"], "blocks_when": "before the S09 phase PR (target Sat 14:00) to avoid OD-WORKER-LANDING; before S18-E (Sun 06:00) for a clean merge", "if_absent": "OD-WORKER-LANDING holds the phase PRs (CF-19, CF-23); S18-E merges origin/main as it is and records the PR states"},
     {"id": "HUM-JORDAN-EDITS", "what": "Jordan does not edit ercot-hackathon/src/index.js, wrangler.jsonc, or README.md on jordaaan until the lane PR merges, or tells the Coordinator first", "blocks": ["S25 PR merge", "S18-E"], "blocks_when": "wave 1 through S18-E", "if_absent": "CF-14 procedure: the worker lane merges the new jordaaan SHA and repairs (Implementer), the IE re-bases its checks on the new jordaaan SHA"},
     {"id": "OWN-TUNNEL", "what": "Cloudflare named-tunnel credentials and docker compose --profile tunnel up (PROC-TUNNEL)", "blocks": ["PROC-ACCEPT-P1", "PROC-ACCEPT-P2", "video recording"], "blocks_when": "after S09-E for acceptance; Sunday recording", "if_absent": "acceptance not run (typed gap); assembly unaffected"},
     {"id": "OWN-GITHUB-REMOTE", "what": "private repository origin https://github.com/1wgrumph/gridmarket.git", "blocks": [], "blocks_when": "does not block: exists per DEC-GM-018", "if_absent": "n/a"},
     {"id": "OWN-PUBLICATION", "what": "making the repository public after zero secret findings over full history (including Jordan's commits; pre-check a63c8d2..4853e51 clean) and the MIT LICENSE", "blocks": ["public codebase link for submission"], "blocks_when": "after S18-E, before Sun 11:00", "if_absent": "the IE hands over the AC-GM-SEC-01 result; the owner decides"},
     {"id": "OWN-JUDGE-KEYS", "what": "python -m gridmarket_server.keys issue --sandbox (owner-run)", "blocks": ["judge quickstart step of acceptance and demo"], "blocks_when": "acceptance runs", "if_absent": "demo uses seeded accounts only"},
     {"id": "OD-ORDER", "what": "owner decision whether green stretch lanes may merge ahead of an unclosed S12-A", "blocks": ["S18-A, S18-B, S18-C, S18-D entry"], "blocks_when": "only if S12-A is not closed by Sun 02:00 CDT", "if_absent": "strict order: phase 2 first"},
-    {"id": "OD-WORKER-LANDING", "what": "owner decision (with Jordan) when, at the freeze, PR #3 is unmerged or Jordan declined the lane-worker PR: land ercot-hackathon/ in main as integrated (GitHub then counts PR #3's contained commits as merged), or revert the S09-E merge before the landing PR (the market still reads the deployed Worker over HTTP)", "blocks": ["landing PR gridmarket/integration -> main"], "blocks_when": "only if CF-19 applies at Sun 07:00", "if_absent": "the landing PR is held; the final candidate and assurance proceed"}
+    {"id": "OD-WORKER-LANDING", "what": "owner decision (with Jordan) when a phase PR would carry ercot-hackathon/ into main (first at S09, DEC-GM-023) while PR #3 is unmerged or Jordan declined the lane-worker PR: land ercot-hackathon/ in main as integrated (GitHub then counts PR #3's contained commits as merged), or revert the S09-E merge before the phase PR (the market still reads the deployed Worker over HTTP)", "blocks": ["phase PRs gridmarket/integration -> main (S09, S12, S18)"], "blocks_when": "only if CF-19 applies when a phase PR is ready (first at S09, target Sat 14:00); decided before the Sun 07:00 CDT freeze", "if_absent": "the phase PRs are held; assembly on gridmarket/integration, the final candidate and assurance proceed"}
   ],
   "concurrency_findings": [
     {"id": "CF-01", "severity": "high", "kind": "defect", "status": "resolved", "where": "slice-graph.md header lines 14-19; design.md DES-GM-LANES bullet 2", "problem": "No step assembled the foundation lane; wave 2 lanes lacked S01.", "corrected_text": "Applied: wave 2 lanes branch from the S01 exit commit; wave 3 from the S09 exit; S09 merges foundation, market, data, ui, worker."},
@@ -476,7 +510,9 @@ candidate to the Assurance Test Engineer. Inputs are in
     {"id": "CF-18", "severity": "low", "kind": "defect (shared external resource in smoke)", "status": "open", "where": "slice-graph.md Concurrency proof NWS bullet; design.md DES-GM-NWS and DES-GM-ARCH composition-root bullet", "problem": "The proof says only the running app polls NWS, but every CMD-SMOKE stack is a running app. No start condition gates the NWS poller, so the demo stack and up to three smoke stacks each poll api.weather.gov (up to 4 x 6 requests/min), and smoke results depend on the public network.", "corrected_text": "DES-GM-ARCH composition root: 'starts the NWS poller unless GRIDMARKET_NWS=off'; CMD-SMOKE sets GRIDMARKET_NWS=off; add GRIDMARKET_NWS to .env.example names. Concurrency proof NWS bullet: 'NWS API: only the demo stack polls it (<= 6 requests/min); smoke stacks run with GRIDMARKET_NWS=off; tests use fixtures.' This touches S01's frozen main.py, so it must land before S01 exits."},
     {"id": "CF-19", "severity": "medium", "kind": "owner decision (landing through the integration PR)", "status": "open (conditional; OD-WORKER-LANDING at the freeze)", "where": "design.md DES-GM-LANES worker bullet ('jordaaan lands on main through PR #3'); landing PR gridmarket/integration -> main", "problem": "gridmarket/integration contains Jordan's commits (from S09-E). If PR #3 is not merged by the freeze, the landing PR lands them in main anyway, and GitHub counts PR #3's contained commits as merged. If Jordan declined the lane-worker PR, main receives a Worker fix that is not deployed, so main's ercot-hackathon/ differs from the running Worker.", "corrected_text": "Add to DES-GM-LANES: 'If PR #3 is unmerged, or the lane-worker PR is declined, at the freeze, the owner decides with Jordan (OD-WORKER-LANDING): land ercot-hackathon/ as integrated, or revert the S09-E merge before the landing PR. The landing PR is held until the decision.'"},
     {"id": "CF-20", "severity": "low", "kind": "defect (stale wording after DEC-GM-021)", "status": "open", "where": "slice-graph.md S23 row goal", "problem": "S23 writes docs/ml-report.md 'from one live run when ERCOT key exists'; the market no longer holds an ERCOT key.", "corrected_text": "'...write docs/ml-report.md from one live run through the ERCOT Worker (GRIDMARKET_WORKER_URL and GRIDMARKET_WORKER_KEY set, <= 5 requests/min, never during recording); otherwise mark it fixture-only.'"},
-    {"id": "CF-21", "severity": "low", "kind": "read dependency (planning inputs untracked)", "status": "open", "where": "owner checkout gridmarket/lifecycle-setup at 0bfa50a: design.md, gridmarket-technical-plan.md, specialists/, views/ untracked", "problem": "gridmarket/integration and the S01 base are created from the approved planning revision commit. S21 writes the GridMarket specification from design.md and the technical plan, and the Reviewer and IE assessment cite them. If the approval commit omits them, lane-spec cannot read them from its own branch.", "corrected_text": "Planning and Design (or the Plan Integrator) commits design.md, gridmarket-technical-plan.md, and views/ in the approved planning revision before gridmarket/integration is created."}
+    {"id": "CF-21", "severity": "low", "kind": "read dependency (planning inputs untracked)", "status": "open", "where": "owner checkout gridmarket/lifecycle-setup at 0bfa50a: design.md, gridmarket-technical-plan.md, specialists/, views/ untracked", "problem": "gridmarket/integration and the S01 base are created from the approved planning revision commit. S21 writes the GridMarket specification from design.md and the technical plan, and the Reviewer and IE assessment cite them. If the approval commit omits them, lane-spec cannot read them from its own branch.", "corrected_text": "Planning and Design (or the Plan Integrator) commits design.md, gridmarket-technical-plan.md, and views/ in the approved planning revision before gridmarket/integration is created."},
+    {"id": "CF-22", "severity": "info", "kind": "owner change (DEC-GM-025)", "status": "applied by Planning and Design", "where": "implementation.json waves, dependencies, S10/S13/S15/S22 and S11/S14/S16/S17/S23 branch bases; slice-graph.md; design.md DES-GM-LANES", "problem": "The cap rises from 3 to 4 lanes and the red-test slices S10, S13, S15, S22 move to wave 2 on the S01 exit; their implementation slices stay after S09.", "corrected_text": "Edges S01 --> S10, S13, S15, S22 (data) and S09 --> S11, S14, S16, S17 (data: lane sync merge) replace S09 --> S10, S13, S15; slot S11 --> S23 replaces slot S11 --> S22; slot S21 --> S15 is removed (the stretch red tests run in wave 2, and with 4 slots the spec lane fits beside lonestar, adversary and stretch in wave 3). Wave 2 red-test write sets (test_providers.py, test_adversarial.py, test_backtest.py, test_matching_parity.py, fixtures/ercot_history/, bench/bench_matching.py, test_ml.py, fixtures/ml/) are disjoint from foundation, worker, market, data, ui and spec. A lane holds a slot only while one of its slices runs. PROC-ASSEMBLY write-set sub-checks are unchanged: lane sync merge commits are excluded by --no-merges and their parents are already on the integration branch."},
+    {"id": "CF-23", "severity": "medium", "kind": "owner change (DEC-GM-023) moves a conditional owner decision earlier", "status": "applied by Planning and Design", "where": "S09, S12, S18 exits; OD-WORKER-LANDING; authorized_glue; branches.rule", "problem": "Phase PRs merge gridmarket/integration into main after S09, S12 and S18. The S09 PR is the first to carry Jordan's commits and the S25 Worker fix into main, so CF-19 can apply at S09 (target Sat 14:00), not only at the freeze.", "corrected_text": "OD-WORKER-LANDING triggers when a phase PR is ready while PR #3 is unmerged or the lane-worker PR is declined; the phase PRs are held (assembly continues) until the owner decides with Jordan, before the Sun 07:00 CDT freeze. The IE opens and merges phase PRs (merge commit, no review); it still never pushes directly to main or jordaaan."}
   ]
 }
 ```

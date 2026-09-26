@@ -17,18 +17,23 @@
   "lifecycle_type": "feature",
   "development_strategy": {
    "mode": "tdd",
-   "source": "owner-confirmed; journey.json profile_selection frozen_snapshot"
+   "source": "owner-confirmed; journey.json profile_selection frozen_snapshot",
+   "lane_overrides": {
+    "spec (S19-S21)": "single_implementer (tech-writing profile, DEC-GM-024)"
+   }
   },
   "concurrency": {
    "dispatch_ready_independent_work": true,
    "preserve_order_for_dependencies_interfaces_write_overlap_and_shared_mutable_resources": true,
-   "max_concurrent_lanes": 3
+   "max_concurrent_lanes": 4,
+   "max_concurrent_lanes_source": "DEC-GM-025 (was 3)",
+   "active_lane_rule": "A lane counts toward the cap only while one of its slices is running; a red-test lane waiting for its wave 3 implementation slice holds no slot."
   },
   "assurance_cadence": {
    "test_engineer": {
     "assurance": "lifecycle"
    },
-   "reviewer": "phase",
+   "reviewer": "lifecycle",
    "integration_engineer": {
     "execution": "lifecycle"
    }
@@ -46,7 +51,7 @@
    "policy_ref": "skills/bearing-lite/references/review-policy.md",
    "candidate_ref": "gridmarket/lifecycle-setup",
    "candidate_revision": "0bfa50a300fe79a2b2722854438e7915aec158dc",
-   "candidate_digest": "3f54a0a17e509081e8e96017492533c09e0deeed31f81392cf369892b48339a4",
+   "candidate_digest": "e9993338a22707706c157cbe02f5932a272398c930c02f1516dfe312c7544eb2",
    "reviewer_slots": [
     {
      "slot_id": "planning-review",
@@ -75,11 +80,24 @@
     "capability": "OpenCodeReview (OCR)",
     "enabled": true,
     "required": false,
-    "source": "frozen snapshot"
+    "source": "frozen snapshot",
+    "lane_overrides": {
+     "spec (S19-S21)": {
+      "enabled": false,
+      "required": false,
+      "source": "tech-writing lane entry (DEC-GM-024)"
+     }
+    }
    },
    "deterministic_verification": {
     "reverify": {
-     "enabled": true
+     "enabled": true,
+     "lane_overrides": {
+      "spec (S19-S21)": {
+       "enabled": false,
+       "source": "tech-writing lane entry (DEC-GM-024); spec rows carry no binary claim"
+      }
+     }
     },
     "selection": {
      "status": "SELECTED_CONDITIONAL",
@@ -182,7 +200,8 @@
       "reasoning": "high"
      }
     ],
-    "cadence": "phase"
+    "cadence": "lifecycle",
+    "cadence_amended_by": "DEC-GM-023 (frozen value: phase)"
    },
    "test_engineer.assurance": {
     "primary": {
@@ -278,16 +297,104 @@
    "reverify": {
     "enabled": true
    }
+  },
+  "lane_profiles": {
+   "source": "journey.json profile_selection.amendments[0] (DEC-GM-024)",
+   "amended_at": "2026-09-26T03:04:51Z",
+   "lane_entries_digest_sha256": "d83b583369a7bf7ce522b32572f78534ffbce41a135b2b84c0087368ec7129ae",
+   "default": "primary",
+   "spec (S19-S21)": {
+    "profile": "tech-writing",
+    "development_strategy": "single_implementer",
+    "role_routes": {
+     "implementer": {
+      "harness": "Claude Code",
+      "model": "Claude Opus 5.5",
+      "reasoning": "medium",
+      "ordered_fallbacks": [
+       {
+        "harness": "Codex CLI",
+        "model": "GPT-6 Astra",
+        "reasoning": "medium"
+       },
+       {
+        "harness": "Muse Code",
+        "model": "Muse Spark 1.3",
+        "reasoning": "max"
+       }
+      ]
+     }
+    },
+    "coverage_assist": {
+     "enabled": false,
+     "required": false
+    },
+    "deterministic_verification": {
+     "reverify": {
+      "enabled": false
+     }
+    }
+   },
+   "ui (S04, S07)": {
+    "profile": "frontend",
+    "development_strategy": "tdd",
+    "role_routes": {
+     "implementer": {
+      "harness": "Claude Code",
+      "model": "Claude Opus 5.5",
+      "reasoning": "high",
+      "ordered_fallbacks": [
+       {
+        "harness": "Codex CLI",
+        "model": "GPT-6 Astra",
+        "reasoning": "high"
+       },
+       {
+        "harness": "Muse Code",
+        "model": "Muse Spark 1.3",
+        "reasoning": "max"
+       }
+      ]
+     },
+     "test_implementer": {
+      "harness": "Codex CLI",
+      "model": "GPT-6 Sol",
+      "reasoning": "xhigh",
+      "ordered_fallbacks": [
+       {
+        "harness": "Muse Code",
+        "model": "Muse Spark 1.3",
+        "reasoning": "max"
+       },
+       {
+        "harness": "Cursor Agent",
+        "model": "Grok 4.7",
+        "reasoning": "high"
+       }
+      ]
+     }
+    },
+    "coverage_assist": {
+     "enabled": true,
+     "required": false
+    },
+    "deterministic_verification": {
+     "reverify": {
+      "enabled": true
+     }
+    }
+   },
+   "scope": "Lane entries govern the lane slices' implementer and test_implementer routes and lane-scoped capability settings. Coordinator, Scribe, Integration Engineer, the one Lifecycle Reviewer review and Assurance Test Engineer act on the integrated candidate and stay on the primary routes."
   }
  },
  "role_states": {
   "active": [
-   "implementer (Product Implementer)",
-   "test_implementer",
+   "implementer (Product Implementer; primary route, except spec lane S19-S21 on tech-writing and ui S07 on frontend, DEC-GM-024)",
+   "test_implementer (primary route; ui S04 on the frontend entry, same harness, model and reasoning)",
    "integration_engineer.execution",
-   "reviewer (phase cadence)",
+   "reviewer (lifecycle cadence: one review of the integrated candidate at about Sat 2026-09-26 22:00 CDT, DEC-GM-023)",
    "test_engineer.assurance (lifecycle cadence)",
-   "coordinator (wave dispatch)",
+   "coordinator (wave dispatch, max 4 concurrent lanes, DEC-GM-025)",
    "scribe (receipts)"
   ],
   "human_lane": "Jordan (ERCOT Worker, PR #3, 3D views, deployment); not a Bearing role. S24-S25 are agent work (DEC-GM-022); S25 carries the human dependency 'Jordan merges the PR into jordaaan and deploys'.",
@@ -319,8 +426,8 @@
   {
    "id": "Wave 2",
    "name": "Phase 1 + spec lane",
-   "entry": "S01 exit commit recorded (wave 2 lane bases); ui starts after the worker lane (slot edge).",
-   "exit": "Phase 1 lanes merged (S09); phase-1 demoable checkpoint recorded; spec lane green.",
+   "entry": "S01 exit commit recorded (wave 2 lane bases, including the red-test lanes lonestar, adversary, stretch and ml, DEC-GM-025); ui starts after the worker lane (slot edge).",
+   "exit": "Phase 1 lanes merged (S09) and the phase 1 PR merged to main (DEC-GM-023); phase-1 demoable checkpoint recorded; spec lane green; red-test slices S10, S13, S15, S22 red-verified at their exit commits.",
    "slice_ids": [
     "S02",
     "S03",
@@ -332,28 +439,32 @@
     "S19",
     "S20",
     "S21",
+    "S10",
+    "S13",
+    "S15",
+    "S22",
     "S09"
    ],
    "lanes": [
     "market",
     "data",
     "ui",
-    "spec"
+    "spec",
+    "lonestar",
+    "adversary",
+    "stretch",
+    "ml"
    ]
   },
   {
    "id": "Wave 3",
    "name": "Phase 2 + stretch",
-   "entry": "S09 exit commit recorded (wave 3 lane bases); stretch starts after the spec lane (slot edge).",
-   "exit": "Phase 2 merged (S12); stretch merged or dropped (S18); final integrated candidate declared.",
+   "entry": "S09 exit commit recorded; each wave 3 implementation slice starts from its lane sync merge of the S09 exit (lane-ml: the S16 exit) on top of its red-test exit (DEC-GM-025).",
+   "exit": "Phase 2 merged (S12) and stretch merged or dropped (S18), each phase PR merged to main (DEC-GM-023); final integrated candidate declared.",
    "slice_ids": [
-    "S10",
-    "S13",
-    "S15",
     "S11",
     "S14",
     "S16",
-    "S22",
     "S17",
     "S12",
     "S23",
@@ -387,6 +498,26 @@
   {
    "from": "S01",
    "to": "S19",
+   "kind": "data"
+  },
+  {
+   "from": "S01",
+   "to": "S10",
+   "kind": "data"
+  },
+  {
+   "from": "S01",
+   "to": "S13",
+   "kind": "data"
+  },
+  {
+   "from": "S01",
+   "to": "S15",
+   "kind": "data"
+  },
+  {
+   "from": "S01",
+   "to": "S22",
    "kind": "data"
   },
   {
@@ -450,23 +581,23 @@
    "kind": "slot"
   },
   {
-   "from": "S21",
-   "to": "S15",
-   "kind": "slot"
-  },
-  {
    "from": "S09",
-   "to": "S10",
+   "to": "S11",
    "kind": "data"
   },
   {
    "from": "S09",
-   "to": "S13",
+   "to": "S14",
    "kind": "data"
   },
   {
    "from": "S09",
-   "to": "S15",
+   "to": "S16",
+   "kind": "data"
+  },
+  {
+   "from": "S09",
+   "to": "S17",
    "kind": "data"
   },
   {
@@ -481,7 +612,7 @@
   },
   {
    "from": "S11",
-   "to": "S22",
+   "to": "S23",
    "kind": "slot"
   },
   {
@@ -554,7 +685,7 @@
   {
    "id": "S01",
    "role": "Product Implementer",
-   "goal": "Create the repo scaffold and frozen contracts: backend uv project (runtime, dev, optional ml deps; 14-day admission scan), contracts.py, schema.sql with append-only triggers, main.py composition root (mounts dashboard only if built; starts NWS poller unless GRIDMARKET_NWS=off), placeholder modules with empty behavior, contract tests, dashboard Vite+React+Astryx+vitest scaffold with typed api.ts, Makefile targets (see notes), .gitignore, .env.example names, MIT LICENSE, gitleaks config.",
+   "goal": "Create the repo scaffold and frozen contracts: backend uv project (runtime, dev, optional ml deps; 14-day admission scan), contracts.py, schema.sql with append-only triggers, main.py composition root (mounts dashboard only if built; starts NWS poller unless GRIDMARKET_NWS=off), placeholder modules with empty behavior, contract tests, dashboard Vite+React+Astryx+vitest scaffold with typed api.ts, Makefile targets (see notes), .gitignore, .env.example names, MIT LICENSE (copyright holders: the owner (GitHub 1wgrumph) and Jordan Hill, DEC-GM-026), gitleaks config.",
    "type": "scaffold",
    "requirement_ids": [
     "AC-GM-DATA-04",
@@ -613,7 +744,7 @@
     "reason": "Snapshot reasoning for the implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -655,8 +786,8 @@
     "CMD-SECRETS",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-SETUP, CMD-LINT, CMD-TEST-CONTRACTS, CMD-DEPSCAN, CMD-SECRETS and CMD-WRITESET exit 0 at the exit commit; every Makefile target in notes exists and matches its seit procedure; main.py imports on placeholders; or return the typed failure.",
-   "human_decision": "LICENSE copyright holder name: confirm at the integrated owner review before S01 writes LICENSE (AC-GM-SEC-01).",
+   "stop_condition": "CMD-SETUP, CMD-LINT, CMD-TEST-CONTRACTS, CMD-DEPSCAN, CMD-SECRETS and CMD-WRITESET exit 0 at the exit commit; every Makefile target in notes exists and matches its seit procedure; main.py imports on placeholders; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-foundation (DEC-GM-023).",
+   "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
    "lane": "foundation",
@@ -669,7 +800,7 @@
    },
    "work_class": "judgement",
    "work_class_reason": "judgement: 30+ new scaffold files are designed in-session from the plan and design; the transformation is not mechanical (light criteria 1, 2 and 4 fail).",
-   "notes": "Full S01 detail from slice-graph.md. Placeholder modules market.py, api.py, ercot.py, nws.py, scoring.py, seed.py, providers/__init__.py, providers/base_sim.py satisfying contracts.py with empty behavior (only GET /v1/market/status, empty registry, empty signal store, predict returns []). Deps: runtime, dev (pytest, pytest-cov, diff-cover, mutmut, ruff, PyYAML), optional ml (numpy, scikit-learn); admission scan incl. release age >= 14 days. Makefile targets setup, lint, test-contracts, test-market, test-data, test-dash, test-providers, test-adversary, test-backtest, test-parity, test-ml, test-spec, spec-lint, test-all, red-green, coverage, mutation, bench, smoke, secrets, depscan, rules exactly as seit.json procedures_and_commands describes; backend/pyproject.toml [tool.mutmut] paths_to_mutate = [\"gridmarket_server/market.py\"]; .gitignore adds backend/mutants/ and .coverage; backend/tests/conftest.py blocks outbound sockets except 127.0.0.1 and registers no network fixture (TE-F2). .gitignore: .env, *.db, node_modules/, dashboard/dist/, backend/.venv/, rust/matching_core/target/, __pycache__/, .pytest_cache/. .env.example names only incl. GRIDMARKET_ADMIN_KEY, GRIDMARKET_PORT, GRIDMARKET_WORKER_URL, GRIDMARKET_WORKER_KEY, GRIDMARKET_CORS_ORIGIN, GRIDMARKET_NWS; no ERCOT credentials."
+   "notes": "Full S01 detail from slice-graph.md. Placeholder modules market.py, api.py, ercot.py, nws.py, scoring.py, seed.py, providers/__init__.py, providers/base_sim.py satisfying contracts.py with empty behavior (only GET /v1/market/status, empty registry, empty signal store, predict returns []). Deps: runtime, dev (pytest, pytest-cov, diff-cover, mutmut, ruff, PyYAML), optional ml (numpy, scikit-learn); admission scan incl. release age >= 14 days. Makefile targets setup, lint, test-contracts, test-market, test-data, test-dash, test-providers, test-adversary, test-backtest, test-parity, test-ml, test-spec, spec-lint, test-all, red-green, coverage, mutation, bench, smoke, secrets, depscan, rules exactly as seit.json procedures_and_commands describes; backend/pyproject.toml [tool.mutmut] paths_to_mutate = [\"gridmarket_server/market.py\"]; .gitignore adds backend/mutants/ and .coverage; backend/tests/conftest.py blocks outbound sockets except 127.0.0.1 and registers no network fixture (TE-F2). .gitignore: .env, *.db, node_modules/, dashboard/dist/, backend/.venv/, rust/matching_core/target/, __pycache__/, .pytest_cache/. .env.example names only incl. GRIDMARKET_ADMIN_KEY, GRIDMARKET_PORT, GRIDMARKET_WORKER_URL, GRIDMARKET_WORKER_KEY, GRIDMARKET_CORS_ORIGIN, GRIDMARKET_NWS; no ERCOT credentials. LICENSE: MIT, copyright holders the owner (GitHub 1wgrumph) and Jordan Hill (DEC-GM-026; OD-LICENSE-HOLDER resolved)."
   },
   {
    "id": "S24",
@@ -719,7 +850,7 @@
     "reason": "Snapshot reasoning for the test_implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -730,7 +861,7 @@
     "CMD-RED-GREEN-WORKER",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN-WORKER captures every S24 node:test id failing at baseline (stub env, stub fetch, zero ERCOT calls where stated) and CMD-WRITESET exits 0 at the exit commit; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN-WORKER captures every S24 node:test id failing at baseline (stub env, stub fetch, zero ERCOT calls where stated) and CMD-WRITESET exits 0 at the exit commit; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-worker (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -795,7 +926,7 @@
     "reason": "Snapshot reasoning for the implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -809,7 +940,7 @@
     "CMD-TEST-WORKER",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN-WORKER, CMD-TEST-WORKER (incl. the 10-address burst case) and CMD-WRITESET exit 0 at the exit commit with the S24 ids green; branch pushed and PR into jordaaan opened; deploy is Jordan's action; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN-WORKER, CMD-TEST-WORKER (incl. the 10-address burst case) and CMD-WRITESET exit 0 at the exit commit with the S24 ids green; branch pushed and PR into jordaaan opened; deploy is Jordan's action; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-worker (DEC-GM-023).",
    "human_decision": {
     "pr": "Jordan merges (merge commit, not squash or rebase) or declines the lane-worker PR into jordaaan (HUM-JORDAN-PR).",
     "deploy": "Jordan deploys the Worker with MARKET_KEY (DEC-GM-022: deploy is Jordan's action; HUM-JORDAN-DEPLOY).",
@@ -900,7 +1031,7 @@
     "reason": "Snapshot reasoning for the test_implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -914,7 +1045,7 @@
     "CMD-LINT",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN captures every S02 test id failing at baseline and CMD-LINT and CMD-WRITESET exit 0 at the exit commit; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN captures every S02 test id failing at baseline and CMD-LINT and CMD-WRITESET exit 0 at the exit commit; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-market (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -997,7 +1128,7 @@
     "reason": "Snapshot reasoning for the test_implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -1013,7 +1144,7 @@
     "CMD-LINT",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN captures every S03 test id failing at baseline and CMD-LINT and CMD-WRITESET exit 0 at the exit commit; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN captures every S03 test id failing at baseline and CMD-LINT and CMD-WRITESET exit 0 at the exit commit; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-data (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -1057,6 +1188,7 @@
     "model": "GPT-6 Sol",
     "reasoning": "xhigh",
     "snapshot_role": "test_implementer",
+    "profile": "frontend",
     "ordered_fallbacks": [
      {
       "harness": "Muse Code",
@@ -1072,10 +1204,10 @@
    },
    "reasoning_level": {
     "level": "xhigh",
-    "reason": "Snapshot reasoning for the test_implementer route; no per-slice override."
+    "reason": "Snapshot reasoning for the frontend test_implementer route (DEC-GM-024); no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -1088,7 +1220,7 @@
     "CMD-TEST-DASH",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN captures every S04 vitest id failing at baseline and CMD-TEST-DASH and CMD-WRITESET exit 0 at the exit commit; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN captures every S04 vitest id failing at baseline and CMD-TEST-DASH and CMD-WRITESET exit 0 at the exit commit; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-ui (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -1175,7 +1307,7 @@
     "reason": "Snapshot reasoning for the implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -1194,7 +1326,7 @@
     "CMD-COVERAGE",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN, CMD-TEST-MARKET, CMD-LINT, CMD-COVERAGE (>=80% changed lines) and CMD-WRITESET exit 0 at the exit commit with the S02 ids green; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN, CMD-TEST-MARKET, CMD-LINT, CMD-COVERAGE (>=80% changed lines) and CMD-WRITESET exit 0 at the exit commit with the S02 ids green; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-market (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -1276,7 +1408,7 @@
     "reason": "Snapshot reasoning for the implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -1292,7 +1424,7 @@
     "CMD-COVERAGE",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN, CMD-TEST-DATA, CMD-LINT, CMD-COVERAGE (>=80% changed lines) and CMD-WRITESET exit 0 at the exit commit with the S03 ids green; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN, CMD-TEST-DATA, CMD-LINT, CMD-COVERAGE (>=80% changed lines) and CMD-WRITESET exit 0 at the exit commit with the S03 ids green; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-data (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -1331,29 +1463,30 @@
     "Explainability"
    ],
    "model_route": {
-    "harness": "Muse Code",
-    "model": "Muse Spark 1.3",
-    "reasoning": "max",
+    "harness": "Claude Code",
+    "model": "Claude Opus 5.5",
+    "reasoning": "high",
     "snapshot_role": "implementer",
+    "profile": "frontend",
     "ordered_fallbacks": [
      {
       "harness": "Codex CLI",
-      "model": "GPT-6 Sol",
-      "reasoning": "xhigh"
+      "model": "GPT-6 Astra",
+      "reasoning": "high"
      },
      {
-      "harness": "Claude Code",
-      "model": "Claude Opus 5.5",
-      "reasoning": "high"
+      "harness": "Muse Code",
+      "model": "Muse Spark 1.3",
+      "reasoning": "max"
      }
     ]
    },
    "reasoning_level": {
-    "level": "max",
-    "reason": "Snapshot reasoning for the implementer route; no per-slice override."
+    "level": "high",
+    "reason": "Snapshot reasoning for the frontend implementer route (DEC-GM-024); no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -1367,7 +1500,7 @@
     "CMD-TEST-DASH",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN and CMD-WRITESET exit 0 and CMD-TEST-DASH (vitest run + production build) is green at the exit commit with the S04 ids green; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN and CMD-WRITESET exit 0 and CMD-TEST-DASH (vitest run + production build) is green at the exit commit with the S04 ids green; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-ui (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -1429,7 +1562,7 @@
     "reason": "Snapshot reasoning for the implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -1449,7 +1582,7 @@
     "CMD-LINT",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN, CMD-TEST-MARKET, CMD-SMOKE (project gm-smoke-market, port 18001), CMD-LINT and CMD-WRITESET exit 0 at the exit commit with test_sdk_bots.py green; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN, CMD-TEST-MARKET, CMD-SMOKE (project gm-smoke-market, port 18001), CMD-LINT and CMD-WRITESET exit 0 at the exit commit with test_sdk_bots.py green; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-market (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -1466,7 +1599,7 @@
   },
   {
    "id": "S19",
-   "role": "Test Implementer",
+   "role": "Product Implementer",
    "goal": "Author red tests for azdiagram (YAML input to SVG and .drawio from the same Graphviz coordinates, grid renderer for F5/F8, overlap and size lint failures), spec_build (generated front matter, Appendix A), and spec_lint (BLUF, six Frame fields, <=5 requirements, T1-T8/F1-F8 classes).",
    "type": "test",
    "requirement_ids": [
@@ -1484,31 +1617,33 @@
     "Explainability"
    ],
    "model_route": {
-    "harness": "Codex CLI",
-    "model": "GPT-6 Sol",
-    "reasoning": "xhigh",
-    "snapshot_role": "test_implementer",
+    "harness": "Claude Code",
+    "model": "Claude Opus 5.5",
+    "reasoning": "medium",
+    "snapshot_role": "implementer",
+    "profile": "tech-writing",
     "ordered_fallbacks": [
+     {
+      "harness": "Codex CLI",
+      "model": "GPT-6 Astra",
+      "reasoning": "medium"
+     },
      {
       "harness": "Muse Code",
       "model": "Muse Spark 1.3",
       "reasoning": "max"
-     },
-     {
-      "harness": "Cursor Agent",
-      "model": "Grok 4.7",
-      "reasoning": "high"
      }
     ]
    },
    "reasoning_level": {
-    "level": "xhigh",
-    "reason": "Snapshot reasoning for the test_implementer route; no per-slice override."
+    "level": "medium",
+    "reason": "Snapshot reasoning for the tech-writing implementer route (DEC-GM-024); no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
-    "coverage_assist": "enabled-not-required"
+    "coverage_assist": "disabled (tech-writing lane, DEC-GM-024)",
+    "reverify": "disabled (tech-writing lane, DEC-GM-024)"
    },
    "write_set": [
     "tools/tests/test_azdiagram.py",
@@ -1519,7 +1654,7 @@
     "CMD-RED-GREEN",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN captures every S19 test id failing at baseline and CMD-WRITESET exits 0 at the exit commit; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN captures every S19 test id failing at baseline and CMD-WRITESET exits 0 at the exit commit; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-spec (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -1532,7 +1667,8 @@
     "reason": "Write set disjoint from every other lane in wave 2; ordered after S01, S06; tests use fixtures only (no shared live budget)."
    },
    "work_class": "judgement",
-   "work_class_reason": "judgement: red-case stimuli must be interpreted into assertions; verification cases are authored in-session, so light criterion 4 (no decision, nothing written) fails."
+   "work_class_reason": "judgement: red-case stimuli must be interpreted into assertions; verification cases are authored in-session, so light criterion 4 (no decision, nothing written) fails.",
+   "notes": "DEC-GM-024: spec lane is single_implementer (tech-writing); the one implementer writes the S19 red tests, then S20 and S21, continuing its lane session while identity, authority, route and generation are unchanged."
   },
   {
    "id": "S20",
@@ -1556,31 +1692,33 @@
     "Explainability"
    ],
    "model_route": {
-    "harness": "Muse Code",
-    "model": "Muse Spark 1.3",
-    "reasoning": "max",
+    "harness": "Claude Code",
+    "model": "Claude Opus 5.5",
+    "reasoning": "medium",
     "snapshot_role": "implementer",
+    "profile": "tech-writing",
     "ordered_fallbacks": [
      {
       "harness": "Codex CLI",
-      "model": "GPT-6 Sol",
-      "reasoning": "xhigh"
+      "model": "GPT-6 Astra",
+      "reasoning": "medium"
      },
      {
-      "harness": "Claude Code",
-      "model": "Claude Opus 5.5",
-      "reasoning": "high"
+      "harness": "Muse Code",
+      "model": "Muse Spark 1.3",
+      "reasoning": "max"
      }
     ]
    },
    "reasoning_level": {
-    "level": "max",
-    "reason": "Snapshot reasoning for the implementer route; no per-slice override."
+    "level": "medium",
+    "reason": "Snapshot reasoning for the tech-writing implementer route (DEC-GM-024); no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
-    "coverage_assist": "enabled-not-required"
+    "coverage_assist": "disabled (tech-writing lane, DEC-GM-024)",
+    "reverify": "disabled (tech-writing lane, DEC-GM-024)"
    },
    "write_set": [
     "tools/azdiagram/",
@@ -1596,7 +1734,7 @@
     "CMD-TEST-SPEC",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN, CMD-TEST-SPEC and CMD-WRITESET exit 0 at the exit commit with the S19 ids green; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN, CMD-TEST-SPEC and CMD-WRITESET exit 0 at the exit commit with the S19 ids green; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-spec (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -1630,31 +1768,33 @@
     "Integration"
    ],
    "model_route": {
-    "harness": "Muse Code",
-    "model": "Muse Spark 1.3",
-    "reasoning": "max",
+    "harness": "Claude Code",
+    "model": "Claude Opus 5.5",
+    "reasoning": "medium",
     "snapshot_role": "implementer",
+    "profile": "tech-writing",
     "ordered_fallbacks": [
      {
       "harness": "Codex CLI",
-      "model": "GPT-6 Sol",
-      "reasoning": "xhigh"
+      "model": "GPT-6 Astra",
+      "reasoning": "medium"
      },
      {
-      "harness": "Claude Code",
-      "model": "Claude Opus 5.5",
-      "reasoning": "high"
+      "harness": "Muse Code",
+      "model": "Muse Spark 1.3",
+      "reasoning": "max"
      }
     ]
    },
    "reasoning_level": {
-    "level": "max",
-    "reason": "Snapshot reasoning for the implementer route; no per-slice override."
+    "level": "medium",
+    "reason": "Snapshot reasoning for the tech-writing implementer route (DEC-GM-024); no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
-    "coverage_assist": "enabled-not-required"
+    "coverage_assist": "disabled (tech-writing lane, DEC-GM-024)",
+    "reverify": "disabled (tech-writing lane, DEC-GM-024)"
    },
    "write_set": [
     "spec/gridmarket/",
@@ -1664,7 +1804,7 @@
     "CMD-SPEC-LINT",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-SPEC-LINT (spec lint + azdiagram lint) and CMD-WRITESET exit 0 at the exit commit on the built GridMarket specification; or return the typed failure.",
+   "stop_condition": "CMD-SPEC-LINT (spec lint + azdiagram lint) and CMD-WRITESET exit 0 at the exit commit on the built GridMarket specification; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-spec (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -1724,7 +1864,7 @@
     "reason": "Snapshot reasoning for the integration_engineer.execution route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -1738,10 +1878,11 @@
     "CMD-SECRETS",
     "CMD-RULES"
    ],
-   "stop_condition": "Steps S09-A..E merge in order with frozen-contract and write-set checks passing and post-step V&V green on each merge commit; evidence/assembly-phase-1.md committed and pushed; PROC-ERCOT-LIVE-CHECK owner-run after Jordan's deploy with the poller stopped, or its typed gap recorded; merged views keep the baseline-rules label (CMD-RULES); or the failing step reverted with the lane returned.",
+   "stop_condition": "Steps S09-A..E merge in order with frozen-contract and write-set checks passing and post-step V&V green on each merge commit; evidence/assembly-phase-1.md committed and pushed; PROC-ERCOT-LIVE-CHECK owner-run after Jordan's deploy with the poller stopped, or its typed gap recorded; merged views keep the baseline-rules label (CMD-RULES); or the failing step reverted with the lane returned. Exit (DEC-GM-023): evidence committed on gridmarket/integration and pushed; PR gridmarket/integration -> main opened and merged with a merge commit (not squash or rebase) once any required checks are green; no review on phase PRs; while OD-WORKER-LANDING is open the PR stays open and unmerged.",
    "human_decision": {
     "worker_deploy": "Jordan deploys the S25 Worker fix with MARKET_KEY before the owner runs PROC-ERCOT-LIVE-CHECK (owner-run: it loads the market client key); without it the S09-E live check is recorded as typed gap WORKER_FIX_NOT_DEPLOYED.",
-    "tunnel": "Owner tunnel (PROC-TUNNEL) before PROC-ACCEPT-P1; assembly itself does not wait for the tunnel."
+    "tunnel": "Owner tunnel (PROC-TUNNEL) before PROC-ACCEPT-P1; assembly itself does not wait for the tunnel.",
+    "phase_pr": "OD-WORKER-LANDING (CF-19, CF-23): the S09 phase PR is the first to carry ercot-hackathon/ into main; if PR #3 is unmerged or the lane-worker PR declined when it is ready, the PR is held until the owner decides with Jordan; assembly continues."
    },
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -1759,7 +1900,7 @@
   {
    "id": "S10",
    "role": "Test Implementer",
-   "goal": "Author red tests: adapter protocol conformance for base-sim and LoneStar, capacity only via adapter, \u226520 LoneStar customers, cross-provider fills on one book, offline asset handling, /v1/providers shows both fleets. Base-sim conformance ids are regression guards (pass at baseline); LoneStar ids are red-expected (TE-F8).",
+   "goal": "Author red tests: adapter protocol conformance for base-sim and LoneStar, capacity only via adapter, \u226520 LoneStar customers, cross-provider fills on one book, offline asset handling, /v1/providers shows both fleets. Written against S01's frozen contracts (DEC-GM-025): at the S01 exit baseline base-sim is a placeholder, so the LoneStar ids and the base-sim conformance ids it fails are red-expected; ids passing there are regression guards (TE-F8).",
    "type": "test",
    "requirement_ids": [
     "AC-GM-PROV-01",
@@ -1799,7 +1940,7 @@
     "reason": "Snapshot reasoning for the test_implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -1810,17 +1951,17 @@
     "CMD-RED-GREEN",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN captures every LoneStar id failing at baseline (base-sim conformance ids pass as regression guards, TE-F8) and CMD-WRITESET exits 0 at the exit commit; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN on the S01 exit baseline captures every LoneStar id and every base-sim conformance id the S01 placeholder fails as failing (ids passing there are regression guards, TE-F8) and CMD-WRITESET exits 0 at the exit commit; a test that needs an interface S01 does not freeze returns CONTRACT_STOP (no contract edit); or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-lonestar (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
    "lane": "lonestar",
    "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-lonestar",
    "branch": "gridmarket/lane-lonestar",
-   "branch_base": "S09 exit commit on gridmarket/integration",
+   "branch_base": "S01 exit commit",
    "parallel_safe": {
     "value": true,
-    "reason": "Write set disjoint from every other lane in wave 3; ordered after S09; tests use fixtures only (no shared live budget)."
+    "reason": "Write set disjoint from every other lane in wave 2; ordered after S01; red baseline is the S01 exit (DEC-GM-025); tests use fixtures only (no shared live budget)."
    },
    "work_class": "judgement",
    "work_class_reason": "judgement: red-case stimuli must be interpreted into assertions; verification cases are authored in-session, so light criterion 4 (no decision, nothing written) fails."
@@ -1868,7 +2009,7 @@
     "reason": "Snapshot reasoning for the test_implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -1879,17 +2020,17 @@
     "CMD-RED-GREEN",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN captures every S13 test id failing at baseline and CMD-WRITESET exits 0 at the exit commit; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN captures every S13 test id failing on the S01 exit baseline and CMD-WRITESET exits 0 at the exit commit; a test that needs an interface S01 does not freeze returns CONTRACT_STOP (no contract edit); or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-adversary (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
    "lane": "adversary",
    "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-adversary",
    "branch": "gridmarket/lane-adversary",
-   "branch_base": "S09 exit commit on gridmarket/integration",
+   "branch_base": "S01 exit commit",
    "parallel_safe": {
     "value": true,
-    "reason": "Write set disjoint from every other lane in wave 3; ordered after S09; tests use fixtures only (no shared live budget)."
+    "reason": "Write set disjoint from every other lane in wave 2; ordered after S01; red baseline is the S01 exit (DEC-GM-025); tests use fixtures only (no shared live budget)."
    },
    "work_class": "judgement",
    "work_class_reason": "judgement: red-case stimuli must be interpreted into assertions; verification cases are authored in-session, so light criterion 4 (no decision, nothing written) fails."
@@ -1941,7 +2082,7 @@
     "reason": "Snapshot reasoning for the test_implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -1955,17 +2096,17 @@
     "CMD-RED-GREEN",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN captures every S15 id failing at baseline (Rust parity parametrization skips without the extension) and CMD-WRITESET exits 0 at the exit commit; CMD-TEST-PARITY is owned by S17, not this slice; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN captures every S15 id failing on the S01 exit baseline (Python-engine parity ids the S01 placeholder fails are red-expected; the Rust parity parametrization skips without the extension) and CMD-WRITESET exits 0 at the exit commit; CMD-TEST-PARITY is owned by S17, not this slice; a test that needs an interface S01 does not freeze returns CONTRACT_STOP (no contract edit); or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-stretch (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
    "lane": "stretch",
    "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-stretch",
    "branch": "gridmarket/lane-stretch",
-   "branch_base": "S09 exit commit on gridmarket/integration",
+   "branch_base": "S01 exit commit",
    "parallel_safe": {
     "value": true,
-    "reason": "Write set disjoint from every other lane in wave 3; ordered after S21, S09; tests use fixtures only (no shared live budget)."
+    "reason": "Write set disjoint from every other lane in wave 2; ordered after S01; red baseline is the S01 exit (DEC-GM-025); tests use fixtures only (no shared live budget)."
    },
    "work_class": "judgement",
    "work_class_reason": "judgement: red-case stimuli must be interpreted into assertions; verification cases are authored in-session, so light criterion 4 (no decision, nothing written) fails."
@@ -2013,7 +2154,7 @@
     "reason": "Snapshot reasoning for the implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -2028,17 +2169,17 @@
     "CMD-TEST-ALL",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN, CMD-TEST-PROVIDERS, CMD-TEST-ALL and CMD-WRITESET exit 0 at the exit commit with the S10 ids green; or return the typed failure.",
+   "stop_condition": "Start: the lane sync merge of the recorded S09 exit SHA completes without conflict (a conflict is typed failure LANE_SYNC_CONFLICT; stop before any edit); CMD-WRITESET BASE = that merge commit. CMD-RED-GREEN, CMD-TEST-PROVIDERS, CMD-TEST-ALL and CMD-WRITESET exit 0 at the exit commit with the S10 ids green; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-lonestar (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
    "lane": "lonestar",
    "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-lonestar",
    "branch": "gridmarket/lane-lonestar",
-   "branch_base": "S09 exit commit on gridmarket/integration",
+   "branch_base": "lane sync merge commit on gridmarket/lane-lonestar: git merge --no-ff <recorded S09 exit SHA> on top of the S10 exit (DEC-GM-025)",
    "parallel_safe": {
     "value": true,
-    "reason": "Write set disjoint from every other lane in wave 3; ordered after S10; tests use fixtures only (no shared live budget)."
+    "reason": "Write set disjoint from every other lane in wave 3; ordered after S10 and S09 (lane sync merge); tests use fixtures only (no shared live budget)."
    },
    "work_class": "judgement",
    "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail)."
@@ -2088,7 +2229,7 @@
     "reason": "Snapshot reasoning for the implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -2103,17 +2244,17 @@
     "CMD-TEST-ALL",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN, CMD-TEST-ADVERSARY, CMD-TEST-ALL and CMD-WRITESET exit 0 at the exit commit with the S13 ids green; or return the typed failure.",
+   "stop_condition": "Start: the lane sync merge of the recorded S09 exit SHA completes without conflict (a conflict is typed failure LANE_SYNC_CONFLICT; stop before any edit); CMD-WRITESET BASE = that merge commit. CMD-RED-GREEN, CMD-TEST-ADVERSARY, CMD-TEST-ALL and CMD-WRITESET exit 0 at the exit commit with the S13 ids green; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-adversary (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
    "lane": "adversary",
    "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-adversary",
    "branch": "gridmarket/lane-adversary",
-   "branch_base": "S09 exit commit on gridmarket/integration",
+   "branch_base": "lane sync merge commit on gridmarket/lane-adversary: git merge --no-ff <recorded S09 exit SHA> on top of the S13 exit (DEC-GM-025)",
    "parallel_safe": {
     "value": true,
-    "reason": "Write set disjoint from every other lane in wave 3; ordered after S13; tests use fixtures only (no shared live budget)."
+    "reason": "Write set disjoint from every other lane in wave 3; ordered after S13 and S09 (lane sync merge); tests use fixtures only (no shared live budget)."
    },
    "work_class": "judgement",
    "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail)."
@@ -2159,7 +2300,7 @@
     "reason": "Snapshot reasoning for the implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -2171,17 +2312,17 @@
     "CMD-TEST-BACKTEST",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN, CMD-TEST-BACKTEST and CMD-WRITESET exit 0 at the exit commit with test_backtest.py green; or return the typed failure.",
+   "stop_condition": "Start: the lane sync merge of the recorded S09 exit SHA completes without conflict (a conflict is typed failure LANE_SYNC_CONFLICT; stop before any edit); CMD-WRITESET BASE = that merge commit. CMD-RED-GREEN, CMD-TEST-BACKTEST and CMD-WRITESET exit 0 at the exit commit with test_backtest.py green and CMD-RED-GREEN green on the identical S15 TESTS list; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-stretch (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
    "lane": "stretch",
    "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-stretch",
    "branch": "gridmarket/lane-stretch",
-   "branch_base": "S09 exit commit on gridmarket/integration",
+   "branch_base": "lane sync merge commit on gridmarket/lane-stretch: git merge --no-ff <recorded S09 exit SHA> on top of the S15 exit (DEC-GM-025)",
    "parallel_safe": {
     "value": true,
-    "reason": "Write set disjoint from every other lane in wave 3; ordered after S15; tests use fixtures only (no shared live budget)."
+    "reason": "Write set disjoint from every other lane in wave 3; ordered after S15 and S09 (lane sync merge); tests use fixtures only (no shared live budget)."
    },
    "work_class": "judgement",
    "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail)."
@@ -2226,7 +2367,7 @@
     "reason": "Snapshot reasoning for the test_implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -2238,17 +2379,17 @@
     "CMD-RED-GREEN",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN captures every S22 test id failing at baseline and CMD-WRITESET exits 0 at the exit commit; or return the typed failure.",
+   "stop_condition": "CMD-RED-GREEN captures every S22 test id failing on the S01 exit baseline and CMD-WRITESET exits 0 at the exit commit; a test that needs an interface S01 does not freeze returns CONTRACT_STOP (no contract edit); or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-ml (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
    "lane": "ml",
    "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-ml",
    "branch": "gridmarket/lane-ml",
-   "branch_base": "S16 exit commit on gridmarket/lane-stretch",
+   "branch_base": "S01 exit commit",
    "parallel_safe": {
     "value": true,
-    "reason": "Write set disjoint from every other lane in wave 3; ordered after S11; tests use fixtures only (no shared live budget)."
+    "reason": "Write set disjoint from every other lane in wave 2; ordered after S01; red baseline is the S01 exit (DEC-GM-025); tests use fixtures only (no shared live budget)."
    },
    "work_class": "judgement",
    "work_class_reason": "judgement: red-case stimuli must be interpreted into assertions; verification cases are authored in-session, so light criterion 4 (no decision, nothing written) fails."
@@ -2297,7 +2438,7 @@
     "reason": "Snapshot reasoning for the implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -2314,17 +2455,17 @@
     "CMD-DEPSCAN",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN, CMD-TEST-PARITY (extension built), CMD-BENCH, CMD-DEPSCAN (maturin/PyO3) and CMD-WRITESET exit 0 at the exit commit with parity green; bench/results.md records both engines; or return the typed failure.",
+   "stop_condition": "Start: the lane sync merge of the recorded S09 exit SHA completes without conflict (a conflict is typed failure LANE_SYNC_CONFLICT; stop before any edit); CMD-WRITESET BASE = that merge commit. CMD-RED-GREEN, CMD-TEST-PARITY (extension built), CMD-BENCH, CMD-DEPSCAN (maturin/PyO3) and CMD-WRITESET exit 0 at the exit commit with parity green; bench/results.md records both engines; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-rust (DEC-GM-023).",
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
    "lane": "rust",
    "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-rust",
    "branch": "gridmarket/lane-rust",
-   "branch_base": "S15 exit commit on gridmarket/lane-stretch",
+   "branch_base": "lane sync merge commit on gridmarket/lane-rust: git merge --no-ff <recorded S09 exit SHA> on top of the S15 exit commit on gridmarket/lane-stretch (lane created there) (DEC-GM-025)",
    "parallel_safe": {
     "value": true,
-    "reason": "Write set disjoint from every other lane in wave 3; ordered after S14, S15; tests use fixtures only (no shared live budget). Own smoke project and port; removes only its own project."
+    "reason": "Write set disjoint from every other lane in wave 3; ordered after S14 (slot), S15 and S09 (lane sync merge); tests use fixtures only (no shared live budget). Own smoke project and port; removes only its own project."
    },
    "work_class": "judgement",
    "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail)."
@@ -2373,7 +2514,7 @@
     "reason": "Snapshot reasoning for the integration_engineer.execution route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -2385,7 +2526,7 @@
     "CMD-TEST-ALL",
     "CMD-SMOKE"
    ],
-   "stop_condition": "Steps S12-A (lonestar) then S12-B (spec) merge with checks passing and post-step V&V green on each merge commit; evidence/assembly-phase-2.md committed and pushed; a lane not green by Sun 04:30 CDT recorded dropped; or the failing step reverted.",
+   "stop_condition": "Steps S12-A (lonestar) then S12-B (spec) merge with checks passing and post-step V&V green on each merge commit; evidence/assembly-phase-2.md committed and pushed; a lane not green by Sun 04:30 CDT recorded dropped; or the failing step reverted. Exit (DEC-GM-023): evidence committed on gridmarket/integration and pushed; PR gridmarket/integration -> main opened and merged with a merge commit (not squash or rebase) once any required checks are green; no review on phase PRs; while OD-WORKER-LANDING is open the PR stays open and unmerged.",
    "human_decision": "Owner tunnel (PROC-TUNNEL) before PROC-ACCEPT-P2; assembly itself does not wait for the tunnel.",
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
@@ -2441,7 +2582,7 @@
     "reason": "Snapshot reasoning for the implementer route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -2455,17 +2596,17 @@
     "CMD-TEST-ML",
     "CMD-WRITESET"
    ],
-   "stop_condition": "CMD-RED-GREEN, CMD-TEST-ML and CMD-WRITESET exit 0 at the exit commit with the S22 ids green; docs/ml-report.md written from one owner-run live run or marked fixture-only; Open-Meteo terms checked first; or return the typed failure.",
+   "stop_condition": "Start: the lane sync merge of the recorded S16 exit SHA completes without conflict (a conflict is typed failure LANE_SYNC_CONFLICT; stop before any edit); CMD-WRITESET BASE = that merge commit. CMD-RED-GREEN, CMD-TEST-ML and CMD-WRITESET exit 0 at the exit commit with the S22 ids green; docs/ml-report.md written from one owner-run live run or marked fixture-only; Open-Meteo terms checked first; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-ml (DEC-GM-023).",
    "human_decision": "ML live run is owner-run (owner loads GRIDMARKET_WORKER_URL and GRIDMARKET_WORKER_KEY, <=5 requests/min, never during recording); without it docs/ml-report.md is marked fixture-only.",
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
    "lane": "ml",
    "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-ml",
    "branch": "gridmarket/lane-ml",
-   "branch_base": "S16 exit commit on gridmarket/lane-stretch",
+   "branch_base": "lane sync merge commit on gridmarket/lane-ml: git merge --no-ff <recorded S16 exit SHA> on top of the S22 exit (DEC-GM-025)",
    "parallel_safe": {
     "value": true,
-    "reason": "Write set disjoint from every other lane in wave 3; ordered after S22, S16; tests use fixtures only (no shared live budget). Live run is owner-run, <=5 requests/min, never during recording."
+    "reason": "Write set disjoint from every other lane in wave 3; ordered after S22, S16 (lane sync merge; contains the S09 exit) and S11 (slot); tests use fixtures only (no shared live budget). Live run is owner-run, <=5 requests/min, never during recording."
    },
    "work_class": "judgement",
    "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail)."
@@ -2512,7 +2653,7 @@
     "reason": "Snapshot reasoning for the integration_engineer.execution route; no per-slice override."
    },
    "review_path": {
-    "reviewer": "phase",
+    "reviewer": "lifecycle",
     "assurance": "lifecycle",
     "coverage_assist": "enabled-not-required"
    },
@@ -2526,8 +2667,8 @@
     "CMD-SECRETS",
     "CMD-RULES"
    ],
-   "stop_condition": "Steps S18-A..E close in order (adversary and backtest as soon as green; ML only after backtest green and not reverted; Rust only after backtest merged and with benchmark gain; origin/main last); post-step V&V green on each merge; evidence/assembly-stretch.md committed and pushed with the final candidate identity; lanes not green by Sun 04:30 CDT recorded dropped; or the failing step reverted.",
-   "human_decision": "Owner tunnel for the recording; OD-WORKER-LANDING at the freeze if CF-19 applies (PR #3 unmerged or lane-worker PR declined).",
+   "stop_condition": "Steps S18-A..E close in order (adversary and backtest as soon as green; ML only after backtest green and not reverted; Rust only after backtest merged and with benchmark gain; origin/main last); post-step V&V green on each merge; evidence/assembly-stretch.md committed and pushed with the final candidate identity; lanes not green by Sun 04:30 CDT recorded dropped; or the failing step reverted. Exit (DEC-GM-023): evidence committed on gridmarket/integration and pushed; PR gridmarket/integration -> main opened and merged with a merge commit (not squash or rebase) once any required checks are green; no review on phase PRs; while OD-WORKER-LANDING is open the PR stays open and unmerged.",
+   "human_decision": "Owner tunnel for the recording; OD-WORKER-LANDING holds the phase PRs if CF-19 applies (PR #3 unmerged or lane-worker PR declined), decided before the Sun 07:00 CDT freeze.",
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
    "lane": "integration",
@@ -2633,8 +2774,9 @@
       "S10",
       "S11"
      ],
-     "created_from": "S09 exit commit on gridmarket/integration",
+     "created_from": "S01 exit commit (wave 2 red-test lane, DEC-GM-025); before S11 the lane merges the recorded S09 exit SHA (--no-ff, lane sync)",
      "exit_commits": {
+      "S10": "recorded by Coordinator at S10 red-verified",
       "S11": "recorded by Coordinator at S11 green"
      }
     },
@@ -2645,8 +2787,9 @@
       "S13",
       "S14"
      ],
-     "created_from": "S09 exit commit on gridmarket/integration",
+     "created_from": "S01 exit commit (wave 2 red-test lane, DEC-GM-025); before S14 the lane merges the recorded S09 exit SHA (--no-ff, lane sync)",
      "exit_commits": {
+      "S13": "recorded by Coordinator at S13 red-verified",
       "S14": "recorded by Coordinator at S14 green"
      }
     },
@@ -2657,7 +2800,7 @@
       "S15",
       "S16"
      ],
-     "created_from": "S09 exit commit on gridmarket/integration",
+     "created_from": "S01 exit commit (wave 2 red-test lane, DEC-GM-025); before S16 the lane merges the recorded S09 exit SHA (--no-ff, lane sync)",
      "exit_commits": {
       "S15": "recorded by Coordinator at S15 red-verified (base of lane-rust)",
       "S16": "recorded by Coordinator at S16 green (backtest item; base of lane-ml)"
@@ -2669,7 +2812,7 @@
      "slices": [
       "S17"
      ],
-     "created_from": "S15 exit commit on gridmarket/lane-stretch",
+     "created_from": "S15 exit commit on gridmarket/lane-stretch; before S17 the lane merges the recorded S09 exit SHA (--no-ff, lane sync, DEC-GM-025)",
      "exit_commits": {
       "S17": "recorded by Coordinator at S17 green (Rust item)"
      }
@@ -2681,8 +2824,9 @@
       "S22",
       "S23"
      ],
-     "created_from": "S16 exit commit on gridmarket/lane-stretch",
+     "created_from": "S01 exit commit (wave 2 red-test lane, DEC-GM-025); before S23 the lane merges the recorded S16 exit SHA (contains the S09 exit; --no-ff, lane sync)",
      "exit_commits": {
+      "S22": "recorded by Coordinator at S22 red-verified",
       "S23": "recorded by Coordinator at S23 green (ML item)"
      }
     }
@@ -2714,7 +2858,7 @@
      ]
     }
    ],
-   "rule": "A merge consumes the recorded exit SHA (or recorded origin/main SHA), never a moving branch tip. No force-push, no history rewrite, no git switch in the owner checkout. The IE never pushes to jordaaan or main and never merges PR #3."
+   "rule": "A merge consumes the recorded exit SHA (or recorded origin/main SHA), never a moving branch tip. No force-push, no history rewrite, no git switch in the owner checkout. The IE never pushes to jordaaan or directly to main and never merges PR #3; main changes through the phase PRs at the S09, S12 and S18 exits (DEC-GM-023). Lane sync merges (DEC-GM-025) are made by the lane's implementer in the lane worktree, never on gridmarket/integration."
   },
   "worktrees": {
    "rule": "Every linked worktree is /home/spectre/alphazede/worktrees/base-gridmarket-<lane>; never hidden directories or /tmp. Agents create them without asking at the lane's start. The owner checkout /home/spectre/alphazede/Hackathons/Base keeps branch gridmarket/lifecycle-setup.",
@@ -2863,7 +3007,7 @@
      "PROC-ERCOT-LIVE-CHECK only after HUM-JORDAN-DEPLOY and OWN-WORKER-ENV, with the demo poller stopped: one call per Worker route of DES-GM-ERCOT with the market key, one keyless /api/report call expecting 401, one non-allowlisted report expecting 404, no fresh parameter"
     ],
     "rollback": "Red merge V&V: git revert -m 1 <S09-E merge>; rerun CMD-TEST-ALL and CMD-SMOKE on the revert commit; return the worker lane. The revert also removes Jordan's ercot-hackathon/ source; a later S18-E merge of origin/main will not restore it because the commits are already ancestors (CF-17), so re-entry uses revert-of-revert. Live-check failures do not revert: 401/404 on keyed calls is a key or allowlist mismatch returned to the worker lane (and Jordan for the deployed version); ERCOT outage or 429 is typed gap ERCOT_LIVE_UNAVAILABLE; a parser mismatch (RISK-GM-09) returns to the data lane via the re-entry procedure.",
-    "exit": "Phase 1 demoable checkpoint recorded in evidence/assembly-phase-1.md: integration head SHA, code tree SHA, configuration identity (incl. jordaaan base SHA, S25 exit, PR URL and state, deployed Worker source SHA and version ID as reported by Jordan, or typed gap WORKER_FIX_NOT_DEPLOYED / WORKER_ENV_ABSENT); evidence committed and pushed; wave 3 lanes branch from this commit; owner notified that PROC-ACCEPT-P1 is ready once the live check passed. If the live check is deferred, it reruns on this checkpoint when Jordan reports the deploy, before PROC-ACCEPT-P1, with no merge."
+    "exit": "Phase 1 demoable checkpoint recorded in evidence/assembly-phase-1.md: integration head SHA, code tree SHA, configuration identity (incl. jordaaan base SHA, S25 exit, PR URL and state, deployed Worker source SHA and version ID as reported by Jordan, or typed gap WORKER_FIX_NOT_DEPLOYED / WORKER_ENV_ABSENT); evidence committed and pushed; phase 1 PR gridmarket/integration -> main opened and merged with a merge commit, no review (DEC-GM-023; held while OD-WORKER-LANDING is open); wave 3 implementation lanes merge this commit (lane sync, DEC-GM-025); owner notified that PROC-ACCEPT-P1 is ready once the live check passed. If the live check is deferred, it reruns on this checkpoint when Jordan reports the deploy, before PROC-ACCEPT-P1, with no merge."
    },
    {
     "id": "S12-A",
@@ -2920,7 +3064,7 @@
      "PROC-ASSEMBLY"
     ],
     "rollback": "git revert -m 1 <S12-B merge>; rerun CMD-TEST-ALL and CMD-SMOKE on the revert commit; the phase 2 checkpoint (S12-A) stays; return the spec lane or record it dropped at cut-off",
-    "exit": "Green; the built specification and its figures are present at the merge commit; result appended to evidence/assembly-phase-2.md and pushed"
+    "exit": "Green; the built specification and its figures are present at the merge commit; result appended to evidence/assembly-phase-2.md and pushed; then the phase 2 PR gridmarket/integration -> main is opened and merged with a merge commit, no review (DEC-GM-023; also after S12-B is reverted or the spec lane dropped)"
    },
    {
     "id": "S18-A",
@@ -3013,7 +3157,7 @@
     },
     "entry_criteria": [
      "S18-B merged (green, even if later reverted); if backtest was never merged, S18-D is skipped because lane-rust carries S15's test_backtest.py without backtest.py, which turns CMD-TEST-ALL red (CF-15)",
-     "S17 exit SHA recorded by Sun 04:30 CDT; S17 commands passed (CMD-RED-GREEN, CMD-TEST-PARITY with the extension built, CMD-BENCH, CMD-DEPSCAN for maturin/PyO3, CMD-SMOKE on gm-smoke-stretch:18002, CMD-WRITESET over <S15-exit>..<S17-exit>)",
+     "S17 exit SHA recorded by Sun 04:30 CDT; S17 commands passed (CMD-RED-GREEN, CMD-TEST-PARITY with the extension built, CMD-BENCH, CMD-DEPSCAN for maturin/PyO3, CMD-SMOKE on gm-smoke-stretch:18002, CMD-WRITESET from the S17 lane sync merge commit)",
      "bench/results.md at the S17 exit SHA shows Rust orders/second strictly higher than Python on the identical workload; otherwise S18-D is skipped and recorded, not merged",
      "frozen-contract diff empty"
     ],
@@ -3053,7 +3197,7 @@
      "PROC-ASSEMBLY (LICENSE present at the root; .env untracked; views label per AC-GM-RULE-02)"
     ],
     "rollback": "Non-whitespace conflict in ercot-hackathon/ (Jordan's later edits vs S25, CF-14): git merge --abort; the candidate is the pre-merge head; return the conflict to the worker lane Product Implementer as a repair on gridmarket/lane-worker (new exit SHA, re-entered at S18-E) and tell Jordan; unresolved by the freeze is CF-19. Red after merge: revert the merge and repeat S18-E without it. If the final V&V is red for another reason: revert the most recent merge step and repeat; the fallback candidate is the last green checkpoint (phase 2, else phase 1).",
-    "exit": "Final integrated candidate declared in evidence/assembly-stretch.md with its configuration identity, dropped-lane list, origin/main SHA, and PR #3 state; committed and pushed; handed to the Assurance Test Engineer (CANDIDATE_READY from the execution session). The landing PR gridmarket/integration -> main waits on OD-WORKER-LANDING when CF-19 applies."
+    "exit": "Final integrated candidate declared in evidence/assembly-stretch.md with its configuration identity, dropped-lane list, origin/main SHA, and PR #3 state; committed and pushed; handed to the Assurance Test Engineer (CANDIDATE_READY from the execution session). The S18 phase PR gridmarket/integration -> main (the landing PR) is opened and merged with a merge commit, no review, before the Sun 07:00 CDT freeze (DEC-GM-023), unless OD-WORKER-LANDING holds it."
    }
   ],
   "configuration_identity": {
@@ -3097,7 +3241,8 @@
     "git merge --no-ff <recorded origin/main SHA> at S18-E",
     "git revert -m 1 <merge> revert commits and revert-of-revert commits during recovery",
     "evidence files docs/plans/2026-09-25-gridmarket/evidence/assembly-phase-1.md, assembly-phase-2.md, assembly-stretch.md (S09, S12, S18 write sets) committed on gridmarket/integration",
-    "non-force git push origin gridmarket/integration"
+    "non-force git push origin gridmarket/integration",
+    "at the S09, S12 and S18 exits: open a PR gridmarket/integration -> main and merge it with a merge commit once any required checks are green; no review on phase PRs (DEC-GM-023); not while OD-WORKER-LANDING is open"
    ],
    "conflicts": "Resolve only hunks whose sides differ in whitespace alone. Any other conflict: git merge --abort and return it to the owning lane (write sets are disjoint, so a lane conflict signals a write-set violation; an S18-E conflict in ercot-hackathon/ goes to the worker lane).",
    "forbidden": [
@@ -3106,7 +3251,7 @@
     "weakening, skipping, or deselecting tests",
     "force-push, reset --hard, history rewrite, git switch in the owner checkout",
     "reading or printing .env, MARKET_KEY, or tunnel credentials",
-    "pushing to jordaaan or main, merging or commenting on PR #3, deploying the Worker",
+    "pushing to jordaaan or directly to main, squash or rebase merge of a phase PR, merging or commenting on PR #3, deploying the Worker",
     "tunnel start, public flip"
    ]
   },
@@ -3218,10 +3363,11 @@
    "worker": "S25 exit and PR into jordaaan target Sat 2026-09-26 10:00, so Jordan can deploy before PROC-ERCOT-LIVE-CHECK; S09-A..D do not wait for it (CF-16)",
    "phase_1": "S09 target Sat 2026-09-26 14:00; no wave 3 merge before S09-E closes",
    "phase_2": "S12-A target Sat 2026-09-26 20:00. If S12-A is not closed by Sun 2026-09-27 02:00, raise OWNER_DECISION_REQUIRED OD-ORDER. Default until answered: strict order. S12-B (spec) merges when green, up to the stretch cut-off.",
+   "review": "Sat 2026-09-26 22:00: the Reviewer's one Lifecycle review of the integrated candidate (gridmarket/integration head SHA recorded then); its one repair round lands through the owning lanes and assembly before the Sun 07:00 freeze (DEC-GM-023)",
    "stretch": "A lane (including lonestar and spec) whose exit SHA is not recorded green by Sun 2026-09-27 04:30 is dropped and recorded, never forced in. A merge step may start up to 04:30. A step not green by 05:30 is reverted.",
    "final_candidate": "S18-E declared by Sun 2026-09-27 06:00",
    "freeze": "Sun 2026-09-27 07:00: no merges after the freeze; only a revert to the last green checkpoint if the demo breaks. OD-WORKER-LANDING is raised at the freeze if CF-19 applies.",
-   "submission": "Sun 2026-09-27 11:00; the landing PR gridmarket/integration -> main on origin merges after the assurance verdict and before 11:00 (PR-only by convention, DEC-GM-018); the public flip is owner-only"
+   "submission": "Sun 2026-09-27 11:00; main holds the S18 phase PR merged before the freeze (DEC-GM-023; PR-only by convention, DEC-GM-018); after the freeze only a revert PR to the last green checkpoint; the public flip is owner-only"
   },
   "final_candidate": {
    "definition": "The commit on gridmarket/integration recorded at S18-E exit: the last green merge (or revert) commit's code tree plus evidence commits, with every step closed green, reverted, skipped, or dropped with a reason",
@@ -3261,7 +3407,7 @@
     "owner-run PROC-ACCEPT-P1 and PROC-ACCEPT-P2 results with the SC-1..SC-11 checklist, or not-run typed gaps",
     "AC disposition table: phase 1 incl. AC-GM-EDGE-01..04, phase 2 incl. AC-GM-SPEC-01..03, stretch incl. AC-GM-ML-01 (passed on the candidate or dropped with reason)",
     "CMD-SECRETS full-history result and LICENSE check (AC-GM-SEC-01)",
-    "Reviewer phase-cadence receipts and review.coverage_assist status (presence only; the IE does not adjudicate defects)",
+    "Reviewer Lifecycle review receipt (candidate recorded at about Sat 2026-09-26 22:00 CDT) with its repair round, and review.coverage_assist status (presence only; the IE does not adjudicate defects)",
     "the approved user-facing outcome: gridmarket-technical-plan.md Outcome and intent section 20 demo story"
    ],
    "assessment_questions": [
@@ -3297,11 +3443,12 @@
     "id": "HUM-JORDAN-PR",
     "what": "Jordan merges or declines the lane-worker PR into jordaaan, using a merge commit (not squash or rebase); Jordan or the owner merges PR #3 into main",
     "blocks": [
+     "phase PRs to main without OD-WORKER-LANDING (first at S09)",
      "S18-E clean merge",
      "OD-WORKER-LANDING avoidance"
     ],
-    "blocks_when": "before S18-E (Sun 06:00)",
-    "if_absent": "S18-E merges origin/main as it is and records the PR states; CF-19 decides the landing PR"
+    "blocks_when": "before the S09 phase PR (target Sat 14:00) to avoid OD-WORKER-LANDING; before S18-E (Sun 06:00) for a clean merge",
+    "if_absent": "OD-WORKER-LANDING holds the phase PRs (CF-19, CF-23); S18-E merges origin/main as it is and records the PR states"
    },
    {
     "id": "HUM-JORDAN-EDITS",
@@ -3360,12 +3507,12 @@
    },
    {
     "id": "OD-WORKER-LANDING",
-    "what": "owner decision (with Jordan) when, at the freeze, PR #3 is unmerged or Jordan declined the lane-worker PR: land ercot-hackathon/ in main as integrated (GitHub then counts PR #3's contained commits as merged), or revert the S09-E merge before the landing PR (the market still reads the deployed Worker over HTTP)",
+    "what": "owner decision (with Jordan) when a phase PR would carry ercot-hackathon/ into main (first at S09, DEC-GM-023) while PR #3 is unmerged or Jordan declined the lane-worker PR: land ercot-hackathon/ in main as integrated (GitHub then counts PR #3's contained commits as merged), or revert the S09-E merge before the phase PR (the market still reads the deployed Worker over HTTP)",
     "blocks": [
-     "landing PR gridmarket/integration -> main"
+     "phase PRs gridmarket/integration -> main (S09, S12, S18)"
     ],
-    "blocks_when": "only if CF-19 applies at Sun 07:00",
-    "if_absent": "the landing PR is held; the final candidate and assurance proceed"
+    "blocks_when": "only if CF-19 applies when a phase PR is ready (first at S09, target Sat 14:00); decided before the Sun 07:00 CDT freeze",
+    "if_absent": "the phase PRs are held; assembly on gridmarket/integration, the final candidate and assurance proceed"
    }
   ],
   "concurrency_findings": [
@@ -3557,6 +3704,24 @@
     "where": "owner checkout gridmarket/lifecycle-setup at 0bfa50a: design.md, gridmarket-technical-plan.md, specialists/, views/ untracked",
     "problem": "gridmarket/integration and the S01 base are created from the approved planning revision commit. S21 writes the GridMarket specification from design.md and the technical plan, and the Reviewer and IE assessment cite them. If the approval commit omits them, lane-spec cannot read them from its own branch.",
     "corrected_text": "Planning and Design (or the Plan Integrator) commits design.md, gridmarket-technical-plan.md, and views/ in the approved planning revision before gridmarket/integration is created."
+   },
+   {
+    "id": "CF-22",
+    "severity": "info",
+    "kind": "owner change (DEC-GM-025)",
+    "status": "applied by Planning and Design",
+    "where": "implementation.json waves, dependencies, S10/S13/S15/S22 and S11/S14/S16/S17/S23 branch bases; slice-graph.md; design.md DES-GM-LANES",
+    "problem": "The cap rises from 3 to 4 lanes and the red-test slices S10, S13, S15, S22 move to wave 2 on the S01 exit; their implementation slices stay after S09.",
+    "corrected_text": "Edges S01 --> S10, S13, S15, S22 (data) and S09 --> S11, S14, S16, S17 (data: lane sync merge) replace S09 --> S10, S13, S15; slot S11 --> S23 replaces slot S11 --> S22; slot S21 --> S15 is removed (the stretch red tests run in wave 2, and with 4 slots the spec lane fits beside lonestar, adversary and stretch in wave 3). Wave 2 red-test write sets (test_providers.py, test_adversarial.py, test_backtest.py, test_matching_parity.py, fixtures/ercot_history/, bench/bench_matching.py, test_ml.py, fixtures/ml/) are disjoint from foundation, worker, market, data, ui and spec. A lane holds a slot only while one of its slices runs. PROC-ASSEMBLY write-set sub-checks are unchanged: lane sync merge commits are excluded by --no-merges and their parents are already on the integration branch."
+   },
+   {
+    "id": "CF-23",
+    "severity": "medium",
+    "kind": "owner change (DEC-GM-023) moves a conditional owner decision earlier",
+    "status": "applied by Planning and Design",
+    "where": "S09, S12, S18 exits; OD-WORKER-LANDING; authorized_glue; branches.rule",
+    "problem": "Phase PRs merge gridmarket/integration into main after S09, S12 and S18. The S09 PR is the first to carry Jordan's commits and the S25 Worker fix into main, so CF-19 can apply at S09 (target Sat 14:00), not only at the freeze.",
+    "corrected_text": "OD-WORKER-LANDING triggers when a phase PR is ready while PR #3 is unmerged or the lane-worker PR is declined; the phase PRs are held (assembly continues) until the owner decides with Jordan, before the Sun 07:00 CDT freeze. The IE opens and merges phase PRs (merge commit, no review); it still never pushes directly to main or jordaaan."
    }
   ]
  },
@@ -3635,10 +3800,11 @@
   ],
   "note": "TE-F5 Lifecycle assurance set, outside slice command_ids. CMD-TEST-PARITY and CMD-REVERIFY-RUST are conditional on S18-D merged. Owner-run procedures PROC-ERCOT-LIVE-CHECK (TE-F6 alternative), PROC-TUNNEL, PROC-ACCEPT-P1, PROC-ACCEPT-P2 and PROC-ADV-DEMO are in no slice's command_ids.",
   "cadence": {
-   "reviewer": "phase",
+   "reviewer": "lifecycle",
    "test_engineer.assurance": "lifecycle",
    "integration_engineer.execution": "lifecycle"
-  }
+  },
+  "reviewer_boundary": "DEC-GM-023: one independent Reviewer review of the integrated candidate (gridmarket/integration head SHA recorded at about Sat 2026-09-26 22:00 CDT), then one repair round fixing every finding through the owning lanes and assembly, landed before the Sun 07:00 CDT freeze; deterministic verification closes it, with no second review unless the owner asks or the repair changes approved scope. Phase PRs to main carry no review. Lanes merged after the review candidate (S18 stretch steps) are covered by post-step V&V and Lifecycle assurance, not by the review."
  },
  "recovery": {
   "per_slice_repair": "A lane slice that fails its commands returns to the same lane's implementer inside the one-repair bound (k=1); the lane branch never merges red.",
@@ -3660,7 +3826,7 @@
    "Worker deployment (wrangler deploy); report of deployed source SHA and version ID",
    "Merging (merge commit, not squash or rebase) or declining the lane-worker PR into jordaaan; PR #3 into main"
   ],
-  "existing": "The private repository github.com/1wgrumph/gridmarket exists (DEC-GM-018); pushing branches and landing PRs to main is agent work, never a direct push to main.",
+  "existing": "The private repository github.com/1wgrumph/gridmarket exists (DEC-GM-018); pushing branches and landing PRs to main is agent work, never a direct push to main. Phase PRs gridmarket/integration -> main after S09, S12 and S18 merge with a merge commit and no review (DEC-GM-023).",
   "orchestrator_commit_CF-21": "The Orchestrator commits the planning artifacts in the approved planning revision; the Plan Integrator does not commit.",
   "no_profile_or_route_pause": true,
   "owner_review_gate": "Single integrated owner review after the planning review (owner-stops class E); execution waits for explicit approval."
@@ -3681,21 +3847,23 @@
   },
   {
    "id": "CELL-GM-KICKOFF-DECK",
-   "status": "BLOCKED",
+   "status": "RESOLVED",
    "decision": "Text of the Pitch kickoff deck, or owner confirmation it adds no rules.",
-   "source": "journey.json open_decisions (reference/hackathon-brief.md Sources)"
+   "source": "journey.json open_decisions (reference/hackathon-brief.md Sources)",
+   "resolution": "Deck transcribed in reference/hackathon-brief.md (commit a63c8d2)."
   },
   {
    "id": "OD-LICENSE-HOLDER",
-   "status": "QUEUED",
+   "status": "RESOLVED",
    "decision": "MIT LICENSE copyright holder name for S01.",
-   "source": "S01 human_decision; confirm at the integrated owner review"
+   "source": "S01 human_decision; confirm at the integrated owner review",
+   "resolution": "DEC-GM-026: the owner (GitHub 1wgrumph) and Jordan Hill."
   },
   {
    "id": "OD-WORKER-LANDING",
    "status": "CONDITIONAL",
-   "decision": "If PR #3 is still unmerged at the freeze, or the lane-worker PR is declined, the owner decides with Jordan (CF-19): land ercot-hackathon/ in main as integrated, or revert the S09-E merge before the landing PR gridmarket/integration -> main.",
-   "source": "integration-plan.md CF-19",
+   "decision": "If PR #3 is unmerged, or the lane-worker PR is declined, when a phase PR would carry ercot-hackathon/ into main (first at S09, DEC-GM-023), the owner decides with Jordan (CF-19, CF-23): land ercot-hackathon/ in main as integrated, or revert the S09-E merge before the phase PR. The phase PRs are held until the decision; assembly continues.",
+   "source": "integration-plan.md CF-19, CF-23",
    "deadline": "before the Sun 2026-09-27 07:00 CDT freeze"
   }
  ],
@@ -3707,9 +3875,13 @@
    "DEC-GM-019",
    "DEC-GM-020",
    "DEC-GM-021",
-   "DEC-GM-022"
+   "DEC-GM-022",
+   "DEC-GM-023",
+   "DEC-GM-024",
+   "DEC-GM-025",
+   "DEC-GM-026"
   ],
-  "note": "owner-requested P&D resume decisions are incorporated; the Orchestrator records acceptance in journey.json"
+  "note": "owner-requested P&D resume decisions are incorporated; the Orchestrator records acceptance in journey.json; DEC-GM-023..026 are owner changes at the integrated approval gate (profile_selection.amendments[0])"
  },
  "requirement_register": "none",
  "requirement_register_note": "all Lifecycle-local; no register exists (greenfield repository)",
@@ -3727,7 +3899,7 @@
   "state": "planning",
   "title": "GridMarket hackathon MVP",
   "lede": "Provider-neutral simulated exchange for battery flexibility on live ERCOT data; phased delivery with a frozen TDD slice graph.",
-  "bluf": "TDD: 25 slices in 3 waves (foundation plus Worker security; phase 1 plus spec; phase 2 plus stretch). Test slices author red tests, product slices turn them green, three Integration Engineer slices assemble with post-step V&V on gridmarket/integration. The ERCOT Worker security fix (S24-S25) runs in wave 1 with a PR into jordaaan; Jordan deploys. Stretch lanes merge only when green by Sun 04:30 CDT. Reviewer at phase cadence, Test Engineer assurance and Integration Engineer execution assessment at lifecycle cadence; one integrated owner review gates dispatch.",
+  "bluf": "TDD (spec lane single_implementer on the tech-writing profile; ui lane on the frontend profile): 25 slices in 3 waves (foundation plus Worker security; phase 1, spec, and the LoneStar, adversary, backtest/parity and ML red tests against S01's frozen contracts; phase 2 plus stretch), at most 4 concurrent lanes. Test slices author red tests, product slices turn them green, three Integration Engineer slices assemble with post-step V&V on gridmarket/integration. Every slice exits with a commit on its lane branch; each phase assembly ends with a PR merged to main without review. The ERCOT Worker security fix (S24-S25) runs in wave 1 with a PR into jordaaan; Jordan deploys. Stretch lanes merge only when green by Sun 04:30 CDT. One Reviewer Lifecycle review of the integrated candidate at about Sat 22:00 CDT before the Sun 07:00 freeze; Test Engineer assurance and Integration Engineer execution assessment at lifecycle cadence; one integrated owner review gates dispatch.",
   "identity": [
    {
     "label": "Lifecycle",
@@ -3747,7 +3919,7 @@
    },
    {
     "label": "Candidate digest",
-    "value": "3f54a0a17e509081e8e96017492533c09e0deeed31f81392cf369892b48339a4"
+    "value": "e9993338a22707706c157cbe02f5932a272398c930c02f1516dfe312c7544eb2"
    },
    {
     "label": "Profile",
@@ -3756,6 +3928,10 @@
    {
     "label": "Profile configuration digest",
     "value": "14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721"
+   },
+   {
+    "label": "Lane profiles (DEC-GM-024)",
+    "value": "tech-writing (spec S19-S21), frontend (ui S04, S07); lane entries digest d83b583369a7bf7ce522b32572f78534ffbce41a135b2b84c0087368ec7129ae"
    },
    {
     "label": "Development strategy",
@@ -3821,7 +3997,7 @@
    },
    {
     "id": "DOD-06",
-    "criterion": "Reviewer (phase), Test Engineer assurance (lifecycle) and Integration Engineer execution assessment (lifecycle) complete; DoD Manifest closeout appended.",
+    "criterion": "Reviewer (one Lifecycle review of the integrated candidate at about Sat 2026-09-26 22:00 CDT, then one repair round), Test Engineer assurance (lifecycle) and Integration Engineer execution assessment (lifecycle) complete; DoD Manifest closeout appended.",
     "evidence": "assurance receipts; closeout section",
     "status": "Planned"
    }
@@ -4165,7 +4341,7 @@
    },
    {
     "id": "RISK-GM-11",
-    "statement": "Risk: Spec, ML, and the Rust lane exceed the 3-lane concurrency limit if they run beside the lanes already in that window. Control: Slot edges serialize them: Spec runs after the data lane in wave 2; ML runs after LoneStar in wave 3; Rust runs after the adversary lane.",
+    "statement": "Risk: Spec, ML, and the Rust lane exceed the 4-lane concurrency limit (DEC-GM-025) if they run beside the lanes already in that window. Control: Slot edges serialize them: Spec runs after the data lane in wave 2; ML runs after LoneStar in wave 3; Rust runs after the adversary lane.",
     "source": "Lifecycle-local; technical plan Risk table",
     "status": "Planned"
    },
@@ -4293,7 +4469,7 @@
    },
    {
     "id": "DES-GM-LANES",
-    "decision": "Coordinator waves with lane branches and worktrees, integration branch, --no-ff ordered assembly with post-step V&V, cap of 3 lanes with slot edges.",
+    "decision": "Coordinator waves with lane branches and worktrees, integration branch, --no-ff ordered assembly with post-step V&V, cap of 4 lanes with slot edges (DEC-GM-025), red tests authored in wave 2, a commit per slice and a PR to main per phase (DEC-GM-023).",
     "interfaces": "gridmarket/integration; evidence/assembly-*.md",
     "status": "Planned"
    },
@@ -4431,16 +4607,37 @@
    },
    {
     "role": "Product Implementer",
-    "session": "implementation",
+    "session": "implementation (primary lanes)",
     "configured_primary": "Muse Code / Muse Spark 1.3 / max",
     "effective_route": "frozen primary (no fallback activated)",
     "status": "Planned"
    },
    {
     "role": "Test Implementer",
-    "session": "implementation",
+    "session": "implementation (primary lanes)",
     "configured_primary": "Codex CLI / GPT-6 Sol / xhigh",
     "effective_route": "frozen primary (no fallback activated)",
+    "status": "Planned"
+   },
+   {
+    "role": "Product Implementer",
+    "session": "implementation (spec S19-S21, tech-writing, single_implementer; DEC-GM-024)",
+    "configured_primary": "Claude Code / Claude Opus 5.5 / medium",
+    "effective_route": "frozen tech-writing entry (no fallback activated)",
+    "status": "Planned"
+   },
+   {
+    "role": "Product Implementer",
+    "session": "implementation (ui S07, frontend; DEC-GM-024)",
+    "configured_primary": "Claude Code / Claude Opus 5.5 / high",
+    "effective_route": "frozen frontend entry (no fallback activated)",
+    "status": "Planned"
+   },
+   {
+    "role": "Test Implementer",
+    "session": "implementation (ui S04, frontend; DEC-GM-024)",
+    "configured_primary": "Codex CLI / GPT-6 Sol / xhigh",
+    "effective_route": "frozen frontend entry (no fallback activated)",
     "status": "Planned"
    },
    {
@@ -4459,7 +4656,7 @@
    },
    {
     "role": "Reviewer",
-    "session": "phase",
+    "session": "lifecycle (one review, about Sat 2026-09-26 22:00 CDT; DEC-GM-023)",
     "configured_primary": "Cursor Agent / Grok 4.7 / high",
     "effective_route": "frozen primary (no fallback activated)",
     "status": "Planned"
@@ -4647,7 +4844,7 @@
    },
    {
     "id": "S19",
-    "role": "Test Implementer",
+    "role": "Product Implementer",
     "depends_on": [
      "S01",
      "S06"
@@ -4706,7 +4903,7 @@
     "id": "S10",
     "role": "Test Implementer",
     "depends_on": [
-     "S09"
+     "S01"
     ],
     "write_set": [
      "backend/tests/test_providers.py"
@@ -4717,7 +4914,7 @@
     "id": "S13",
     "role": "Test Implementer",
     "depends_on": [
-     "S09"
+     "S01"
     ],
     "write_set": [
      "backend/tests/test_adversarial.py"
@@ -4728,8 +4925,7 @@
     "id": "S15",
     "role": "Test Implementer",
     "depends_on": [
-     "S21",
-     "S09"
+     "S01"
     ],
     "write_set": [
      "backend/tests/test_backtest.py",
@@ -4743,6 +4939,7 @@
     "id": "S11",
     "role": "Product Implementer",
     "depends_on": [
+     "S09",
      "S10"
     ],
     "write_set": [
@@ -4756,6 +4953,7 @@
     "id": "S14",
     "role": "Product Implementer",
     "depends_on": [
+     "S09",
      "S13"
     ],
     "write_set": [
@@ -4769,6 +4967,7 @@
     "id": "S16",
     "role": "Product Implementer",
     "depends_on": [
+     "S09",
      "S15"
     ],
     "write_set": [
@@ -4780,7 +4979,7 @@
     "id": "S22",
     "role": "Test Implementer",
     "depends_on": [
-     "S11"
+     "S01"
     ],
     "write_set": [
      "backend/tests/test_ml.py",
@@ -4792,6 +4991,7 @@
     "id": "S17",
     "role": "Product Implementer",
     "depends_on": [
+     "S09",
      "S14",
      "S15"
     ],
@@ -4819,6 +5019,7 @@
     "id": "S23",
     "role": "Product Implementer",
     "depends_on": [
+     "S11",
      "S22",
      "S16"
     ],
@@ -5283,7 +5484,7 @@
     "method": "inspection",
     "cadence": "slice",
     "command": "CMD-DEPSCAN",
-    "evidence": "CMD-DEPSCAN output (S01, S17) + CMD-RULES output (S18-E) + Reviewer phase finding list",
+    "evidence": "CMD-DEPSCAN output (S01, S17) + CMD-RULES output (S18-E) + Reviewer Lifecycle finding list",
     "status": "Planned"
    },
    {
@@ -5515,7 +5716,7 @@
    },
    {
     "id": "RISK-GM-11",
-    "risk": "Spec, ML, and the Rust lane exceed the 3-lane concurrency limit if they run beside the lanes already in that window.",
+    "risk": "Spec, ML, and the Rust lane exceed the 4-lane concurrency limit (DEC-GM-025) if they run beside the lanes already in that window.",
     "control": "Slot edges serialize them: Spec runs after the data lane in wave 2; ML runs after LoneStar in wave 3; Rust runs after the adversary lane.",
     "recovery": "Drop Rust first, then ML, at the Sun 04:30 CDT cut-off.",
     "status": "Planned"
@@ -5548,6 +5749,12 @@
     "owner": "William (owner)",
     "evidence": "implementation.json + gridmarket-dod-manifest.html at candidate 0bfa50a",
     "status": "Hold"
+   },
+   {
+    "event": "Owner changes at the integrated approval gate (DEC-GM-023..026) applied; package returns to the same gate",
+    "owner": "William (owner)",
+    "evidence": "journey.json decisions DEC-GM-023..026 and profile_selection.amendments[0]",
+    "status": "Confirmed"
    },
    {
     "event": "Continuation grant (proposal)",

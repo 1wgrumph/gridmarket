@@ -463,17 +463,20 @@ For zone `z` and future delivery hour `h`, each factor is squashed to
 
 ### DES-GM-LANES — Workstreams, worktrees, and assembly
 
-- One Lifecycle, one checkout lease, Coordinator-dispatched waves with 2–3
+- One Lifecycle, one checkout lease, Coordinator-dispatched waves with 2–4
   concurrent lanes (DEC-GM-006 resolved: Coordinator waves, not separate
-  Lifecycles).
+  Lifecycles; cap 4 per DEC-GM-025).
 - Integration branch `gridmarket/integration` in worktree
   `/home/spectre/alphazede/worktrees/base-gridmarket-integration`, created from
   the approved planning revision. Each lane has branch
   `gridmarket/lane-<name>` in worktree
-  `/home/spectre/alphazede/worktrees/base-gridmarket-<name>`; wave 2 lanes
-  are created from the S01 exit commit and wave 3 lanes from the S09 exit
-  commit of the integration branch (`lane-rust` from the S15 exit, `lane-ml`
-  from the S16 exit). Lane names: `foundation`, `market`, `data`, `ui`,
+  `/home/spectre/alphazede/worktrees/base-gridmarket-<name>`; wave 2 lanes,
+  including the red-test lanes `lonestar`, `adversary`, `stretch`, and `ml`
+  (DEC-GM-025: S10, S13, S15, S22 are written against S01's frozen
+  contracts), are created from the S01 exit commit (`lane-rust` from the S15
+  exit). Before its wave 3 implementation slice, a lane merges the S09 exit
+  commit of the integration branch (`lane-ml`: the S16 exit) with `--no-ff`;
+  that merge commit is the slice base. Lane names: `foundation`, `market`, `data`, `ui`,
   `spec`, `worker`, `lonestar`, `adversary`, `stretch`, `rust`, `ml`.
 - Worker lane (DEC-GM-021, DEC-GM-022): Jordan's branch `jordaaan` lands on
   `main` through PR #3. In wave 1, lane `worker` branches
@@ -482,19 +485,24 @@ For zone `z` and future delivery hour `h`, each factor is squashed to
   branch after `ui`. Paths under `ercot-hackathon/` are disjoint from every
   other lane. Before the final candidate the Integration Engineer
   merges `origin/main` (with PR #3) into the integration branch.
-- Concurrency cap 3 lanes, counted across waves: slot edges (scheduling
-  order, not data) run `ui` after `worker`, `spec` after `data`, `stretch`
-  after `spec`, `ml` after
-  `lonestar` and `rust` after `adversary` in wave 3.
+- Concurrency cap 4 lanes (DEC-GM-025), counted across waves as lanes with a
+  running slice: slot edges (scheduling order, not data) run `ui` after
+  `worker`, `spec` after `data`, and in wave 3 the `ml` implementation after
+  `lonestar` and `rust` after `adversary`.
 - Test Implementer and Product Implementer slices of one lane run in the same
-  lane worktree in order (TDD); the lane branch merges only when green.
+  lane worktree in order (TDD); the lane branch merges only when green. The
+  `spec` lane runs `single_implementer` (tech-writing profile, DEC-GM-024):
+  one implementer writes its tests and code, red first.
 - The Integration Engineer (execution route) merges lanes with `--no-ff` in a
   fixed order and runs post-step V&V after every merge; a red step is reverted
   (RISK-GM-05). Merge conflicts beyond whitespace return to the lane.
 - Remote `origin` = `github.com/1wgrumph/gridmarket` (private, DEC-GM-018).
   Lane and integration branches are pushed without force; `main` changes only
   through PRs (convention until the owner applies the ruleset after the public
-  flip). The integration branch is the demo and freeze candidate.
+  flip). The integration branch is the demo and freeze candidate. Every slice
+  exits with a commit on its lane branch; each phase assembly (S09, S12, S18)
+  ends with a PR `gridmarket/integration` → `main` merged with a merge commit,
+  without review (DEC-GM-023).
 - Lenses: Integration.
 
 ## Contracts
@@ -590,13 +598,18 @@ flowchart LR
     S07 --> S09
     S25 -.complete-or-drop.-> S09
     S25 -.slot.-> S04
+    S10[S10 T LoneStar]
+    S13[S13 T adversary]
+    S15[S15 T backtest+parity]
+    S22[S22 T ML]
   end
   subgraph W3[Wave 3 phase 2 + stretch]
-    S10[S10 T LoneStar] --> S11[S11 P LoneStar] --> S12[S12 IE phase 2 + spec assembly]
-    S11 -.slot.-> S22[S22 T ML] --> S23[S23 P ML]
-    S13[S13 T adversary] --> S14[S14 P adversary]
+    S10 --> S11[S11 P LoneStar] --> S12[S12 IE phase 2 + spec assembly]
+    S11 -.slot.-> S23[S23 P ML]
+    S22 --> S23
+    S13 --> S14[S14 P adversary]
     S14 -.slot.-> S17[S17 P Rust core]
-    S15[S15 T backtest+parity] --> S16[S16 P backtest]
+    S15 --> S16[S16 P backtest]
     S15 --> S17
     S16 --> S23
     S12 --> S18[S18 IE stretch assembly]
@@ -605,8 +618,7 @@ flowchart LR
     S17 -.complete-or-drop.-> S18
     S23 -.complete-or-drop.-> S18
   end
-  S01 --> S02 & S03 & S04 & S19
+  S01 --> S02 & S03 & S04 & S19 & S10 & S13 & S15 & S22
   S21 -.complete-or-drop.-> S12
-  S21 -.slot.-> S15
-  S09 --> S10 & S13 & S15
+  S09 --> S11 & S14 & S16 & S17
 ```

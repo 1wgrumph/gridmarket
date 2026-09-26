@@ -157,7 +157,7 @@ DEC-GM-001..022 in `journey.json` and the owner intent `gridmarket-intent.html`
 | RISK-GM-07 | Abuse of the public tunnel or judge keys. | API keys, sandbox rate limits, maximum order size, tunnel open only from recording through 15:00 CDT Sunday. | Owner revokes keys or stops the tunnel. |
 | RISK-GM-08 | A new dependency (Python, npm, Astryx, maturin, PyO3) carries a supply-chain defect. | Dependency admission scan when a dependency is added (wave 1 and the Rust lane). | Pin or remove the dependency; stretch lane dropped if unresolved. |
 | RISK-GM-10 | NWS API outage or throttling, or Open-Meteo free-tier terms that do not fit a public repository. | AC-GM-DATA-05 budget and stale marking; Open-Meteo used only by the offline ML lane with CC BY 4.0 attribution; the ML lane checks the terms first and drops Open-Meteo history if they do not allow this use. | Score runs on ERCOT and calendar factors; ML lane falls back to NWS-free features. |
-| RISK-GM-11 | Spec, ML, and the Rust lane exceed the 3-lane concurrency limit if they run beside the lanes already in that window. | Slot edges serialize them: Spec runs after the data lane in wave 2; ML runs after LoneStar in wave 3; Rust runs after the adversary lane. | Drop Rust first, then ML, at the Sun 04:30 CDT cut-off. |
+| RISK-GM-11 | Spec, ML, and the Rust lane exceed the 4-lane concurrency limit (DEC-GM-025) if they run beside the lanes already in that window. | Slot edges serialize them: Spec runs after the data lane in wave 2; ML runs after LoneStar in wave 3; Rust runs after the adversary lane. | Drop Rust first, then ML, at the Sun 04:30 CDT cut-off. |
 | RISK-GM-09 | Fixture shape differs from live ERCOT Worker responses. | Parsers read the documented ERCOT report fields and the snapshot shape of `ercot-hackathon/src/snapshot.js` at `bae0a16` (CONTRACT-GM-WORKER); one live response per Worker route is checked during phase 1 assembly once the Worker fix is deployed. | Fix the parser in the data lane; fixtures stay test-only. |
 | RISK-GM-12 | The Worker's open report proxy lets any caller exhaust the shared ERCOT limit of 30 requests per minute during the demo. | AC-GM-EDGE-01..04 built in wave 1 (S24–S25) and deployed by Jordan before the recording. | Jordan disables `/api/report/*` for anonymous callers; the market keeps last stored values. |
 | RISK-GM-13 | The Worker lane is run by a human teammate on his own schedule; a snapshot shape change or a missing allowlist entry breaks the market data lane. | CONTRACT-GM-WORKER fixes the routes, the allowlist, and the snapshot shape; agent lanes edit `ercot-hackathon/` only in S24–S25 (DEC-GM-022). | Jordan restores the contract; the market marks the affected signals stale. |
@@ -197,9 +197,12 @@ DEC-GM-001..022 in `journey.json` and the owner intent `gridmarket-intent.html`
 
 ## Entry criteria
 
-- DEC-GM-001..022 confirmed or recorded in `journey.json` (the Orchestrator
+- DEC-GM-001..026 confirmed or recorded in `journey.json` (the Orchestrator
   clears `pending_planning_delta`, which this package incorporates); profile `primary` frozen with
-  digest `14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`.
+  digest `14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`;
+  lane profiles `tech-writing` (spec lane) and `frontend` (ui lane) frozen with
+  digest `d83b583369a7bf7ce522b32572f78534ffbce41a135b2b84c0087368ec7129ae`
+  (DEC-GM-024).
 - Integrated owner approval of this five-artifact package (one review gate).
 - Checkout lease active on `/home/spectre/alphazede/Hackathons/Base`; lane
   worktrees are created under `/home/spectre/alphazede/worktrees/` per the
@@ -215,8 +218,9 @@ DEC-GM-001..022 in `journey.json` and the owner intent `gridmarket-intent.html`
 - Phase 2: AC-GM-ACC-02 demonstrated.
 - Stretch: each stretch AC either passes on the integrated candidate or is
   recorded as a dropped lane with its reason.
-- Lifecycle: Reviewer (phase cadence), Test Engineer assurance (Lifecycle
-  cadence), and Integration Engineer execution assessment (Lifecycle cadence)
+- Lifecycle: Reviewer (Lifecycle cadence: one independent review of the
+  integrated candidate at about Sat 2026-09-26 22:00 CDT, DEC-GM-023), Test
+  Engineer assurance (Lifecycle cadence), and Integration Engineer execution assessment (Lifecycle cadence)
   complete; AC-GM-SEC-01 passes before any owner publication; DoD Manifest
   closeout appended.
 
