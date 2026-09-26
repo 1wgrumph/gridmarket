@@ -1166,6 +1166,13 @@
       "decided_by": "Orchestrator (delegate, planning owner)",
       "decision": "A16 clarifications after S69b's first run (1,000 homes, 26 Aug: FixedSchedule net 202,013 cents vs PriceBased 181,255, Battery-aware tied with PriceBased; provider outage 19:00-20:00 caused 1,000 failed commitments for every strategy): offer_flex only targets procurement quarters and never blocks self_supply; Battery-aware self-supplies at RT >= the day-ahead median (not Q75) and charges whenever day-ahead <= median; parameters stay day-independent; results are reported as they come, including a simple schedule winning on this day.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-132",
+      "decided_at": "2026-09-26T18:07:00-05:00",
+      "decided_by": "Orchestrator (delegate)",
+      "decision": "S80 finish decisions: CONTRACTS.md gains the #/tour redirect, #/replay deep link, checklist and context-carry query semantics and the renamed env value; the backend UX-01 test is deselected in lane ux (owned and fixed by lane ux2); DEC-GM-122 standing test-correction authority extends to S80 for Market links carrying zone/hour context, zone-close keeping the hour and the renamed views env; slowing bot summaries to 15 s is rejected (the 2 s Overview polling contract stays, and per-bot profile fetches are removed or bounded because ux2 serves economy fields); replay completion hooks wait for S71/S72 with no faked completion.",
+      "reversible": true
     }
   ],
   "stages": {
