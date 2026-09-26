@@ -225,7 +225,7 @@
     "intake": "accepted",
     "architectural_alignment": "accepted",
     "scope_definition": "accepted",
-    "planning_and_design": "in_progress"
+    "planning_and_design": "plan_review_ready"
   },
   "profile_selection": {
     "selected_at": "2026-09-26T01:10:55Z",
@@ -977,6 +977,31 @@
       "event": "owner_requested_restart",
       "at": "2026-09-26T01:47:45Z",
       "note": "Resumed session stopped after about 6 minutes, before any specialist dispatch, to add DEC-GM-022."
+    },
+    {
+      "stage": "planning_review",
+      "at": "2026-09-26T02:43:30Z",
+      "slot_id": "planning-review-1",
+      "route": "Cursor Agent/Grok 4.7/high (frozen primary reviewer)",
+      "candidate_revision": "4defcb4535ca16d70918d3e597599ed26b03028e",
+      "candidate_digest": "1a0b6c0d3c93140e283901801f1f6947ce04f9c483ba2c056f4a84838e215260",
+      "verdict": "REPAIR_REQUIRED",
+      "findings": [
+        "F1 S17 lane/branch collision with S16",
+        "F2 three ERCOT report slugs left as placeholders"
+      ],
+      "ocr": "delegation mode ran; 5/76 reviewable; Markdown excluded (unsupported_ext) = typed coverage gap, reviewed directly",
+      "reverify": "not applicable: documents only, no binary claim",
+      "evidence": "specialists/planning-review-r1.md"
+    },
+    {
+      "stage": "planning_repair",
+      "at": "2026-09-26T02:43:30Z",
+      "route": "Claude Code headless planning_and_design delta",
+      "result": "DELTA_APPLIED",
+      "deterministic_gate": "plan-package PASS, 0 findings, manifest digest 3f54a0a17e509081e8e96017492533c09e0deeed31f81392cf369892b48339a4; render --check PASS",
+      "planning_review_gate": "PASS repair_gate_passed",
+      "evidence": "specialists/planning-gate.json, specialists/delta-f2-evidence.md"
     }
   ]
 }

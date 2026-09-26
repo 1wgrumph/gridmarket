@@ -1,0 +1,48 @@
+{
+  "input": {
+    "reviewer_slots": [
+      {
+        "slot_id": "planning-review-1",
+        "primary_route_ref": "Cursor Agent/Grok 4.7/high",
+        "fallback_route_refs": [
+          "Codex CLI/GPT-6 Astra/high",
+          "Claude Code/Claude Opus 5.5/high"
+        ]
+      }
+    ],
+    "round_number": 1,
+    "completed_rounds": 1,
+    "candidate": {
+      "candidate_ref": "gridmarket/lifecycle-setup",
+      "candidate_revision": "4defcb4535ca16d70918d3e597599ed26b03028e",
+      "candidate_digest": "1a0b6c0d3c93140e283901801f1f6947ce04f9c483ba2c056f4a84838e215260"
+    },
+    "receipts": [
+      {
+        "slot_id": "planning-review-1",
+        "selected_route_ref": "Cursor Agent/Grok 4.7/high",
+        "independent": true,
+        "findings_isolated": true,
+        "candidate_ref": "gridmarket/lifecycle-setup",
+        "candidate_revision": "4defcb4535ca16d70918d3e597599ed26b03028e",
+        "candidate_digest": "1a0b6c0d3c93140e283901801f1f6947ce04f9c483ba2c056f4a84838e215260",
+        "verdict": "REPAIR_REQUIRED",
+        "findings": [
+          "F1",
+          "F2"
+        ]
+      }
+    ],
+    "aggregation_complete": true,
+    "aggregated_repairs": 1,
+    "deterministic_gate": "PASS",
+    "plan_dir": "docs/plans/2026-09-25-gridmarket",
+    "dod_manifest": {
+      "output_name": "gridmarket-dod-manifest.html"
+    }
+  },
+  "result": {
+    "outcome": "PASS",
+    "reason": "repair_gate_passed"
+  }
+}

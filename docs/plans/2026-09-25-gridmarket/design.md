@@ -184,18 +184,18 @@ is acceptable for one process. Lenses: Security controls, Market integrity.
   forecast by ERCOT weather-zone name, outage capacity by load zone, shadow
   prices by constraint identity; every value with interval, source time, and
   fetch time.
-- Routes (report paths and field names are confirmed in the data lane against
-  developer.ercot.com and by one live call per route during phase 1 assembly,
-  RISK-GM-09):
+- Routes (report paths confirmed 2026-09-25 from the Worker's ERCOT product
+  catalog, `specialists/delta-f2-evidence.md`; field names are confirmed by one
+  live call per route during phase 1 assembly, RISK-GM-09):
 
   | Signal | Worker route | Poll interval |
   |---|---|---|
   | System snapshot: demand, hub RT SPP, DAM HB_NORTH and DART, SCED lambda and headroom, wind and solar error, baseline checks (dashboard signals panel) | `/api/snapshot` | 5 min |
   | RT SPP, 15-min, load zones + `HB_HUBAVG` | `/api/report/np6-905-cd/spp_node_zone_hub` | 5 min |
   | DAM SPP, hourly, load zones | `/api/report/np4-190-cd/dam_stlmnt_pnt_prices` | 60 min (and on first start) |
-  | Load forecast by weather zone | `/api/report/np3-565-cd/<report>` | 60 min |
-  | Hourly resource outage capacity by load zone | `/api/report/np3-233-cd/<report>` | 60 min |
-  | SCED shadow prices and binding constraints | `/api/report/np6-86-cd/<report>` | 5 min |
+  | Load forecast by weather zone | `/api/report/np3-565-cd/lf_by_model_weather_zone` | 60 min |
+  | Hourly resource outage capacity by load zone | `/api/report/np3-233-cd/hourly_res_outage_cap` | 60 min |
+  | SCED shadow prices and binding constraints | `/api/report/np6-86-cd/shdw_prices_bnd_trns_const` | 5 min |
 
 - Budget: a sliding-window limiter allows at most 12 Worker requests per 60 s
   for the poller, including pagination; the client never sends `fresh`
@@ -545,7 +545,8 @@ at `bae0a16` (unchanged at `4853e51`): `asOf`, `ct`, `heNow`, `errors`, `demand`
 `sced`, `wind`, `solar`, `weather`, `checks`; cached 5 min.
 `GET /api/report/<emil-id>/<report>?<ERCOT query>` with header
 `x-gridmarket-key` returns ERCOT's `{fields, data, _meta}` unchanged; the
-report allowlist contains exactly the five reports of DES-GM-ERCOT.
+report allowlist contains exactly the five reports of DES-GM-ERCOT:
+`/api/report/np6-905-cd/spp_node_zone_hub`, `/api/report/np4-190-cd/dam_stlmnt_pnt_prices`, `/api/report/np3-565-cd/lf_by_model_weather_zone`, `/api/report/np3-233-cd/hourly_res_outage_cap`, `/api/report/np6-86-cd/shdw_prices_bnd_trns_const`.
 Errors: 401 missing or wrong key, 404 report not allowlisted, 429 rate
 limited (per client or ERCOT upstream budget), 502 ERCOT failure, 503 Worker
 secrets missing. The market allows

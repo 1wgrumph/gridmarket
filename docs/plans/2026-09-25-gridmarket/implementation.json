@@ -46,7 +46,7 @@
    "policy_ref": "skills/bearing-lite/references/review-policy.md",
    "candidate_ref": "gridmarket/lifecycle-setup",
    "candidate_revision": "0bfa50a300fe79a2b2722854438e7915aec158dc",
-   "candidate_digest": "1a0b6c0d3c93140e283901801f1f6947ce04f9c483ba2c056f4a84838e215260",
+   "candidate_digest": "3f54a0a17e509081e8e96017492533c09e0deeed31f81392cf369892b48339a4",
    "reviewer_slots": [
     {
      "slot_id": "planning-review",
@@ -674,7 +674,7 @@
   {
    "id": "S24",
    "role": "Test Implementer",
-   "goal": "DEC-GM-022: in worktree base-gridmarket-worker on branch gridmarket/lane-worker from origin/jordaaan (4853e51), author red node:test tests with stub env and stub fetch counting ERCOT calls: non-allowlisted /api/report 404; keyless report/products/snapshot?fresh 401; 31st request in 60 s from one address 429; 10-address burst keeps ERCOT calls <= 25 with 429s; snapshot 429 retry kept; views unaffected; zero ERCOT calls where stated.",
+   "goal": "DEC-GM-022: red node:test tests, stub env and stub fetch counting ERCOT calls: allowlist exactly /api/report/np6-905-cd/spp_node_zone_hub, /api/report/np4-190-cd/dam_stlmnt_pnt_prices, /api/report/np3-565-cd/lf_by_model_weather_zone, /api/report/np3-233-cd/hourly_res_outage_cap, /api/report/np6-86-cd/shdw_prices_bnd_trns_const; other report 404; keyless report/products/snapshot?fresh 401; 31st request/60 s per address 429; 10-address burst ERCOT calls <= 25; snapshot 429 retry kept; views unaffected.",
    "type": "test",
    "requirement_ids": [
     "AC-GM-EDGE-01",
@@ -749,7 +749,7 @@
   {
    "id": "S25",
    "role": "Product Implementer",
-   "goal": "DEC-GM-022: implement the report allowlist, the market client key check (MARKET_KEY) on /api/report, /api/products and /api/snapshot?fresh, the per-client RATE_LIMITER binding on /api/*, the ERCOT_BUDGET guard in the shared ERCOT fetch path with one shared snapshot build per isolate, keep the snapshot 429 backoff, restrict /api/edc to the view's query parameters, and README setup lines, until S24 tests are green; push the lane and open a PR into jordaaan; deployment is Jordan's action.",
+   "goal": "DEC-GM-022, until S24 is green: allowlist: /api/report/np6-905-cd/spp_node_zone_hub, /api/report/np4-190-cd/dam_stlmnt_pnt_prices, /api/report/np3-565-cd/lf_by_model_weather_zone, /api/report/np3-233-cd/hourly_res_outage_cap, /api/report/np6-86-cd/shdw_prices_bnd_trns_const; MARKET_KEY on report, products, snapshot?fresh; per-client RATE_LIMITER on /api/*; ERCOT_BUDGET in shared fetch, one snapshot build/isolate; keep snapshot 429 backoff; /api/edc view params only; README; PR into jordaaan; Jordan deploys.",
    "type": "product",
    "requirement_ids": [
     "AC-GM-EDGE-01",
@@ -932,7 +932,7 @@
   {
    "id": "S03",
    "role": "Test Implementer",
-   "goal": "Author red tests and test-only ERCOT Worker (snapshot and report-route shapes per CONTRACT-GM-WORKER) and NWS fixtures for the 12-per-minute Worker budget, no `fresh`, market client key header, backoff/stale on 401/404/429/5xx, no ERCOT credentials, report parsing, zone mapping, NWS forecast and alerts, 5x16 NERC-holiday calendar, seven score factors, monotonicity, levels, confidence, disclaimer.",
+   "goal": "Red tests, NWS and Worker fixtures (/api/snapshot, /api/report/np6-905-cd/spp_node_zone_hub, /api/report/np4-190-cd/dam_stlmnt_pnt_prices, /api/report/np3-565-cd/lf_by_model_weather_zone, /api/report/np3-233-cd/hourly_res_outage_cap, /api/report/np6-86-cd/shdw_prices_bnd_trns_const): 12/min budget, no `fresh`, key header, backoff/stale on 401/404/429/5xx, no ERCOT credentials, parsing, zone mapping, NWS forecast/alerts, 5x16 NERC-holiday calendar, seven factors, monotonicity, levels, confidence, disclaimer.",
    "type": "test",
    "requirement_ids": [
     "AC-GM-DATA-01",
@@ -1212,7 +1212,7 @@
   {
    "id": "S06",
    "role": "Product Implementer",
-   "goal": "Implement ercot.py (ERCOT Worker client per CONTRACT-GM-WORKER, limiter with a requests-per-minute budget parameter, backoff, parsers, poller, signal store; no ERCOT credentials), nws.py, and scoring.py (seven factors, stdlib peak calendar) until S03 tests are green.",
+   "goal": "Implement ercot.py (Worker client of /api/snapshot, /api/report/np6-905-cd/spp_node_zone_hub, /api/report/np4-190-cd/dam_stlmnt_pnt_prices, /api/report/np3-565-cd/lf_by_model_weather_zone, /api/report/np3-233-cd/hourly_res_outage_cap, /api/report/np6-86-cd/shdw_prices_bnd_trns_const; limiter with a requests-per-minute budget parameter, backoff, parsers, poller, signal store; no ERCOT credentials), nws.py, and scoring.py (seven factors, stdlib peak calendar) until S03 tests are green.",
    "type": "product",
    "requirement_ids": [
     "AC-GM-DATA-01",
@@ -2318,10 +2318,10 @@
    "human_decision": null,
    "authority_id": "GM-2026-09-25",
    "dispatchable": true,
-   "lane": "stretch",
-   "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-stretch",
-   "branch": "gridmarket/lane-stretch",
-   "branch_base": "S09 exit commit on gridmarket/integration",
+   "lane": "rust",
+   "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-rust",
+   "branch": "gridmarket/lane-rust",
+   "branch_base": "S15 exit commit on gridmarket/lane-stretch",
    "parallel_safe": {
     "value": true,
     "reason": "Write set disjoint from every other lane in wave 3; ordered after S14, S15; tests use fixtures only (no shared live budget). Own smoke project and port; removes only its own project."
@@ -3747,7 +3747,7 @@
    },
    {
     "label": "Candidate digest",
-    "value": "1a0b6c0d3c93140e283901801f1f6947ce04f9c483ba2c056f4a84838e215260"
+    "value": "3f54a0a17e509081e8e96017492533c09e0deeed31f81392cf369892b48339a4"
    },
    {
     "label": "Profile",
