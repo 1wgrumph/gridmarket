@@ -1,5 +1,13 @@
 {
-  "fields": ["deliveryDate", "hourEnding", "loadZone", "outageCapacity", "publishTime"],
-  "data": [["2026-09-26", 10, "LZ_HOUSTON", 2310, "2026-09-26T13:10:00Z"]],
+  "fields": [
+    {"name": "deliveryDate", "label": "Delivery Date", "dataType": "DATE"},
+    {"name": "hourEnding", "label": "Hour Ending", "dataType": "INTEGER"},
+    {"name": "loadZone", "label": "Load Zone", "dataType": "VARCHAR"},
+    {"name": "outageCapacity", "label": "Outage Capacity", "dataType": "INTEGER"},
+    {"name": "publishTime", "label": "Publish Time", "dataType": "DATETIME"}
+  ],
+  "data": [
+    ["2026-09-26", 10, "LZ_HOUSTON", 2310, "2026-09-26T13:10:00Z"]
+  ],
   "_meta": {"totalRecords": 1}
 }

@@ -1,5 +1,12 @@
 {
-  "fields": ["scedTimestamp", "constraintName", "shadowPrice", "publishTime"],
-  "data": [["2026-09-26T14:00:00Z", "HOUSTON_NORTH_345KV", 125.5, "2026-09-26T14:04:00Z"]],
+  "fields": [
+    {"name": "scedTimestamp", "label": "SCED Timestamp", "dataType": "DATETIME"},
+    {"name": "constraintName", "label": "Constraint Name", "dataType": "VARCHAR"},
+    {"name": "shadowPrice", "label": "Shadow Price", "dataType": "DOUBLE"},
+    {"name": "publishTime", "label": "Publish Time", "dataType": "DATETIME"}
+  ],
+  "data": [
+    ["2026-09-26T14:00:00Z", "HOUSTON_NORTH_345KV", 125.5, "2026-09-26T14:04:00Z"]
+  ],
   "_meta": {"totalRecords": 1}
 }

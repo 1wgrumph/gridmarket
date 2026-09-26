@@ -1,0 +1,14 @@
+{
+  "fields": [
+    {"name": "AGCExecTime", "label": "AGC Exec Time", "cardinality": 1, "dataType": "DATETIME", "searchable": true, "sortable": true, "hasRange": true},
+    {"name": "DSTFlag", "label": "DST Flag", "cardinality": 2, "dataType": "BOOLEAN", "searchable": true, "sortable": true, "hasRange": false},
+    {"name": "AGCExecTimeUTC", "label": "AGC Exec Time (UTC)", "cardinality": 3, "dataType": "DATETIME", "searchable": true, "sortable": true, "hasRange": true},
+    {"name": "systemDemand", "label": "System Demand", "cardinality": 4, "dataType": "DOUBLE", "searchable": true, "sortable": true, "hasRange": true},
+    {"name": "ESRChargingMW", "label": "ESR Charging MW", "cardinality": 5, "dataType": "DOUBLE", "searchable": true, "sortable": true, "hasRange": true}
+  ],
+  "data": [
+    ["2026-09-26T09:00:02", false, "2026-09-26T14:00:02", 53577.19921875, 561.719421386719],
+    ["2026-09-26T09:00:06", false, "2026-09-26T14:00:06", 53584.15234375, 557.368765108933]
+  ],
+  "_meta": {"totalRecords": 2, "pageSize": 2, "totalPages": 1, "currentPage": 1}
+}
