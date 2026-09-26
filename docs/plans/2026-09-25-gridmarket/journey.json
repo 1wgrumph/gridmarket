@@ -593,6 +593,22 @@
       "source": "Orchestrator as owner delegate (DEC-GM-043)",
       "decision": "Authorized glue: the Makefile test-dash target runs `npm --prefix dashboard run test` instead of `npm --prefix dashboard exec -- vitest run`, so Vitest's root is dashboard/ and it no longer collects the Worker's node:test file.",
       "why": "Seen in the Integration Engineer's S09-E evidence ('No test suite found' for ercot-hackathon/test/security.test.mjs). The Orchestrator ran the replacement on candidate b044b8a: 12/12 dashboard tests pass. No test is weakened."
+    },
+    {
+      "id": "DEC-GM-057",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T12:14:58Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043)",
+      "decision": "CMD-WRITESET amended: before the Bearing write-set-check.cjs hook runs, directory write-set entries expand to the files that changed under them, because the hook accepts only existing files. The bash prefix check is unchanged.",
+      "why": "The stretch Coordinator reported that S15, S22 and S38 fail only on 'missing_path' for directory entries. The Orchestrator reproduced this, then ran the amended command: PASS on the mcp and backtest lanes."
+    },
+    {
+      "id": "DEC-GM-058",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T12:14:58Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043)",
+      "decision": "Design-conformance repair in the market lane before phase 1a assurance (S05-repair2): market.py and api.py call adversary.observe(event) on every rejection, and GET /v1/market/status exposes `anomalies`, per design.md 676-680.",
+      "why": "The stretch Coordinator found that the S13 test expects `anomalies` in the status, and the design confirms it. S05 missed it. Fixing it now avoids spending phase 1a's single repair round on it."
     }
   ],
   "stages": {
