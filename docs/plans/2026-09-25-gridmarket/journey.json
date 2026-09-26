@@ -1082,6 +1082,13 @@
       "decision": "Product story and one guided demo path (stretch-2 component C8, slice S80 on lane ux after S63): Overview leads with 'Texas home batteries, paid to help when the grid is tight.' and a 'Start the 3-minute tour' action; #/tour walks Hook (God's Eye and the replay day's real peak price) -> Replay (three strategies) -> Your turn (earn-versus-backup slider, provider outage) -> Proof (live market, sandbox order); navigation keeps Overview, Tour, Replay, Market and Judge sandbox primary and moves Predictions, Providers, Bots and Spec under 'More'. Tour numbers come only from APIs (S69 adds peak_rt_price to GET /v1/replay/days).",
       "owner_quote": "yes lets do it",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-120",
+      "decided_at": "2026-09-26T16:21:00-05:00",
+      "decided_by": "Orchestrator (delegate authority)",
+      "decision": "Product-time rule for the DST fall-back day: the repeated Central 01:00 hour's second occurrence (standard time, UTC-06:00) takes the canonical symbol suffix 'R' (for example FLEX-LZ_HOUSTON-2026-11-01-01R), mirroring ERCOT's DSTFlag; the first keeps the plain symbol; aliases resolve by UTC instant. S78b implements it and includes flat positions in api.account(). S78 exit ae99d4a recorded (R2-03..08 fixed and proven, including container stress with 0 self-trades and conserved cash over 1,000 orders).",
+      "reversible": true
     }
   ],
   "stages": {
