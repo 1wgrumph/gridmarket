@@ -123,7 +123,7 @@ def test_assurance_f5_activity_has_overview_fields(api):
         ({**ORDER, "quantity": 0}, headers("member", "zero"), 422, "VALIDATION_ERROR", "member"),
         ({**ORDER, "quantity": 51}, headers("member", "large"), 422, "ORDER_TOO_LARGE", "member"),
         (
-            {**ORDER, "price_cents": 100001},
+            {**ORDER, "price_cents": 500},
             headers("member", "cash"),
             422,
             "INSUFFICIENT_FUNDS",
@@ -144,6 +144,8 @@ def test_dir_p1a_11_order_rejections_are_observed_once(
     path, client = api
     observe = Mock(wraps=adversary.observe)
     monkeypatch.setattr(adversary, "observe", observe)
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE accounts SET cash_cents=499 WHERE id='member'")
     before = snapshot(path)
     error(client.post("/v1/orders", headers=auth, json=body), status, code)
     observe.assert_called_once_with(
