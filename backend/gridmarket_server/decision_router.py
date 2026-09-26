@@ -50,7 +50,7 @@ def band(probability: float) -> str:
 
 
 def market_checks() -> list[CheckResult]:
-    """DART spread check per zone and delivery hour in the 24 clock hours after now's hour."""
+    """DA premium persists (RT hourly average < DA) per zone and delivery hour in the 24 clock hours after now's hour."""
     t = now().astimezone(UTC)
     start = t.replace(minute=0, second=0, microsecond=0)
     results = []
@@ -111,8 +111,7 @@ def _market_outcome(subject: str) -> bool | None:
     """DA premium persists: RT hourly average < DA for the delivery hour.
 
     Uses the latest observation at each of the four quarter-hour boundaries;
-    None until all four exist. Owner amendment S76b (R4-09): the outcome was
-    RT average > DA, which the check probability anti-predicted.
+    None until all four exist. Contract amendment DEC-GM-124 (2026-09-26, Orchestrator).
     """
     zone, start = subject.split(":", 1)
     hour = datetime.fromisoformat(start)

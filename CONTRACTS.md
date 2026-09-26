@@ -136,7 +136,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | --- | --- | --- |
 | `CheckResult.check_id`, `family`, `subject`, `horizon_s` | router | `family` is `market` or `health` |
 | `CheckResult.probability`, `band`, `baseline`, `jev_probability` | router | `band` is `log`, `review`, or `alert`; optional Jev probability |
-| `CheckResult.created_at`, `resolves_at`, `outcome` | router | UTC timing and eventual Boolean outcome (S76b owner amendment: market outcome is RT hourly average < DA — the DA premium persists — resolved from the latest observation at each of the four quarter-hour boundaries, only when all four exist) |
+| `CheckResult.created_at`, `resolves_at`, `outcome` | router | UTC timing and eventual Boolean outcome (Contract amendment DEC-GM-124 (2026-09-26, Orchestrator): CheckResult market outcome, old: RT hourly average > DA; new: RT hourly average < DA (DA premium persists), resolved from the latest observation at each of the four quarter-hour boundaries; reason: R4-09, the outcome contradicted the check probability; affected lanes: router, dashboard Predictions/router views) |
 | `decision_router.register(family, fn)`, `decision_router.tick()` | router | Registry and 60 s evaluation (S76b: one `alert` event per episode on band entry, in CURRENT_TIMESTAMP format like all activity rows) |
 | `health.heartbeat(provider_id)`, `health.is_online(provider_id)` | lonestar | 10 s heartbeat loop, 30 s offline rule (S76b: `health:worker` is alert when no snapshot ever parsed after polling started or the snapshot is older than two poll windows; a provider transition refreshes `/v1/router` within one 10 s tick) |
 | `jev.enabled()`, `jev.probability(check)` | jev | Off by default |

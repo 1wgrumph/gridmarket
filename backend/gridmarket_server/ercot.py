@@ -255,7 +255,7 @@ def _store(
 
 def parse_snapshot(payload: dict) -> None:
     """Store the Worker's real snapshot shape; nulls are skipped, missing sections
-    are marked failed, and a snapshot with nothing usable raises."""
+    are marked failed, and an empty snapshot leaves freshness untouched (A1-empty)."""
     global _snapshot_asof
     at = payload["asOf"]
     stored = 0
@@ -286,7 +286,7 @@ def parse_snapshot(payload: dict) -> None:
     else:
         signals.mark_failed("SNAPSHOT-SCED")
     if not stored:
-        raise ValueError("snapshot stored no usable sections")
+        return
     _snapshot_asof = datetime.fromisoformat(at)
     stats.snapshot_age_s = max(0, (datetime.now(UTC) - _snapshot_asof).total_seconds())
 

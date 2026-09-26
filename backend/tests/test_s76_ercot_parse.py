@@ -64,11 +64,16 @@ def test_s76_r1_01_snapshot_partial_failure_stores_rest_and_marks_section() -> N
     assert (os.environ["GRIDMARKET_DB"], "SNAPSHOT-HUBS") in ercot.signals.failed
 
 
-def test_s76_r1_01_snapshot_all_failed_raises_and_keeps_age_unset() -> None:
-    with pytest.raises(ValueError):
-        ercot.parse_snapshot(json.loads(json.dumps(s76_spec.SNAPSHOT_ALL_FAILED)))
+def test_s76_r1_01_snapshot_all_failed_marks_failed_and_keeps_age_unset() -> None:
+    ercot.parse_snapshot(
+        json.loads(json.dumps(s76_spec.SNAPSHOT_ALL_FAILED))
+    )  # A1-empty: no raise.
     assert rows("SNAPSHOT-DEMAND", "ERCOT") == []
     assert ercot.stats.snapshot_age_s is None
+    import os
+
+    for report in ("SNAPSHOT-DEMAND", "SNAPSHOT-HUBS", "SNAPSHOT-DAM", "SNAPSHOT-SCED"):
+        assert (os.environ["GRIDMARKET_DB"], report) in ercot.signals.failed
 
 
 def test_s76_r1_01_contract_worker_build_snapshot_feeds_parse_snapshot() -> None:
