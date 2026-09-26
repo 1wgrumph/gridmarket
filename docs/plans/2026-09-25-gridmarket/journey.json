@@ -1173,6 +1173,13 @@
       "decided_by": "Orchestrator (delegate)",
       "decision": "S80 finish decisions: CONTRACTS.md gains the #/tour redirect, #/replay deep link, checklist and context-carry query semantics and the renamed env value; the backend UX-01 test is deselected in lane ux (owned and fixed by lane ux2); DEC-GM-122 standing test-correction authority extends to S80 for Market links carrying zone/hour context, zone-close keeping the hour and the renamed views env; slowing bot summaries to 15 s is rejected (the 2 s Overview polling contract stays, and per-bot profile fetches are removed or bounded because ux2 serves economy fields); replay completion hooks wait for S71/S72 with no faked completion.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-133",
+      "decided_at": "2026-09-26T18:14:00-05:00",
+      "decided_by": "Orchestrator (delegate)",
+      "decision": "S18-D stop root-caused by the Orchestrator: lane-jev's R4-10 change runs sync scheduler ticks via asyncio.to_thread, so the first health.tick can override a raw provider_health write in test_seit_gm_prov_04 (bisected: 4/4 pass at 8eba27e, 3/4 fail at a93bfb8; 6/6 pass on phase 2). Repair S43b on lane-jev: owner-declared outages win over heartbeat ticks, deterministic startup under test, and the test uses the real outage path. Assembly merge rule for main.py repeat(): keep R4-10's to_thread for sync ticks inside S78's per-tick exception isolation. Posted as DIR-PS-16.",
+      "reversible": true
     }
   ],
   "stages": {
