@@ -39,7 +39,7 @@ def probability(check: CheckResult) -> float | None:
             data=json.dumps(asdict(check)).encode(),
             headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
         )
-        with urlopen(request, timeout=10) as response:
+        with urlopen(request, timeout=2) as response:
             value = json.load(response)["probability"]
         if isinstance(value, (int, float)) and not isinstance(value, bool) and 0 <= value <= 1:
             return float(value)
