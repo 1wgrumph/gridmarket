@@ -3,11 +3,14 @@
 import hashlib
 import json
 import logging
+import math
 import os
 import secrets
 import sqlite3
+from collections import Counter
 from dataclasses import asdict
 from pathlib import Path
+from statistics import stdev
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
@@ -138,6 +141,28 @@ def list_bots() -> list[dict[str, object]]:
                 "SELECT id, bot_index, bot_type, provider_id, dormant FROM bots ORDER BY bot_index"
             ).fetchall()
         ]
+
+
+@router.get("/v1/bots/diversity")
+def bot_diversity() -> dict[str, object]:
+    with _db() as conn:
+        _ensure_seeded(conn)
+        rows = conn.execute(
+            "SELECT bot_type, profile_json FROM bots ORDER BY bot_index"
+        ).fetchall()
+    bot_types = [row[0] for row in rows]
+    traits = [json.loads(row[1])["traits"] for row in rows]
+    names = list(traits[0])
+    columns = ([trait[name] for trait in traits] for name in names)
+    coverage = sum(stdev(column) >= 0.05 for column in columns) / 7
+    counts = Counter(bot_types)
+    total = len(bot_types)
+    entropy = -sum(count / total * math.log2(count / total) for count in counts.values())
+    points = [
+        {"risk_appetite": trait["risk appetite"], "patience": trait["patience"]}
+        for trait in traits
+    ]
+    return {"coverage": coverage, "entropy": entropy, "points": points}
 
 
 @router.get("/v1/bots/{id}")

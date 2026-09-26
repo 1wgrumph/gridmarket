@@ -10,9 +10,12 @@ import base64
 import hashlib
 import hmac
 import itertools
+import json
 import logging
 import os
+import random
 import time
+from datetime import datetime
 from typing import Any
 
 import httpx
@@ -145,6 +148,58 @@ def step_all(base_url: str, clock: Any) -> int:
         if submit(index, gridmarket.Client(base_url, bot_key(index)), clock, order) is not None:
             placed += 1
     return placed
+
+
+THRESHOLDS = (("buy", 0.0, 1.0), ("sell", 0.0, 1.0))
+
+
+def observe_signals(bot: Any, signals: list[Any], now: datetime) -> dict[str, float]:
+    """Signal values visible to a bot after its family filter, delay, bias and noise."""
+    families = set(bot.info.get("families", ()))
+    delay = float(bot.info.get("delay_s", 0))
+    bias = float(bot.info.get("ev_bias", 0.0))
+    noise = float(bot.info.get("noise", 0.0))
+    observed = {}
+    for signal in signals:
+        if signal.report_id not in families:
+            continue
+        age = (now - datetime.fromisoformat(signal.published_at)).total_seconds()
+        if age < delay:
+            continue
+        jitter = random.Random(f"{bot.index}:{signal.report_id}:{signal.published_at}").uniform(
+            -noise, noise
+        )
+        observed[signal.report_id] = float(signal.value) * (1 + bias) * (1 + jitter)
+    return observed
+
+
+def thresholds_from_ledger(
+    db: Any, master: str, index: int
+) -> dict[str, dict[str, float]]:
+    """Replay a bot's settled positions from the ledger; identical after restart."""
+    row = db.execute(
+        "SELECT account_id, profile_json FROM bots WHERE bot_index = ?", (index,)
+    ).fetchone()
+    if row is None:
+        raise KeyError(f"unknown bot index {index} for master {master}")
+    account_id, raw = row
+    rate = float(json.loads(raw).get("learning_rate", 0.0))
+    states = {
+        name: {"min": low, "value": (low + high) / 2, "max": high}
+        for name, low, high in THRESHOLDS
+    }
+    positions = db.execute(
+        "SELECT pnl_cents FROM settled_positions WHERE account_id = ? ORDER BY rowid",
+        (account_id,),
+    ).fetchall()
+    for (pnl,) in positions:
+        direction = (pnl > 0) - (pnl < 0)
+        for state in states.values():
+            span = state["max"] - state["min"]
+            state["value"] = min(
+                state["max"], max(state["min"], state["value"] + rate * span * direction)
+            )
+    return states
 
 
 class _SystemClock:

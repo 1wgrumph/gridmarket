@@ -56,6 +56,26 @@ UNIT_TRAITS = frozenset(
     }
 )
 
+FAMILIES = (
+    "price-spread",
+    "load-pressure",
+    "outage-pressure",
+    "congestion-pressure",
+    "heat-stress",
+    "peak-period",
+    "weather-alert",
+    "DART",
+)
+
+
+class Traits(dict):
+    """Trait map; ``risk_appetite`` reads the ``risk appetite`` trait."""
+
+    def __missing__(self, key: str) -> float:
+        if key == "risk_appetite":
+            return self["risk appetite"]
+        raise KeyError(key)
+
 
 def _cholesky(matrix: tuple[tuple[float, ...], ...]) -> list[list[float]]:
     lower = [[0.0] * len(matrix) for _ in matrix]
@@ -88,14 +108,16 @@ def sample(
             sum(_FACTOR[i][j] * independent[j] for j in range(i + 1)) for i in range(len(TRAITS))
         ]
         uniforms = [_NORMAL.cdf(value) for value in latent]
-        traits = {
-            name: (
-                float(1 / (1 + math.exp(-z)))
-                if name in UNIT_TRAITS
-                else float(_clamp(u, 1e-9, 1 - 1e-9))
-            )
-            for name, u, z in zip(TRAITS, uniforms, latent, strict=True)
-        }
+        traits = Traits(
+            {
+                name: (
+                    float(1 / (1 + math.exp(-z)))
+                    if name in UNIT_TRAITS
+                    else float(_clamp(u, 1e-9, 1 - 1e-9))
+                )
+                for name, u, z in zip(TRAITS, uniforms, latent, strict=True)
+            }
+        )
         employed = latent[6] * 0.42 + rng.normalvariate(0, 0.91) > -0.42
         kind = types[index % len(types)]
         zone = rng.choices(list(ZONE_WEIGHTS), list(ZONE_WEIGHTS.values()))[0]
@@ -112,13 +134,25 @@ def sample(
             )
             for hour in range(24)
         ]
+        # Layers 2-3 draw last so the layer 1/4/economy stream is unchanged.
+        others = rng.sample([name for name in DEFAULT_COUNTS if name != kind], 2)
+        draws = [rng.gammavariate(6, 1), rng.gammavariate(1.5, 1), rng.gammavariate(1.5, 1)]
+        total = sum(draws)
+        blend = {
+            name: weight / total for name, weight in zip([kind, *others], draws, strict=True)
+        }
         specs.append(
             BotSpec(
                 index=index,
                 bot_type=kind,
-                blend={kind: 1.0},
+                blend=blend,
                 traits=traits,
-                info={"families": [], "delay_s": 0, "ev_bias": 0.0, "noise": 0.0},
+                info={
+                    "families": sorted(rng.sample(FAMILIES, rng.randrange(1, 5))),
+                    "delay_s": rng.randrange(901),
+                    "ev_bias": rng.uniform(-0.10, 0.10),
+                    "noise": rng.uniform(0.02, 0.10),
+                },
                 household={
                     "batteries": batteries,
                     "zone": zone,
@@ -129,7 +163,7 @@ def sample(
                 pay=round(_clamp(rng.lognormvariate(math.log(40), 0.5), 10, 150), 2),
                 pay_offset_s=rng.randrange(1800),
                 start_cash=round(_clamp(1000 * math.exp(0.8 * latent[6]), 100, 10000), 2),
-                learning_rate=0.0,
+                learning_rate=rng.uniform(0.01, 0.05),
                 provider_id=(
                     "lonestar"
                     if os.getenv("GRIDMARKET_LONESTAR") == "on" and index % 3 == 0
