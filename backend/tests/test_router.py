@@ -248,6 +248,17 @@ def serve() -> Iterator[int]:
         thread.join(timeout=5)
 
 
+@pytest.fixture(autouse=True)
+def _market_only_registry():
+    """Router tests isolate the global registry; app lifespans elsewhere register health."""
+    saved = dict(decision_router.registry)
+    decision_router.registry.clear()
+    decision_router.register("market", decision_router.market_checks)
+    yield
+    decision_router.registry.clear()
+    decision_router.registry.update(saved)
+
+
 def get_router(port: int, origin: str) -> tuple[int, str | None, bytes]:
     request = urllib.request.Request(
         f"http://127.0.0.1:{port}/v1/router",
@@ -417,10 +428,10 @@ def test_seit_gm_router_01_outcome_brier(tmp_path: Path, monkeypatch: pytest.Mon
         store.add(RT_REPORT, "LZ_NORTH", hour + timedelta(minutes=minutes), 15, north_rt)
     decision_router.tick()
     resolved = [row for row in rows(path) if row["check_id"] == houston]
-    assert [as_bool(row["outcome"]) for row in resolved] == [True, True]
+    assert [as_bool(row["outcome"]) for row in resolved] == [False, False]
     assert [row["probability"] for row in resolved] == pytest.approx([0.8, 0.2])
     north_rows = [row for row in rows(path) if row["check_id"] == north]
-    assert [as_bool(row["outcome"]) for row in north_rows] == [False, False]
+    assert [as_bool(row["outcome"]) for row in north_rows] == [True, True]
     assert all(as_bool(row["outcome"]) is None for row in rows(path) if row["check_id"] == pending)
 
     monkeypatch.setattr(decision_router, "tick", lambda: None)
@@ -430,13 +441,18 @@ def test_seit_gm_router_01_outcome_brier(tmp_path: Path, monkeypatch: pytest.Mon
     assert status == 200
     payload = json.loads(body)
     brier = payload["brier"]
-    assert brier[houston] == pytest.approx(((0.8 - 1) ** 2 + (0.2 - 1) ** 2) / 2)
+    assert brier[houston] == pytest.approx(((0.8 - 0) ** 2 + (0.2 - 0) ** 2) / 2)
     assert brier[north] == pytest.approx(0.25)
     assert pending not in brier
+    assert payload["brier_events"] == {
+        f"LZ_HOUSTON:{hour.isoformat()}": pytest.approx(0.04),
+        f"LZ_NORTH:{hour.isoformat()}": pytest.approx(0.25),
+    }
+    assert payload["brier_mean"] == pytest.approx(0.145)
     latest = {item["check_id"]: item for item in payload["checks"]}
     assert latest[houston]["probability"] == pytest.approx(0.2)
-    assert as_bool(latest[houston]["outcome"]) is True
-    assert as_bool(latest[north]["outcome"]) is False
+    assert as_bool(latest[houston]["outcome"]) is False
+    assert as_bool(latest[north]["outcome"]) is True
     assert as_bool(latest[pending]["outcome"]) is None
 
 
@@ -547,4 +563,4 @@ def test_router_matches_live_report_ids(monkeypatch: pytest.MonkeyPatch) -> None
     assert [c.check_id for c in decision_router.market_checks()] == [check_id("LZ_HOUSTON", hour)]
     for minutes in (0, 15, 30, 45):
         store.add("NP6-905-CD", "LZ_HOUSTON", hour + timedelta(minutes=minutes), 15, 90.0)
-    assert decision_router._market_outcome(f"LZ_HOUSTON:{hour.isoformat()}") is True
+    assert decision_router._market_outcome(f"LZ_HOUSTON:{hour.isoformat()}") is False

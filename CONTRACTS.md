@@ -87,7 +87,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | Trade: `id`, `product_id`, `buy_order_id`, `sell_order_id`, `quantity`, `price_cents`, `created_at` | market | Append-only fill |
 | Asset: `id`, `account_id`, `provider_id`, `zone`, `capacity_kwh`, `soc_kwh`, `min_reserve_kwh`, `charge_kw`, `discharge_kw` | market | Battery |
 | Prediction response: `zone`, `delivery_hour`, `score`, `level`, `confidence`, `expected_value`, `market_price`, `drivers`, `disclaimer`, `generated_at` | data | `drivers` entries have `factor`, `contribution`, `detail`; `level` is `LOW`/`MEDIUM`/`HIGH`, or `UNAVAILABLE` when a core ERCOT input is missing (S76: missing drivers contribute 0 with an "unavailable" detail, `expected_value` is 0.0 without a DA price) |
-| Router response: `checks`, `brier`, `jev_enabled` | router | Latest results, per-check calibration, Jev flag |
+| Router response: `checks`, `brier`, `jev_enabled` | router | Latest results, per-check calibration, Jev flag (S76b: plus `brier_events` per-subject scores using the last forecast per event and `brier_mean` over resolved events, `null` when none) |
 | Bot response: `id`, `bot_type`, `blend`, `provider_id`, `cash`, `net_worth`, `pnl`, `trades`, `losses`, `dormant` | bots | Public bot profile |
 | Sandbox key request: `label` | market | `^[A-Za-z0-9 _-]{1,24}$` |
 | Sandbox key response: `account_id`, `api_key`, `label` | market | Key shown once |
@@ -136,9 +136,9 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | --- | --- | --- |
 | `CheckResult.check_id`, `family`, `subject`, `horizon_s` | router | `family` is `market` or `health` |
 | `CheckResult.probability`, `band`, `baseline`, `jev_probability` | router | `band` is `log`, `review`, or `alert`; optional Jev probability |
-| `CheckResult.created_at`, `resolves_at`, `outcome` | router | UTC timing and eventual Boolean outcome |
-| `decision_router.register(family, fn)`, `decision_router.tick()` | router | Registry and 60 s evaluation |
-| `health.heartbeat(provider_id)`, `health.is_online(provider_id)` | lonestar | 10 s heartbeat loop, 30 s offline rule |
+| `CheckResult.created_at`, `resolves_at`, `outcome` | router | UTC timing and eventual Boolean outcome (S76b owner amendment: market outcome is RT hourly average < DA — the DA premium persists — resolved from the latest observation at each of the four quarter-hour boundaries, only when all four exist) |
+| `decision_router.register(family, fn)`, `decision_router.tick()` | router | Registry and 60 s evaluation (S76b: one `alert` event per episode on band entry, in CURRENT_TIMESTAMP format like all activity rows) |
+| `health.heartbeat(provider_id)`, `health.is_online(provider_id)` | lonestar | 10 s heartbeat loop, 30 s offline rule (S76b: `health:worker` is alert when no snapshot ever parsed after polling started or the snapshot is older than two poll windows; a provider transition refreshes `/v1/router` within one 10 s tick) |
 | `jev.enabled()`, `jev.probability(check)` | jev | Off by default |
 | `adversary.halted(tx, account_id)`, `adversary.observe(event)` | adversary | Order halt and observer seams |
 

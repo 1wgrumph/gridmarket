@@ -194,6 +194,7 @@ export default {
 
       if (p === "/api/health") {
         const missing = missingSecrets(env);
+        if (!env.MARKET_KEY) missing.push("MARKET_KEY"); // report only; never gates keyless routes
         return json({
           ok: missing.length === 0,
           worker: "ercot-hackathon",

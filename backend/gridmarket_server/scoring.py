@@ -8,7 +8,7 @@ from pathlib import Path
 from statistics import mean, median
 
 from .contracts import Prediction
-from .ercot import signals
+from .ercot import CENTRAL, POLL_MINUTES, signals
 
 WEIGHTS = {
     "price-spread": 0.18,
@@ -52,10 +52,14 @@ def _holidays(year: int) -> set[date]:
 
 
 def on_peak(hour: datetime) -> bool:
-    day = hour.date()
+    """NERC 5x16: hour endings HE7-HE22 on Mon-Fri Central, excluding holidays."""
+    if hour.tzinfo is None:
+        hour = hour.replace(tzinfo=UTC)
+    local = hour.astimezone(CENTRAL)
+    day = local.date()
     return (
-        hour.weekday() < 5
-        and 7 <= hour.hour < 23
+        local.weekday() < 5
+        and 7 <= local.hour + 1 <= 22
         and day not in (_holidays(day.year) | _holidays(day.year - 1))
     )
 
@@ -273,8 +277,12 @@ def predict() -> list[Prediction]:
                 "NWS-TEMP",
                 "NWS-ALERTS",
             )
+            if os.getenv("GRIDMARKET_NWS") == "off":
+                reports = reports[:5]  # A disabled source is absent, not stale.
             fresh = all(
-                (age := signals.staleness(report)) is not None and age <= 7200 for report in reports
+                (age := signals.staleness(report)) is not None
+                and age <= 2 * POLL_MINUTES[report] * 60
+                for report in reports
             )
             predictions.append(
                 score_hour(

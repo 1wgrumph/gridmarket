@@ -187,15 +187,9 @@ def test_r4_12_freshness_is_twice_each_poll_interval(db_path: Path) -> None:
         )
         for report in ("NP4-190-CD", "NP3-565-CD", "NP3-233-CD", "NP6-86-CD"):
             add_signal(db, report, "LZ_HOUSTON", hour.isoformat(), 1, fetched=now.isoformat())
-        add_signal(
-            db,
-            "NP6-905-CD",
-            "LZ_HOUSTON",
-            hour.isoformat(),
-            1,
-            fetched=(now - timedelta(minutes=100)).isoformat(),
-        )
-        add_signal(db, "NP6-905-CD", "HB_HUBAVG", hour.isoformat(), 1, fetched=now.isoformat())
+        old = (now - timedelta(minutes=100)).isoformat()
+        add_signal(db, "NP6-905-CD", "LZ_HOUSTON", hour.isoformat(), 1, fetched=old)
+        add_signal(db, "NP6-905-CD", "HB_HUBAVG", hour.isoformat(), 1, fetched=old)
         db.commit()
     (result,) = scoring.predict()
     assert any(row["report_id"] == "NP6-905-CD" and row["stale"] for row in ercot.signals.current())

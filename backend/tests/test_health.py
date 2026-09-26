@@ -76,7 +76,7 @@ def test_seit_gm_prov_04_heartbeat_30_second_boundary_and_recovery(service) -> N
 
 def test_seit_gm_router_03_worker_and_provider_health_bands(service, monkeypatch) -> None:
     _, db_path = service
-    monkeypatch.setattr(ercot, "worker_stats", lambda: WorkerStats(requests=100))
+    monkeypatch.setattr(ercot, "worker_stats", lambda: WorkerStats(requests=100, snapshot_age_s=0))
     healthy = [row for row in decision_router.evaluate() if row.family == "health"]
     assert {row.subject.lower() for row in healthy} >= {"worker", "base_sim", "lonestar"}
     assert all(row.horizon_s == 900 and 0 <= row.probability < 0.5 for row in healthy)
@@ -104,11 +104,11 @@ def test_seit_gm_router_03_each_worker_stat_changes_probability(service, monkeyp
         checks = [row for row in decision_router.evaluate() if row.family == "health"]
         return next(row.probability for row in checks if row.subject.lower() == "worker")
 
-    baseline = worker_probability(WorkerStats(requests=100))
+    baseline = worker_probability(WorkerStats(requests=100, snapshot_age_s=0))
     variants = (
-        WorkerStats(requests=100, errors=100),
-        WorkerStats(requests=100, http_429=100),
-        WorkerStats(requests=100, latencies_ms=[20_000] * 100),
+        WorkerStats(requests=100, errors=100, snapshot_age_s=0),
+        WorkerStats(requests=100, http_429=100, snapshot_age_s=0),
+        WorkerStats(requests=100, latencies_ms=[20_000] * 100, snapshot_age_s=0),
         WorkerStats(requests=100, snapshot_age_s=3600),
     )
     assert all(worker_probability(stats) > baseline for stats in variants)
