@@ -153,14 +153,13 @@ def test_r3_13_validation_names_field(live):
 
 @pytest.mark.parametrize("tunnel", [True, False])
 def test_r5_07_admin_peer_before_key(live, tunnel):
-    http, _, port = live
-    base = (
-        str(http.base_url)
-        if tunnel
-        else f"http://{socket.gethostbyname(socket.gethostname())}:{port}"
-    )
+    http, _, _ = live
     headers = {"CF-Connecting-IP": "203.0.113.5"} if tunnel else {}
-    with httpx.Client(base_url=base, trust_env=False) as remote:
+    # Reach only our loopback listener using a real non-loopback source peer.
+    transport = httpx.HTTPTransport(
+        local_address=None if tunnel else socket.gethostbyname(socket.gethostname())
+    )
+    with httpx.Client(base_url=str(http.base_url), transport=transport, trust_env=False) as remote:
         responses = [
             remote.post(
                 "/v1/admin/bots",
