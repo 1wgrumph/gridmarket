@@ -2,14 +2,33 @@
 
 import json
 import random
+import time
 import uuid
 from datetime import UTC, datetime, timedelta
 from fractions import Fraction
 
 import pytest
+import test_sweep_core
+from test_sweep_core import future, order, traders
 
 from gridmarket_server import ercot, keys, market
-from test_sweep_core import exchange, future, order, traders  # noqa: F401
+
+native_exchange = test_sweep_core.exchange
+
+
+@pytest.fixture
+def exchange(native_exchange, monkeypatch):
+    request = native_exchange.request
+
+    def retry(*args, **kwargs):
+        response = request(*args, **kwargs)
+        if response.status_code == 429:
+            time.sleep(int(response.headers["Retry-After"]))
+            response = request(*args, **kwargs)
+        return response
+
+    monkeypatch.setattr(native_exchange, "request", retry)
+    return native_exchange
 
 
 def account(client, who):
@@ -82,6 +101,33 @@ def refund_case(client, monkeypatch, capacities, quantities, price, failed):
         ]
         expected = round(sum(Fraction(str(capacities[i])) for i in failed) * price)
         assert sum(row["cash_delta_cents"] for row in refunds) == expected
+        fills = list(
+            db.execute(
+                "SELECT id,quantity,price_cents FROM trades WHERE sell_order_id=? ORDER BY rowid",
+                (sell.json()["id"],),
+            )
+        )
+        allocations = [
+            db.execute(
+                "SELECT SUM(json_extract(payload_json,'$.cash_delta_cents')) FROM events WHERE entry_type='delivery_refund' AND account_id=? AND subject_id=?",
+                (buyer, trade_id),
+            ).fetchone()[0]
+            for trade_id, _, _ in fills
+        ]
+        for allocation, (_, quantity, fill_price) in zip(allocations, fills, strict=True):
+            quota = (
+                sum(Fraction(str(capacities[i])) for i in failed)
+                * quantity
+                * fill_price
+                / sum(quantities)
+            )
+            assert (
+                quota.numerator // quota.denominator
+                <= allocation
+                <= -(-quota.numerator // quota.denominator)
+            )
+        if capacities == [1, 1] and quantities == [1, 1] and failed == {0}:
+            assert allocations == ([1, 0] if price == 1 else [2, 1])
         balances = dict(db.execute("SELECT id,cash_cents FROM accounts"))
         event_count = db.execute("SELECT COUNT(*) FROM events").fetchone()[0]
         market.settle(db, end)

@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_FLOOR, Decimal
+from fractions import Fraction
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -165,7 +166,8 @@ def list_products(db, now: datetime | None = None) -> None:
         for offset in range(1, 25):
             delivery = hour + timedelta(hours=offset)
             kind = "SPOT" if offset <= 2 else "FLEX"
-            symbol = f"{kind}-{zone}-{delivery.astimezone(CENTRAL):%Y-%m-%d-%H}"
+            local = delivery.astimezone(CENTRAL)
+            symbol = f"{kind}-{zone}-{local:%Y-%m-%d-%H}{'R' if local.fold else ''}"
             # Existing futures retain their kind; the approaching hour also gets spot supply.
             existing = db.execute(
                 "SELECT id FROM products WHERE zone=? AND delivery_hour=? AND symbol LIKE ?",
@@ -439,53 +441,12 @@ def settle(db, now: datetime | None = None) -> None:
 
 def _deliver(db, now: datetime) -> None:
     adapters = _adapters(db)
+    failed = {}
     for reservation in due_capacity(db, now):
         adapter = adapters.get(reservation["provider_id"])
         delivered = adapter is not None and adapter.verify_delivery(reservation["id"])
         if not delivered:
-            fills = rows(
-                db,
-                "SELECT t.*,b.account_id AS buyer,s.account_id AS seller FROM trades t JOIN orders b ON b.id=t.buy_order_id JOIN orders s ON s.id=t.sell_order_id WHERE t.sell_order_id=?",
-                (reservation["order_id"],),
-            )
-            total = sum(fill["quantity"] for fill in fills)
-            for fill in fills:
-                credits = Decimal(fill["quantity"]) * Decimal(str(reservation["kwh"])) / total
-                prior = [
-                    json.loads(row[0])
-                    for row in db.execute(
-                        "SELECT payload_json FROM events WHERE entry_type='delivery_refund' AND account_id=? AND subject_id=?",
-                        (fill["buyer"], fill["id"]),
-                    )
-                ]
-                defaulted = credits + sum(Decimal(row["defaulted_quantity"]) for row in prior)
-                refund = round(defaulted * fill["price_cents"]) - sum(
-                    row["cash_delta_cents"] for row in prior
-                )
-                db.execute(
-                    "UPDATE accounts SET cash_cents=cash_cents+?,flex_credits=flex_credits-? WHERE id=?",
-                    (refund, float(credits), fill["buyer"]),
-                )
-                db.execute(
-                    "UPDATE accounts SET cash_cents=cash_cents-? WHERE id=?",
-                    (refund, fill["seller"]),
-                )
-                for account, delta, credit_delta in (
-                    (fill["buyer"], refund, -float(credits)),
-                    (fill["seller"], -refund, 0),
-                ):
-                    event(
-                        db,
-                        "delivery_refund",
-                        account,
-                        fill["id"],
-                        {
-                            "reservation_id": reservation["id"],
-                            "cash_delta_cents": delta,
-                            "flex_credit_delta": credit_delta,
-                            "defaulted_quantity": str(credits),
-                        },
-                    )
+            failed.setdefault(reservation["order_id"], []).append(reservation)
         if adapter is not None:
             adapter.release_capacity(db, reservation["id"])
         set_delivery_status(db, reservation["id"], delivered)
@@ -496,6 +457,59 @@ def _deliver(db, now: datetime) -> None:
             reservation["id"],
             {"delivery": "delivered" if delivered else "defaulted"},
         )
+    for order_id, reservations in failed.items():
+        fills = rows(
+            db,
+            "SELECT t.*,b.account_id AS buyer,s.account_id AS seller FROM trades t JOIN orders b ON b.id=t.buy_order_id JOIN orders s ON s.id=t.sell_order_id WHERE t.sell_order_id=? ORDER BY t.rowid",
+            (order_id,),
+        )
+        total = sum(fill["quantity"] for fill in fills)
+        capacity = sum(Fraction(str(r["kwh"])) for r in reservations)
+        exact = [capacity * fill["quantity"] * fill["price_cents"] / total for fill in fills]
+        refunds = [value.numerator // value.denominator for value in exact]
+        # Round once per order; equal remainders go to the earliest fill.
+        residue = round(sum(exact)) - sum(refunds)
+        for index in sorted(range(len(fills)), key=lambda i: exact[i] - refunds[i], reverse=True)[
+            :residue
+        ]:
+            refunds[index] += 1
+        for fill, refund in zip(fills, refunds, strict=True):
+            allocated = 0
+            cumulative = Fraction(0)
+            for reservation in sorted(reservations, key=lambda r: r["id"]):
+                kwh = Fraction(str(reservation["kwh"]))
+                credits = kwh * fill["quantity"] / total
+                cumulative += kwh
+                # Preserve reservation-level ledger entries without losing a fill's cents.
+                target = round(refund * cumulative / capacity)
+                delta = target - allocated
+                allocated = target
+                db.execute(
+                    "UPDATE accounts SET cash_cents=cash_cents+?,flex_credits=flex_credits-? WHERE id=?",
+                    (delta, float(credits), fill["buyer"]),
+                )
+                db.execute(
+                    "UPDATE accounts SET cash_cents=cash_cents-? WHERE id=?",
+                    (delta, fill["seller"]),
+                )
+                for account, cash_delta, credit_delta in (
+                    (fill["buyer"], delta, -float(credits)),
+                    (fill["seller"], -delta, 0),
+                ):
+                    event(
+                        db,
+                        "delivery_refund",
+                        account,
+                        fill["id"],
+                        {
+                            "reservation_id": reservation["id"],
+                            "cash_delta_cents": cash_delta,
+                            "flex_credit_delta": credit_delta,
+                            "defaulted_quantity": str(
+                                Decimal(credits.numerator) / credits.denominator
+                            ),
+                        },
+                    )
 
 
 def tick() -> None:

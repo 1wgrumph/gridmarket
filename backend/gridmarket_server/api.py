@@ -273,7 +273,7 @@ def account(request: Request) -> dict:
         result["unrealized_pnl_cents"] = 0
         for position in market.rows(
             db,
-            "SELECT p.*,x.zone,x.delivery_hour FROM positions p JOIN products x ON x.id=p.product_id WHERE p.account_id=? AND p.quantity!=0 AND x.symbol LIKE 'FLEX-%'",
+            "SELECT p.*,x.zone,x.delivery_hour FROM positions p JOIN products x ON x.id=p.product_id WHERE p.account_id=? AND x.status!='settled' AND x.symbol LIKE 'FLEX-%'",
             (account_id,),
         ):
             last = db.execute(
