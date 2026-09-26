@@ -254,3 +254,124 @@ Reverify **not applicable — no native binary claim**. Neither is passing evide
 Only this evidence file changed. No remote push was attempted (no green
 assembly step); no PR, landing, deployment, credential access, branch deletion,
 force operation, issue closure, or Co-Authored-By trailer. S49-L was not entered.
+
+
+## Attempt 4: OWNER_DECISION_REQUIRED — recovery green, S49-A conflict
+
+Journey GM-2026-09-25; S49 recovery; phase 1b; Integration Engineer execution.
+Authority: current S49-IE4 dispatch, Coordinator under DEC-GM-043. This receipt
+supersedes earlier current-state summaries above while preserving their history.
+It is an assembly receipt, not independent review, assurance, acceptance, or landing.
+
+### Recovery and configuration identity
+
+- Starting HEAD: `c5714d3`; starting branch clean, `gridmarket/integration-1b`.
+- Authorized `git revert --no-edit e51b636`: exit **0**, recovery commit
+  `c77a173de2795f09c236e2ff8880043d59f7795f`.
+- Tested candidate at stop: **`c77a173de2795f09c236e2ff8880043d59f7795f`**;
+  tree `7d45a7367b285bea5d7146e62a65f328d33bb001`. This restores phase 1a; it is **not** a complete phase 1b candidate.
+- `git diff --stat 44b7f63..c77a173de2795f09c236e2ff8880043d59f7795f` shows only the added prior
+  `evidence/assembly-phase-1b.md` (256 lines). No phase 1a product/test content
+  differs or is deleted. See `recovery-tree-stat.log` and `recovery-tree-paths.log`.
+- `git merge --no-ff origin/main -m "Merge phase 1a landing for S49 attempt 4"`:
+  exit **0**, **Already up to date**; no new main merge commit. The existing
+  `3a986cb` records main ancestry. Main remains
+  `44b7f63cac9a35730059a791c7f1aab461f5d245` (PR #5).
+- Frozen-file comparison with landed `44b7f63`: exit **0**, no changes.
+  Raw comparison with S01: exit **1**, only `backend/pyproject.toml` mutation
+  configuration differs, inherited from landed glue commit `6636375`.
+  This is restored by the explicitly authorized recovery, not a new amendment
+  or a claim that the original S01 blobs still match. `CONTRACTS.md` is unchanged.
+- No new dependency or setup change; existing worktree environment and frozen
+  locks reused. No product/test edit, lane-worktree access, conflict resolution,
+  destructive history operation, credential access, or owner deployment.
+
+### Recovery V&V
+
+Evidence root: `/tmp/gm-evidence/P1b/attempt-4/`. Every gate below ran on
+`c77a173de2795f09c236e2ff8880043d59f7795f`; actual commands, durations and exits are in `recovery-results.json`.
+
+| Gate | Exit | Evidence |
+|---|---:|---|
+| `make lint` | 0 | `recovery-lint.log` |
+| `make test-contracts` | 0 | `recovery-test-contracts.log` |
+| `make test-all` | 0 | `recovery-test-all.log` |
+| `make test-dash` | 0 | `recovery-test-dash.log` |
+| `make smoke` | 0 | `recovery-smoke.log` |
+| `make test-bots` | 2 | `recovery-test-bots.log` |
+
+`test-all`: 85 backend tests, 13 dashboard tests, and 25 Worker tests passed;
+dashboard build passed. `test-contracts`: 3 passed. Smoke used
+`SMOKE_PROJECT=gm-smoke-1b SMOKE_PORT=18003`; its repaired landed recipe asserted
+dashboard HTML, loopback port, UID, read-only root, restart policy, SQLite volume,
+and bots healthy/stable for 30 seconds, then cleaned up its containers, volume,
+network and temporary env file. No owner env file was read.
+
+`test-bots` is **EXPECTED_NOT_APPLICABLE**, not green and not a rollback trigger:
+make exited 2 after pytest reported missing `backend/tests/test_population.py`
+(pytest exit 4). The phase 1b tests have not been restored/merged. BOT_01 and
+BOT_03 are therefore **NOT_RUN on this candidate**; the dispatched lane claim
+is not substituted for integrated proof.
+
+### S49-A entry preflight and stop
+
+The non-working-tree merge preflight
+`git merge-tree --write-tree HEAD 2842f1e56d9590c662ed04a6b4089061e8726a1f`
+exited **1**. `S49-A-merge-preflight.log` records:
+
+- Content conflicts: `backend/gridmarket_server/bots.py`, `bots_api.py`,
+  and `population.py`.
+- Modify/delete conflict: `backend/tests/test_bots.py` is deleted in HEAD
+  and modified in the dispatched bots exit.
+
+The merge base is `5ddc28c35eb0f56195d70151f0090194dc6cf26f`.
+`git log --no-merges 2842f1e --not HEAD` lists only `b7c8e32` (format repair)
+and `2842f1e` (BOT_03 repair). The original bots merge `d6e05f8` and its revert
+`b58d6c4` remain ancestors. Undoing `e51b636` restores phase 1a but does not
+undo the separate bots rollback. A fresh merge of the repair tip therefore
+cannot restore the complete bots lane automatically.
+
+The dispatch explicitly prohibits touching `b58d6c4`/`d6e05f8` history or
+resolving lane-content conflicts. Its stop condition applies. No actual S49-A
+merge was started, so there is no conflicted index, merge commit, genuinely red
+post-step gate, or step revert to report. The clean recovery tree is retained.
+The Coordinator must supply a separately authorized bots recovery disposition;
+this session does not perform it or classify the ancestry conflict as a product bug.
+
+| Step | Exact lane exit | Merge SHA / post_step_vv | Disposition |
+|---|---|---|---|
+| S49-A bots | `2842f1e56d9590c662ed04a6b4089061e8726a1f` | none / NOT_RUN | Entry preflight conflict; returned to Coordinator. |
+| S49-B router | `fc8080df50250b564f2e1f858e9c4265a16d740e` | none / NOT_RUN | Stopped before entry. |
+| S49-C views | `fde33285c721b24d191d3dde36d1177a87050900` | none / NOT_RUN | Stopped before entry. |
+| S49-D pages | `90921b98c87857f22bf4e64cee6ec0ab59909f0a` | none / NOT_RUN | Stopped before entry. |
+| S49-E spec | `b0fa857e9f2e7f065b7ad55fde5570069ae982ba` | none / NOT_RUN | Entry not reached; complete-or-defer not evaluated. |
+
+All five dispatched SHAs match the ops exit records. Slip trigger: **NOT fired**.
+Spec is unmerged, but no S49-E deferral decision is asserted.
+
+### Pending actions, capabilities and risks
+
+- `S49_A_REVERTED_MERGE_ANCESTRY_CONFLICT`: assembly blocker requiring new authority.
+- `VIEWS_NOT_DEPLOYED`: owner MARKET_URL update/redeploy and Worker redeploy
+  remain pending. No green S49-C head exists; no green-head notification is claimed.
+- Owner `PROC-ERCOT-LIVE-CHECK` and `PROC-ACCEPT-P1`: pending, not performed.
+- Retain `ENTROPY_PROOF_CONFLICT` (bits versus 0–1),
+  `PAGES_APP_ERROR_BOUNDARY_GAP`, and `BRAN_UNAVAILABLE` (ordinary discovery used).
+- `SMOKE_PROOF_INCOMPLETE`: retained as a live/acceptance proof limitation.
+  The earlier missing local assertions are repaired in landed phase 1a and passed
+  here, but NWS is off, live ERCOT and integrated phase 1b bots remain unproven.
+- Frozen route digest stays
+  `14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`;
+  execution route Codex CLI / GPT-6 Astra / high, with no substitution.
+  `review.coverage_assist`: enabled, required=false, OpenCodeReview delegation;
+  executable available, **not_run** because this is assembly, not code review.
+  Independent review/assurance and applicable browser review remain pending.
+  `deterministic_verification.reverify`: enabled, selected conditional Rust ELF
+  backend retained; executable available. Reverify: **not applicable — no
+  Rust/native binary claim**. Ordinary gate receipts do not substitute for it.
+- S49-L remains **NOT_RUN**. No PR, main landing, branch deletion, force push,
+  owner-run procedure, issue closure, or Co-Authored-By line.
+
+The evidence-only handoff commit follows the tested recovery candidate. A
+non-force push of this branch may follow; its command receipt is
+`attempt-4/push.log`. No phase 1b readiness or independent PASS is claimed.
