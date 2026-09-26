@@ -32,3 +32,12 @@ C7 Battery activity timeline (S73, backend + Worker + dashboard, lane esr after 
 ## Amendments A1-A15 (DEC-GM-113, binding)
 The independent planning review's 15 findings are adopted verbatim: ops/plans/stretch2-amendments.md. Each "Exact replacement" there supersedes the matching text above (A1=R1/R7 sourcing, A2=C1 data selection, A3=R2 availability, A4=R3 time and money, A5=R4 battery equations, A6=C2 decisions and policies, A7=C3 procurement and commitments, A8=C3 ledger, A9=disruptions, A10=C4 live decisions advisory only, A11=estimate and slider maths, A12=ESR sources and history, A13=R5 determinism and API bounds, A14=R6 demo claims, A15=R7 gates and order). Where this file and the amendments differ, the amendments win.
 Scope choice (A10): live bot decisions are advisory and not executed; battery physics, dispatch and money are modelled in the replay (C3). Live execution would need a separate owner decision.
+
+## C8 Story and tour (DEC-GM-119, owner: "yes lets do it")
+Product sentence: "Texas home batteries, paid to help when the grid is tight." Subline: "A simulated flexibility exchange running on real ERCOT conditions."
+Demo path (3 minutes): 1 Hook (God's Eye: Texas, and the replay day's real peak price) -> 2 Replay (the fleet decides hour by hour, three strategies on a scoreboard) -> 3 Your turn (earn-versus-backup slider, knock a provider offline) -> 4 Proof (live market with bots, sandbox key and first order).
+- Overview hero leads with the sentence, a primary "Start the 3-minute tour" and a secondary "Try the sandbox".
+- Route #/tour: four steps, one sentence and one action each, Back/Next, progress 1-4, skippable, keyboard and 390 px.
+- Navigation: primary Overview, Tour, Replay, Market, Judge sandbox; a "More" group holds Predictions, Providers, Bots, Spec (all still reachable, deep links unchanged).
+- Numbers in the tour come from APIs (the replay day's peak price from GET /v1/replay/days, which S69 must include as peak_rt_price with its point and interval); if an API is unavailable the sentence omits the number, never invents it.
+- Slice S80 on lane ux after S63; the S18 assembly joins it with the replay page (S71) and slider (S72).

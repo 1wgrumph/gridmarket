@@ -1074,6 +1074,14 @@
       "decided_by": "Orchestrator (delegate, planning owner) on sweep R7",
       "decision": "Verification-plan corrections from the R7 audit: (1) the seit.json claim that ERCOT fixtures are sourced is false and is superseded by test rule 7 (sourced fixtures with provenance; spec-derived fixtures labelled synthetic); (2) PROC-ERCOT-LIVE-CHECK is re-specified as an as-flown boundary gate: after the owner deploys the Worker, capture one real response for each of the five report routes, ESR and the snapshot (scripts/capture_ercot.py from S76), run them through the backend parsers (S76's captured-file test) and require stored rows for every report; it blocks v1.0.0 unless the owner accepts the residual in writing; (3) mutation scope adds gridmarket_server.ercot and gridmarket_server.scoring (S76b Makefile change; the S18 gate reports their scores); (4) R7-08 zone-table flood and real-response dashboard fixtures go to S63, R7-07 and R7-12 to S76b.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-119",
+      "decided_at": "2026-09-26T16:19:00-05:00",
+      "decided_by": "Owner (in chat) on Orchestrator recommendation",
+      "decision": "Product story and one guided demo path (stretch-2 component C8, slice S80 on lane ux after S63): Overview leads with 'Texas home batteries, paid to help when the grid is tight.' and a 'Start the 3-minute tour' action; #/tour walks Hook (God's Eye and the replay day's real peak price) -> Replay (three strategies) -> Your turn (earn-versus-backup slider, provider outage) -> Proof (live market, sandbox order); navigation keeps Overview, Tour, Replay, Market and Judge sandbox primary and moves Predictions, Providers, Bots and Spec under 'More'. Tour numbers come only from APIs (S69 adds peak_rt_price to GET /v1/replay/days).",
+      "owner_quote": "yes lets do it",
+      "reversible": true
     }
   ],
   "stages": {
