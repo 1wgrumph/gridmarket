@@ -9,7 +9,9 @@ public_boundary: private
 
 # Phase 1a assembly — S09
 
-Current outcome: **REPAIRABLE_FAILURE** under DIR-P1a-07 / DEC-GM-054: repaired market exit and restored S06 data pass S09-D with the existing offline NWS setting. S09-E merged cleanly, but `make test-dash` runs Vitest from the repository root, collects the worker's node:test file, and fails with `No test suite found`. Production build and full S09-E gates are incomplete. The assembly is retained as an AN-ENV command-discovery checkpoint; no candidate is written. Return to the Coordinator for a bounded command correction. Stop before S09-L.
+Current outcome: **PASS — CANDIDATE_READY** under DIR-P1a-10 / DEC-GM-056 and DIR-P1a-09 / DIR-P1a-08 / DEC-GM-055. Authorized dashboard command glue and S09-D2 are assembled; all seven required post-step commands exit 0. Full backend tests run with NWS enabled. The unchanged smoke recipe disables NWS internally and proves status `open` only; its existing bots-healthcheck limitation remains. This is assembly evidence, not independent phase assurance or owner acceptance. Stop before S09-L.
+
+Historical outcome before DIR-P1a-10: **REPAIRABLE_FAILURE** under DIR-P1a-07 / DEC-GM-054: repaired market exit and restored S06 data pass S09-D with the existing offline NWS setting. S09-E merged cleanly, but `make test-dash` runs Vitest from the repository root, collects the worker's node:test file, and fails with `No test suite found`. Production build and full S09-E gates are incomplete. The assembly is retained as an AN-ENV command-discovery checkpoint; no candidate is written. Return to the Coordinator for a bounded command correction. Stop before S09-L.
 
 Historical outcome before DIR-P1a-07: **REPAIRABLE_FAILURE**: S09-C passed; S09-D merged cleanly but failed application import through `api -> scoring -> ercot -> api`. S09-D was reverted under PROC-ASSEMBLY, and the restored S09-C checks passed. S09-E was not attempted; no Phase 1a candidate was written at that checkpoint.
 
@@ -301,3 +303,50 @@ make: *** [Makefile:26: test-dash] Error 1
 The Makefile recipe is `npm --prefix dashboard exec -- vitest run`. Its observed Vitest root is the repository root, so it collects both dashboard tests and the worker's native `node:test` file. `dashboard/package.json` already provides `"test": "vitest run"`; a bounded correction can invoke that npm script in the dashboard package (`npm --prefix dashboard test`) while retaining the native Node worker command in test-all. That correction was not applied: this dispatch prohibits direct product/configuration edits. The default command failure is reproducible with npm 11.15.0, Node v22.23.2, Vitest 3.2.7 and unchanged admitted lockfiles. It is an in-scope assembly-command mismatch (AN-ENV), not evidence of a worker behavior defect or an upstream Vitest/Astryx defect. No issue filed. JSDOM also emits CSS parsing diagnostics for Astryx theme rules; the 12 dashboard assertions still pass, and those diagnostics are not the failing gate.
 
 The failed command-discovery checkpoint is retained for the Coordinator under AN-ENV; no later assembly step is attempted and no candidate is certified. The evidence-only follow-up commit is pushed non-force to `origin/gridmarket/integration-1a`. The designated `ops/candidates/1a` file remains absent. Resume after an authorized command correction with the complete S09-E gates, recording `GRIDMARKET_NWS=off` for the offline backend gate; no tests may be skipped. Phase review (including OCR and browser visual review), Assurance Test Engineer, owner acceptance, production build, and S09-L remain pending. No main merge, deployment, credential access, or Co-Authored-By line is introduced.
+
+## DIR-P1a-10 — authorized dashboard glue
+
+- Fresh Integration Engineer execution session, lifecycle GM-2026-09-25, Phase 1a, S09. Initial branch clean at `bd09b210710711fa6381ea4eb112b6c694596f8f` on `gridmarket/integration-1a`.
+- Authority: current owner dispatch DIR-P1a-10 / DEC-GM-056 and DIR-P1a-09 / DIR-P1a-08 / DEC-GM-055; these supersede the historical offline-suite instruction above. Method references: `design.md` DES-GM-LANES, `implementation.json` S09 and integration_plan, `seit.json` PROC-ASSEMBLY.
+- Changed only the `test-dash` test recipe from `npm --prefix dashboard exec -- vitest run` to `npm --prefix dashboard run test`; production build recipe retained. `git diff --check` exits 0.
+- Glue commit: `c63ccb135ec84baaaa27b624688c0acff7a7df41`, message `Glue: scope test-dash Vitest to dashboard (DEC-GM-056)`.
+
+## S09-D2 — S06-repair assembled
+
+- Recorded `ops/exits/S06` matches the owner-approved input `532d4c5418616f073f5f5e7c99656817e4adf3d8`.
+- Preflight non-merge write-set check against S03/S06 union exits 0: only `backend/gridmarket_server/ercot.py`, `backend/gridmarket_server/nws.py`, `backend/tests/test_ercot.py`, and `backend/tests/test_nws.py`.
+- Ran `git merge --no-ff 532d4c5418616f073f5f5e7c99656817e4adf3d8 -m "Merge S06-repair data poller exception containment (DIR-P1a-08, DIR-P1a-09)"`: exit 0; no conflicts.
+- Resulting merge HEAD: `83bc5f26931ac23b48ac8c540bfc802fb7dec794`; tree: `87836fe956be0fe837c0659b8d8fdd5f93d14552`.
+- Twelve frozen files, including `dashboard/vite.config.ts`, compare identical to S01 `4256b221081a0f145524df1da6a5a2aaa2092221` (`git diff --exit-code`: 0). Dependency manifests and lockfiles unchanged; existing admission receipts retained. No setup or dependency update needed.
+- No direct product edits, rollback, or further repair. The input contains poller exception containment and test-state isolation; the full suite below exercises the assembled market/data/UI candidate.
+
+## S09-E — complete post-step V&V after S09-D2
+
+S07 UI remains assembled through merge `b044b8ab55f58bf765ee9b83b17cffab60d180c8`. All checks below ran on `83bc5f26931ac23b48ac8c540bfc802fb7dec794`, with `env -u GRIDMARKET_NWS` ensuring no inherited disable flag. No tests were skipped or deselected. The backend's existing outbound-socket guard remains active: NWS background polling is enabled, but this is not a successful live weather-service retrieval claim.
+
+| Command | Exit | Output / result |
+|---|---:|---|
+| `make lint` | 0 | All checks passed; 32 files already formatted. |
+| `make test-contracts` | 0 | 3 passed in 0.82 s. |
+| `make test-dash` | 0 | Vitest 3.2.7: 12/12 passed in dashboard scope; TypeScript check and Vite 6.4.3 production build succeed (632 modules). |
+| `make test-all` | 0 | Backend: 70 passed, 2 deprecation warnings, 66.20 s, including the complete SDK suite. Dashboard: 12 passed and production build succeeds. Worker: 25 passed, 0 failed/cancelled/skipped. No tools/tests or MCP project present. |
+| `make smoke SMOKE_PROJECT=gm-smoke-integration SMOKE_PORT=18000` | 0 | App healthy; HTTP response `{"status":"open"}`. Temporary project containers and volume absent after recipe cleanup. |
+| `make secrets` | 0 | Gitleaks scans 100 commits, no leaks; MIT license and env-example checks pass. |
+| `make rules` | 0 | Baseline-rules, Jev boundary and author-time checks pass. |
+
+Dashboard JSDOM CSS parsing diagnostics remain non-failing; all assertions and the production build pass. The two backend warnings concern Starlette/httpx and the AnyIO BlockingPortal alias.
+
+Smoke limitations: the existing Makefile writes `GRIDMARKET_NWS=off` into its temporary env file regardless of the invoking environment. It also emits `container gm-smoke-integration-bots-1 has no healthcheck configured`; the recipe continues to curl and returns 0. This receipt satisfies the dispatched status/exit gate, but proves neither live NWS polling inside Docker nor bot health/activity. These pre-existing recipe behaviors were not changed under the one-line glue authority.
+
+Configuration identity: Python 3.12.3; uv 0.11.6; Node v22.23.2; npm 11.15.0; Docker 29.1.3; Compose 2.40.3; gitleaks 8.30.1. Compose blob `582dfb94b8c00906359f60e3a4bd7ad544c4e548`; Dockerfile blob `51219672538db9c6691443b04a8d7118e32d9f6d`. Smoke app image `sha256:27625ad6d3232ffb720cf800c4970c363011f9b25c7322a6fa035551b4cbbf8c`; bots image `sha256:988ebb74fee60db98e29e4330f7286c039dd9b091d0cd97ee2bfc7781a730c9b`. Engine remains Python; provider registry base_sim; no live Worker delivery or owner acceptance exercised.
+
+Local command transcripts: `/tmp/gm-p1a-10-test-dash.log`, `/tmp/gm-p1a-10-test-all.log`, `/tmp/gm-p1a-10-smoke.log`. Summarized results above are the committed receipts.
+
+## Candidate handoff boundary
+
+- Outcome: **PASS / CANDIDATE_READY** for the authorized assembly and command gates only. The evidence-only commit following tested merge `83bc5f26931ac23b48ac8c540bfc802fb7dec794` is the candidate HEAD; its SHA is recorded in the designated `ops/candidates/1a` file after non-force push. Product files are identical to the tested merge.
+- Frozen configuration digest remains `14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`; Integration Engineer route remains Codex CLI / GPT-6 Astra / high. No live profile imported or route switched.
+- `review.coverage_assist`: enabled, required=false; selected backend OpenCodeReview delegation. Status `not_run` in this assembly session; runtime availability unassessed, a pending review capability gap, not passing review evidence. Phase reviewer owns independent review and OCR execution, including browser visual review of the UI.
+- `deterministic_verification.reverify`: enabled; selected conditional Rust ELF verification retained. Reverify: NOT_APPLICABLE — this candidate has no Rust/native binary claim. Source tests, JavaScript production-build receipts and container startup do not establish binary analysis; no ordinary test rerun substitutes for Reverify.
+- BRAN: unavailable (no native policy); direct plan, exit-file, Git and command evidence used.
+- Independent phase review, Assurance Test Engineer, owner acceptance and S09-L remain pending. This session neither self-certifies those gates nor opens a main PR. Only `gridmarket/integration-1a` is pushed; no Co-Authored-By lines added.
