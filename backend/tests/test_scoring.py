@@ -237,6 +237,60 @@ def seed_predictions_db(
         db.executemany("INSERT INTO signals VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
 
 
+@pytest.fixture
+def seeded_prediction_market(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> datetime:
+    db_path = tmp_path / "signals.db"
+    monkeypatch.setenv("GRIDMARKET_DB", str(db_path))
+    now = datetime.now(UTC)
+    hour = (now + timedelta(hours=2)).replace(minute=0, second=0, microsecond=0)
+    seed_predictions_db(
+        db_path,
+        [("product", "HOUSTON-FC", ZONE, hour.isoformat())],
+        [
+            (
+                "da",
+                "NP4-190-CD",
+                ZONE,
+                hour.isoformat(),
+                60,
+                50.0,
+                "$/MWh",
+                now.isoformat(),
+                now.isoformat(),
+            ),
+        ],
+    )
+    with sqlite3.connect(db_path) as db:
+        db.execute("PRAGMA foreign_keys = ON")
+        db.executemany(
+            "INSERT INTO accounts (id, display_name) VALUES (?, ?)",
+            (("buyer", "Buyer"), ("seller", "Seller")),
+        )
+        db.executemany(
+            "INSERT INTO orders (id, account_id, product_id, side, quantity, remaining_qty, "
+            "price_cents, status) VALUES (?, ?, 'product', ?, 1, 0, 5, 'filled')",
+            (("buy", "buyer", "buy"), ("sell", "seller", "sell")),
+        )
+        db.execute(
+            "INSERT INTO trades (id, product_id, buy_order_id, sell_order_id, quantity, price_cents) "
+            "VALUES ('trade', 'product', 'buy', 'sell', 1, 5)"
+        )
+    return hour
+
+
+def test_ate_p1b_01_prediction_value_and_market_price_share_dollar_units(
+    seeded_prediction_market: datetime,
+) -> None:
+    """A 50 $/MWh DA signal and 5-cent FC trade both yield dollars per kWh/FC."""
+    (result,) = scoring.predict()
+    assert result.zone == ZONE
+    assert result.delivery_hour == seeded_prediction_market.isoformat()
+    assert isinstance(result.expected_value, float)
+    assert isinstance(result.market_price, float)
+    assert 0.025 <= result.expected_value <= 0.075
+    assert result.market_price == 0.05
+
+
 def test_heat_stress_detail_states_threshold_position() -> None:
     above = driver_detail(score_hour(**inputs(temperature_f=90.0)), "heat-stress")
     assert above == "Temperature 90 F above 85 F threshold"
