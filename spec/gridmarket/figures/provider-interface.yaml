@@ -1,0 +1,34 @@
+class: F3
+title: Provider adapter interface
+max_width: 1200
+max_height: 700
+direction: LR
+nodes:
+  - id: market
+    label: market.py risk and settlement
+  - id: port
+    label: ProviderAdapter protocol
+  - id: registry
+    label: providers registry
+  - id: basesim
+    label: base_sim adapter
+  - id: lonestar
+    label: lonestar adapter (phase 2)
+  - id: health
+    label: health.py loop
+edges:
+  - from: market
+    to: port
+    label: available, reserve, release, verify
+  - from: registry
+    to: port
+    label: enabled adapters
+  - from: port
+    to: basesim
+    label: implements
+  - from: port
+    to: lonestar
+    label: implements
+  - from: health
+    to: port
+    label: heartbeat()

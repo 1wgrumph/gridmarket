@@ -102,6 +102,8 @@ with `status`, `code`, and `message` from the API's error envelope.
 
 See the [design system](docs/design/DESIGN.md) and the [frontend-design skill](skills/gridmarket-frontend-design/SKILL.md).
 
+See the [changelog](CHANGELOG.md) for what shipped in each release.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

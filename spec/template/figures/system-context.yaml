@@ -1,0 +1,18 @@
+class: F1
+title: System context
+max_width: 1200
+max_height: 800
+nodes:
+  - id: system
+    label: <System>
+  - id: user
+    label: <User>
+  - id: upstream
+    label: <Upstream service>
+edges:
+  - from: user
+    to: system
+    label: <request>
+  - from: upstream
+    to: system
+    label: <data>

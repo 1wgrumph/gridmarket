@@ -1,0 +1,76 @@
+<mxfile host="azdiagram">
+  <diagram id="deployment" name="Deployment and trust boundaries">
+    <mxGraphModel pageWidth="614.5" pageHeight="408">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="internet" value="Internet clients" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="54.4996" y="20" width="118.001" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="edge" value="Cloudflare edge" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="52.0012" y="103" width="122.998" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="cloudflared" value="cloudflared (profile tunnel)" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="20.0008" y="186" width="186.998" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="app" value="app container, uid 10001, read-only" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="193.5" y="269" width="241.999" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="bots" value="bots container, read-only" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="225" y="186" width="178.999" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="volume" value="gm-data volume (SQLite)" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="118" y="352" width="178.999" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="loopback" value="host loopback 127.0.0.1" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="422.5" y="186" width="172.001" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="worker" value="ERCOT Worker, owner account" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="315.001" y="352" width="212.998" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-1" value="HTTPS" edge="1" parent="1" style="html=1;" source="internet" target="edge">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="113.5" y="56.18" as="sourcePoint" />
+            <mxPoint x="113.5" y="102.85" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-2" value="named tunnel" edge="1" parent="1" style="html=1;" source="edge" target="cloudflared">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="113.5" y="139.18" as="sourcePoint" />
+            <mxPoint x="113.5" y="185.85" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-3" value="CF-Connecting-IP set" edge="1" parent="1" style="html=1;" source="cloudflared" target="app">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="145.62" y="222.1" as="sourcePoint" />
+            <mxPoint x="257.33" y="268.92" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-4" value="WAL writes" edge="1" parent="1" style="html=1;" source="app" target="volume">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="291.81" y="305.178" as="sourcePoint" />
+            <mxPoint x="230.16" y="351.847" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-5" value="x-gridmarket-key" edge="1" parent="1" style="html=1;" source="app" target="worker">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="337.19" y="305.178" as="sourcePoint" />
+            <mxPoint x="398.84" y="351.847" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-6" value="public API" edge="1" parent="1" style="html=1;" source="bots" target="app">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="314.5" y="222.18" as="sourcePoint" />
+            <mxPoint x="314.5" y="268.85" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-7" value="admin requests only here" edge="1" parent="1" style="html=1;" source="loopback" target="app">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="467.36" y="222.18" as="sourcePoint" />
+            <mxPoint x="355.25" y="268.99" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

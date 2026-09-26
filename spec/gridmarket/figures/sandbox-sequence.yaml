@@ -1,0 +1,40 @@
+class: F5
+title: Judge sandbox onboarding sequence
+max_width: 1400
+max_height: 700
+participants:
+  - id: judge
+    label: Judge
+  - id: page
+    label: Sandbox page
+  - id: api
+    label: api.py
+  - id: market
+    label: market.py
+  - id: feed
+    label: Activity feed
+messages:
+  - from: judge
+    to: page
+    label: Get a sandbox key
+  - from: page
+    to: api
+    label: POST /v1/sandbox/keys
+  - from: api
+    to: page
+    label: key shown once
+  - from: judge
+    to: page
+    label: Place a first order
+  - from: page
+    to: api
+    label: POST /v1/orders
+  - from: api
+    to: market
+    label: risk, match, ledger
+  - from: market
+    to: feed
+    label: event appended
+  - from: page
+    to: api
+    label: GET /v1/orders every 2 s

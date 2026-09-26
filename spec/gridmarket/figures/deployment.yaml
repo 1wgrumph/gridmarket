@@ -1,0 +1,44 @@
+class: F4
+title: Deployment and trust boundaries
+max_width: 1400
+max_height: 900
+direction: TB
+nodes:
+  - id: internet
+    label: Internet clients
+  - id: edge
+    label: Cloudflare edge
+  - id: cloudflared
+    label: cloudflared (profile tunnel)
+  - id: app
+    label: app container, uid 10001, read-only
+  - id: bots
+    label: bots container, read-only
+  - id: volume
+    label: gm-data volume (SQLite)
+  - id: loopback
+    label: host loopback 127.0.0.1
+  - id: worker
+    label: ERCOT Worker, owner account
+edges:
+  - from: internet
+    to: edge
+    label: HTTPS
+  - from: edge
+    to: cloudflared
+    label: named tunnel
+  - from: cloudflared
+    to: app
+    label: CF-Connecting-IP set
+  - from: loopback
+    to: app
+    label: admin requests only here
+  - from: bots
+    to: app
+    label: public API
+  - from: app
+    to: volume
+    label: WAL writes
+  - from: app
+    to: worker
+    label: x-gridmarket-key

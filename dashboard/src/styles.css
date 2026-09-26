@@ -488,3 +488,7 @@ thead th{font-weight:500;letter-spacing:.02em}
 .zone-cards{grid-template-columns:minmax(0,1fr)}
 .field input{min-height:44px}
 .show-book{min-height:44px}}
+/* S53-cls: the Bot profile loading skeleton reserves the loaded panels' height (panel head included) so they arrive without shifting the page. */
+.profile-reserve .loading{min-height:584px}
+@media(max-width:1100px) and (min-width:761px){.profile-reserve .loading{min-height:1178px}}
+@media(max-width:760px){.profile-reserve .loading{min-height:1384px}}

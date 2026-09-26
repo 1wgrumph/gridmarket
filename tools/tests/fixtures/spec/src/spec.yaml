@@ -1,0 +1,11 @@
+title: GridMarket Fixture Specification
+document_id: GM-SPEC-FIXTURE
+revisions:
+  - rev: "0.1"
+    date: "2026-09-25"
+    author: Spec lane
+    summary: Initial draft
+  - rev: "0.2"
+    date: "2026-09-26"
+    author: Spec lane
+    summary: Added market section

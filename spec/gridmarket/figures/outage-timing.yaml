@@ -1,0 +1,28 @@
+class: F8
+title: ERCOT Worker outage and recovery (minutes)
+max_width: 1000
+max_height: 500
+lanes:
+  - id: worker
+    label: ERCOT Worker
+    states:
+      - {at: 0, value: up}
+      - {at: 12, value: failing (5xx)}
+      - {at: 40, value: up}
+  - id: client
+    label: Market client
+    states:
+      - {at: 0, value: poll 5 min}
+      - {at: 12, value: backoff 5 s to 300 s}
+      - {at: 40, value: poll 5 min}
+  - id: served
+    label: Served values
+    states:
+      - {at: 0, value: fresh}
+      - {at: 20, value: stale with age_s}
+      - {at: 45, value: fresh}
+  - id: api
+    label: API endpoints
+    states:
+      - {at: 0, value: answering}
+      - {at: 60, value: answering}
