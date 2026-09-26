@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { MarketProduct, Prediction, Signal } from '../api';
 import Panel from './Panel';
+import { mapZones } from './ZoneMap';
 import { Stale as StaleTag } from '../pages/Market';
 
 type Feed<T> = { data: T[] | null; error: string | null; loading: boolean };
@@ -18,14 +19,30 @@ export default function ZoneDetail({ zone, title, predictions, signals, market, 
   useEffect(() => { close.current?.focus({ preventScroll: true }); }, []);
   const prediction = predictions.data?.filter(p => p.zone === zone).sort((a, b) => a.delivery_hour.localeCompare(b.delivery_hour))[0];
   const products = market.data?.filter(p => p.zone === zone && p.status === 'open' && p.symbol.startsWith('FLEX-')) ?? [];
+  const hasPrices = signals.data?.some(s => s.report_id === 'NP6-905-CD' && mapZones.includes(s.zone));
+  const zoneSignals = signals.data?.filter(s => s.zone === zone) ?? [];
+  const has = (report: string) => zoneSignals.some(s => s.report_id === report);
+  // Reports each driver detail is computed from; peak-period is calendar-only, unknown factors render as served.
+  const needs: Record<string, string[]> = {
+    'price spread': ['NP4-190-CD', 'NP6-905-CD'], 'load pressure': ['NP3-565-CD'], 'outage pressure': ['NP3-233-CD'],
+    'congestion pressure': ['NP6-905-CD'], 'heat stress': ['NWS-TEMP'], 'weather alert': ['NWS-ALERTS'], 'peak period': [],
+  };
+  const detailFor = (d: { factor: string; detail: string }) => {
+    const required = needs[d.factor.toLowerCase().replace(/[_-]+/g, ' ').trim()];
+    return required && !required.every(has) ? 'not reported' : d.detail;
+  };
   return <div className="zone-detail" onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } }}>
     <Panel title={`${title} zone details`} index="01" meta={<button ref={close} onClick={onClose} className="motion-toggle">Close</button>}>
       <div className="zone-detail-body">
         <StaleTag feed={predictions}/>
-        {!scored.includes(zone) ? <p>Not scored: the model covers the four largest load zones</p> : prediction ? <>
+        {!scored.includes(zone) ? <p>Not scored: the model covers the four largest load zones</p> : prediction ? hasPrices ? <>
           <p><strong>{prediction.score}%</strong> scarcity · <span>{prediction.level}</span> · Confidence {Math.round(prediction.confidence * 100)}%</p>
           <p>Delivery <time dateTime={prediction.delivery_hour}>{hour.format(new Date(prediction.delivery_hour))} CT</time></p>
-          <ul className="zone-drivers">{prediction.drivers.map(d => <li key={d.factor}><strong>{d.factor}</strong> · {d.contribution}<p>{d.detail}</p></li>)}</ul>
+          <ul className="zone-drivers">{prediction.drivers.map(d => <li key={d.factor}><strong>{d.factor}</strong> · {d.contribution}<p>{detailFor(d)}</p></li>)}</ul>
+        </> : <>
+          <p><strong>—</strong> scarcity · <span>Baseline only: waiting for live ERCOT data</span></p>
+          <p>Delivery <time dateTime={prediction.delivery_hour}>{hour.format(new Date(prediction.delivery_hour))} CT</time></p>
+          <ul className="zone-drivers"><li>Drivers appear when live ERCOT inputs arrive</li></ul>
         </> : <p>{predictions.loading ? 'Loading prediction…' : predictions.error ? 'Prediction unavailable' : 'Prediction not reported'}</p>}
         <h3>Latest signals</h3><StaleTag feed={signals}/>
         <ul className="zone-signals">{reports.map(([report, label]) => {

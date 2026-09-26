@@ -227,18 +227,19 @@ describe("S52a design v2 Overview and rail", () => {
     expect(card.textContent).toMatch(/expected value/i);
   });
 
-  it("key-number strip marks fields absent from backend as unavailable", async () => {
+  it("key-number strip shows served load and product counts with honest fallbacks", async () => {
     render(<Overview />);
     const strip = await screen.findByRole("region", { name: /market key numbers/i });
-    for (const label of ["System load", "Open interest", "Active traders", "Participants by provider"]) {
-      const item = within(strip).getByText(label).parentElement;
-      if (label === "Active traders") {
-        await waitFor(() => expect(item?.querySelector("strong")?.textContent).toBe("—"));
-      } else if (label === "Participants by provider") {
-        for (const provider of providers) await within(item!).findByText(provider.display_name);
-        expect(item?.textContent?.toLowerCase()).not.toContain("unavailable");
-      } else expect(item?.textContent?.toLowerCase()).toContain("unavailable");
-    }
+    const load = within(strip).getByText("System load").parentElement;
+    await waitFor(() => expect(load?.querySelector("strong")?.textContent).toBe("—"));
+    expect(load?.textContent).toContain("Waiting for ERCOT");
+    const products = within(strip).getByText("Open products").parentElement;
+    await waitFor(() => expect(products?.querySelector("strong")?.textContent).toBe("1"));
+    const traders = within(strip).getByText("Active traders").parentElement;
+    await waitFor(() => expect(traders?.querySelector("strong")?.textContent).toBe("—"));
+    const participants = within(strip).getByText("Participants by provider").parentElement;
+    for (const provider of providers) await within(participants!).findByText(provider.display_name);
+    expect(strip.textContent?.toLowerCase()).not.toContain("unavailable");
     await waitFor(() => expect(strip.textContent).toContain(String(predictions[0].score)));
   });
 
@@ -261,7 +262,8 @@ describe("S52a design v2 Overview and rail", () => {
     const panel = await screen.findByRole("region", { name: /the price of flexibility/i });
     await waitFor(() => expect(panel.getAttribute("aria-busy")).toBe("false"));
     expect(panel.textContent).toMatch(/price|history/i);
-    expect(panel.textContent).toMatch(/unavailable/i);
+    expect(panel.textContent).toMatch(/Day-ahead forecast \$45\.10/i);
+    expect(panel.textContent).not.toMatch(/unavailable/i);
     expect(fetchMock.mock.calls.some(([path]) => String(path).includes("/v1/market/history"))).toBe(true);
   });
 

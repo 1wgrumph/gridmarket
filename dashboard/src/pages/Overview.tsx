@@ -104,6 +104,14 @@ export default function Overview() {
   const esr = (signals.data ?? []).filter(s => s.report_id === 'ESR').sort((a, b) => a.published_at < b.published_at ? -1 : 1);
   const latestEsr = esr[esr.length - 1];
   const trades = (history.data ?? []).map(t => ({ at: parseTime(t.created_at), price: t.price_cents / 100 })).sort((a, b) => a.at - b.at);
+  // System load sums the latest load forecast per zone; the LZ rows already aggregate the raw weather zones.
+  const loadRows = (signals.data ?? []).filter(s => s.report_id === 'NP3-565-CD');
+  const loadPool = loadRows.some(s => s.zone.startsWith('LZ_')) ? loadRows.filter(s => s.zone.startsWith('LZ_')) : loadRows;
+  const systemLoad = [...groupBy(loadPool, s => s.zone).values()].map(rows => rows.reduce((a, b) => b.published_at > a.published_at ? b : a));
+  const systemLoadMw = systemLoad.reduce((sum, s) => sum + s.value, 0);
+  const forecastRows = (signals.data ?? []).filter(s => s.report_id === 'NP4-190-CD' && s.zone === (product?.zone ?? lead?.zone));
+  const latestForecast = forecastRows.reduce<Signal | undefined>((max, s) => !max || s.published_at > max.published_at ? s : max, undefined);
+  const chartData = [...trades, ...forecastRows.map(s => ({ at: parseTime(s.interval_start), forecast: s.value }))].sort((a, b) => a.at - b.at);
   const anomalies = (status.data?.anomalies ?? []) as { id?: string; kind?: string; detail?: string | null }[];
   const providerName = (id: string) => providers.data?.find(p => p.id === id)?.display_name ?? id;
   const views = import.meta.env.VITE_VIEWS_URL as string | undefined;
@@ -144,9 +152,9 @@ export default function Overview() {
         </div>
       </section>
       <section className="number-strip" aria-label="Market key numbers">
-        <div><span>System load</span><strong className="unavailable">unavailable</strong><span>ERCOT demand</span></div>
+        <div><span>System load</span>{systemLoad.length ? <strong>{systemLoadMw.toLocaleString('en-US', { maximumFractionDigits: 0 })} <small>MW</small></strong> : <strong>—</strong>}<span>{systemLoad.length ? <>ERCOT demand{systemLoad.some(s => s.stale) && <> · <span className="stale">Stale</span></>}</> : 'Waiting for ERCOT'}</span></div>
         <div><span>Highest scarcity</span><strong>{hasPrices ? lead?.score ?? '—' : '—'}{hasPrices && lead && <small>%</small>}</strong><span>{lead ? `${zoneTitle(lead.zone)} · ${delivery}` : 'Awaiting predictions'}</span></div>
-        <div><span>Open interest</span><strong className="unavailable">unavailable</strong><span>Flex Credits</span></div>
+        <div><span>Open products</span><strong>{market.error ? '—' : market.loading ? '…' : market.data?.filter(p => p.status === 'open').length ?? 0}</strong><span>SPOT + FLEX</span></div>
         <div><span>Active traders</span><strong>{bots.error ? '—' : bots.loading ? '…' : bots.data?.filter(b => !b.dormant).length ?? 0}</strong><span>Non-dormant bots</span></div>
         <div className="provider-stat"><span>Participants by provider</span>
           <span>{providers.data?.length ? providers.data.map((p, i) => <span key={p.id}>{i > 0 && ' / '}<b>{p.display_name}</b>{p.participants != null && <> · {p.participants}</>}</span>) : providers.loading ? 'Loading providers…' : providers.error ? 'Providers unavailable' : 'No providers enabled'}</span></div>
@@ -158,11 +166,11 @@ export default function Overview() {
 
     <div className="market-grid">
       <Panel title="The price of flexibility" index="02" className="price-panel" busy={history.loading} meta={<><StaleTag res={history}/><span>TRADES · $ / FLEX CREDIT</span></>}>
-        <div className="chart-caption"><span><i className="legend-line actual"/>Trade price history</span><span><i className="legend-line forecast"/>Day-ahead forecast unavailable</span></div>
-        <div className="chart" role="img" aria-label={trades.length ? `Traded Flex Credit prices: ${trades.length} most recent trades, last ${usd(trades[trades.length - 1].price)}.` : 'No trades yet.'}>
-          {trades.length ? <Suspense fallback={<Empty loading/>}><PriceChart data={trades}/></Suspense> : <Empty loading={history.loading} label="No trades yet"/>}
+        <div className="chart-caption"><span><i className="legend-line actual"/>Trade price history</span><span><i className="legend-line forecast"/>{latestForecast ? `Day-ahead forecast ${usd(latestForecast.value)}` : 'Day-ahead: waiting for ERCOT'}</span></div>
+        <div className="chart" role="img" aria-label={trades.length ? `Traded Flex Credit prices: ${trades.length} most recent trades, last ${usd(trades[trades.length - 1].price)}.${latestForecast ? ` Day-ahead forecast latest ${usd(latestForecast.value)}.` : ''}` : latestForecast ? `Day-ahead forecast: ${forecastRows.length} hourly prices, latest ${usd(latestForecast.value)}.` : 'No trades yet.'}>
+          {trades.length || forecastRows.length ? <Suspense fallback={<Empty loading/>}><PriceChart data={chartData}/></Suspense> : <Empty loading={history.loading} label="No trades yet"/>}
         </div>
-        <p className="chart-foot"><span>Most recent {trades.length} trades</span><span>Hourly forecast series not served yet</span></p>
+        <p className="chart-foot"><span>Most recent {trades.length} trades</span><span>{latestForecast ? `Day-ahead ${usd(latestForecast.value)} /MWh` : 'Hourly forecast series not served yet'}</span></p>
       </Panel>
       <Panel title="Live order book" index="03" className="book-panel" busy={market.loading} meta={<><StaleTag res={market}/><span>{product ? `${zoneTitle(product.zone).toUpperCase()} · ${hourFormat.format(new Date(product.delivery_hour))}` : 'NO PRODUCT'}</span></>}>
         <p className="panel-subtitle">Simulated $ / Flex Credit</p>
@@ -186,7 +194,7 @@ export default function Overview() {
             </tr>;
           })}</tbody>
         </table> : <Empty loading={signals.loading || predictions.loading}/>}</div>
-        <div className="panel-end"><span>Central time · trend series unavailable</span><span>{zones.length} zones served</span></div>
+        <div className="panel-end"><span>Central time</span><span>{zones.length} zones served</span></div>
       </Panel>
       <Panel title="Bots setting the pace" index="05" className="bots-panel" busy={bots.loading} meta={<span>P&L · SIMULATED</span>}>
         <div className="bots-body">{bots.data?.length ? <table className="bot-table">
