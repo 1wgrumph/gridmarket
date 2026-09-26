@@ -709,3 +709,107 @@ Blocker: the authorized design-first candidate cannot build against the
 currently integrated page consumers. Steps 2 and 3 were not used to bridge
 that red step. No PR, main merge, branch deletion, force push, git switch,
 owner deployment, credential access, issue closure or Co-Authored-By line.
+
+## Attempt 7 (continued; attempt-8 evidence): CONTRACT_FAILURE — pages write set blocked
+
+Journey GM-2026-09-25, S49 phase 1b, Integration Engineer execution,
+DIR-P1b-20, combined design+pages re-entry under DEC-GM-075. This appended
+record retains the requested Attempt 7 label; its fresh evidence root is
+`/tmp/gm-evidence/P1b/attempt-8/`. Entry was clean at
+`a10a0b1f81837d9d965a175286f2046ede346da3` on `gridmarket/integration-1b`.
+
+### Identities, structural gates and stop
+
+| Item | SHA / disposition | Gate evidence |
+|---|---|---|
+| Design exact exit | `8f6843a69117ff3c2145ddf400a7a8d96572a0d3` | object exists; entry exit 0, `design-entry.json` |
+| Restore design (revert of `58a7f89`) | `3d4b43c60ee1ef3fe14b5527173d1223c11d6868` | command exit 0, `design-restore.log`; structural exit 0, `design-restore.json` |
+| Pages-v2 exact exit | `bf9252fd25b7275ba54e65d931b8b15138a77195` | entry write-set exit **1**, `pages-v2-entry.json`; merge **NOT_RUN** |
+| Spec exact exit | `8989e539e7499dccbcbe49ad06fbfbe4c30ea747` | object exists; merge and S49-E gates **NOT_RUN** after entry failure |
+| Recovery revert (`git revert -m 1` of restoration) | `bdb281b8972d58676d6678d3a69f1e089d3af5a3` | command exit 0, `combined-revert.log`; exact entry tree restored, `combined-revert-assembly.json` |
+
+PROC-ASSEMBLY's incoming non-merge-path check found
+`dashboard/src/styles.css` in pages commit `8d263a8`. The canonical
+implementation.json pages-lane union (S50, S51, S53) allows the named page
+and fixture files and `dashboard/src/pages/`, but not `styles.css`.
+`pages-writeset-contract.json` records that full union and the unexpected
+path; `pages-styles-diff.log` binds it to its source commit. This is a
+write-set contract failure, not a test failure, merge conflict, or product
+bug finding. The combined procedure exit is **1** in
+`combined-proc-assembly.json`. The pages merge and merged-candidate
+behavioral gates were never run; design alone was not tested as a candidate.
+The restoration was rolled back immediately, with no product/test edit,
+conflict resolution, or scope expansion.
+
+DEC-GM-074 exempts **only** `dashboard/src/api.ts` and
+`dashboard/src/hooks.ts` for design restoration, reflecting DEC-GM-062
+(type exports, poll deduplication, error text). They were the only incoming
+frozen changes; all other frozen files passed. Pages and spec receive no
+exemption. The restoration receipt includes frozen blob identities;
+rollback restores every file to the entry tree, including both exempted
+files. CONTRACTS.md and backend/uv.lock are unchanged.
+
+### Recovery gates
+
+| Gate | Recovery exit | Evidence |
+|---|---:|---|
+| CMD-TEST-CONTRACTS | 0 | `combined-revert-test-contracts.log` |
+| CMD-TEST-ALL | 0 | `combined-revert-test-all.log` |
+| CMD-TEST-DASH | 0 | `combined-revert-test-dash.log` |
+| CMD-SMOKE | 0 | `combined-revert-smoke.log` |
+| PROC-ASSEMBLY recovery | 0 | `combined-revert-proc-assembly.json` |
+
+Test-all reports 109 backend, 29 dashboard and 34 Worker tests passed.
+Smoke completes every runtime assertion and removes its stack, volume,
+network and throwaway environment file.
+
+Each command receipt binds the recovery SHA, start/end UTC timestamps,
+exit, duration and log in `combined-revert-results.json`.
+`combined-revert-proc-assembly.json` aggregates recovery structure and gates.
+Existing setup was reused, with `GRIDMARKET_NWS=off`,
+`UV_EXCLUDE_NEWER=2026-09-11T22:00:00Z`, frozen Make targets and smoke project
+`gm-smoke-1b:18003` from SEIT (superseding the stale step annotation).
+No owner environment file was read. The recovery test-all ran 2026-09-26 15:09:14–15:11:17 UTC, without an hour
+boundary or failure. DEC-GM-075 retry was not needed; each gate ran once.
+
+### Candidate, remaining work and capability gaps
+
+Last green merge candidate remains
+`ab8f825b5c1aec25f87a4105ef66c37b37d74c01` (attempt-5 S49-D).
+No new green lane merge was produced. Recovery is `bdb281b`; its complete
+tree equals entry `a10a0b1`. Branch-only non-force push and final clean-tree
+receipts are `revert-push.log`, `final-push.log` and
+`final-verification.json`.
+
+Spec is **un-deferred/eligible** at the supplied S21+S21-fix exit under
+DIR-P1b-20. It remains unassembled because the preceding combined step
+stopped; this attempt does not claim any S49-E gate or re-defer spec.
+Design+pages, spec and **market2** assembly remain outstanding. The
+anomalies-panel check against the real `status.anomalies` row shape remains
+for market2, as does the S05-flake root fix.
+
+Pending owner items, never performed: **PROC-ERCOT-LIVE-CHECK** and
+**AC-GM-ACC-01**; Worker deployment remains `VIEWS_NOT_DEPLOYED`.
+Independent phase review, browser visual review and Assurance Test Engineer
+remain pending. Prior `ENTROPY_PROOF_CONFLICT`,
+`PAGES_APP_ERROR_BOUNDARY_GAP`, live smoke coverage limits and the spec
+Graphviz 2.43.0 versus designed 2.42.2 discrepancy remain disclosed,
+not revalidated or closed. `BRAN_UNAVAILABLE`: no native policy; ordinary
+Git/repository evidence used.
+
+Frozen binding digest
+`14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`
+is retained unchanged in `frozen-profile.json`, including roles and both
+capability settings. No live profile import or route substitution occurred.
+`review.coverage_assist`: enabled, required=false, OpenCodeReview delegation
+backend, executable available; **not_run**, this is assembly, not code review.
+`deterministic_verification.reverify`: enabled, conditional Rust ELF backend,
+executable available; **not applicable — no Rust/native compiled binary claim**.
+Availability paths are in `capability-availability.json`; ordinary gates are
+not Reverify or independent assurance evidence.
+
+Blocker: the pages lane's incoming stylesheet change is outside its declared
+write-set union. Return it to the Orchestrator/lane for correction or explicit
+scope amendment before re-entry. **S49-L NOT_RUN.** No PR, main merge, branch
+deletion, force push, git switch, owner deployment, credential access, issue
+closure or Co-Authored-By line.
