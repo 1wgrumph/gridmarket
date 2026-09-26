@@ -665,6 +665,14 @@
       "decision": "CMD-TEST-BOTS is not part of the S49 main-merge gate; it enters at S49-A with the bots lane. The attempt-2 revert of the main merge (e51b636) is undone by revert-of-revert. S52b (design port) and S05-const dispatched directly by the Orchestrator because the P1b Coordinator had not acked DIR-P1b-05..08; S05-const runs on light_implementer (mechanical 2-constant refactor). Design and market2 lanes join S49 after pages.",
       "rationale": "test-bots files arrive with the bots lane; running it on the main merge alone always exits 2 (file not found). Every other gate on 3a986cb was green.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-066",
+      "decided_at": "2026-09-26T09:25:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "S17 admission order: write Cargo.toml and generate Cargo.lock first, then make depscan RUST=1 must pass before any Rust source is written or built. Redispatch S17 once on the heavyweight route. S14 merges origin/main now that 1a has landed.",
+      "rationale": "S17 attempt 1 stopped because cargo audit ran before a lockfile could exist, which is a sequencing defect in the plan. The scan remains a hard gate.",
+      "reversible": true
     }
   ],
   "stages": {
