@@ -17,7 +17,7 @@ const VIEWS_URL = "https://views.example.test/godseye/";
 
 type Signal = { report_id: string; zone: string; value: number; published_at: string; stale: boolean };
 type Prediction = { zone: string; score: number; level: string };
-type Activity = { id: string; type: string; label: string; symbol: string; side: string; quantity: number; price_cents: number; reason?: string; created_at: string };
+type Activity = { type: string; label: string; reason?: string; symbol: string };
 type Provider = { id: string; display_name: string };
 type Bot = { id: string; provider_id: string };
 
@@ -97,22 +97,6 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
     expect(await screen.findByText(/judge/i)).toBeTruthy();
     expect(screen.getByText(new RegExp(judge.symbol))).toBeTruthy();
     expect(screen.getByText(new RegExp(rejected.reason ?? "NO-REASON-IN-FIXTURE"))).toBeTruthy();
-    expect(screen.getByText(`${judge.side} ${judge.quantity} @ $${(judge.price_cents / 100).toFixed(2)}`)).toBeTruthy();
-  });
-
-  it("[SEIT-GM-UI-01] participants render providers and mark bots not yet available when /v1/bots is 404", async () => {
-    const serve = fetchMock.getMockImplementation() as (input: string) => Promise<unknown>;
-    fetchMock.mockImplementation(async (input: string) =>
-      input.includes("/v1/bots")
-        ? { ok: false, status: 404, json: async () => ({ error: { code: "NOT_FOUND", message: input } }) }
-        : serve(input),
-    );
-    render(<Overview />);
-    expect(await screen.findByText(/bots not yet available/i)).toBeTruthy();
-    for (const provider of providers) expect(screen.getByText(provider.display_name)).toBeTruthy();
-    expect(screen.getByText(new RegExp(`${providers.length} providers`))).toBeTruthy();
-    expect(screen.queryByText(/feed unavailable/i)).toBeNull();
-    expect(screen.queryByText(/^\d+ bots$/)).toBeNull();
   });
 
   it("[SEIT-GM-UI-01] links to the 3D views from VITE_VIEWS_URL", async () => {

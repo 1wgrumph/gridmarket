@@ -398,7 +398,7 @@ def settle(db, now: datetime | None = None) -> None:
         for offset in range(4):
             interval = (hour + timedelta(minutes=15 * offset)).isoformat()
             price = db.execute(
-                "SELECT value FROM signals WHERE report_id='NP6-905-CD' AND zone=? AND julianday(interval_start)=julianday(?) AND interval_minutes=15 AND unit='$/MWh' ORDER BY fetched_at DESC,rowid DESC LIMIT 1",
+                "SELECT value FROM signals WHERE report_id='np6-905-cd' AND zone=? AND julianday(interval_start)=julianday(?) AND interval_minutes=15 AND unit='$/MWh' ORDER BY fetched_at DESC,rowid DESC LIMIT 1",
                 (item["zone"], interval),
             ).fetchone()
             if price is None:
@@ -514,24 +514,8 @@ def activity() -> list[dict]:
     with connection() as db:
         return rows(
             db,
-            "SELECT e.id,e.entry_type AS type,COALESCE(a.display_name,e.entry_type) AS label,"
-            "p.symbol,COALESCE(json_extract(e.payload_json,'$.side'),"
-            "CASE WHEN t.id IS NOT NULL THEN CASE WHEN b.account_id=e.account_id "
-            "THEN 'buy' ELSE 'sell' END END) AS side,"
-            "json_extract(e.payload_json,'$.quantity') AS quantity,"
-            "json_extract(e.payload_json,'$.price_cents') AS price_cents,"
-            "COALESCE(json_extract(e.payload_json,'$.reason'),"
-            "json_extract(e.payload_json,'$.delivery')) AS reason,"
-            "e.created_at AS created_at,e.entry_type,e.subject_id FROM events e "
-            "LEFT JOIN accounts a ON a.id=e.account_id "
-            "LEFT JOIN products p ON p.id=COALESCE("
-            "json_extract(e.payload_json,'$.product_id'),e.subject_id) "
-            "LEFT JOIN trades t ON e.entry_type='fill' AND t.id=e.subject_id "
-            "LEFT JOIN orders b ON b.id=t.buy_order_id UNION ALL "
-            "SELECT o.id,'order',a.display_name,p.symbol,o.side,o.quantity,o.price_cents,"
-            "NULL,o.created_at,'order',o.product_id FROM orders o "
-            "JOIN accounts a ON a.id=o.account_id JOIN products p ON p.id=o.product_id "
-            "ORDER BY created_at DESC LIMIT 100",
+            "SELECT id,entry_type,subject_id,created_at FROM events UNION ALL "
+            "SELECT id,'order',product_id,created_at FROM orders ORDER BY created_at DESC LIMIT 100",
         )
 
 

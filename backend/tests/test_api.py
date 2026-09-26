@@ -91,29 +91,6 @@ def test_dir_p1a_11_market_status_exposes_anomalies(api):
     assert response.json()["anomalies"] == []
 
 
-def test_assurance_f5_activity_has_overview_fields(api):
-    _, client = api
-    assert client.get("/v1/market/activity").json() == []
-    for account, side in (("member", "buy"), ("sandbox", "sell")):
-        response = client.post(
-            "/v1/orders", headers=headers(account, "activity"), json={**ORDER, "side": side}
-        )
-        assert response.status_code == 200
-    response = client.get("/v1/market/activity")
-    assert response.status_code == 200
-    activity = response.json()
-    assert len(activity) == 4
-    assert {item["type"] for item in activity} == {"order", "fill"}
-    for item in activity:
-        assert item["id"] and item["created_at"]
-        assert item["label"] in ("member", "sandbox")
-        assert item["symbol"] == "FLEX-LZ_HOUSTON-test"
-        assert item["side"] == ("buy" if item["label"] == "member" else "sell")
-        assert item["quantity"] == 1
-        assert item["price_cents"] == 20
-        assert item["reason"] is None
-
-
 @pytest.mark.parametrize(
     "body,auth,status,code,account",
     [

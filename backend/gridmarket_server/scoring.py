@@ -76,7 +76,7 @@ def score_hour(
     outage_mw: float,
     outage_median_mw: float,
     shadow_prices: dict[str, float],
-    temperature_f: float | None,
+    temperature_f: float,
     alerts: int,
     fresh: bool,
     market_price: float | None,
@@ -88,7 +88,7 @@ def score_hour(
         "load-pressure": (load_mw - load_mean_mw) / max(0.1 * load_mean_mw, 1),
         "outage-pressure": (outage_mw - outage_median_mw) / (0.1 * outage_median_mw + 100),
         "congestion-pressure": (rt_price - hub_price + 0.1 * shadow) / CONGESTION_SCALE,
-        "heat-stress": 0 if temperature_f is None else max(temperature_f - 85, 0) / HEAT_SCALE,
+        "heat-stress": max(temperature_f - 85, 0) / HEAT_SCALE,
         "peak-period": 1 if on_peak(hour) else -1,
         "weather-alert": alerts,
     }
@@ -97,13 +97,7 @@ def score_hour(
         "load-pressure": f"Load {load_mw:g} MW vs {load_mean_mw:g} MW 24-hour mean",
         "outage-pressure": f"Outage capacity {outage_mw:g} MW vs {outage_median_mw:g} MW median",
         "congestion-pressure": f"RT vs hub spread plus constraints {', '.join(f'{name} {value:g}' for name, value in shadow_prices.items()) or 'none'}",
-        "heat-stress": (
-            "Temperature reading unavailable (no NWS-TEMP signal)"
-            if temperature_f is None
-            else f"Temperature {temperature_f:g} F above 85 F threshold"
-            if temperature_f > 85
-            else f"Temperature {round(temperature_f)} F at or below 85 F threshold"
-        ),
+        "heat-stress": f"Temperature {temperature_f:g} F above 85 F threshold",
         "peak-period": "NERC 5x16 on-peak hour" if on_peak(hour) else "NERC off-peak hour",
         "weather-alert": f"{alerts} active Severe or Extreme weather alerts",
     }
@@ -161,20 +155,14 @@ def predict() -> list[Prediction]:
         predictions = []
         for product_id, zone, hour in products:
 
-            def value(
-                report: str, zone: str, default: float | None = 0, hour: str = hour
-            ) -> float | None:
-                row = db.execute(
-                    "SELECT value FROM signals WHERE report_id=? AND zone=? AND interval_start=? "
-                    "ORDER BY fetched_at DESC, rowid DESC LIMIT 1",
-                    (report, zone, hour),
-                ).fetchone()
-                return row[0] if row else default
+            def value(report: str, at: str, default: float = 0) -> float:
+                signal = signals.latest(report, at)
+                return signal.value if signal else default
 
             shadows = {
                 name: price
                 for name, price in db.execute(
-                    "SELECT zone,value FROM signals WHERE report_id='NP6-86-CD' ORDER BY rowid ASC"
+                    "SELECT zone,value FROM signals WHERE report_id='NP6-86-CD' ORDER BY rowid DESC"
                 ).fetchall()
             }
             trade = db.execute(
@@ -229,7 +217,7 @@ def predict() -> list[Prediction]:
                     outage_mw=outage,
                     outage_median_mw=median(_window(db, "NP3-233-CD", zone, hour, 168, outage)),
                     shadow_prices=shadows,
-                    temperature_f=value("NWS-TEMP", zone, None),
+                    temperature_f=value("NWS-TEMP", zone),
                     alerts=int(value("NWS-ALERTS", zone)),
                     fresh=fresh,
                     market_price=market_price,
