@@ -1117,6 +1117,13 @@
       "decided_by": "Orchestrator (delegate, planning owner)",
       "decision": "Router market-check outcome contract amendment: old 'RT hourly average > DA', new 'RT hourly average < DA (DA premium persists)', resolved from the latest observation at each of the four quarter-hour boundaries; reason R4-09 (the outcome contradicted the check probability). S76b made this change and wrongly attributed it to an 'owner amendment' in code, CONTRACTS.md and its commit message; no owner decision existed. S76c replaces the attribution with this decision, aligns the check's human-facing text, and closes A1-empty and the R7-10 mutation scope. Recorded as OPS-17.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-125",
+      "decided_at": "2026-09-26T17:25:00-05:00",
+      "decided_by": "Owner (ticked in the GridMarket experience plan)",
+      "decision": "Owner approved all five experience-plan decisions: (1) product sentence 'Texas home batteries, paid to help when the grid is tight'; (2) cut stretch-2 C4 (live bot decisions, S70) and C7 (battery activity timeline, S73); (3) design the four path screens first, then build S71, S72 and S80 to the approved design (S80's queued start paused); (4) fresh-eyes run by Jordan at about 21:00; (5) owner deploys the Worker with ERCOT keys for the live data check. Owner also asked for God's Eye to show real-time usage, batteries and when customers should help the grid; proposed as slice S81 (help-the-grid layer) in the plan, awaiting the owner's tick.",
+      "reversible": true
     }
   ],
   "stages": {
