@@ -989,7 +989,7 @@
     },
     {
       "id": "DEC-GM-107",
-      "decided_at": "2026-09-26T15:31:00-05:00",
+      "decided_at": "2026-09-26T15:30:00-05:00",
       "decided_by": "Owner (in chat) + Orchestrator (delegate)",
       "decision": "New slice S65 on lane public (from origin/main e08cf55, Light Implementer): remove docs/plans/ (114 files; 46 contain private workstation paths and internal tool or company names) from main's tree, drop its .dockerignore line, and add a make check-public gate (inside make lint) that fails on private markers. Planning records stay only on the private branch gridmarket/lifecycle-setup, which no longer merges into main. 'Jev' product references are out of scope (separate open owner decision). History still contains the records: a history-clean public export (for example git filter-repo on a fresh clone, preserving every author including Jordan Hill) is an owner-only publication step.",
       "owner_quote": "that need to be a slice",
