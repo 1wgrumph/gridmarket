@@ -30,7 +30,10 @@ services:
       dockerfile: deploy/Dockerfile
     command: ["python", "-m", "gridmarket_server.bots"]
     healthcheck:
-      disable: true
+      test: ["CMD", "python", "-c", "from pathlib import Path; assert Path('/proc/1/cmdline').read_bytes().split(bytes([0]))[:3] == [b'python', b'-m', b'gridmarket_server.bots']"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
     volumes:
       - gm-data:/data
     depends_on:
