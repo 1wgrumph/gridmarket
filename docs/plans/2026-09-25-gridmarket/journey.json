@@ -3,7 +3,7 @@
   "journey": {
     "id": "GM-2026-09-25",
     "title": "GridMarket hackathon MVP",
-    "status": "planning",
+    "status": "implementing",
     "planning_repository": "local:/home/spectre/alphazede/Hackathons/Base"
   },
   "checkout_lease": {
@@ -12,7 +12,7 @@
     "repository": "local:/home/spectre/alphazede/Hackathons/Base",
     "checkout": "/home/spectre/alphazede/Hackathons/Base",
     "branch": "gridmarket/lifecycle-setup",
-    "candidate_revision": "18c3f5c623529973505fc0edd1c20425bd341c96",
+    "candidate_revision": "f6bfb23ee99db8966924f70990cb4bd9ef7eae19",
     "acquired_at": "2026-09-26T00:05:38Z",
     "generation": 1,
     "state": "active"
@@ -491,13 +491,21 @@
       "owner_statement": "when this is done just go ahead and start I am about to go to sleep plan is already approved / If gaps or problems arise I need you act as the delegate authority and keep this running please get this done do not stop for no reason",
       "decision": "Owner pre-approves the Planning and Design package that the current delta (DEC-GM-027..040, 042) produces, once plan-package PASS and the Manifest render. Wave dispatch starts without a further approval stop. Overnight, the Orchestrator acts as delegate authority for OWNER_DECISION_REQUIRED returns inside the approved scope: route fallbacks, repair acceptance, slice drops per the documented drop order, and schedule re-sequencing. Each delegated decision is recorded as a dated DEC-GM entry with source 'Orchestrator as owner delegate (DEC-GM-043)'.",
       "excluded": "Owner-only actions stay owner-only: credential access (ERCOT, Cloudflare, Jev keys), production deploy (wrangler deploy, public tunnel activation), making the repository public, and the Loom/submission. Scope expansion beyond the approved package is not delegated."
+    },
+    {
+      "id": "DEC-GM-044",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T05:11:36Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043)",
+      "decision": "Accept the Planning and Design package at manifest digest cea7bcbdefd2f415064530b621cb4cee4284c6afcc81edf9b6116b8e5249730e (plan-package PASS, 0 findings; render --check RENDER_CHECK_PASS sha256:5f70ebe3...b643) as the approved Lifecycle baseline under the owner's pre-approval (DEC-GM-043). Accept the node's four readings: the S31 diversity slip check at Sat 14:00; the final wave gets the same 1 review / at most 1 repair rule; non-windowed routes capped at 3 concurrent sessions; the frontend profile covers the new UI lanes (pages, providers-page, onboarding); acceptance runs use localhost phase candidates, and the tunnel is Sunday-only. Resolve CELL-GM-DISCLAIMER-PLACEMENT: the Jordan disclaimer goes in the README Contributors section (S45) and in any receipt for a slice Jordan runs.",
+      "why": "Each reading narrows the plan or restates an owner decision. None expands scope."
     }
   ],
   "stages": {
     "intake": "accepted",
     "architectural_alignment": "accepted",
     "scope_definition": "accepted",
-    "planning_and_design": "delta_pending"
+    "planning_and_design": "accepted"
   },
   "profile_selection": {
     "selected_at": "2026-09-26T01:10:55Z",
@@ -1867,6 +1875,23 @@
         "CELL-GM-DISCLAIMER-PLACEMENT"
       ],
       "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "stage": "planning_and_design",
+      "role": "planning_and_design",
+      "host": "Claude Code headless",
+      "result": "PLAN_REVIEW_READY",
+      "delta": "DEC-GM-027..040, 042",
+      "plan_package": "PASS",
+      "manifest_digest": "cea7bcbdefd2f415064530b621cb4cee4284c6afcc81edf9b6116b8e5249730e"
     }
-  ]
+  ],
+  "approval": {
+    "approved_at": "2026-09-26T05:11:36Z",
+    "approved_by": "owner pre-approval DEC-GM-043, applied by DEC-GM-044",
+    "lifecycle_type": "standard",
+    "snapshot": "primary + lane amendments (tech-writing: spec, frontend: ui lanes)",
+    "manifest_digest": "cea7bcbdefd2f415064530b621cb4cee4284c6afcc81edf9b6116b8e5249730e",
+    "candidate_revision": "f6bfb23"
+  }
 }
