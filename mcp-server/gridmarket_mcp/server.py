@@ -28,7 +28,7 @@ def _schema(
 _ORDER_PROPS = {
     "product_id": {"type": "string", "description": "Product id from market()."},
     "quantity": {"type": "integer", "description": "Lots; at most 50 per order."},
-    "price_cents": {"type": "integer", "description": "Limit price in cents."},
+    "price_cents": {"type": "integer", "description": "Limit price in cents; max 500 ($5.00)."},
     "idempotency_key": {"type": "string", "description": "Caller-chosen dedupe key."},
 }
 
@@ -81,14 +81,14 @@ TOOLS: list[Tool] = [
     ),
     Tool(
         name="buy",
-        description="Place a buy order through the public risk-checked API.",
+        description="Place a buy order through the public risk-checked API; price max $5.00 (500 cents).",
         inputSchema=_schema(
             _ORDER_PROPS, ["product_id", "quantity", "price_cents", "idempotency_key"]
         ),
     ),
     Tool(
         name="sell",
-        description="Place a sell order through the public risk-checked API.",
+        description="Place a sell order through the public risk-checked API; price max $5.00 (500 cents).",
         inputSchema=_schema(
             _ORDER_PROPS, ["product_id", "quantity", "price_cents", "idempotency_key"]
         ),

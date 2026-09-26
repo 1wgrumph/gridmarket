@@ -44,7 +44,7 @@ uv sync --project mcp-server --frozen
   `provider_health`, `bot_population`
 - Your account only: `my_orders`, `my_positions`, `my_pnl`, `my_losses`
 - Trading through the public risk-checked API: `buy`, `sell`, `cancel`
-  (max 50 lots per order, 200 position limit)
+  (max 50 lots per order, max price $5.00 (500 cents), 200 position limit)
 
 ## Safety notes
 
