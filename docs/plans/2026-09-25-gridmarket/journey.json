@@ -777,6 +777,14 @@
       "decision": "Add ERCOT ESR (Energy Storage Resources) data: new slice S55 after the phase 2 landing. It is display-only with no scoring change: a Worker route proxying GET /rptesr-m/4_sec_esr_charging_mw, the backend poller storing it as a signal (report_id ESR), and an Overview 'Texas batteries charging now' tile with a sparkline. The Worker secret name is ERCOT_ESR_SUBSCRIPTION_KEY (a separate ESR API subscription on the same ERCOT account). The owner sets secrets and deploys.",
       "owner_quote": "yes lets do this this is something we need",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-080",
+      "decided_at": "2026-09-26T10:43:00-05:00",
+      "decided_by": "Orchestrator (delegate) + owner report",
+      "decision": "OWN-WORKER-ENV is done (owner-reported): Worker 'ercot-hackathon' secrets are set on the owner's Cloudflare account (ERCOT_USERNAME, ERCOT_PASSWORD, ERCOT_SUBSCRIPTION_KEY, ERCOT_ESR_SUBSCRIPTION_KEY, MARKET_KEY), and the MARKET_KEY value is in ~/.config/gridmarket/worker-key on the host. The Worker is not deployed yet: OWN-WORKER-DEPLOY follows the 1b landing. ERCOT EWS (SOAP, market participants only, with digital certificates) is out of scope: no code. It appears in the docs only as a roadmap line: the path to real settlement is aggregating household batteries through a QSE that submits bids and offers via EWS.",
+      "rationale": "EWS is not available to non-registered developers. The Public API and the ESR API cover the demo. The roadmap line strengthens the judge story without adding build risk.",
+      "reversible": true
     }
   ],
   "stages": {
