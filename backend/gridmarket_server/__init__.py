@@ -1,1 +1,0 @@
-"""GridMarket simulation server."""
