@@ -1138,6 +1138,13 @@
       "decided_by": "Orchestrator (delegate, planning owner)",
       "decision": "Replay model amendment A16 (stretch2-plan.md): procurement in the four highest day-ahead hours instead of fixed 17:00-21:00; self_supply action valued at RT SPP; distinct fixed rules per strategy with no day-specific tuning; compact fleet-level run body and a bounded decisions endpoint. Reason: S69's real 2026-08-26 run produced identical scoreboards because the fixed window missed the real 22:00-22:30 spike. Slice S69b on lane replay-model, merged into lane replay; S71/S72 build against the added keys.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-128",
+      "decided_at": "2026-09-26T17:44:00-05:00",
+      "decided_by": "Orchestrator (delegate) applying the owner's AZHQ Product Flow Standard v1.0",
+      "decision": "GridMarket's experience work follows the owner's AZHQ Product Flow Standard v1.0 (26 September 2026). S80 re-scoped: the detached #/tour becomes a first-run checklist ('Your first 3 minutes') whose items deep-link into the real Replay, Your turn and Judge sandbox pages and tick on the real action (A7 step 16), plus next-step links at every task end (FLOW-001/022), zone and time window carried in the URL (FLOW-013/020), every alert and activity item linked to its object at its time (FLOW-027/060), and wayfinding (FLOW-010/011/012). S72 adds URL-carried slider state and next steps. The S18 independent UX critique scores the integrated build against the standard's Part C flow checks at 1440x900 and 390x844 (A7 step 18) and B2 (energy) and B4 (developer tools) journeys; the fresh-eyes run with Jordan is the A5 human check. The standard's text stays outside the product repository.",
+      "reversible": true
     }
   ],
   "stages": {
