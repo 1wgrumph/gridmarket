@@ -143,6 +143,44 @@
       "rationale": "Makes acceptance falsifiable against the intent's success criteria. Headcount no longer affects scope because delivery is phased, and it is needed only to assign lanes.",
       "source": "Owner confirmation of shared understanding, item 5 and the acceptance proposal, 2026-09-25 CDT; gridmarket-intent.html section 22",
       "recorded_at": "2026-09-26T01:10:55Z"
+    },
+    {
+      "id": "DEC-GM-017",
+      "status": "confirmed",
+      "decision": "Split the owner's new signals. The phase 1 explainable opportunity score adds three normalized, explained drivers: NWS hourly temperature (heat stress), an on-peak/off-peak and NERC holiday flag (5x16 calendar rule: hours ending 07-22 Central Prevailing Time, weekdays, excluding the six NERC holidays; standard library only, no new dependency), and NWS active extreme-weather alerts for Texas (the 'events' signal). A new ML stretch lane (intent P2 item 26) uses all of those signals plus Open-Meteo weather history, Census county population estimates, and LEHD LODES8 Texas workplace (WAC) versus residence (RAC) job counts as a daytime population weight per zone. It is trained on ERCOT archive data and compared against the deterministic score through the stretch backtest. Dropped: a special-events feed and TxDOT traffic data.",
+      "rationale": "The owner asked for weather, on-peak/off-peak, events, location and peak-hour population, from free APIs or State of Texas data. These sources were verified without a key (HTTP 200) on 2026-09-25: NWS api.weather.gov hourly forecast and /alerts/active?area=TX; the Open-Meteo forecast and archive; the Census county population estimates CSV; and the LODES8 Texas WAC files for 2021 and 2022. The phase 1 signals are live, need no key, fit the live-only rule in DEC-GM-007, and work before the owner's ERCOT key exists. The static population weights only become meaningful once they are fitted against history, so they belong in the ML lane. Training on historical archives is offline model work, not the application or demo data path, so it does not conflict with DEC-GM-007 or DEC-GM-014. Location was already decided through load zones (DEC-GM-012). Special events were dropped because the Austin, Houston and data.texas.gov endpoints return 200 but hold only stale or regulatory data. TxDOT was dropped because it publishes annual average daily traffic only, with no hourly counts. The keyless Open-Meteo fetcher in alphazede/alphazede-sports at cd3dbaf (services/data_node/fetchers/weather_fetcher.py and fetchers/data_signals.py) may be ported. The OpenWeatherMap client and its OPENWEATHER_API_KEY are not needed. Checks left for Planning and Design: the Open-Meteo free-tier terms for a public repository; the LODES8 RAC file path (same pattern as WAC, not probed); and the Texas Demographic Center direct CSV, which returned 404 and is covered by the Census file instead.",
+      "affects": [
+        "DEC-GM-012",
+        "DEC-GM-016"
+      ],
+      "source": "Owner answers to Scope Definition Q11, 2026-09-25 CDT (verbatim: 'For the ML algorithm we should add weather, on-peak off-peak, events, location, population during peak hours'; 'so we need to get apis for weather I have one in alphazedsports in the gh repo. and other free apis or state of texas data'; answer: Split); keyless source probes 2026-09-25",
+      "recorded_at": "2026-09-26T01:23:55Z"
+    },
+    {
+      "id": "DEC-GM-012",
+      "status": "partially_superseded",
+      "decision": "DEC-GM-012's rule that all P2 items are out no longer applies to intent P2 item 26 (the ML prediction model). Item 26 is now an ML stretch lane that runs in parallel with the other stretch items and follows DEC-GM-017. The phase 1 core list stays as it was, except that three drivers are added to the opportunity score: NWS temperature, the peak/holiday flag and NWS alerts. All other P2 items remain out.",
+      "rationale": "The owner's new ML signal intent reopened item 26. Under DEC-GM-005 and DEC-GM-006, stretch lanes must never block a demoable, non-crashing phase 1.",
+      "superseded_by": "DEC-GM-017",
+      "source": "DEC-GM-017, 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T01:23:55Z"
+    },
+    {
+      "id": "DEC-GM-018",
+      "status": "recorded",
+      "decision": "The owner created the private repository https://github.com/1wgrumph/gridmarket under their personal account and seeded main. GitHub refused a PR-only ruleset on a free private repository with HTTP 403. Until the owner makes the repository public on Sunday, PR-only main is a working convention that all humans and agents must follow. The owner applies the ruleset after the repository is public.",
+      "rationale": "Records the realized state of DEC-GM-011 and the enforcement gap before the public flip. Pushing directly to main is prohibited by convention even though GitHub does not yet enforce it. The public flip remains an owner action, gated on the secret scan and the MIT license (DEC-GM-011, DEC-GM-015).",
+      "amends": "DEC-GM-011",
+      "source": "Owner action relayed by the Orchestrator, 2026-09-25 CDT; GitHub ruleset API response HTTP 403",
+      "recorded_at": "2026-09-26T01:23:55Z"
+    },
+    {
+      "id": "DEC-GM-019",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T01:25:52Z",
+      "source": "Owner in chat, verbatim: 'you can just build the spec its part of the presentation I want to show the judges. add it part of the plan if you half too'",
+      "decision": "Add a Spec lane to the GridMarket plan. It builds (1) the spec template: generated front matter plus the outline, per-section pattern (BLUF; Frame of Who/What/Why/How/When/Where; prose with no word limit; one table or figure when the structural trigger fires; at most 5 requirements per section, bound per feature), 8 table classes T1-T8 and 8 figure classes F1-F8; (2) azdiagram, a Python generator using Graphviz layout for graph classes, draw.io output from Graphviz coordinates, a grid renderer for sequence and timing, and overlap/size lint; (3) the spec-author, spec-diagram and spec-lint skills; (4) GridMarket's own specification written in that template with its figures. The GridMarket specification is a product deliverable in the gridmarket repo, shown to the judges in the demo and presentation. It is outside Bearing's five planning artifacts and requires no bearing-lite change. The lane runs in parallel and must not block the phase 1 demo.",
+      "inputs": "AZHQ journey HQ-SPEC-2026-09-25 decisions DEC-SPEC-004 through DEC-SPEC-007 and DEC-SPEC-010 (outline, section pattern, classes, tooling). Graphviz 2.42.2 and draw.io 31.5.2 are installed on spectre-dev."
     }
   ],
   "stages": {
@@ -881,5 +919,15 @@
       "result": "SHARED_UNDERSTANDING_CONFIRMED",
       "recorded_at": "2026-09-26T01:10:55Z"
     }
-  ]
+  ],
+  "pending_planning_delta": {
+    "reason": "Owner scope additions after Planning and Design dispatch",
+    "decisions": [
+      "DEC-GM-017",
+      "DEC-GM-012 partial supersession",
+      "DEC-GM-018",
+      "DEC-GM-019"
+    ],
+    "action": "Dispatch planning_and_design delta when the running P&D session returns"
+  }
 }
