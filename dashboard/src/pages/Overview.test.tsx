@@ -3,7 +3,7 @@
    dashboard/src/fixtures/overview.json with fetch stubbed (no network).
    The pragma pins jsdom because `make red-green` runs vitest from the repo
    root, where dashboard/vite.config.ts is not auto-loaded. */
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 // @ts-ignore TS2307: Node types are absent from the frozen tsconfig; Vitest resolves this import.
 import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
@@ -60,18 +60,22 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
     render(<Overview />);
     const fresh = signals.filter((s) => !s.stale)[0] as Signal;
     const staleSignal = signals.filter((s) => s.stale)[0] as Signal;
-    expect(await screen.findByText(new RegExp(String(fresh.value).replace(".", "\\.")))).toBeTruthy();
-    expect(document.body.textContent).toMatch(new RegExp(fresh.zone.replace(/^LZ_/, ""), "i"));
-    expect(document.querySelectorAll("time[datetime]").length).toBeGreaterThan(0);
-    expect(document.body.textContent).toMatch(new RegExp(staleSignal.zone.replace(/^LZ_/, ""), "i"));
-    expect(screen.getByText(/stale/i)).toBeTruthy();
+    const panel = await screen.findByRole("region", { name: /across the load zones/i });
+    const freshRow = await within(panel).findByRole("row", { name: new RegExp(fresh.zone.replace(/^LZ_/, ""), "i") });
+    await waitFor(() => {
+      expect(freshRow.textContent).toContain(String(fresh.value));
+      expect(freshRow.querySelector("time[datetime]")).not.toBeNull();
+    });
+    const staleRow = await within(panel).findByRole("row", { name: new RegExp(staleSignal.zone.replace(/^LZ_/, ""), "i") });
+    expect(within(staleRow).getByText(/stale/i)).toBeTruthy();
   });
 
   it("[SEIT-GM-UI-01] renders zone scores", async () => {
     render(<Overview />);
     const top = predictions[0] as Prediction;
-    expect((await screen.findAllByText(new RegExp(top.zone.replace(/^LZ_/, ""), "i"))).length).toBeGreaterThan(0);
-    expect((await screen.findAllByText(new RegExp(String(top.score).replace(".", "\\.")))).length).toBeGreaterThan(0);
+    const panel = await screen.findByRole("region", { name: /across the load zones/i });
+    const row = await within(panel).findByRole("row", { name: new RegExp(top.zone.replace(/^LZ_/, ""), "i") });
+    await waitFor(() => expect(row.textContent).toContain(`${top.score}%`));
   });
 
   it("[SEIT-GM-UI-01] renders provider names without inventing participant counts", async () => {
@@ -89,9 +93,10 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
   it("[SEIT-GM-UI-01] renders activity feed with judge-labelled order", async () => {
     render(<Overview />);
     const judge = activity.find((e) => e.label === "judge") as Activity;
-    expect(await screen.findByText(/judge/i)).toBeTruthy();
-    expect(screen.getByText(new RegExp(judge.symbol))).toBeTruthy();
-    expect(screen.getByText(`${judge.side} ${judge.quantity} @ $${(judge.price_cents / 100).toFixed(2)}`)).toBeTruthy();
+    const panel = await screen.findByRole("region", { name: /exchange tape/i });
+    const judgeItem = (await within(panel).findByText(/^judge$/i)).closest("li") as HTMLElement;
+    expect(judgeItem.textContent).toContain(`${judge.side} ${judge.quantity} @ $${(judge.price_cents / 100).toFixed(2)}`);
+    expect(judgeItem.closest(".tape-group")?.textContent).toContain(judge.symbol);
   });
 
   it("[SEIT-GM-UI-01] participants render providers and mark bots not yet available when /v1/bots is 404", async () => {
@@ -217,8 +222,8 @@ describe("S52a design v2 Overview and rail", () => {
     render(<Overview />);
     const card = await screen.findByRole("region", { name: /next delivery prediction/i });
     const lead = predictions.reduce((best, item) => item.score > best.score ? item : best);
+    await waitFor(() => expect(card.textContent).toContain(String(lead.score)));
     expect(card.textContent?.toLowerCase()).toContain(lead.zone.replace(/^LZ_|^HB_/, "").toLowerCase());
-    expect(card.textContent).toContain(String(lead.score));
     expect(card.textContent).toMatch(/expected value/i);
   });
 
@@ -229,7 +234,7 @@ describe("S52a design v2 Overview and rail", () => {
       const item = within(strip).getByText(label).parentElement;
       expect(item?.textContent?.toLowerCase()).toContain("unavailable");
     }
-    expect(strip.textContent).toContain(String(predictions[0].score));
+    await waitFor(() => expect(strip.textContent).toContain(String(predictions[0].score)));
   });
 
   it("disclosure is one expandable line with the complete AC-GM-UI-02 text", async () => {
@@ -249,6 +254,7 @@ describe("S52a design v2 Overview and rail", () => {
   it("price-chart region uses served trade history without a fabricated forecast", async () => {
     render(<Overview />);
     const panel = await screen.findByRole("region", { name: /the price of flexibility/i });
+    await waitFor(() => expect(panel.getAttribute("aria-busy")).toBe("false"));
     expect(panel.textContent).toMatch(/price|history/i);
     expect(panel.textContent).toMatch(/unavailable/i);
     expect(fetchMock.mock.calls.some(([path]) => String(path).includes("/v1/market/history"))).toBe(true);
@@ -257,13 +263,15 @@ describe("S52a design v2 Overview and rail", () => {
   it("zone table has one row per served zone and scarcity percentages", async () => {
     render(<Overview />);
     const panel = await screen.findByRole("region", { name: /across the load zones/i });
-    const rows = within(panel).getAllByRole("row");
     const zones = new Set([...predictions.map((item) => item.zone), ...signals.map((item) => item.zone)]);
-    expect(rows).toHaveLength(zones.size + 1); // one heading row, one data row per served zone
-    for (const item of predictions) {
-      const row = rows.find((candidate) => candidate.textContent?.toLowerCase().includes(item.zone.replace(/^LZ_|^HB_/, "").toLowerCase()));
-      expect(row?.textContent).toContain(`${item.score}%`);
-    }
+    await waitFor(() => {
+      const rows = within(panel).getAllByRole("row");
+      expect(rows).toHaveLength(zones.size + 1); // one heading row, one data row per served zone
+      for (const item of predictions) {
+        const row = rows.find((candidate) => candidate.textContent?.toLowerCase().includes(item.zone.replace(/^LZ_|^HB_/, "").toLowerCase()));
+        expect(row?.textContent).toContain(`${item.score}%`);
+      }
+    });
   });
 
   it("order book shows spread from the real detail orders shape", async () => {
@@ -279,7 +287,7 @@ describe("S52a design v2 Overview and rail", () => {
   it("bots panel says not yet available while the backend returns 404", async () => {
     render(<Overview />);
     const panel = await screen.findByRole("region", { name: /bots setting the pace/i });
-    expect(panel.textContent).toMatch(/not yet available/i);
+    expect(await within(panel).findByText(/not yet available/i)).toBeTruthy();
     expect(fetchMock.mock.calls.some(([path]) => String(path).includes("/v1/bots"))).toBe(true);
   });
 
@@ -297,7 +305,7 @@ describe("S52a design v2 Overview and rail", () => {
   it("anomalies panel follows status.anomalies rather than activity rejects", async () => {
     render(<Overview />);
     const panel = await screen.findByRole("region", { name: /anomalies|guardrails/i });
-    expect(panel.textContent).toMatch(/no anomalies|none reported/i);
+    expect(await within(panel).findByText(/no anomalies|none reported/i)).toBeTruthy();
     expect(panel.textContent).not.toMatch(/ORDER_TOO_LARGE|contained/i);
   });
 
@@ -305,7 +313,7 @@ describe("S52a design v2 Overview and rail", () => {
     render(<App />);
     const sidebar = await screen.findByRole("complementary");
     expect(sidebar.textContent).toMatch(/ERCOT data/i);
-    expect(sidebar.textContent).toMatch(/published|stale|unavailable/i);
+    expect(await within(sidebar).findByText(/published/i)).toBeTruthy();
     const key = within(sidebar).getByRole("link", { name: /get api key/i });
     expect(key.getAttribute("href")).toBe("#/sandbox");
   });
@@ -326,7 +334,7 @@ describe("S52a design v2 Overview and rail", () => {
 
   it("zone map identifies served zones and offers a static pause state", async () => {
     render(<Overview />);
-    const map = await screen.findByRole("img", { name: /ercot load zones/i });
+    const map = await screen.findByRole("img", { name: new RegExp(`ERCOT load zones.*${String(predictions[0].score).replace(".", "\\.")}`, "i") });
     expect(map.getAttribute("aria-label")).toContain(String(predictions[0].score));
     const pause = screen.getByRole("button", { name: /pause map motion/i });
     fireEvent.click(pause);
