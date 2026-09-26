@@ -195,6 +195,8 @@ def bot_profile(id: str) -> JSONResponse:
 def spawn_bots(request: Request, spawn: SpawnRequest) -> JSONResponse:
     if "CF-Connecting-IP" in request.headers:
         return _error(403, "FORBIDDEN", "admin requests must come from the host loopback")
+    if request.client and request.client.host not in ("127.0.0.1", "::1", "testclient"):
+        return _error(403, "FORBIDDEN", "admin requests must come from the host loopback")
     admin = os.getenv("GRIDMARKET_ADMIN_KEY", "")
     if not admin or request.headers.get("Authorization") != f"Bearer {admin}":
         return _error(401, "UNAUTHENTICATED", "admin key required")
