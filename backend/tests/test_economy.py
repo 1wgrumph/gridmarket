@@ -131,8 +131,8 @@ def test_SEIT_GM_ECON_03_losses_net_worth_dormancy(tmp_path: Path, monkeypatch) 
     rows = (
         ("acct-dormant", 50, 0, False),
         ("acct-cash", 100, 1, False),
-        ("acct-capacity", 50, 2, True),
-        ("acct-employed", 0, 3, False),
+        ("acct-capacity", 50, 2, False),
+        ("acct-employed", 0, 3, True),
     )
     for account_id, cash_cents, index, employed in rows:
         _account(conn, account_id, cash_cents)
