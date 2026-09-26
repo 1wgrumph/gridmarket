@@ -508,3 +508,75 @@ No active assembly blocker remains; the candidate is ready for independent
 phase assurance with the above gaps. **S49-L NOT_RUN**: no PR, main merge,
 branch/worktree deletion, force operation, owner deployment, issue closure,
 credential access, or Co-Authored-By line was introduced.
+
+
+## Attempt 6: CONTRACT_FAILURE — design step blocked before merge
+
+Journey GM-2026-09-25, slice S49, phase 1b, Integration Engineer execution.
+This packet authorizes only the design merge and its S49-D post-step V&V;
+S49-L is not entered. Entry HEAD was
+`de7fb6f393e6388f412dd3bd5c03cf9447aaea48`, branch
+`gridmarket/integration-1b`, with a clean tree (all entry commands exit 0).
+The exact design exit inspected was
+`bb097f81ca002444d321f3413fb72a0ceffb9a25`.
+
+### Pre-merge blocker
+
+The frozen-file comparison exits **1** and identifies two incoming changes:
+
+- `dashboard/src/api.ts`: additional response types and `MarketStatus.anomalies`.
+- `dashboard/src/hooks.ts`: shared polling implementation and typed activity/signals.
+
+Both changes originate in incoming design commit `b993446`; they are not merely
+unrelated differences between standalone lane trees. `CONTRACTS.md` is unchanged
+(scoped diff exit **0**), with no incoming dated amendment. The execution packet
+explicitly prohibits frozen-file changes and requires `CONTRACT_FAILURE` instead.
+No merge was attempted; **design merge SHA: none**. No revert is needed and no
+product or test content was edited. Return this blocker to the coordinator/design
+lane for contract disposition before redispatch; no contract amendment is made here.
+
+Evidence root: `/tmp/gm-evidence/P1b/attempt-6/`.
+`design-preflight.json` records commands, exact SHAs and exits;
+`design-head.log`, `design-status.log`, `design-branch.log`,
+`design-frozen.log`, `design-incoming.log`, and `design-contracts.log`
+contain their outputs.
+
+| Post-step procedure | Exit | Evidence/disposition |
+|---|---|---|
+| CMD-TEST-CONTRACTS | NOT_RUN | `design-preflight.json`: blocked before merge |
+| CMD-TEST-ALL | NOT_RUN | same |
+| CMD-TEST-DASH | NOT_RUN | same |
+| CMD-SMOKE (`gm-smoke-integration:18000`) | NOT_RUN | same; no stack created |
+| PROC-ASSEMBLY | No aggregate exit; blocked | frozen-file constituent exit 1, `design-frozen.log` |
+
+These are not green verification receipts. Attempt-5 gate results do not prove
+the unmerged design candidate. This evidence-only commit follows `de7fb6f`;
+S49-A through S49-D history and product content remain intact. Push is **NOT_RUN**
+because this packet permits it on green only. The coordinator-owned
+`scratchpad/ops/candidates/1b` is untouched; no phase candidate is promoted.
+
+### Pending actions, gaps and risks
+
+- Owner-run `PROC-ERCOT-LIVE-CHECK` and `PROC-ACCEPT-P1` / `AC-GM-ACC-01`
+  remain pending and were not performed; Worker deployment remains pending.
+- `S52b/S53` anomalies-panel row-shape verification against the real
+  `status.anomalies` shape is **DEFERRED to the market2 step**.
+- Spec S21 remains **DEFERRED to S12-E**. Pages-v2 and market2 assembly steps
+  remain outstanding. Attempt-5 residual risks are retained, not revalidated.
+- `BRAN_UNAVAILABLE`: no native policy; Git and repository evidence used.
+- Frozen profile/settings are not reloaded or amended. Prior binding digest
+  `14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`
+  is retained by reference to attempt 5. Selected Integration Engineer route:
+  Codex CLI / GPT-6 Astra / high; no model or harness substitution.
+- `review.coverage_assist`: retained enabled, required=false, OpenCodeReview
+  delegation backend; **not_run**, this is assembly preflight, not code review.
+  Prior availability receipt is not a fresh backend run. Independent review,
+  browser review and phase assurance remain pending.
+- `deterministic_verification.reverify`: retained enabled, conditional Rust ELF
+  backend; **not applicable — no Rust/native compiled binary claim**.
+  No ordinary gate is substituted for Reverify.
+
+**S49-L NOT_RUN.** No PR, main merge, branch deletion, force operation,
+owner runtime/deployment action, issue closure, credential access or
+Co-Authored-By line. The active blocker is the incoming frozen-file delta;
+this record does not waive it or establish independent assurance.
