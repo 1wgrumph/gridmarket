@@ -30,6 +30,7 @@ _limits: dict[tuple[str, int], list[float]] = {}
 _roster: list[dict[str, Any]] = []
 _roster_at: float | None = None
 _roster_url: str | None = None
+_product = FALLBACK_PRODUCT_ID
 _backoff_until: float = 0.0
 _nonce = itertools.count()
 
@@ -39,6 +40,29 @@ def bot_key(index: int, secret: str | None = None) -> str:
     raw = (secret if secret is not None else os.getenv("GRIDMARKET_BOT_SECRET", "")).encode()
     digest = hmac.new(raw, f"bot:{index}".encode(), hashlib.sha256).digest()
     return "gm_" + base64.urlsafe_b64encode(digest).decode("ascii")[:32]
+
+
+def _sdk_status(exc: BaseException) -> int | None:
+    """HTTP status of a ``gridmarket.GridMarketError``, else None.
+
+    The SDK is imported lazily: this module is also imported by the server
+    process, where the SDK package is not installed.
+    """
+    try:
+        import gridmarket
+    except ImportError:
+        return None
+    error = getattr(gridmarket, "GridMarketError", None)
+    if isinstance(error, type) and isinstance(exc, error):
+        return int(exc.status)
+    return None
+
+
+def _note_status(index: int, status: int, now: float) -> None:
+    global _backoff_until
+    if status == 423:
+        logger.warning("bot %d saw MARKET_HALTED; backing off", index)
+        _backoff_until = now + BACKOFF_S
 
 
 def submit(index: int, client: Any, clock: Any, order: dict[str, Any]) -> Any | None:
@@ -57,21 +81,36 @@ def submit(index: int, client: Any, clock: Any, order: dict[str, Any]) -> Any | 
     except httpx.HTTPError as exc:
         logger.warning("bot %d order failed: %s", index, exc)
         return None
+    except Exception as exc:
+        status = _sdk_status(exc)
+        if status is None:
+            raise
+        _note_status(index, status, now)
+        return None
     if isinstance(placed, dict) and placed.get("status") == 423:
         _note_status(index, 423, now)
         return None
     return placed
 
 
-def _note_status(index: int, status: int, now: float) -> None:
-    global _backoff_until
-    if status == 423:
-        logger.warning("bot %d saw MARKET_HALTED; backing off", index)
-        _backoff_until = now + BACKOFF_S
+def _fetch_product_id(base_url: str) -> str:
+    import gridmarket
+
+    try:
+        products = gridmarket.Client(base_url).market()
+    except (httpx.HTTPError, ValueError):
+        return FALLBACK_PRODUCT_ID
+    except Exception as exc:
+        if _sdk_status(exc) is None:
+            raise
+        return FALLBACK_PRODUCT_ID
+    if isinstance(products, list) and products and isinstance(products[0], dict):
+        return str(products[0].get("id", FALLBACK_PRODUCT_ID))
+    return FALLBACK_PRODUCT_ID
 
 
 def _roster_now(base_url: str, now: float) -> list[dict[str, Any]]:
-    global _roster, _roster_at, _roster_url
+    global _roster, _roster_at, _roster_url, _product
     if (
         _roster_url != base_url
         or _roster_at is None
@@ -79,20 +118,9 @@ def _roster_now(base_url: str, now: float) -> list[dict[str, Any]]:
         or now - _roster_at >= POLL_S
     ):
         _roster = httpx.get(f"{base_url}/v1/bots", timeout=5).json()
+        _product = _fetch_product_id(base_url)
         _roster_at, _roster_url = now, base_url
     return _roster
-
-
-def _product_id(base_url: str) -> str:
-    import gridmarket
-
-    try:
-        products = gridmarket.Client(base_url).market()
-    except (httpx.HTTPError, ValueError):
-        return FALLBACK_PRODUCT_ID
-    if isinstance(products, list) and products and isinstance(products[0], dict):
-        return str(products[0].get("id", FALLBACK_PRODUCT_ID))
-    return FALLBACK_PRODUCT_ID
 
 
 def step_all(base_url: str, clock: Any) -> int:
@@ -107,14 +135,13 @@ def step_all(base_url: str, clock: Any) -> int:
     except httpx.HTTPError as exc:
         logger.warning("bot roster poll failed: %s", exc)
         return 0
-    product_id = _product_id(base_url)
     placed = 0
     for row in rows:
         if row.get("dormant"):
             continue
         index = int(row["bot_index"])
         side = "sell" if row.get("bot_type") in SELL_TYPES else "buy"
-        order = {"product_id": product_id, "side": side, "quantity": 1, "price_cents": 10}
+        order = {"product_id": _product, "side": side, "quantity": 1, "price_cents": 10}
         if submit(index, gridmarket.Client(base_url, bot_key(index)), clock, order) is not None:
             placed += 1
     return placed
@@ -130,7 +157,10 @@ def main() -> None:  # pragma: no cover - service entry point
     logger.info("bot service starting with master seed %s", os.getenv("GRIDMARKET_BOT_MASTER_SEED"))
     clock = _SystemClock()
     while True:
-        step_all(base_url, clock)
+        try:
+            step_all(base_url, clock)
+        except Exception:
+            logger.exception("bot loop pass failed")
         time.sleep(30)
 
 
