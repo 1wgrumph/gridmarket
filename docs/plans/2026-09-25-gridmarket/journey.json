@@ -441,6 +441,18 @@
         "DEC-GM-023",
         "CONF-GM-PHASE-PLACEMENT"
       ]
+    },
+    {
+      "id": "DEC-GM-039",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T04:08:25Z",
+      "source": "Owner in chat: 'We are about to do most of these phases in parrallel ... IF we create the skeleton and already tell the agents what the name of variables and headers will be it should be an easy integration. We should have this done by the evening'",
+      "decision": "Contract-first parallel build. Wave 1 (S01, the skeleton) freezes every shared name before any feature lane starts: module and file layout, Python types and dataclasses, API routes, request and response schemas and field names, HTTP headers (Authorization, Idempotency-Key, rate-limit headers), event and ledger entry types, bot profile schema, check and router schema, MCP tool names and arguments, the Worker snapshot contract, and dashboard page routes and data hooks. These live as code stubs plus a CONTRACTS.md, and any change is a recorded amendment. After wave 1, phases 1a, 1b, 2 and stretch build in parallel lanes against the frozen contracts, each in its own worktree, with concurrency limited only by independent write sets and route capacity rather than phase order. Integration becomes contract-conformance merges. Per-phase review, test and integration assurance (DEC-GM-038) run as each phase's lanes finish. Target: all feature lanes merged by Sat 2026-09-26 evening CDT; the user guide and onboarding follow; freeze Sun 07:00.",
+      "amends": [
+        "DEC-GM-025",
+        "DEC-GM-038",
+        "CONF-GM-PHASE-PLACEMENT"
+      ]
     }
   ],
   "stages": {
