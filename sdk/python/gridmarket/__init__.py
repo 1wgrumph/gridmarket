@@ -78,12 +78,13 @@ class Client:
         key = idempotency_key or str(uuid.uuid4())
         return self.request("POST", "/v1/orders", order, {"Idempotency-Key": key})
 
-    def buy(self, product_id: str, quantity: int, price_cents: int) -> Any:
-        """`product_id` may be a product id or the `FLEX-<zone>-<HH>` alias."""
+    def buy(self, product_id: str, quantity: int, price_cents: int = 500) -> Any:
+        """Buy by id or alias; omitted price caps the limit at 500 cents/credit."""
         order = {"product_id": product_id, "side": "buy", "quantity": quantity}
         return self.place_order({**order, "price_cents": price_cents})
 
-    def sell(self, product_id: str, quantity: int, price_cents: int) -> Any:
+    def sell(self, product_id: str, quantity: int, price_cents: int = 0) -> Any:
+        """Sell by id or alias; omitted price permits fills down to zero cents."""
         order = {"product_id": product_id, "side": "sell", "quantity": quantity}
         return self.place_order({**order, "price_cents": price_cents})
 

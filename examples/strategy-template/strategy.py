@@ -14,7 +14,7 @@ import os
 import time
 import uuid
 
-from gridmarket import Client
+from gridmarket import Client, GridMarketError
 
 MAX_ORDER = 50  # credits per order (engine rejects more with ORDER_TOO_LARGE)
 MAX_POSITION = 200  # abs(net credits) per product (POSITION_LIMIT)
@@ -74,12 +74,9 @@ def cycle(client):
         }
         try:
             result = client.place_order(order, idempotency_key=str(uuid.uuid4()))
-        except Exception as exc:  # the SDK raises on any non-2xx response
-            response = getattr(exc, "response", None)
-            if response is None:
-                raise
-            print(f"rejected {product['id']}: {response.status_code} {response.text}")
-            if response.status_code == 429:  # RATE_LIMITED: wait for the next cycle
+        except GridMarketError as exc:
+            print(f"rejected {product['id']}: {exc.status} {exc.code}: {exc.message}")
+            if exc.status == 429:  # RATE_LIMITED: wait for the next cycle
                 return
             continue
         held[product["id"]] = held.get(product["id"], 0) + quantity
@@ -97,7 +94,11 @@ def main():
         os.environ["GRIDMARKET_API_KEY"],
     )
     while True:
-        cycle(client)
+        try:
+            cycle(client)
+        except GridMarketError as exc:
+            # Reads can also be rate limited; preserve the normal cycle backoff.
+            print(f"rejected cycle: {exc.status} {exc.code}: {exc.message}")
         if args.once:
             return
         time.sleep(INTERVAL)

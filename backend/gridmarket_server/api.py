@@ -3,6 +3,7 @@
 import asyncio
 import hashlib
 import hmac
+import ipaddress
 import json
 import math
 import os
@@ -14,7 +15,7 @@ from typing import Literal
 from fastapi import APIRouter, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from starlette.exceptions import HTTPException
 from starlette.middleware import Middleware
 
@@ -38,20 +39,34 @@ def within(path: str, prefixes: tuple[str, ...]) -> bool:
 
 
 def address(request: Request) -> str:
-    return request.headers.get(
+    host = request.headers.get(
         "CF-Connecting-IP", request.client.host if request.client else "unknown"
     )
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return host
+    if isinstance(ip, ipaddress.IPv6Address):
+        if ip.ipv4_mapped:
+            return str(ip.ipv4_mapped)
+        return str(ipaddress.ip_network(f"{ip}/64", strict=False))
+    return str(ip)
 
 
 def admin_guard(request: Request) -> None:
+    # Reject remote peers before touching the secret: no key oracle remotely.
+    if (
+        "CF-Connecting-IP" in request.headers
+        or not request.client
+        or request.client.host not in ("127.0.0.1", "::1", "testclient")
+    ):
+        market.reject("FORBIDDEN", 403)
     configured = os.getenv("GRIDMARKET_ADMIN_KEY", "")
     authorization = request.headers.get("Authorization", "")
-    if not configured or not hmac.compare_digest(authorization, "Bearer " + configured):
+    if not configured or not hmac.compare_digest(
+        authorization.encode(), ("Bearer " + configured).encode()
+    ):
         market.reject("UNAUTHENTICATED", 401)
-    if "CF-Connecting-IP" in request.headers:
-        market.reject("FORBIDDEN", 403)
-    if request.client and request.client.host not in ("127.0.0.1", "::1", "testclient"):
-        market.reject("FORBIDDEN", 403)
 
 
 def error_response(status: int, code: str, message: str | None = None, headers=None):
@@ -80,7 +95,9 @@ async def validation_error(request: Request, exc: RequestValidationError):
         market.observe_rejection(
             exc, getattr(request.state, "account_id", None), "VALIDATION_ERROR"
         )
-    return error_response(422, "VALIDATION_ERROR")
+    problem = exc.errors()[0]
+    field = ".".join(str(part) for part in problem["loc"])
+    return error_response(422, "VALIDATION_ERROR", f"{field}: {problem['msg']}")
 
 
 class Boundary:
@@ -89,6 +106,26 @@ class Boundary:
         # ponytail: one-process token buckets; use a shared store for multiple API workers.
         self.buckets: dict[str, tuple[float, float]] = {}
         self.pruned_at = time.monotonic()
+
+    def limit(self, identity, rate, burst, headers):
+        now = time.monotonic()
+        if now - self.pruned_at > 60:
+            self.buckets = {
+                key: value for key, value in self.buckets.items() if now - value[1] < 60
+            }
+            self.pruned_at = now
+        tokens, prior = self.buckets.get(identity, (float(burst), now))
+        tokens = min(burst, tokens + (now - prior) * rate)
+        headers.update(
+            {
+                "X-RateLimit-Limit": str(rate),
+                "X-RateLimit-Remaining": str(max(0, int(tokens - 1))),
+            }
+        )
+        if tokens < 1:
+            headers["Retry-After"] = str(max(1, math.ceil((1 - tokens) / rate)))
+            market.reject("RATE_LIMITED", 429)
+        self.buckets[identity] = (tokens - 1, now)
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -100,8 +137,10 @@ class Boundary:
         cors = public and bool(origin) and origin == os.getenv("GRIDMARKET_CORS_ORIGIN")
         headers = {}
         try:
-            rate = burst = 0
-            identity = ""
+            # Check before any credential lookup. Valid account keys refund this
+            # token and use their own bucket; anonymous traffic shares the IP cap.
+            ip_identity = "ip:" + address(request)
+            self.limit(ip_identity, 10, 20, headers)
             if path.startswith("/v1/admin/"):
                 admin_guard(request)
             elif within(path, PRIVATE):
@@ -121,27 +160,9 @@ class Boundary:
                     ).fetchone()
                 request.state.account_id = account_id
                 rate, burst = (5, 10) if sandbox else (20, 40)
-                identity = "key:" + digest
-            elif public:
-                rate, burst = 10, 20
-                identity = "ip:" + address(request)
-            if rate:
-                now = time.monotonic()
-                if now - self.pruned_at > 60:
-                    self.buckets = {
-                        key: value for key, value in self.buckets.items() if now - value[1] < 60
-                    }
-                    self.pruned_at = now
-                tokens, prior = self.buckets.get(identity, (float(burst), now))
-                tokens = min(burst, tokens + (now - prior) * rate)
-                headers = {
-                    "X-RateLimit-Limit": str(rate),
-                    "X-RateLimit-Remaining": str(max(0, int(tokens - 1))),
-                }
-                if tokens < 1:
-                    headers["Retry-After"] = str(max(1, math.ceil((1 - tokens) / rate)))
-                    market.reject("RATE_LIMITED", 429)
-                self.buckets[identity] = (tokens - 1, now)
+                tokens, prior = self.buckets[ip_identity]
+                self.buckets[ip_identity] = (tokens + 1, prior)
+                self.limit("key:" + digest, rate, burst, headers)
         except HTTPException as exc:
             response = await http_error(request, exc)
             response.headers.update(headers)
@@ -202,7 +223,7 @@ class OrderRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     product_id: str
     side: Literal["buy", "sell"]
-    quantity: StrictInt
+    quantity: StrictInt = Field(ge=1)
     price_cents: StrictInt
 
 
@@ -211,6 +232,8 @@ def place_order(request: Request, body: OrderRequest) -> dict:
     key = request.headers.get("Idempotency-Key")
     if not key:
         market.reject("IDEMPOTENCY_KEY_REQUIRED", 400)
+    if len(key) > 128:
+        market.reject("VALIDATION_ERROR", 422, "Idempotency-Key must be at most 128 characters")
     account_id = request.state.account_id
     payload = body.model_dump()
     digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
@@ -390,7 +413,7 @@ def providers() -> list[dict]:
 def sandbox(request: Request, body: dict) -> dict:
     label = body.get("label", "Sandbox")
     if not isinstance(label, str) or re.fullmatch(r"[A-Za-z0-9 _-]{1,24}", label) is None:
-        market.reject("VALIDATION_ERROR")
+        market.reject("VALIDATION_ERROR", 422, "label must be 1–24 letters, digits, spaces, _ or -")
     client_address = address(request)
     hashed = hashlib.sha256(client_address.encode()).hexdigest()
     with market.connection(write=True) as db:
