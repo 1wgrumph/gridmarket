@@ -930,6 +930,14 @@
       "decided_by": "Orchestrator (delegate, planning owner)",
       "decision": "Phase 2 Test Engineer REPAIRABLE_FAILURE dispositions, all in the one repair round: ATE-P2-01 health mutation 61.22% -> Test Implementer adds health tests to reach >= 70%; ATE-P2-02 lint (already in scope); ATE-P2-03 no change: DEC-GM-090's 'assertion lines stay' meant comparators, expected codes and state checks, and the price argument inside place(...) is test data; ATE-P2-04 the gate reruns the observer with --baseline = frozen copy of the review's screenshots (ops/vr/review-1290402) so changed pages are judged; ATE-P2-05 folded into F1 with a test that derives the Providers fixture shape from real backend responses. Posted as DIR-P2-15.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-100",
+      "decided_at": "2026-09-26T15:05:00-05:00",
+      "decided_by": "Owner request + Orchestrator (delegate)",
+      "decision": "Integrate Jordan Hill's God's Eye commit (origin/jordaaan 3732b0f: EIA-860 plants, node drill-down, decision-map doc) as new slice S60 on lane godseye, landing with the stretch assembly. Fairness rules: his commit merges unchanged (hash, author, message); our changes are separate follow-up commits (conflict resolution keeping both sides, /api/node settlement-point allowlist, Worker tests); nothing he added is deleted without the owner. Open owner decisions: whether docs/ercot-jev-map.html (names Jev and jev-gateway) is published with the public repo, and whether the one-off scripts/add-node-route.py stays.",
+      "owner_quote": "we have to be fair and a team environment",
+      "reversible": true
     }
   ],
   "stages": {
