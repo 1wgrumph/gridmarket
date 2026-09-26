@@ -38,3 +38,19 @@ export function leadPrediction(predictions, zone) {
   return predictions.filter(p => p?.zone === zone && Number.isFinite(p.score) && typeof p.level === "string" && Number.isFinite(Date.parse(p.delivery_hour)))
     .sort((a, b) => Date.parse(a.delivery_hour) - Date.parse(b.delivery_hour))[0] ?? null;
 }
+
+export function isBattery(plant) {
+  return plant.prim === "storage" || (plant.units ?? []).some(unit => unit.cat === "storage" || unit.pm === "BA" || unit.stor);
+}
+
+export function latestESR(signals) {
+  if (!Array.isArray(signals)) return null;
+  return signals.filter(s => s?.report_id === "ESR" && s.zone === "ERCOT" && Number.isFinite(Date.parse(s.fetched_at)))
+    .sort((a, b) => Date.parse(b.fetched_at) - Date.parse(a.fetched_at))[0] ?? null;
+}
+
+export function formatESR(signal) {
+  if (!signal || signal.report_id !== "ESR" || signal.zone !== "ERCOT" || signal.unit !== "MW" || signal.stale !== false || !Number.isFinite(signal.value) || !Number.isFinite(Date.parse(signal.fetched_at))) return "Battery data unavailable";
+  const mw = Math.abs(signal.value).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return `${mw} MW ${signal.value < 0 ? "discharging" : signal.value > 0 ? "charging" : "· idle"}`;
+}

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { countyToZone, tradeLink, leadPrediction } from "../public/godseye/geo.js";
+import { countyToZone, tradeLink, leadPrediction, isBattery, latestESR, formatESR } from "../public/godseye/geo.js";
 
 const plants = JSON.parse(readFileSync(new URL("../public/data/tx_plants.json", import.meta.url))).plants;
 
@@ -29,4 +29,28 @@ test("S61 #12 selects the zone's lead delivery hour independent of response orde
   assert.equal(leadPrediction([first], "LZ_WEST"), null);
   assert.equal(leadPrediction(null, "LZ_NORTH"), null);
   assert.equal(leadPrediction([{ ...first, score: null }], "LZ_NORTH"), null);
+});
+
+const esrFixture = JSON.parse(readFileSync(new URL("./fixtures/esr.json", import.meta.url)));
+const signals = esrFixture.data.map(([time, value, published]) => ({ report_id: "ESR", zone: "ERCOT", interval_start: time, interval_minutes: 0, value, unit: "MW", published_at: published, fetched_at: published, stale: false }));
+
+test("S61 #13 ESR formatting distinguishes charging, discharging, zero and unavailable", () => {
+  assert.equal(formatESR(signals[0]), "812.5 MW charging");
+  assert.equal(formatESR(signals[2]), "120.75 MW discharging");
+  assert.equal(formatESR({ ...signals[0], value: 0 }), "0 MW · idle");
+  for (const signal of [null, { ...signals[0], value: null }, { ...signals[0], stale: true }, { ...signals[0], unit: "MWh" }]) {
+    assert.equal(formatESR(signal), "Battery data unavailable");
+  }
+});
+
+test("S61 #13 latest ESR uses the system-wide signal and fetched time", () => {
+  assert.deepEqual(latestESR([signals[2], { ...signals[2], report_id: "OTHER" }, signals[0], { ...signals[2], zone: "LZ_NORTH" }]), signals[2]);
+  assert.equal(latestESR([]), null);
+  assert.equal(latestESR(null), null);
+});
+
+test("S61 #13 batteries include hybrid plants with storage units", () => {
+  assert.equal(isBattery(plants.find(p => p.code === 67737)), true);
+  assert.equal(isBattery(plants.find(p => p.code === 8063)), true);
+  assert.equal(isBattery(plants.find(p => p.prim === "nuclear")), false);
 });

@@ -125,6 +125,8 @@ table.units td.n{font-family:var(--font-mono);text-align:right;white-space:nowra
 .dash:hover{text-decoration:underline}
 [hidden]{display:none!important}
 .market{left:24px;bottom:84px;width:300px;max-height:34vh;overflow:auto;padding:12px}
+.rail .market{position:static;width:auto;max-height:none;overflow:visible}
+.rail .livebox .note,#zoneMarket .note{color:var(--text-secondary)}
 .mf-title{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-secondary);margin:2px 0 6px}
 .mf-strip,.mf-alerts{list-style:none;margin:0 0 10px;padding:0;font-size:12px}
 .mf-strip li,.mf-alerts li{padding:5px 0;border-bottom:1px solid var(--glass-border)}
@@ -144,7 +146,7 @@ table.units td.n{font-family:var(--font-mono);text-align:right;white-space:nowra
 #tip{position:absolute;z-index:6;pointer-events:none;display:none;font:500 11px var(--font-mono);background:rgba(10,10,15,.88);border:1px solid var(--glass-border);border-radius:8px;padding:6px 8px;white-space:nowrap}
 #tip b{color:var(--accent);font-weight:500}
 
-button:focus-visible,input:focus-visible{outline:2px solid var(--text-primary);outline-offset:2px}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--text-primary);outline-offset:2px}
 @media (max-width:900px){
   .readout{display:none}
   .rail{top:auto;bottom:84px;left:12px;right:12px;width:auto;max-height:32vh}
@@ -173,6 +175,12 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--text-primary);o
 <div class="hud rail glass" id="rail">
   <div class="search"><span class="eyebrow">⌕</span><input id="q" type="search" placeholder="Find a plant, operator or county" autocomplete="off" /></div>
   <div class="results" id="results"></div>
+  <section class="livebox" aria-label="Texas batteries charging now">
+    <div class="lbl">Texas batteries charging now</div>
+    <div id="batteryReading" aria-live="polite">Battery data unavailable</div>
+    <div class="note">ERCOT system-wide ESR · refreshed every 5 minutes</div>
+  </section>
+  <button class="pill" id="batteriesOnly" aria-pressed="false">Batteries only · includes hybrids</button>
   <div class="eyebrow">// power plants by resource</div>
   <div class="legend" id="legend"></div>
   <div class="slider">
@@ -197,7 +205,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--text-primary);o
 <div class="hud market glass" id="market" hidden aria-label="Market activity and router checks (baseline rules)"></div>
 
 <script type="module">
-import { countyToZone, tradeLink, leadPrediction } from "./geo.js";
+import { countyToZone, tradeLink, leadPrediction, isBattery, latestESR, formatESR } from "./geo.js";
 
 const fmt=(n,d=0)=>n==null||!isFinite(n)?'—':Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 const money=n=>n==null||!isFinite(n)?'—':(n<0?'−$':'$')+fmt(Math.abs(n),2);
@@ -294,7 +302,7 @@ Object.entries(ZONES).forEach(([zone,[lon,lat]])=>{
 
 /* ---------- power plants (EIA-860) ---------- */
 let PLANTS=[], META=null, selected=null;
-const filt={types:new Set(ORDER),minIdx:2,ercotOnly:true,labels:true};
+const filt={batteriesOnly:false,types:new Set(ORDER),minIdx:2,ercotOnly:true,labels:true};
 const MINS=[0,5,10,25,50,100,250,500];
 const plantEnt=new Map();
 
@@ -315,10 +323,13 @@ function addPlants(){
 function applyFilter(){
   const min=MINS[filt.minIdx]; let n=0, mw=0;
   for(const p of PLANTS){ const e=plantEnt.get(p.code);
-    const on=filt.types.has(p.prim)&&p.mw>=min&&(!filt.ercotOnly||p.ba==='ERCO');
+    const on=(filt.batteriesOnly?isBattery(p):filt.types.has(p.prim))&&p.mw>=min&&(!filt.ercotOnly||p.ba==='ERCO');
     e.show=on; e.label.show=filt.labels; if(on){n++;mw+=p.mw;} }
   document.getElementById('shown').textContent=`${fmt(n)} · ${fmt(mw/1000,1)} GW`;
   document.getElementById('minmwv').textContent=min?`${min} MW`:'all';
+  const batteryButton=document.getElementById('batteriesOnly');
+  batteryButton.classList.toggle('on',filt.batteriesOnly);
+  batteryButton.setAttribute('aria-pressed',String(filt.batteriesOnly));
   renderLegend();
 }
 
@@ -327,8 +338,9 @@ function renderLegend(){
   const min=MINS[filt.minIdx]; const agg={}; ORDER.forEach(t=>agg[t]={n:0,mw:0});
   PLANTS.forEach(p=>{ if(p.mw>=min&&(!filt.ercotOnly||p.ba==='ERCO')){agg[p.prim].n++;agg[p.prim].mw+=p.mw;} });
   document.getElementById('legend').innerHTML=ORDER.filter(t=>agg[t].n).map(t=>`<button class="lg ${filt.types.has(t)?'':'off'}" data-t="${t}" aria-pressed="${filt.types.has(t)}"><img src="${ICON[t]}" alt=""><span>${TYPES[t].label}</span><span class="n"><b>${fmt(agg[t].mw/1000,1)} GW</b>${fmt(agg[t].n)} plants</span></button>`).join('');
-  document.querySelectorAll('.lg').forEach(b=>b.onclick=()=>{ const t=b.dataset.t; filt.types.has(t)?filt.types.delete(t):filt.types.add(t); applyFilter(); });
+  document.querySelectorAll('.lg').forEach(b=>b.onclick=()=>{ const t=b.dataset.t; filt.batteriesOnly=false; filt.types.has(t)?filt.types.delete(t):filt.types.add(t); applyFilter(); });
 }
+document.getElementById('batteriesOnly').onclick=()=>{filt.batteriesOnly=!filt.batteriesOnly;applyFilter();};
 document.getElementById('minmw').oninput=e=>{filt.minIdx=+e.target.value;applyFilter();};
 document.getElementById('ercotOnly').onclick=e=>{filt.ercotOnly=!filt.ercotOnly;e.currentTarget.classList.toggle('on',filt.ercotOnly);applyFilter();};
 document.getElementById('labelsBtn').onclick=e=>{filt.labels=!filt.labels;e.currentTarget.classList.toggle('on',filt.labels);applyFilter();};
@@ -395,15 +407,24 @@ async function marketGet(path){
   return r.json();
 }
 async function refreshMarket(){
+  let esr=null;
+  marketUrl='';
   try{
     const cfg=await fetch('/api/config',{signal:AbortSignal.timeout(20000)}).then(r=>{if(!r.ok) throw new Error('Config unavailable');return r.json();});
     const link=tradeLink(cfg.MARKET_URL,'LZ_NORTH');
     marketUrl=link?link.split('#')[0].replace(/\/+$/,''):'';
-    predictions=marketUrl?await marketGet('/v1/predictions'):null;
-    if(!Array.isArray(predictions)) predictions=null;
+    const [forecast,signals]=marketUrl?await Promise.all([
+      marketGet('/v1/predictions').catch(()=>null),
+      marketGet('/v1/signals').catch(()=>null)
+    ]):[null,null];
+    predictions=Array.isArray(forecast)?forecast:null;
+    esr=latestESR(signals);
   }catch{predictions=null;}
   const box=document.getElementById('zoneMarket');
   if(box&&selected) box.innerHTML=zoneHTML(selected);
+  const reading=formatESR(esr);
+  document.getElementById('batteryReading').innerHTML=esc(reading)+
+    (reading==='Battery data unavailable'?'':`<div class="note">Fetched <time datetime="${esc(esr.fetched_at)}">${esc(new Date(esr.fetched_at).toISOString())}</time></div>`);
 }
 
 /* ---------- plant drill-down ---------- */
@@ -523,6 +544,7 @@ async function loadNode(p){
 function selectPlant(code,fly=true){
   const p=PLANTS.find(x=>x.code===code); if(!p) return;
   selected=p;
+  if(filt.batteriesOnly&&!isBattery(p)){filt.batteriesOnly=false;applyFilter();}
   if(!filt.types.has(p.prim)||(filt.ercotOnly&&p.ba!=='ERCO')||p.mw<MINS[filt.minIdx]){ filt.types.add(p.prim); if(p.ba!=='ERCO'){filt.ercotOnly=false;document.getElementById('ercotOnly').classList.remove('on');} if(p.mw<MINS[filt.minIdx]){filt.minIdx=0;document.getElementById('minmw').value=0;} applyFilter(); }
   intel.innerHTML=plantHTML(p); intel.scrollTop=0;
   document.getElementById('back').onclick=()=>{selected=null;renderSystem();history.replaceState(null,'',location.pathname);};
@@ -582,6 +604,8 @@ if(window.gsap&&!reduce) gsap.from('.hud',{opacity:0,y:-8,stagger:.08,duration:.
 </script>
 <script type="module">
 import { mountFeed } from "/market-feed.js";
+// Keep the activity feed in the scrollable rail so it cannot cover the controls.
+document.getElementById("rail").append(document.getElementById("market"));
 mountFeed(document.getElementById("market"), document.getElementById("dashboard"));
 </script>
 </body>
