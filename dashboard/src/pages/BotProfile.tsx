@@ -1,1 +1,96 @@
-export default function BotProfile({ id }: { id: string }) { return <section><h1>Bot profile</h1><p>Bot {id} is being connected.</p></section>; }
+import type { ReactNode } from 'react';
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import Panel from '../components/Panel';
+import { useBotProfile } from '../hooks';
+import type { Bot } from '../api';
+import { FeedBody, PageHeading, Stale } from './Market';
+
+/** Contract Bot fields plus the profile extras; extras may be absent, so they render as "—". */
+type Profile = Bot & Partial<{
+  blend: Record<string, number>; trades: number; loss_share: number; worst_loss: number;
+  traits: { 'risk appetite'?: number; risk_appetite?: number; patience?: number };
+  household: { batteries: number[]; zone: string; reserve_pct: number; schedule: number[] };
+  employed: boolean; job: string | null; pay: number; deposits: number;
+  balance_history: { at: string; balance: number }[];
+}>;
+
+const pct = (p?: number) => p === undefined ? '—' : `${Math.round(p * 100)}%`;
+const usd = (n?: number) => n === undefined ? '—' : n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+const day = (iso: string) => iso.slice(5, 16).replace('T', ' ');
+const tick = { fill: 'var(--muted)', fontSize: 11 };
+const tooltip = { background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', fontSize: 12, borderRadius: 'var(--r-2)' };
+
+function Facts({ rows }: { rows: [string, ReactNode][] }) {
+  return <dl className="facts">
+    {rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+  </dl>;
+}
+
+export default function BotProfile({ id }: { id: string }) {
+  const profile = useBotProfile(id);
+  const b = profile.data as Profile | null;
+  const meta = <><Stale feed={profile}/><span>SIMULATED</span></>;
+
+  return <>
+    <PageHeading eyebrow="05 / BOT POPULATION" title={`Bot profile · ${id}`}>
+      <a className="back-link" href="#/bots">All bots</a>
+    </PageHeading>
+    {!b ? <div className="page-grid"><Panel title="Profile" index="01" className="span-all" busy={profile.loading}>
+      <FeedBody feed={profile} unavailable="Bot profile not yet available"><div className="empty">No profile.</div></FeedBody>
+    </Panel></div> : <>
+      <div className="page-grid thirds">
+        <Panel title="Traits" index="01" meta={meta}>
+          <Facts rows={[['Risk appetite', pct(b.traits?.['risk appetite'] ?? b.traits?.risk_appetite)], ['Patience', pct(b.traits?.patience)]]}/>
+          <h3 className="sub-head">Strategy blend</h3>
+          <Facts rows={Object.entries(b.blend ?? {}).map(([type, w]) => [type, pct(w)])}/>
+        </Panel>
+        <Panel title="Economy" index="02" meta={meta}>
+          <Facts rows={[
+            ['Employment', b.employed === undefined ? '—' : b.employed ? b.job ?? 'employed' : 'unemployed'],
+            ['Pay per period', usd(b.pay)],
+            ['Deposits', usd(b.deposits)],
+            ['Provider', b.provider_id],
+          ]}/>
+        </Panel>
+        <Panel title="Household" index="03" meta={meta}>
+          <Facts rows={[
+            ['Zone', b.household?.zone ?? '—'],
+            ['Batteries', b.household?.batteries.map(k => `${k} kWh`).join(', ') || '—'],
+            ['Reserve', pct(b.household?.reserve_pct)],
+          ]}/>
+          <h3 className="sub-head">Hourly load schedule</h3>
+          <div className="schedule" aria-label="Hourly load schedule" role="img">
+            {(b.household?.schedule ?? []).map((load, hour) => <span key={hour} title={`${hour}:00 · load ${load}`} style={{ opacity: 0.25 + 0.75 * Math.min(1, load) }}/>)}
+          </div>
+        </Panel>
+      </div>
+      <div className="page-grid thirds">
+        <Panel title="Performance" index="04" meta={meta}>
+          <Facts rows={[
+            ['Cash', usd(b.cash)],
+            ['Net worth', usd(b.net_worth)],
+            ['P&L', <span key="pnl" className={b.pnl < 0 ? 'down-text' : 'up-text'}>{usd(b.pnl)}</span>],
+            ['Trades', b.trades ?? '—'],
+            ['Losses', b.losses],
+            ['Loss share', pct(b.loss_share)],
+            ['Worst loss', usd(b.worst_loss)],
+            ['State', <span key="state" className={`tag ${b.dormant ? 'down' : 'up'}`}>{b.dormant ? 'dormant' : 'active'}</span>],
+          ]}/>
+        </Panel>
+        <Panel title="Balance history" index="05" className="span-2" meta={meta}>
+          <div className="chart" role="img" aria-label={`Simulated balance, ${b.balance_history?.length ?? 0} points.`}>
+            {b.balance_history?.length ? <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <LineChart data={b.balance_history} margin={{ top: 24, right: 36, left: 0, bottom: 2 }}>
+                <CartesianGrid stroke="var(--line)" vertical={false} strokeDasharray="2 4"/>
+                <XAxis dataKey="at" tickFormatter={day} axisLine={false} tickLine={false} tick={tick}/>
+                <YAxis domain={['auto', 'auto']} tickFormatter={v => `$${v}`} axisLine={false} tickLine={false} tick={tick}/>
+                <Tooltip formatter={v => [usd(Number(v)), 'Balance']} labelFormatter={l => day(String(l))} contentStyle={tooltip} itemStyle={{ color: 'var(--text)' }} isAnimationActive={false}/>
+                <Line type="monotone" dataKey="balance" stroke="var(--accent)" strokeWidth={3} dot={false} isAnimationActive={false}/>
+              </LineChart>
+            </ResponsiveContainer> : <div className="empty">No balance history served.</div>}
+          </div>
+        </Panel>
+      </div>
+    </>}
+  </>;
+}

@@ -15,12 +15,14 @@ Live: https://ercot-hackathon.jordan-691.workers.dev
 | `/api/products` | All ERCOT EMIL products |
 | `/api/report/<emil-id>/<report>` | Generic proxy for any report |
 | `/api/health` | Which secrets are set, whether a token is cached |
+| `/api/config` | `MARKET_URL` for the views' GridMarket feed |
 
 ## How it works
 
 - Auth: ERCOT Azure B2C password grant → ID token cached in KV for 55 minutes (tokens last 60 and can't be refreshed), plus the `Ocp-Apim-Subscription-Key` header.
 - Snapshot calls run in sequence with backoff on 429, then cache in KV for 5 minutes.
 - Decision checks in `src/snapshot.js` are simple baseline rules that return probabilities in the same shape a Jev decision engine will. They route to log (< 0.50), review (0.50–0.80) or alert (≥ 0.80). Paper only, no order entry.
+- `/` and `/godseye/` load `public/market-feed.js`: a GridMarket activity strip, the router's alert-band checks (labelled baseline rules) and a dashboard link, read cross-origin from `MARKET_URL` with a 20 s timeout. If the market is unset or unreachable the views show only their ERCOT content.
 
 ## Setup
 
@@ -32,4 +34,10 @@ wrangler secret put ERCOT_PASSWORD
 wrangler secret put ERCOT_SUBSCRIPTION_KEY  # Primary key from apiexplorer.ercot.com profile
 wrangler secret put MARKET_KEY              # Shared key clients send as x-gridmarket-key
 wrangler deploy
+```
+
+The owner sets `vars.MARKET_URL` in `wrangler.jsonc` to the GridMarket origin (API and dashboard, e.g. `https://market.example`) and runs `wrangler deploy`. The market must allow the Worker's origin in `GRIDMARKET_CORS_ORIGIN`.
+
+```bash
+node --test "test/*.test.mjs"                # stub env and fetch, no network
 ```
