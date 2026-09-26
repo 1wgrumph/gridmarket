@@ -492,11 +492,15 @@ def test_C3_feed_interrupt_does_not_block_fixed_schedule_dispatch(tmp_path, monk
 def test_C3_feed_interrupt_esr_changes_esr_informed(tmp_path, monkeypatch):
     day = "2026-07-01"
     root = tmp_path / "catalog"
+    # S69 correction: the spike must be eligible at the 16:45 decision. A spike on
+    # [16:30,16:45) is available 16:50, so R2 (available_at <= t) and amendment 6
+    # (offer only when latest eligible RT >= Q75) require a hold; the expected
+    # offer needs the spike on [16:15,16:30), available 16:35.
     syn.write_day(
         root,
         day,
         rt=Decimal(40),
-        rt_at={zulu(day, 16, 30): Decimal(200)},
+        rt_at={zulu(day, 16, 15): Decimal(200)},
         dam=syn.esr_dam(day),
         esr=Decimal(-50),
         esr_at={zulu(day, 16, 15): Decimal(-80), zulu(day, 16, 30): Decimal(-20)},

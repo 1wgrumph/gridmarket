@@ -23,6 +23,7 @@ from . import (
     seed,
 )
 from .providers import enabled
+from .replay import routes as replay
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -64,7 +65,7 @@ def create_app() -> FastAPI:
                     await job
 
     app = FastAPI(title="GridMarket", lifespan=lifespan)
-    for module in (market, api, bots_api, decision_router, health, adversary_api):
+    for module in (market, api, bots_api, decision_router, health, adversary_api, replay):
         app.include_router(module.router)
     for url, relative in (("/llms.txt", "docs/llms.txt"), ("/guide.md", "docs/USER_GUIDE.md")):
         path = ROOT / relative

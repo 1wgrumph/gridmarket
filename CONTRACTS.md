@@ -248,3 +248,42 @@ not ERCOT clearing or a live order executor.
 S69 owns procurement, accepted commitments, settlement, breach counting, and the
 Decimal day-component ledger with HALF_EVEN posting. C2 does not implement those
 APIs or claim independent review, real-source qualification, or replay acceptance.
+
+## Replay engine and API (C3, DEC-GM-113)
+
+`gridmarket_server.replay` runs a labelled simulated peak-flex procurement
+programme on captured ERCOT observations; it is not ERCOT clearing. One
+catalogued day per run, stepped at local-day 15-minute quarters (92/96/100).
+Each strategy gets an independently cloned fleet; demand per procurement
+quarter is 25% of the fleet's initial rated AC discharge kW, fixed across
+strategy copies, zero outside delivery starts 17:00–21:00 Central. Offers
+target the next quarter; acceptance is pro rata with deterministic
+0.000001-kWh floor and lexicographic residual; accepted energy is reserved
+immediately (AC kWh / eta_d) and released exactly once after settlement.
+Settlement truth is independent of interrupted agent feeds. Money posts once
+per strategy/day ledger component in integer cents (HALF_EVEN); net =
+energy − charging + bonus − penalty + terminal mark − opening mark; a
+no-action run scores zero. Breaches invalidate the run; shortfalls above
+0.000001 kWh are failed commitments with cause. `provider_offline` blocks new
+commitments and dispatch while retaining SoC and liabilities;
+`feed_interrupt` hides new observations (actuals expire 30 minutes after
+interval end; published DAM stays valid) and never erases settled state.
+
+- `POST /v1/replay` (day, 1–3 distinct strategies, 1–1000 assets, 0–20
+  disruptions, 2 MiB, 6 runs/minute/client, 2 concurrent computations) returns
+  canonical JSON: `run_id` (SHA-256 of the binding), binding, scoreboard and
+  timeline. Identical requests return byte-identical bodies without timing
+  keys; the latest 20 completed runs are retained. Oversize is 413, invalid
+  422, rate/concurrency 429, unknown day or run 404.
+- `GET /v1/replay/{run_id}` returns the stored immutable body. Reset clears
+  playback state; rerun reuses the same inputs.
+- `GET /v1/replay/days` lists catalogued days with quarters, gaps, synthetic
+  flags, availability status and `peak_rt_price` (point, interval, value).
+- Availability: `strict` when every series carries real `available_at`;
+  otherwise labelled `assumed` (DAM 13:30 Central D−1, RT 5 minutes after
+  interval end, load 20 minutes after). Every run carries
+  `availability_mode` plus the assumption text; the S67 2026-08-26 dataset is
+  assumed-mode because ERCOT archives do not record original publication
+  times. Datasets use `$/MWh` archive labels normalized to the `USD/MWh`
+  policy contract. Every run and day states: "Historical ERCOT observations;
+  simulated households, batteries, procurement and outcomes."
