@@ -1,0 +1,9 @@
+Round 1 re-gate is a repairable failure. The candidate sha256 `0d792040197d6c40cdea1745529a330238298ae65b9ce99dd402abd697abe0b1` matches the file. The mechanical re-check is 33 rows, 0 flagged. Nine corrected rows, the new definition, and `AC-GM-MKT-02` pass. The definition’s “settlements” are an allowed ledger kind, not a new write duty on `AC-GM-MKT-05`.
+
+`AC-GM-MKT-06` fails. `AC-GM-MKT-02` can fill one order against several resting orders at different prices, but this row can also be read as one cash transfer to one seller. The replacement text is:
+
+When a spot fill occurs, the system shall transfer simulated cash from the buyer to the seller of that fill in the amount fill price × filled quantity and shall increase the buyer's Flex Credit inventory by that filled quantity.
+
+The buyer-only Flex Credit increase stays, because a spot sell is a capacity reservation. The blocker is `AC-GM-MKT-06` only. The record is `docs/plans/2026-09-25-gridmarket/specialists/requirements-engineer-gate-r1.md`.
+
+Verdict: REPAIRABLE_FAILURE

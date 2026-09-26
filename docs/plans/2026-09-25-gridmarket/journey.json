@@ -3,7 +3,7 @@
   "journey": {
     "id": "GM-2026-09-25",
     "title": "GridMarket hackathon MVP",
-    "status": "planning",
+    "status": "implementing",
     "planning_repository": "local:/home/spectre/alphazede/Hackathons/Base"
   },
   "checkout_lease": {
@@ -12,7 +12,7 @@
     "repository": "local:/home/spectre/alphazede/Hackathons/Base",
     "checkout": "/home/spectre/alphazede/Hackathons/Base",
     "branch": "gridmarket/lifecycle-setup",
-    "candidate_revision": "18c3f5c623529973505fc0edd1c20425bd341c96",
+    "candidate_revision": "f6bfb23ee99db8966924f70990cb4bd9ef7eae19",
     "acquired_at": "2026-09-26T00:05:38Z",
     "generation": 1,
     "state": "active"
@@ -192,13 +192,320 @@
         "DEC-GM-017",
         "DEC-GM-004"
       ]
+    },
+    {
+      "id": "DEC-GM-021",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T01:38:44Z",
+      "source": "Owner choice in chat (Hybrid) after review of teammate branch origin/jordaaan @ bae0a16",
+      "decision": "Hybrid architecture. Jordan Hill's Cloudflare Worker (ercot-hackathon/: ERCOT Azure B2C auth, /api/snapshot with demand, hub RT SPP, DAM HB_NORTH and DART, SCED lambda and adder and headroom, wind and solar actual vs forecast, NP4-722 weather-zone temperatures, 3 baseline probability checks, plus 3D views at /, /diagram/, /planet/) is the ERCOT data edge and the visualization lane, owned by Jordan. The Python/FastAPI market consumes /api/snapshot as its Market Data Service input, and market activity is exposed for his views. ERCOT credentials are held by Jordan as Worker secrets, which amends DEC-GM-007's owner-registered-key assumption. His Worker is publicly hosted on his Cloudflare account; the market stays on spectre-dev behind a tunnel (DEC-GM-009).",
+      "required_fixes": [
+        "Security: /api/report/* is an open proxy with CORS * and ?fresh bypasses the snapshot cache, so any caller can exhaust the ERCOT 30 req/min limit during the demo. Add a report allowlist and a rate limit or key on fresh and proxy routes.",
+        "Hackathon rule (DEC-GM-020): the 'Jev' decision engine referenced in the views may appear only if it is code written during the hackathon or open source for at least 2 weeks; the baseline checks are compliant."
+      ],
+      "amends": [
+        "DEC-GM-007",
+        "DEC-GM-009",
+        "DEC-GM-010",
+        "DEC-GM-017"
+      ]
+    },
+    {
+      "id": "DEC-GM-022",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T01:47:45Z",
+      "source": "Owner in chat: 'just add that rate limit hole as an implementation slice'",
+      "decision": "The ERCOT Worker rate-limit exposure is its own implementation slice in the first wave, done by the agent lanes rather than offered to Jordan first. Scope: in ercot-hackathon/, put /api/report/* behind an allowlist of the reports the snapshot and views use; add a per-IP rate limit on /api/* (for example a KV or Durable Object counter or a Cloudflare rate-limiting binding); gate /api/snapshot?fresh behind a shared key or remove it; keep the 429 backoff. Verification: a burst test shows ERCOT upstream calls stay under 30/min while the public endpoints return 429 to abusers. Deploying it to Jordan's Cloudflare account is Jordan's action, or needs his credentials.",
+      "amends": [
+        "DEC-GM-021"
+      ]
+    },
+    {
+      "id": "DEC-GM-023",
+      "decision": "Commit after every slice on its lane branch. After every phase assembly (S09, S12, S18), push, open a PR and merge to main, with no review on those phase PRs. Reviewer cadence changes from phase to lifecycle: one independent review of the integrated candidate at about Sat 2026-09-26 22:00 CDT, leaving repair time before the Sun 07:00 freeze. This amends the frozen primary cadence.",
+      "source": "Owner choice in chat (One review Sat eve)",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T03:04:51Z"
+    },
+    {
+      "id": "DEC-GM-024",
+      "decision": "Profile split by lane. The spec lane (S19-S21) uses the tech-writing profile; the ui lane (S04, S07) uses the frontend profile; all other lanes use primary. Frozen copies are in profile_selection.amendments.",
+      "source": "Owner in chat",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T03:04:51Z"
+    },
+    {
+      "id": "DEC-GM-025",
+      "decision": "Raise max concurrent lanes from 3 to 4. Move the red-test authoring slices S10 (LoneStar), S13 (adversary), S15 (backtest) and S22 (ML) into wave 2 against S01's frozen contracts; their implementation slices stay after phase 1 assembly.",
+      "source": "Owner choice in chat (Yes, 4 agents)",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T03:04:51Z"
+    },
+    {
+      "id": "DEC-GM-026",
+      "decision": "MIT LICENSE copyright holders: the owner (GitHub 1wgrumph) and Jordan Hill.",
+      "source": "Owner choice in chat (You + Jordan Hill)",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T03:04:51Z"
+    },
+    {
+      "id": "DEC-GM-027",
+      "status": "confirmed",
+      "decision": "The owner takes over Jordan's Worker work. The owner builds and deploys the owner's own ERCOT Worker on the owner's Cloudflare account, starting from Jordan's ercot-hackathon code at 4853e51 plus the S24-S25 security fix. The owner holds the ERCOT, Cloudflare and Jev credentials, and owns the worker and 3D-view lanes. The market's GRIDMARKET_WORKER_URL points to the owner's Worker.",
+      "rationale": "Owner, verbatim: 'I am going to do it however he has the api keys for ercot but I can get my own honestly' and 'I can create my own worker I have cloudflare access'. This removes the teammate dependency from the deploy and secrets steps on the critical data path. Credential registration, Worker secrets and deploy are owner-only actions. Jordan's code was written during the event, so it complies with DEC-GM-020. Starting from Jordan's code rather than a fresh lane was judged not material.",
+      "amends": [
+        "DEC-GM-021",
+        "DEC-GM-022",
+        "DEC-GM-007"
+      ],
+      "source": "Owner answers to Scope Definition Q12, reopen at the plan approval gate, 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-028",
+      "status": "confirmed",
+      "decision": "One decision router serves two families of checks. (1) Market checks, following Jordan's plan: each check is one question with a fixed horizon that returns a probability, starting with the DART spread, calibrated against realized outcomes. (2) Health checks, the owner's observability idea: the probability that the Worker or a provider becomes unavailable within 15 minutes, computed from in-process latency, error and 429 rates, snapshot staleness and adapter heartbeat. Baseline rules always answer and are the only thing that takes action; for example, a missed heartbeat marks a provider offline and its new sell orders are rejected. Jev is optional, behind a flag that is off by default, called through its hosted API with an owner-held key, and disclosed in the README and video as a pre-existing hosted service linked to the owner. Router bands: below 0.50 is logged for calibration, 0.50 to 0.80 goes to review, 0.80 and above raises an alert. The router never places trades. The demo includes a simulated LoneStar provider outage. Grid generator outage (NP3-233) remains a deterministic score factor.",
+      "rationale": "Combines the team plan (Jordan's calibrated checks) with the owner's observability idea. Jev never bypasses the risk engine, and the demo works with Jev switched off, which avoids the 'simple API wrapper' judging objection and keeps DEC-GM-020 intact. AC-GM-RULE-02 must be amended in Planning so that it permits flag-gated, disclosed calls to the hosted Jev service instead of barring all Jev calls.",
+      "affects": [
+        "AC-GM-RULE-02",
+        "DES-GM-EDGE",
+        "DES-GM-ADV",
+        "DEC-GM-012"
+      ],
+      "source": "Owner answer to revised Scope Definition Q13 ('One router, 2 check families'), 2026-09-25 CDT; Jordan's committed view text at origin/jordaaan 4853e51",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-029",
+      "status": "confirmed",
+      "decision": "Two linked surfaces. The Astryx dashboard, served by FastAPI through the tunnel, is the main surface for judges. The owner's Worker keeps serving the 3D views (/, /diagram/, /godseye/) as they are. The views read the market's public data and the router's results through CORS, and each surface links to the other. The video cuts from the globe to the dashboard during the simulated outage.",
+      "rationale": "No Cesium or Three.js enters the React build, each surface can fail without taking down the other, and Jordan's work stays visible and credited. God's Eye loads CesiumJS 1.124.0 from a CDN and needs no ion token. Its visual style is credited to bilawalsidhu/gods-eye-view, created 2026-06-22; GitHub reports that repository's license as NOASSERTION, so the MIT claim is unverified, but only the style was followed and no code was copied.",
+      "source": "Owner answer to Scope Definition Q14 ('Two linked surfaces'), 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-030",
+      "status": "confirmed",
+      "decision": "The seeded bot population has 7 types: market maker, score follower, DART trader, heat seller, saver, alert reactor, and noise trader, each with the parameter ranges and signal use proposed in Q15. The default population is 60 bots: market maker 4, follower 12, DART 8, heat seller 14, saver 12, alert reactor 6, noise 4, with at least 20 on LoneStar. Only the owner can spawn new bots live, from the dashboard, in cohorts of up to 10 with an optional seed, with a cap of 200 bots in total. Every bot is its own account with its own API key, calls the public API, is bound by the same risk engine (size at most 50, position at most 200, funds, capacity reservation), sends at most 6 orders per minute, and stops when the kill switch is used.",
+      "rationale": "Uses every signal family, satisfies AC-GM-BOT-01 and AC-GM-PROV-02, and adds no new attack surface. Judges cannot spawn bots.",
+      "source": "Owner answer to Scope Definition Q15 ('Adopt the 7 types'), 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-031",
+      "status": "confirmed",
+      "decision": "Bot diversity is built in layers, using only Python's built-in libraries at runtime and fully reproducible from a logged master seed. Each bot has its own generator seeded as random.Random(f'{master}:{index}'). Layer 1: 7 correlated latent traits drawn with a Gaussian copula (risk appetite, patience, reaction delay, loss aversion, herd vs contrarian, daily activity pattern, wealth), using a small pure-Python Cholesky decomposition and statistics.NormalDist, with logistic-normal marginals for bounded traits. Layer 2: each bot blends its main type with 2 others, weighted by a Dirichlet draw via gammavariate with alpha 6, 1.5, 1.5. Layer 3: different information per bot, meaning which signal families it can see, a delay of 0 to 15 minutes, an expected-value bias of plus or minus 10%, and noise of 2% to 10%. Layer 4: different households, meaning battery size 5 to 40 kWh (lognormal, median 13.5), 1 to 2 batteries, a weighted load zone, a reserve habit of 15% to 50%, and an hour-of-day activity schedule. Layer 5a: bounded learning, where each bot nudges its thresholds after each settlement at a rate of 0.01 to 0.05, clamped to its range. Layer 6: a diversity panel showing trait-space coverage, behavior entropy, and a scatter of risk against patience. Evolution (layer 5b) is dropped. Once started, bots trade continuously and none are retired.",
+      "rationale": "Owner, verbatim: 'I want real diversity' and 'Once done lets just lets the bots keep trading'. Traits are sampled together so each bot's parameters are consistent with each other rather than independent noise. Tests: an identical population digest for the same seed, sampled averages and spreads within tolerance, and trait rank correlations close to their targets. Estimated at about 11 hours for one lane. Layer 4 replaces the fixed battery sizes in DES-GM-PROV.",
+      "supersedes": [
+        "DES-GM-PROV fixed battery sizes"
+      ],
+      "source": "Owner answers to Scope Definition Q16, 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-032",
+      "status": "confirmed",
+      "decision": "Bot economy. Bot starting cash is lognormal with a median of $1,000 and sigma 0.8, clamped to $100 to $10,000, and correlated with employment (+0.3) and risk appetite (+0.2). 65% of bots are employed and trade mostly before and after work; unemployed bots trade during the day. Pay is lognormal with a median of $40 and sigma 0.5, between $10 and $150, paid every 30 minutes of real time (a compressed biweekly cycle) with a random offset per bot. Unemployed bots get no income. Income is recorded as a separate ledger entry type called deposit, never as a trade, and never counts as P&L; net worth equals cash plus position value. A loss is counted per settled position, meaning one account's holding in one product at expiry or when closed flat. A bot with no money can only sell flexibility from its battery and waits for income; an unemployed bot with no money and no capacity becomes dormant, with no bailout, and the dashboard shows the dormant rate. The bot service restarts from ledger state plus the master seed. Each bot has a profile showing its traits, strategy blend, household, job and pay, balance over time, trade count, losing positions (count, share and worst loss), P&L and dormant status. Human and judge sandbox accounts keep the $1,000 starting cash from intent section 4.1.",
+      "rationale": "Owner, verbatim: 'give each bot a random amount of money, the bots need profiles so we can observe to see how many time they lose money also some bots should get recurring income like they have real jobs while some dont have jobs'. Keeping income out of P&L keeps the loss counts honest.",
+      "amends": [
+        "SC-2"
+      ],
+      "source": "Owner answer to Scope Definition Q17 (adopt as shown, including the SC-2 amendment), 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "SC-2-AMENDMENT",
+      "status": "confirmed",
+      "decision": "Success criterion 2 now reads: human and judge sandbox accounts begin with $1,000 of simulated cash, seeded bot accounts begin with random simulated cash per DEC-GM-032, and all of them can trade.",
+      "rationale": "Random cash for bots conflicts with the original wording 'Generated users begin with $1,000'. The owner approved this amendment.",
+      "amends": [
+        "gridmarket-intent.html section 22 SC-2",
+        "DEC-GM-016 acceptance mapping"
+      ],
+      "source": "DEC-GM-032; owner confirmation of reopen item 6, 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-033",
+      "status": "confirmed",
+      "decision": "Dashboard design system: Astryx @astryxdesign/core 0.6.0, the newest stable release at least 14 days old (0.6.0 released 2026-09-10; 0.6.1 and later are too new), with Recharts 3.10.1 for charts, because Astryx has no chart components. React 19 and StyleX are required. Visual direction: a dark control-room look that continues Jordan's 3D palette (dark glass, cyan accent, monospaced heads-up-display text, Jev green #5fdd91, heat #ff7a45, sun #f2c14e), plus a light mode. Timebox: if the Astryx and StyleX Vite build is not green by the end of wave-1 slice S04, the UI lane switches to shadcn/ui with Tailwind 4 and Recharts in the same palette.",
+      "rationale": "The owner named Astryx; the AZHQ astryx-frontend-design skill and the visual-review loop target it; DEC-GM-010 already chose it. Using the same palette makes the two linked surfaces read as one product. Tremor was excluded because its last release was 2025-01-13 and it only supports React 18. The owner confirmed the direction and the timebox in reopen item 7.",
+      "source": "Owner answer to Scope Definition Q18 ('Astryx + Recharts'); owner confirmation of reopen item 7, 2026-09-25 CDT; npm registry checks 2026-09-25",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "CONF-GM-PAGES",
+      "status": "confirmed",
+      "decision": "The dashboard is a single-page app served as static files by FastAPI, with these pages: (1) Overview: ERCOT signals, zone scores, market status, activity feed, link to the 3D views; (2) Market: products, order book depth, trades; (3) Predictions and router: factor bars, both families of checks, and a Jev column when the flag is on; (4) Providers: Base-sim and LoneStar fleet health and the simulated outage; (5) Bots: population table, diversity panel and dormant rate, plus a /bots/:id profile page; (6) Judge sandbox: how to get a key, code snippets, 'your orders' by key label, and copy buttons for the prompt kit; (7) Spec: link to the GridMarket spec. Data is fetched by REST polling every 2 seconds, with no WebSockets.",
+      "rationale": "Replaces the single page in DES-GM-UI, so it becomes a Planning delta.",
+      "supersedes": [
+        "DES-GM-UI single page"
+      ],
+      "source": "Owner confirmation of reopen item 8, 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-034",
+      "status": "confirmed",
+      "decision": "microsoft/qlib (pyqlib 0.9.7, MIT, released 2025-08-15, with Python 3.12 wheels) powers the owner's first-party quant strategy in the ML stretch lane. The strategy code is written during the event, and the strategy trades only through the public API and risk engine using its own account key. qlib and its heavy dependencies (mlflow, redis, pymongo, cvxpy, gym, jupyter, matplotlib, lightgbm, pyarrow) go in an optional 'quant' extra and never enter the runtime image unless the stretch lands. No pre-existing algorithm code is used.",
+      "rationale": "Owner, verbatim: 'qlib for ML stretch' and 'The MS Quant could be my own trading algo'. As a library, qlib was public long before the event, so it complies with DEC-GM-020. The backtest also reports rank IC, which is the Spearman correlation AC-GM-ML-01 already measures. The reading that the owner's algorithm is newly written was confirmed in reopen item 9. Loki was declined: v3.7.8 was only 8 days old, it is AGPL-3.0, and it would add 2 to 3 containers and a second UI; JSON logs plus in-process health counters cover the need.",
+      "source": "Owner answer to Scope Definition Q19 and clarification; owner confirmation of reopen item 9, 2026-09-25 CDT; PyPI and GitHub checks 2026-09-25",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-035",
+      "status": "confirmed",
+      "decision": "Users get three ways to bring their own strategy. (a) A strategy template in examples/strategy-template/: a standard-library rules strategy built on predictions, using the Python SDK, with the owner's qlib strategy as an optional example if the stretch lands. (b) An LLM prompt kit in docs/llm/: a copy-paste system prompt stating the platform rules, the risk limits and an instruction never to exceed position limits, plus /openapi.json (already planned in CONTRACT-GM-API; ChatGPT Actions can import it) and SDK snippets. (c) gridmarket-mcp, a local MCP server that runs on the user's own machine with the user's own sandbox key and wraps the SDK. Its read and monitoring tools mirror the dashboard: market and order book, predictions and router checks, provider health, and bot population. It also exposes the caller's own orders, positions, P&L and loss history, scoped to the caller's key, plus order tools that go through the public API and are bounded by the risk engine and per-key limits. The mcp package is pinned to a release at least 14 days old. There is no remote MCP server.",
+      "rationale": "Owner, verbatim: 'Both + local MCP server' and 'the mcp could be used to provide the user with data and to see how their algorith is trading so they need access to data that would be on the dashboard'. This completes intent section 12's progression from manual trading to rules, algorithms and AI agents. Security: private data is scoped to the caller's key; tool responses carry market data only and never free text from other users, which limits prompt-injection risk; with no remote MCP server there is no new public surface.",
+      "source": "Owner answer to Scope Definition Q20; owner expansion of reopen item 10, 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-012",
+      "status": "partially_superseded",
+      "decision": "Intent P2 item 25 (AI trading agent), which DEC-GM-012 excluded, is now in scope only as agents that users bring themselves, through the LLM prompt kit and the local gridmarket-mcp in DEC-GM-035. There is still no first-party AI trader: the router in DEC-GM-028 never trades, and the owner's qlib strategy in DEC-GM-034 is an algorithm, not an AI agent. Item 26 (ML) remains a stretch item under DEC-GM-017 and DEC-GM-034. All other P2 items remain out.",
+      "rationale": "The owner's intent for user onboarding reopened item 25 in this limited form.",
+      "superseded_by": [
+        "DEC-GM-035"
+      ],
+      "source": "DEC-GM-035, 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "CONF-GM-VISUAL-REVIEW",
+      "status": "confirmed",
+      "decision": "The AZHQ visual-review skill, being built by a Muse agent in worktree /home/spectre/alphazede/worktrees/hq-visual-review on branch feat/visual-review-skill (Playwright runner scripts/vr.py, screenshots at 1280 and 390 pixels wide, baseline diffs, a Jev next-element and expected-state loop), becomes the UI lane's visual verification method once it works. Until then its absence is a typed capability gap, the fallback is vitest render tests, and it blocks nothing.",
+      "rationale": "Owner input; phase 1 of the skill was not yet written at capture time. The owner confirmed this in reopen item 11.",
+      "source": "Owner input relayed by the Orchestrator; owner confirmation of reopen item 11, 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "CONF-GM-JORDAN-DISCLAIMER",
+      "status": "confirmed",
+      "decision": "Add a disclaimer that work Jordan contributes may be produced with a different agent or tool profile than the owner's frozen Bearing profile, and that it is integrated through the same lanes, tests and review gates.",
+      "rationale": "Owner, verbatim: 'if jordan does do some of the work we need a disclaimer that jordan profile might be different from mine'. The owner confirmed this in reopen item 12.",
+      "affects": [
+        "DEC-GM-024"
+      ],
+      "source": "Owner input; owner confirmation of reopen item 12, 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "CONF-GM-PHASE-PLACEMENT",
+      "status": "confirmed",
+      "decision": "Phase 1 adds: the owner's Worker (DEC-GM-027); the router with baseline market checks (DEC-GM-028); all the bot work (DEC-GM-030, DEC-GM-031 and DEC-GM-032, including bot profiles); and every page except Providers. Phase 2 (LoneStar) adds: the health-check family, the simulated outage, the Providers page, the strategy template and the LLM prompt kit. Stretch: gridmarket-mcp, the qlib strategy and the Jev flag, alongside the existing stretch items (adversarial scenario, backtest, Rust core, ML). Trigger: if phase 1 is not assembled and green by Sat 2026-09-26 14:00 CDT, diversity layers 2, 3, 5a and 6 move to phase 2.",
+      "rationale": "The scope grew against the Sun 2026-09-27 07:00 CDT freeze. This placement keeps each phase demoable without crashing (DEC-GM-005). The owner confirmed it in reopen item 13.",
+      "affects": [
+        "DEC-GM-005",
+        "DEC-GM-012",
+        "implementation.json waves"
+      ],
+      "source": "Owner confirmation of reopen item 13, 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-036",
+      "status": "confirmed",
+      "decision": "In the final wave, once the inputs to the feature freeze are stable, produce a fully detailed, agent-readable user guide. Proposed format: docs/USER_GUIDE.md plus an llms.txt-style index; Planning and Design finalizes the exact paths and whether the app also serves /llms.txt. The guide gives numbered steps for: getting a sandbox key; reading market data, predictions and router checks; using the Python SDK, the strategy template, the LLM prompt kit and gridmarket-mcp; monitoring your own algorithm's orders, positions, P&L and losses; limits and rate limits; and every error code in CONTRACT-GM-API. It describes only features that actually landed, and it is finished before the owner makes the repository public.",
+      "rationale": "Owner, verbatim: 'just at the end we create a fully detailed user guide that goes through the steps that an agent can read so that they can use'. Proposed acceptance: demonstration that an agent following only the guide, from a clean machine with a sandbox key, completes the sequence of getting a key, reading data, placing an order and monitoring it.",
+      "source": "Owner reply to Scope Definition Q21, 2026-09-25 CDT",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "CELL-GM-DISCLAIMER-PLACEMENT",
+      "status": "DEFERRED",
+      "decision": "Where the Jordan-profile disclaimer appears, for example the README contributors section and the lane records.",
+      "rationale": "Destination: Planning and Design. Trigger: the delta for this reopen. The owner approved routing layout details to Planning.",
+      "source": "CONF-GM-JORDAN-DISCLAIMER",
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-037",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T03:53:36Z",
+      "source": "Owner in chat: 'an an onboarding skill or guide. Onboarding on the website should be quick and easy'",
+      "decision": "Add (a) an agent onboarding skill, for example skills/gridmarket-onboarding/SKILL.md in the repository, that a user's agent loads to go from zero to trading: get a sandbox key, read data, use the SDK, strategy template, LLM prompt kit or local MCP, monitor the algorithm, and handle limits and errors. It is paired with the DEC-GM-036 user guide. (b) Quick, easy website onboarding on the dashboard: a user gets a working sandbox key in one or two clicks, with copy-paste snippets for the SDK, the LLM prompt kit and MCP, and sees their first order live. Sandbox key issuance remains rate-limited and bounded by the risk engine.",
+      "amends": [
+        "DEC-GM-035",
+        "DEC-GM-036",
+        "CONF-GM-PAGES"
+      ]
+    },
+    {
+      "id": "DEC-GM-038",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T04:07:05Z",
+      "source": "Owner in chat: 'We are reviewer per phase. For this journey we can test and integration engineer per phase also. 1 review and 1 repair. Also make sure the planning agents is doing the same thing to avoid review loops'",
+      "decision": "Split phase 1 into phase 1a, a walking skeleton targeted for about Sat 10:00 CDT (foundation, market engine S02/S05, data client and score S03/S06, SDK and a minimal overview page, Worker fix S24-S25), and phase 1b, the rich core targeted for about Sat 16:00 CDT (bots with diversity and economy, the remaining pages, bot profiles, the router with market checks, the spec lane). Cadence for this journey: the reviewer, Test Engineer assurance, and Integration Engineer execution each run once per declared phase (1a, 1b, 2, stretch), with exactly 1 review and at most 1 repair per phase, and the repair verified deterministically with no re-review. Each phase ends with push, PR, and merge to main. This supersedes the review-cadence part of DEC-GM-023 (one lifecycle review Saturday evening); commit-per-slice and PR-per-phase stand. Planning agents follow the same rule: one review round and at most one repair per planning review, with no review loops.",
+      "amends": [
+        "DEC-GM-023",
+        "CONF-GM-PHASE-PLACEMENT"
+      ]
+    },
+    {
+      "id": "DEC-GM-039",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T04:08:25Z",
+      "source": "Owner in chat: 'We are about to do most of these phases in parrallel ... IF we create the skeleton and already tell the agents what the name of variables and headers will be it should be an easy integration. We should have this done by the evening'",
+      "decision": "Contract-first parallel build. Wave 1 (S01, the skeleton) freezes every shared name before any feature lane starts: module and file layout, Python types and dataclasses, API routes, request and response schemas and field names, HTTP headers (Authorization, Idempotency-Key, rate-limit headers), event and ledger entry types, bot profile schema, check and router schema, MCP tool names and arguments, the Worker snapshot contract, and dashboard page routes and data hooks. These live as code stubs plus a CONTRACTS.md, and any change is a recorded amendment. After wave 1, phases 1a, 1b, 2 and stretch build in parallel lanes against the frozen contracts, each in its own worktree, with concurrency limited only by independent write sets and route capacity rather than phase order. Integration becomes contract-conformance merges. Per-phase review, test and integration assurance (DEC-GM-038) run as each phase's lanes finish. Target: all feature lanes merged by Sat 2026-09-26 evening CDT; the user guide and onboarding follow; freeze Sun 07:00.",
+      "amends": [
+        "DEC-GM-025",
+        "DEC-GM-038",
+        "CONF-GM-PHASE-PLACEMENT"
+      ]
+    },
+    {
+      "id": "DEC-GM-040",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T04:10:37Z",
+      "source": "Owner in chat: 'make sure you merge the PRs and keep things clean when a phase is completed. get it on main ... Agy 5hr usage migh run out so be sure to use 2 agy and 2 fallbacks at a time. or just smart split'",
+      "decision": "(1) Landing hygiene: when a phase passes its assurance (review, 1 repair max, deterministic verification), the Orchestrator immediately pushes, opens the PR, and merges it to main, then deletes the merged lane branches (local and remote) and removes their worktrees. main stays demoable after every merge, and no stale branches or worktrees remain. (2) Route load split, an owner-confirmed amendment to fallback activation: for any role routed to a usage-windowed route (AGY with its 5-hour usage window, and likewise Muse or Codex if limits appear), run at most 2 concurrent sessions on the primary route and place further concurrent sessions on the ordered fallbacks, splitting proactively rather than waiting for exhaustion. On verified exhaustion, all new sessions move down the fallback order. Each placement is recorded in a route receipt.",
+      "amends": [
+        "DEC-GM-023",
+        "DEC-GM-038",
+        "profile_selection fallback activation"
+      ]
+    },
+    {
+      "id": "DEC-GM-041",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T04:15:15Z",
+      "source": "Owner in chat",
+      "decision": "Lower every 'max' reasoning route in this journey's frozen profile snapshots to 'xhigh', effective immediately."
+    },
+    {
+      "id": "DEC-GM-042",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T04:17:18Z",
+      "source": "Owner in chat: 'Muse is fast. we can keep muse at max sorry'",
+      "decision": "Revoke DEC-GM-041. The frozen snapshot reasoning levels stand as captured: Muse routes run at max; all other routes keep their catalog levels (high, xhigh or medium).",
+      "supersedes": [
+        "DEC-GM-041"
+      ]
+    },
+    {
+      "id": "DEC-GM-043",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T04:20:32Z",
+      "source": "Owner in chat",
+      "owner_statement": "when this is done just go ahead and start I am about to go to sleep plan is already approved / If gaps or problems arise I need you act as the delegate authority and keep this running please get this done do not stop for no reason",
+      "decision": "Owner pre-approves the Planning and Design package that the current delta (DEC-GM-027..040, 042) produces, once plan-package PASS and the Manifest render. Wave dispatch starts without a further approval stop. Overnight, the Orchestrator acts as delegate authority for OWNER_DECISION_REQUIRED returns inside the approved scope: route fallbacks, repair acceptance, slice drops per the documented drop order, and schedule re-sequencing. Each delegated decision is recorded as a dated DEC-GM entry with source 'Orchestrator as owner delegate (DEC-GM-043)'.",
+      "excluded": "Owner-only actions stay owner-only: credential access (ERCOT, Cloudflare, Jev keys), production deploy (wrangler deploy, public tunnel activation), making the repository public, and the Loom/submission. Scope expansion beyond the approved package is not delegated."
+    },
+    {
+      "id": "DEC-GM-044",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T05:11:36Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043)",
+      "decision": "Accept the Planning and Design package at manifest digest cea7bcbdefd2f415064530b621cb4cee4284c6afcc81edf9b6116b8e5249730e (plan-package PASS, 0 findings; render --check RENDER_CHECK_PASS sha256:5f70ebe3...b643) as the approved Lifecycle baseline under the owner's pre-approval (DEC-GM-043). Accept the node's four readings: the S31 diversity slip check at Sat 14:00; the final wave gets the same 1 review / at most 1 repair rule; non-windowed routes capped at 3 concurrent sessions; the frontend profile covers the new UI lanes (pages, providers-page, onboarding); acceptance runs use localhost phase candidates, and the tunnel is Sunday-only. Resolve CELL-GM-DISCLAIMER-PLACEMENT: the Jordan disclaimer goes in the README Contributors section (S45) and in any receipt for a slice Jordan runs.",
+      "why": "Each reading narrows the plan or restates an owner decision. None expands scope."
     }
   ],
   "stages": {
     "intake": "accepted",
     "architectural_alignment": "accepted",
     "scope_definition": "accepted",
-    "planning_and_design": "pending"
+    "planning_and_design": "accepted"
   },
   "profile_selection": {
     "selected_at": "2026-09-26T01:10:55Z",
@@ -876,7 +1183,574 @@
       "model": "Claude Opus 5.5",
       "reasoning": "session default"
     },
-    "note": "Frozen copy; later catalog edits have no effect without an owner-confirmed dated amendment."
+    "note": "Frozen copy; later catalog edits have no effect without an owner-confirmed dated amendment.",
+    "amendments": [
+      {
+        "amended_at": "2026-09-26T03:04:51Z",
+        "source": "Owner in chat: 'we need to split the profiles, tech writer for the spec template and the gridmarket spec, then primary for the implementation'; frontend for ui accepted",
+        "implementation_lane_profiles": {
+          "default": "primary",
+          "spec (S19-S21)": "tech-writing",
+          "ui (S04, S07)": "frontend"
+        },
+        "frozen_lane_entries": {
+          "frontend": {
+            "roles": {
+              "implementer": {
+                "enabled": true,
+                "primary": {
+                  "harness": "Claude Code",
+                  "model": "Claude Opus 5.5",
+                  "reasoning": "high"
+                },
+                "ordered_fallbacks": [
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                    "harness": "Codex CLI",
+                    "model": "GPT-6 Astra",
+                    "reasoning": "high"
+                  },
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                    "harness": "Muse Code",
+                    "model": "Muse Spark 1.3",
+                    "reasoning": "max"
+                  }
+                ]
+              },
+              "test_implementer": {
+                "enabled": true,
+                "primary": {
+                  "harness": "Codex CLI",
+                  "model": "GPT-6 Sol",
+                  "reasoning": "xhigh"
+                },
+                "ordered_fallbacks": [
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                    "harness": "Muse Code",
+                    "model": "Muse Spark 1.3",
+                    "reasoning": "max"
+                  },
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                    "harness": "Cursor Agent",
+                    "model": "Grok 4.7",
+                    "reasoning": "high"
+                  }
+                ]
+              },
+              "light_implementer": {
+                "enabled": true,
+                "primary": {
+                  "harness": "AGY",
+                  "model": "Gemini 3.8 Flash",
+                  "reasoning": "medium"
+                },
+                "ordered_fallbacks": [
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                    "harness": "Codex CLI",
+                    "model": "GPT-6 Sol",
+                    "reasoning": "medium"
+                  },
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                    "harness": "Muse Code",
+                    "model": "Muse Spark 1.3",
+                    "reasoning": "xhigh"
+                  }
+                ]
+              },
+              "coordinator": {
+                "enabled": true,
+                "primary": {
+                  "harness": "AGY",
+                  "model": "Gemini 3.8 Flash",
+                  "reasoning": "medium"
+                },
+                "ordered_fallbacks": [
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                    "harness": "Muse Code",
+                    "model": "Muse Spark 1.3",
+                    "reasoning": "xhigh"
+                  },
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                    "harness": "Codex CLI",
+                    "model": "GPT-6 Sol",
+                    "reasoning": "high"
+                  }
+                ]
+              },
+              "reviewer": {
+                "enabled": true,
+                "primary": {
+                  "harness": "Codex CLI",
+                  "model": "GPT-6 Astra",
+                  "reasoning": "high"
+                },
+                "ordered_fallbacks": [
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                    "harness": "Claude Code",
+                    "model": "Claude Opus 5.5",
+                    "reasoning": "high"
+                  },
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                    "harness": "Cursor Agent",
+                    "model": "Grok 4.7",
+                    "reasoning": "high"
+                  }
+                ],
+                "cadence": "phase"
+              },
+              "scribe": {
+                "enabled": true,
+                "primary": {
+                  "harness": "AGY",
+                  "model": "Gemini 3.8 Flash",
+                  "reasoning": "medium"
+                },
+                "ordered_fallbacks": [
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                    "harness": "Muse Code",
+                    "model": "Muse Spark 1.3",
+                    "reasoning": "xhigh"
+                  },
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                    "harness": "Codex CLI",
+                    "model": "GPT-6 Sol",
+                    "reasoning": "medium"
+                  }
+                ]
+              },
+              "plan_integrator": {
+                "enabled": true,
+                "primary": {
+                  "harness": "Muse Code",
+                  "model": "Muse Spark 1.3",
+                  "reasoning": "max"
+                },
+                "ordered_fallbacks": [
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                    "harness": "Codex CLI",
+                    "model": "GPT-6 Astra",
+                    "reasoning": "high"
+                  },
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                    "harness": "Claude Code",
+                    "model": "Claude Opus 5.5",
+                    "reasoning": "high"
+                  }
+                ]
+              },
+              "systems_modeler": {
+                "sessions": {
+                  "planning": {
+                    "enabled": true,
+                    "primary": {
+                      "harness": "Muse Code",
+                      "model": "Muse Spark 1.3",
+                      "reasoning": "max"
+                    },
+                    "ordered_fallbacks": [
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                        "harness": "Codex CLI",
+                        "model": "GPT-6 Astra",
+                        "reasoning": "high"
+                      },
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                        "harness": "Claude Code",
+                        "model": "Claude Opus 5.5",
+                        "reasoning": "high"
+                      }
+                    ]
+                  }
+                }
+              },
+              "test_engineer": {
+                "sessions": {
+                  "planning": {
+                    "enabled": true,
+                    "primary": {
+                      "harness": "Claude Code",
+                      "model": "Claude Opus 5.5",
+                      "reasoning": "high"
+                    },
+                    "ordered_fallbacks": [
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                        "harness": "Cursor Agent",
+                        "model": "Grok 4.7",
+                        "reasoning": "high"
+                      },
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                        "harness": "Codex CLI",
+                        "model": "GPT-6 Astra",
+                        "reasoning": "high"
+                      }
+                    ]
+                  },
+                  "assurance": {
+                    "enabled": true,
+                    "primary": {
+                      "harness": "Codex CLI",
+                      "model": "GPT-6 Astra",
+                      "reasoning": "high"
+                    },
+                    "ordered_fallbacks": [
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                        "harness": "Cursor Agent",
+                        "model": "Grok 4.7",
+                        "reasoning": "high"
+                      },
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                        "harness": "Claude Code",
+                        "model": "Claude Opus 5.5",
+                        "reasoning": "high"
+                      }
+                    ],
+                    "cadence": "lifecycle"
+                  }
+                }
+              },
+              "integration_engineer": {
+                "sessions": {
+                  "planning": {
+                    "enabled": true,
+                    "primary": {
+                      "harness": "Claude Code",
+                      "model": "Claude Opus 5.5",
+                      "reasoning": "high"
+                    },
+                    "ordered_fallbacks": [
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                        "harness": "Codex CLI",
+                        "model": "GPT-6 Astra",
+                        "reasoning": "high"
+                      },
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                        "harness": "Cursor Agent",
+                        "model": "Grok 4.7",
+                        "reasoning": "high"
+                      }
+                    ]
+                  },
+                  "execution": {
+                    "enabled": true,
+                    "primary": {
+                      "harness": "Codex CLI",
+                      "model": "GPT-6 Astra",
+                      "reasoning": "high"
+                    },
+                    "ordered_fallbacks": [
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                        "harness": "Cursor Agent",
+                        "model": "Grok 4.7",
+                        "reasoning": "high"
+                      },
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                        "harness": "Claude Code",
+                        "model": "Claude Opus 5.5",
+                        "reasoning": "high"
+                      }
+                    ],
+                    "cadence": "lifecycle"
+                  }
+                }
+              },
+              "requirements_engineer": {
+                "sessions": {
+                  "planning": {
+                    "enabled": true,
+                    "primary": {
+                      "harness": "Cursor Agent",
+                      "model": "Grok 4.7",
+                      "reasoning": "high"
+                    },
+                    "ordered_fallbacks": [
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                        "harness": "Claude Code",
+                        "model": "Claude Opus 5.5",
+                        "reasoning": "high"
+                      },
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                        "harness": "Muse Code",
+                        "model": "Muse Spark 1.3",
+                        "reasoning": "max"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "development_strategy": {
+              "mode": "tdd"
+            },
+            "concurrency": {
+              "dispatch_ready_independent_work": true,
+              "preserve_order_for_dependencies_interfaces_write_overlap_and_shared_mutable_resources": true
+            },
+            "planning_to_implementation_clean_session": true,
+            "deterministic_verification": {
+              "reverify": {
+                "enabled": true
+              }
+            },
+            "review": {
+              "coverage_assist": {
+                "enabled": true,
+                "required": false
+              }
+            }
+          },
+          "tech-writing": {
+            "roles": {
+              "implementer": {
+                "enabled": true,
+                "primary": {
+                  "harness": "Claude Code",
+                  "model": "Claude Opus 5.5",
+                  "reasoning": "medium"
+                },
+                "ordered_fallbacks": [
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                    "harness": "Codex CLI",
+                    "model": "GPT-6 Astra",
+                    "reasoning": "medium"
+                  },
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                    "harness": "Muse Code",
+                    "model": "Muse Spark 1.3",
+                    "reasoning": "max"
+                  }
+                ]
+              },
+              "light_implementer": {
+                "enabled": true,
+                "primary": {
+                  "harness": "AGY",
+                  "model": "Gemini 3.8 Flash",
+                  "reasoning": "medium"
+                },
+                "ordered_fallbacks": [
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                    "harness": "Codex CLI",
+                    "model": "GPT-6 Sol",
+                    "reasoning": "medium"
+                  },
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                    "harness": "Muse Code",
+                    "model": "Muse Spark 1.3",
+                    "reasoning": "xhigh"
+                  }
+                ]
+              },
+              "reviewer": {
+                "enabled": true,
+                "primary": {
+                  "harness": "Cursor Agent",
+                  "model": "Grok 4.7",
+                  "reasoning": "high"
+                },
+                "ordered_fallbacks": [
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                    "harness": "Codex CLI",
+                    "model": "GPT-6 Astra",
+                    "reasoning": "high"
+                  },
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                    "harness": "Claude Code",
+                    "model": "Claude Opus 5.5",
+                    "reasoning": "high"
+                  }
+                ],
+                "cadence": "phase"
+              },
+              "plan_integrator": {
+                "enabled": true,
+                "primary": {
+                  "harness": "Muse Code",
+                  "model": "Muse Spark 1.3",
+                  "reasoning": "max"
+                },
+                "ordered_fallbacks": [
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                    "harness": "Codex CLI",
+                    "model": "GPT-6 Astra",
+                    "reasoning": "high"
+                  },
+                  {
+                    "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                    "harness": "Claude Code",
+                    "model": "Claude Opus 5.5",
+                    "reasoning": "high"
+                  }
+                ]
+              },
+              "requirements_engineer": {
+                "sessions": {
+                  "planning": {
+                    "enabled": true,
+                    "primary": {
+                      "harness": "Cursor Agent",
+                      "model": "Grok 4.7",
+                      "reasoning": "high"
+                    },
+                    "ordered_fallbacks": [
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                        "harness": "Claude Code",
+                        "model": "Claude Opus 5.5",
+                        "reasoning": "high"
+                      },
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                        "harness": "Muse Code",
+                        "model": "Muse Spark 1.3",
+                        "reasoning": "max"
+                      }
+                    ]
+                  }
+                }
+              },
+              "test_engineer": {
+                "sessions": {
+                  "planning": {
+                    "enabled": true,
+                    "primary": {
+                      "harness": "Claude Code",
+                      "model": "Claude Opus 5.5",
+                      "reasoning": "high"
+                    },
+                    "ordered_fallbacks": [
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                        "harness": "Cursor Agent",
+                        "model": "Grok 4.7",
+                        "reasoning": "high"
+                      },
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                        "harness": "Codex CLI",
+                        "model": "GPT-6 Astra",
+                        "reasoning": "high"
+                      }
+                    ]
+                  },
+                  "assurance": {
+                    "enabled": false,
+                    "primary": {
+                      "harness": "Codex CLI",
+                      "model": "GPT-6 Astra",
+                      "reasoning": "high"
+                    },
+                    "ordered_fallbacks": [
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                        "harness": "Cursor Agent",
+                        "model": "Grok 4.7",
+                        "reasoning": "high"
+                      },
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                        "harness": "Claude Code",
+                        "model": "Claude Opus 5.5",
+                        "reasoning": "high"
+                      }
+                    ],
+                    "cadence": "phase"
+                  }
+                }
+              },
+              "systems_modeler": {
+                "sessions": {
+                  "planning": {
+                    "enabled": true,
+                    "primary": {
+                      "harness": "Muse Code",
+                      "model": "Muse Spark 1.3",
+                      "reasoning": "max"
+                    },
+                    "ordered_fallbacks": [
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                        "harness": "Codex CLI",
+                        "model": "GPT-6 Astra",
+                        "reasoning": "high"
+                      },
+                      {
+                        "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                        "harness": "Claude Code",
+                        "model": "Claude Opus 5.5",
+                        "reasoning": "high"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "development_strategy": {
+              "mode": "single_implementer"
+            },
+            "concurrency": {
+              "dispatch_ready_independent_work": false,
+              "preserve_order_for_dependencies_interfaces_write_overlap_and_shared_mutable_resources": true
+            },
+            "planning_to_implementation_clean_session": true,
+            "deterministic_verification": {
+              "reverify": {
+                "enabled": false
+              }
+            },
+            "review": {
+              "coverage_assist": {
+                "enabled": false,
+                "required": false
+              }
+            }
+          }
+        },
+        "lane_entries_digest_sha256": "d83b583369a7bf7ce522b32572f78534ffbce41a135b2b84c0087368ec7129ae"
+      },
+      {
+        "amended_at": "2026-09-26T04:15:15Z",
+        "id": "DEC-GM-041",
+        "source": "Owner in chat: 'why are we using max reasoning levels please stop that' then chose 'xhigh, apply now'",
+        "change": "For this journey, every route in the frozen snapshots (primary, tech-writing, frontend; primaries and fallbacks) whose reasoning is 'max' runs at 'xhigh' instead. The catalog file is unchanged.",
+        "applied": "Stopped the running P&D delta and its Muse max Systems Modeler runs and the Requirements Engineer run; relaunched at xhigh."
+      },
+      {
+        "amended_at": "2026-09-26T04:17:18Z",
+        "id": "DEC-GM-042",
+        "change": "Revokes DEC-GM-041; the frozen snapshot levels apply unchanged."
+      }
+    ]
   },
   "open_decisions": [
     {
@@ -929,17 +1803,95 @@
       "session_id": "159fa458-273d-4fbe-b041-b4074e8cf7aa",
       "result": "SHARED_UNDERSTANDING_CONFIRMED",
       "recorded_at": "2026-09-26T01:10:55Z"
+    },
+    {
+      "stage": "planning_and_design",
+      "event": "owner_requested_resume",
+      "at": "2026-09-26T01:41:41Z",
+      "stopped": "first P&D session and its in-flight specialist runs (ie2, re-r2, sm2, te2, plan integrator), at the owner's request",
+      "resumed_with": [
+        "DEC-GM-017",
+        "DEC-GM-012 partial supersession",
+        "DEC-GM-018",
+        "DEC-GM-019",
+        "DEC-GM-020",
+        "DEC-GM-021"
+      ],
+      "note": "Accepted specialist artifacts on disk are reused, not replayed."
+    },
+    {
+      "stage": "planning_and_design",
+      "event": "owner_requested_restart",
+      "at": "2026-09-26T01:47:45Z",
+      "note": "Resumed session stopped after about 6 minutes, before any specialist dispatch, to add DEC-GM-022."
+    },
+    {
+      "stage": "planning_review",
+      "at": "2026-09-26T02:43:30Z",
+      "slot_id": "planning-review-1",
+      "route": "Cursor Agent/Grok 4.7/high (frozen primary reviewer)",
+      "candidate_revision": "4defcb4535ca16d70918d3e597599ed26b03028e",
+      "candidate_digest": "1a0b6c0d3c93140e283901801f1f6947ce04f9c483ba2c056f4a84838e215260",
+      "verdict": "REPAIR_REQUIRED",
+      "findings": [
+        "F1 S17 lane/branch collision with S16",
+        "F2 three ERCOT report slugs left as placeholders"
+      ],
+      "ocr": "delegation mode ran; 5/76 reviewable; Markdown excluded (unsupported_ext) = typed coverage gap, reviewed directly",
+      "reverify": "not applicable: documents only, no binary claim",
+      "evidence": "specialists/planning-review-r1.md"
+    },
+    {
+      "stage": "planning_repair",
+      "at": "2026-09-26T02:43:30Z",
+      "route": "Claude Code headless planning_and_design delta",
+      "result": "DELTA_APPLIED",
+      "deterministic_gate": "plan-package PASS, 0 findings, manifest digest 3f54a0a17e509081e8e96017492533c09e0deeed31f81392cf369892b48339a4; render --check PASS",
+      "planning_review_gate": "PASS repair_gate_passed",
+      "evidence": "specialists/planning-gate.json, specialists/delta-f2-evidence.md"
+    },
+    {
+      "stage": "scope_definition",
+      "event": "reopened_at_approval_gate",
+      "result": "SHARED_UNDERSTANDING_CONFIRMED",
+      "session_id": "159fa458-273d-4fbe-b041-b4074e8cf7aa",
+      "decisions": [
+        "DEC-GM-027",
+        "DEC-GM-028",
+        "DEC-GM-029",
+        "DEC-GM-030",
+        "DEC-GM-031",
+        "DEC-GM-032",
+        "SC-2-AMENDMENT",
+        "DEC-GM-033",
+        "CONF-GM-PAGES",
+        "DEC-GM-034",
+        "DEC-GM-035",
+        "DEC-GM-012",
+        "CONF-GM-VISUAL-REVIEW",
+        "CONF-GM-JORDAN-DISCLAIMER",
+        "CONF-GM-PHASE-PLACEMENT",
+        "DEC-GM-036",
+        "CELL-GM-DISCLAIMER-PLACEMENT"
+      ],
+      "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "stage": "planning_and_design",
+      "role": "planning_and_design",
+      "host": "Claude Code headless",
+      "result": "PLAN_REVIEW_READY",
+      "delta": "DEC-GM-027..040, 042",
+      "plan_package": "PASS",
+      "manifest_digest": "cea7bcbdefd2f415064530b621cb4cee4284c6afcc81edf9b6116b8e5249730e"
     }
   ],
-  "pending_planning_delta": {
-    "reason": "Owner scope additions after Planning and Design dispatch",
-    "decisions": [
-      "DEC-GM-017",
-      "DEC-GM-012 partial supersession",
-      "DEC-GM-018",
-      "DEC-GM-019",
-      "DEC-GM-020"
-    ],
-    "action": "Dispatch planning_and_design delta when the running P&D session returns"
+  "approval": {
+    "approved_at": "2026-09-26T05:11:36Z",
+    "approved_by": "owner pre-approval DEC-GM-043, applied by DEC-GM-044",
+    "lifecycle_type": "standard",
+    "snapshot": "primary + lane amendments (tech-writing: spec, frontend: ui lanes)",
+    "manifest_digest": "cea7bcbdefd2f415064530b621cb4cee4284c6afcc81edf9b6116b8e5249730e",
+    "candidate_revision": "f6bfb23"
   }
 }

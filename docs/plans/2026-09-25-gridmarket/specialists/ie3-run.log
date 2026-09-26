@@ -1,0 +1,27 @@
+**Status: `GAPS`.** I re-issued the integration plan for the current slice graph. The assembly strategy is ready (`PLAN_READY`), but several fixes to `slice-graph.md` and `design.md` are needed before the affected waves dispatch.
+
+- **Verdict:** CF-01 to CF-12 are all resolved: Planning and Design applied them, and CF-12 was re-checked against the current graph. CF-09 has one leftover part, moved to CF-13. Nine new findings are added (CF-13 to CF-21).
+- **changed_paths:** `docs/plans/2026-09-25-gridmarket/specialists/integration-plan.md` only. No branches, no commit.
+- **tests:**
+  - The `integration_plan` JSON block parses and has the same 12 top-level keys. The 12 steps run in order 1–12. Every merged lane has a matching branch and worktree entry.
+  - Read-only checks on Jordan's branch: the common ancestor with this branch is `a63c8d2`. `git diff --name-only a63c8d2 origin/jordaaan` lists only 9 files, all under `ercot-hackathon/`. `origin/main` at `712f63a` has the same file tree as `a63c8d2`.
+  - `gitleaks` over `a63c8d2..origin/jordaaan` scanned 2 commits and found no leaks.
+  - Node is v22.23.2, so `node --test` can import the Worker code without a `package.json`.
+  - No product tests exist yet. Nothing was assembled.
+- **What the plan now contains:**
+  - **Items:** Jordan's branch at `4853e51` is an external item, with its own identity check (files only under `ercot-hackathon/`). The write-set check for the worker lane excludes Jordan's own commits.
+  - **Steps:** S09-A..E (foundation, market, data, ui, worker), S12-A lonestar, S12-B spec, S18-A adversary, S18-B backtest, S18-C ML, S18-D Rust. S18-E merges `origin/main` at a recorded SHA (with PR #3 if merged), then declares the final candidate.
+  - **V&V:** CMD-TEST-WORKER runs after the worker merge; the live check runs only after Jordan deploys and the owner's `.env` is in place. CMD-TEST-SPEC and CMD-SPEC-LINT run after the spec merge, CMD-TEST-ML after the ML merge.
+  - **Owner and Jordan dependencies:** the owner's `.env` now needs the Worker URL and market key, replacing the old ERCOT key dependency. Jordan deploys the fixed Worker and sets `MARKET_KEY` before the live check and phase 1 acceptance. Jordan merges or declines the PR into `jordaaan`, using a merge commit. Jordan avoids editing the Worker files during the fix. A new owner decision (OD-WORKER-LANDING) covers landing if PR #3 is still unmerged at the freeze.
+- **Concurrency proof:** write sets are disjoint in wave 1: `foundation` writes nothing under `ercot-hackathon/`, and `worker` writes only 4 paths there. Each wave has at most 3 lanes on its own. The proof fails across waves (CF-13).
+- **New findings:**
+  - **CF-13 (open, medium):** waves overlap, so 4 lanes can run at once. Wave 2 lanes need only S01, so they start while `worker` is still running. Wave 3 lanes need only S09, so they start while `spec` is still running. Fix: count the cap across waves, and add slot edges S25 --> S04 and S21 --> S15.
+  - **CF-14 (open, medium):** Jordan may edit `ercot-hackathon/src/index.js` at the same time. That would conflict with the PR into `jordaaan` and again at S18-E. A squash or rebase merge of that PR repeats the same changes at S18-E. The plan gives a merge-not-rebase procedure; Jordan has to agree to it.
+  - **CF-15 (medium):** `lane-rust` carries the backtest tests without `backtest.py`, and `lane-ml` needs the backtest merge. So Rust and ML merge only after backtest. The plan's entry criteria already enforce this; the S18 goal wording in `slice-graph.md` still needs changing.
+  - **CF-16 (open, medium):** the edges S25 --> S09 and S21 --> S12 hold up whole assembly slices. S09-A..D wait for the worker lane, and the lonestar merge waits for spec. Fix: make both completion-or-drop edges that gate only S09-E and S12-B.
+  - **CF-17 (resolved in this plan, low):** reverting the S09-E merge would hide Jordan's commits from the S18-E merge. The plan does a revert of the revert first.
+  - **CF-18 (open, low):** every smoke stack would poll the NWS weather API. Fix: a `GRIDMARKET_NWS=off` switch, which must land before S01 exits.
+  - **CF-19 (open, conditional):** if PR #3 is still unmerged at the freeze, the landing PR would put Jordan's commits into `main` anyway, and GitHub would count them as merged. The owner decides with Jordan (OD-WORKER-LANDING).
+  - **CF-20 (open, low):** the S23 row still says "when ERCOT key exists"; the market no longer holds an ERCOT key.
+  - **CF-21 (open, low):** `design.md`, `gridmarket-technical-plan.md` and `views/` are uncommitted. The approved planning commit must include them, because S21 writes the specification from them.
+- **blocker:** nothing blocks the plan itself. Before wave 2 dispatches, Planning and Design must apply CF-13. Before S09 and S12 dispatch, it must apply CF-16. CF-18 must land before S01 exits.
