@@ -1067,6 +1067,13 @@
       "decided_by": "Owner (commissioned acceptance audit) + Orchestrator (delegate)",
       "decision": "Owner's Astra-medium acceptance audit of fd1b9c4 (9 gaps A1-A9) mapped to repair lanes: A1 snapshot crash = R1-01 (S76) plus the empty-response case (S76b); A2 bot strategy, signal selection and learning not wired = R4-02 (S77) plus learning and signals (new S77b after S77); A3 DART resolution on duplicate readings (S76b); A4 refund rounding across reservations (new S78b after S78); A5 cash history, A6 net worth, A7 dormancy (S77b); A8 outage alert within 60 s (S76b); A9 remote admin 401 vs 403 ordering = R5-07 (S79). Evidence gaps (live ERCOT schema, restart reconstruction, strategy template resting orders, browser, container smoke, mutation) are carried as gaps until observed.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-118",
+      "decided_at": "2026-09-26T16:13:00-05:00",
+      "decided_by": "Orchestrator (delegate, planning owner) on sweep R7",
+      "decision": "Verification-plan corrections from the R7 audit: (1) the seit.json claim that ERCOT fixtures are sourced is false and is superseded by test rule 7 (sourced fixtures with provenance; spec-derived fixtures labelled synthetic); (2) PROC-ERCOT-LIVE-CHECK is re-specified as an as-flown boundary gate: after the owner deploys the Worker, capture one real response for each of the five report routes, ESR and the snapshot (scripts/capture_ercot.py from S76), run them through the backend parsers (S76's captured-file test) and require stored rows for every report; it blocks v1.0.0 unless the owner accepts the residual in writing; (3) mutation scope adds gridmarket_server.ercot and gridmarket_server.scoring (S76b Makefile change; the S18 gate reports their scores); (4) R7-08 zone-table flood and real-response dashboard fixtures go to S63, R7-07 and R7-12 to S76b.",
+      "reversible": true
     }
   ],
   "stages": {
