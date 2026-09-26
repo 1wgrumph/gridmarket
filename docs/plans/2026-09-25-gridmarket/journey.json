@@ -1004,7 +1004,7 @@
     },
     {
       "id": "DEC-GM-109",
-      "decided_at": "2026-09-26T15:40:00-05:00",
+      "decided_at": "2026-09-26T15:35:00-05:00",
       "decided_by": "Owner target + Orchestrator (delegate)",
       "decision": "Pull left toward the owner's 18:00 target: the UX review repair runs as two parallel Product Implementer slices from the S63-T exit instead of in sequence. S63 on lane ux (merges main after phase 2 lands): UX-02, 03, 04, 05, 07-15 (Overview, chart, Spec, Predictions, map, status, Providers, clickability, home layout). S64 on new lane ux2: UX-01, 06, 16-19 (bot summaries and number formatting, Market book and filters, Bots and profile, Sandbox, orders). S18 merges both lanes.",
       "owner_quote": "so we are almost done we might get done by 1800",
