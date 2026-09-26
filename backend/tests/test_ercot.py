@@ -81,7 +81,8 @@ def test_seit_gm_data_01_ingests_snapshot_and_all_five_reports(
     assert ercot.signals.latest("NP6-86-CD", "HOUSTON_NORTH_345KV").value == 125.5
     signal = ercot.signals.latest("NP6-905-CD", "LZ_HOUSTON")
     assert signal.interval_minutes == 15
-    assert signal.published_at == "2026-09-26T14:05:00Z"
+    # NP6-905-CD has no publish-time column; published_at is the interval end.
+    assert signal.published_at == "2026-09-26T13:15:00+00:00"
     for report, zone in (
         ("NP6-905-CD", "LZ_HOUSTON"),
         ("NP4-190-CD", "LZ_HOUSTON"),
@@ -99,7 +100,7 @@ def test_seit_gm_data_01_ingests_snapshot_and_all_five_reports(
             "SELECT published_at, fetched_at FROM signals WHERE value=70234"
         ).fetchone()
     assert snapshot is not None
-    assert snapshot[0] == "2026-09-26T14:00:00Z" and snapshot[1]
+    assert snapshot[0] == "2026-09-26T14:00:00.000Z" and snapshot[1]
 
 
 def test_seit_gm_data_02_sliding_budget_over_180_seconds() -> None:
@@ -118,7 +119,22 @@ def test_seit_gm_data_02_sliding_budget_over_180_seconds() -> None:
 
 def test_seit_gm_data_01_weather_zone_load_mapping() -> None:
     report = json.loads((FIXTURES / "np3-565-cd.json").read_text())
-    rows = {row[2]: row[3] for row in report["data"]}
+    names = [field["name"] for field in report["fields"]]
+    display = {
+        "coast": "Coast",
+        "east": "East",
+        "farWest": "Far West",
+        "north": "North",
+        "northCentral": "North Central",
+        "southCentral": "South Central",
+        "southern": "Southern",
+        "west": "West",
+    }
+    rows = {
+        display[name]: value
+        for name, value in zip(names, report["data"][0], strict=True)
+        if name in display
+    }
     assert callable(getattr(ercot, "map_weather_zone_load", None))
     assert ercot.map_weather_zone_load(rows) == {
         "LZ_HOUSTON": 1001,
@@ -159,7 +175,7 @@ def test_seit_gm_data_04_uses_only_worker_key_and_never_fresh(
     )
 
 
-@pytest.mark.parametrize("status", [0, 401, 404, 429, 500, 502, 503])
+@pytest.mark.parametrize("status", [0, 429, 500, 502, 503])
 def test_seit_gm_data_03_retries_worker_failures(
     status: int, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -174,6 +190,19 @@ def test_seit_gm_data_03_retries_worker_failures(
     assert ercot.worker_stats().errors >= 1
     if status == 429:
         assert ercot.worker_stats().http_429 >= 1
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 404])
+def test_seit_gm_data_03_client_errors_fail_fast(
+    status: int, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    with worker({"/api/snapshot": [status] * 7}) as (url, calls):
+        monkeypatch.setenv("GRIDMARKET_WORKER_URL", url)
+        monkeypatch.setenv("GRIDMARKET_WORKER_KEY", "fixture-market-key")
+        monkeypatch.setenv("GRIDMARKET_DB", str(tmp_path / "signals.db"))
+        asyncio.run(ercot.poll())
+    snapshot_calls = [call for call in calls if urlsplit(call["path"]).path == "/api/snapshot"]
+    assert len(snapshot_calls) == 1
 
 
 def test_seit_gm_data_03_backoff_caps_at_five_minutes() -> None:

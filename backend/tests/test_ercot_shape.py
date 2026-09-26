@@ -81,11 +81,20 @@ def weather(value: int) -> tuple:
                 "LZ_WEST": weather(2015),
             },
         ),
-        ("NP3-233-CD", "ercot/np3-233-cd.json", {"LZ_HOUSTON": (2310, H14, 60, "MW")}),
+        (
+            "NP3-233-CD",
+            "ercot/np3-233-cd.json",
+            {
+                "LZ_HOUSTON": (2310, H14, 60, "MW"),
+                "LZ_SOUTH": (3000, H14, 60, "MW"),
+                "LZ_NORTH": (4000, H14, 60, "MW"),
+                "LZ_WEST": (1500, H14, 60, "MW"),
+            },
+        ),
         (
             "NP6-86-CD",
             "ercot/np6-86-cd.json",
-            {"HOUSTON_NORTH_345KV": (125.5, "2026-09-26T14:00:00Z", 5, "$/MWh")},
+            {"HOUSTON_NORTH_345KV": (125.5, "2026-09-26T14:05:13+00:00", 5, "$/MWh")},
         ),
     ],
 )

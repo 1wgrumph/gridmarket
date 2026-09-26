@@ -14,10 +14,9 @@ from urllib.parse import parse_qs, urlsplit
 
 import httpx
 import pytest
+import s76_spec
 
 from gridmarket_server import ercot
-
-import s76_spec
 
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 POINTS = {"LZ_HOUSTON", "LZ_NORTH", "LZ_SOUTH", "LZ_WEST", "HB_HUBAVG"}
@@ -91,8 +90,23 @@ def handle(path: str, qs: dict[str, list[str]]) -> dict:
     if path.endswith("lf_by_model_weather_zone"):
         return s76_spec.np3_565(
             [
-                [f"{day}T08:30:00", day, "10:00", 18000, 2000, 6000, 1500, 14000,
-                 9000, 4000, 1300, 55800, "E", True, False]
+                [
+                    f"{day}T08:30:00",
+                    day,
+                    "10:00",
+                    18000,
+                    2000,
+                    6000,
+                    1500,
+                    14000,
+                    9000,
+                    4000,
+                    1300,
+                    55800,
+                    "E",
+                    True,
+                    False,
+                ]
             ]
         )
     if path.endswith("hourly_res_outage_cap"):
@@ -159,6 +173,7 @@ def test_s76_r1_03_report_queries_bounded_sorted_paged(
         assert re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$", qs["SCEDTimestampFrom"][0])
         assert qs["size"] and qs["sort"] and qs["page"]
 
+    assert ercot.signals.failed == set()  # Realistic page counts complete the cycle.
     assert ercot.signals.latest("NP6-905-CD", "LZ_HOUSTON").value == 50.0
     assert ercot.signals.latest("NP6-905-CD", "HB_HUBAVG").value == 50.0
     assert ercot.signals.latest("NP4-190-CD", "LZ_NORTH").value == 61.0
@@ -189,9 +204,7 @@ def test_s76_r1_05_snapshot_age_recomputed_at_read_time(
 
 # R1-16: deterministic 4xx fails fast; an exhausted budget raises instead of blocking.
 @pytest.mark.parametrize("status", [400, 401, 403, 404])
-def test_s76_r1_16_client_errors_fail_fast(
-    status: int, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_s76_r1_16_client_errors_fail_fast(status: int, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(ercot, "backoff_seconds", lambda attempt: 0)
     path = "/api/report/np6-86-cd/shdw_prices_bnd_trns_const"
     with worker({path: [status] * 7}) as (url, calls):

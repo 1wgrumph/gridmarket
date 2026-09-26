@@ -119,7 +119,23 @@ def np6_86(rows: list[list], total_pages: int = 1) -> dict:
 
 
 def sced_row(stamp: str, name: str, price: float, repeated: bool = False) -> list:
-    return [stamp, repeated, 1, name, "BASE CASE", price, 5251.0, 900, 900, 0, "A", "B", 345, 345, "COMP"]
+    return [
+        stamp,
+        repeated,
+        1,
+        name,
+        "BASE CASE",
+        price,
+        5251.0,
+        900,
+        900,
+        0,
+        "A",
+        "B",
+        345,
+        345,
+        "COMP",
+    ]
 
 
 # The Worker's real /api/snapshot body shape (ercot-hackathon/src/snapshot.js):
@@ -145,6 +161,14 @@ SNAPSHOT_ALL_FAILED = {
     "asOf": "2026-09-26T14:00:00Z",
     "ct": {"date": "2026-09-26", "hour": 9, "minute": 0},
     "heNow": 10,
-    "errors": {"demand": "x", "spp": "x", "dam": "x", "adders": "x", "wind": "x", "solar": "x", "weather": "x"},
+    "errors": {
+        "demand": "x",
+        "spp": "x",
+        "dam": "x",
+        "adders": "x",
+        "wind": "x",
+        "solar": "x",
+        "weather": "x",
+    },
     "checks": [],
 }

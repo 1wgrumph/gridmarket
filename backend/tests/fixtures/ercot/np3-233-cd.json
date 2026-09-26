@@ -1,13 +1,15 @@
 {
   "fields": [
-    {"name": "deliveryDate", "label": "Delivery Date", "dataType": "DATE"},
+    {"name": "postedDatetime", "label": "Posted Datetime", "dataType": "DATETIME"},
+    {"name": "operatingDate", "label": "Operating Date", "dataType": "DATE"},
     {"name": "hourEnding", "label": "Hour Ending", "dataType": "INTEGER"},
-    {"name": "loadZone", "label": "Load Zone", "dataType": "VARCHAR"},
-    {"name": "outageCapacity", "label": "Outage Capacity", "dataType": "INTEGER"},
-    {"name": "publishTime", "label": "Publish Time", "dataType": "DATETIME"}
+    {"name": "totalResourceMWZoneSouth", "label": "Total Resource MW Zone South", "dataType": "INTEGER"},
+    {"name": "totalResourceMWZoneNorth", "label": "Total Resource MW Zone North", "dataType": "INTEGER"},
+    {"name": "totalResourceMWZoneWest", "label": "Total Resource MW Zone West", "dataType": "INTEGER"},
+    {"name": "totalResourceMWZoneHouston", "label": "Total Resource MW Zone Houston", "dataType": "INTEGER"}
   ],
   "data": [
-    ["2026-09-26", 10, "LZ_HOUSTON", 2310, "2026-09-26T13:10:00Z"]
+    ["2026-09-26T08:05:00", "2026-09-26", 10, 3000, 4000, 1500, 2310]
   ],
-  "_meta": {"totalRecords": 1}
+  "_meta": {"totalRecords": 1, "pageSize": 1, "totalPages": 1, "currentPage": 1}
 }

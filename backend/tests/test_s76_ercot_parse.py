@@ -12,10 +12,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+import s76_spec
 
 from gridmarket_server import ercot
-
-import s76_spec
 
 NOW = datetime(2026, 9, 26, 14, 0, 10, tzinfo=UTC)
 H14, H15 = "2026-09-26T14:00:00+00:00", "2026-09-26T15:00:00+00:00"
@@ -114,9 +113,24 @@ def test_s76_r1_02_np3_565_wide_row_unpivots_and_rolls_up() -> None:
         "NP3-565-CD",
         s76_spec.np3_565(
             [
-                                ["2026-09-26T08:30:00", "2026-09-26", "10:00", 18000, 2000, 6000,
-                                 1500, 14000, 9000, 4000, 1300, 55800, "E", True, False]
-                            ]
+                [
+                    "2026-09-26T08:30:00",
+                    "2026-09-26",
+                    "10:00",
+                    18000,
+                    2000,
+                    6000,
+                    1500,
+                    14000,
+                    9000,
+                    4000,
+                    1300,
+                    55800,
+                    "E",
+                    True,
+                    False,
+                ]
+            ]
         ),
     )
     assert ercot.signals.latest("NP3-565-CD", "Coast").value == 18000
@@ -134,9 +148,24 @@ def test_s76_r1_02_np3_565_skips_retired_model_rows() -> None:
         "NP3-565-CD",
         s76_spec.np3_565(
             [
-                                ["2026-09-26T08:30:00", "2026-09-26", "10:00", 1, 1, 1, 1, 1, 1,
-                                 1, 1, 8, "OLD", False, False]
-                            ]
+                [
+                    "2026-09-26T08:30:00",
+                    "2026-09-26",
+                    "10:00",
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    8,
+                    "OLD",
+                    False,
+                    False,
+                ]
+            ]
         ),
     )
     assert rows("NP3-565-CD", "Coast") == []
@@ -157,7 +186,9 @@ def test_s76_r1_02_np3_233_operating_date_wide_zones() -> None:
 
 
 def test_s76_r1_02_np6_86_central_timestamp_converts_to_utc() -> None:
-    ercot.parse_report("NP6-86-CD", s76_spec.np6_86([s76_spec.sced_row("2026-09-26T09:05:13", "C1", 125.5)]))
+    ercot.parse_report(
+        "NP6-86-CD", s76_spec.np6_86([s76_spec.sced_row("2026-09-26T09:05:13", "C1", 125.5)])
+    )
     signal = ercot.signals.latest("NP6-86-CD", "C1")
     assert signal.value == 125.5
     assert signal.interval_start == "2026-09-26T14:05:13+00:00"  # 09:05 CDT.
@@ -169,8 +200,23 @@ def test_s76_r1_08_np3_565_roll_up_keeps_every_hour() -> None:
         "NP3-565-CD",
         s76_spec.np3_565(
             [
-                [f"2026-09-26T08:3{i}:00", "2026-09-26", f"1{i}:00", 18000, 2000, 6000,
-                 1500, 14000, 9000, 4000, 1300, 55800, "E", True, False]
+                [
+                    f"2026-09-26T08:3{i}:00",
+                    "2026-09-26",
+                    f"1{i}:00",
+                    18000,
+                    2000,
+                    6000,
+                    1500,
+                    14000,
+                    9000,
+                    4000,
+                    1300,
+                    55800,
+                    "E",
+                    True,
+                    False,
+                ]
                 for i in (0, 1)
             ]
         ),
@@ -223,8 +269,12 @@ def test_s76_r1_12_sced_repeated_hour_flag_sets_fold() -> None:
             ]
         ),
     )
-    assert ercot.signals.latest("NP6-86-CD", "C_FIRST").interval_start == "2026-11-01T06:05:13+00:00"
-    assert ercot.signals.latest("NP6-86-CD", "C_SECOND").interval_start == "2026-11-01T07:05:13+00:00"
+    assert (
+        ercot.signals.latest("NP6-86-CD", "C_FIRST").interval_start == "2026-11-01T06:05:13+00:00"
+    )
+    assert (
+        ercot.signals.latest("NP6-86-CD", "C_SECOND").interval_start == "2026-11-01T07:05:13+00:00"
+    )
 
 
 # R1-04: stale means the measurement is old, not the fetch.
