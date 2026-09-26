@@ -5,12 +5,12 @@ import json
 import sqlite3
 import subprocess
 import sys
+import tomllib
 from contextlib import asynccontextmanager
+from datetime import datetime
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
-
-import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 TOOLS = {
@@ -75,11 +75,7 @@ def tool_data(result):
     if value is None:
         assert len(result.content) == 1 and hasattr(result.content[0], "text")
         value = json.loads(result.content[0].text)
-    return (
-        value["result"]
-        if isinstance(value, dict) and set(value) == {"result"}
-        else value
-    )
+    return value["result"] if isinstance(value, dict) and set(value) == {"result"} else value
 
 
 def without_user_text(value):
@@ -103,15 +99,30 @@ def products(url):
 def test_seit_gm_mcp_01_read_tools_match_dashboard_api(backend):
     import gridmarket_mcp  # noqa: F401 -- red import must happen inside the test call
 
+    def without_call_times(value, timestamps, path=()):
+        # Only computation times vary per call; stored event times must still match.
+        if isinstance(value, dict):
+            result = {}
+            for field, item in value.items():
+                if field == "generated_at":
+                    timestamps[path + (field,)] = item
+                else:
+                    result[field] = without_call_times(item, timestamps, path + (field,))
+            return result
+        if isinstance(value, list):
+            return [
+                without_call_times(item, timestamps, path + (index,))
+                for index, item in enumerate(value)
+            ]
+        return value
+
     with backend() as (url, _):
         key = sandbox_key(url, "ReadCaller")["api_key"]
         symbol = products(url)[0]["symbol"]
 
         async def check():
             async with mcp_session(url, key) as session:
-                assert TOOLS <= {
-                    tool.name for tool in (await session.list_tools()).tools
-                }
+                assert TOOLS <= {tool.name for tool in (await session.list_tools()).tools}
                 for name, path, arguments in (
                     ("market", "/v1/market", {}),
                     ("order_book", f"/v1/market/{symbol}", {"symbol": symbol}),
@@ -122,9 +133,15 @@ def test_seit_gm_mcp_01_read_tools_match_dashboard_api(backend):
                 ):
                     status, expected = rest(url, path)
                     assert status == 200, (name, expected)
-                    assert tool_data(
-                        await session.call_tool(name, arguments)
-                    ) == without_user_text(expected), name
+                    actual = tool_data(await session.call_tool(name, arguments))
+                    actual_times, expected_times = {}, {}
+                    assert without_call_times(actual, actual_times) == without_call_times(
+                        without_user_text(expected), expected_times
+                    ), name
+                    assert actual_times.keys() == expected_times.keys(), name
+                    for timestamp in actual_times.values():
+                        assert isinstance(timestamp, str) and "T" in timestamp, name
+                        datetime.fromisoformat(timestamp)
 
         asyncio.run(check())
 
@@ -183,12 +200,10 @@ def test_seit_gm_mcp_01_private_tools_are_caller_scoped(backend):
                 ):
                     own_status, expected = rest(url, path, key=own["api_key"])
                     other_status, other_rows = rest(url, path, key=other["api_key"])
-                    assert (
-                        own_status == other_status == 200 and expected != other_rows
+                    assert own_status == other_status == 200 and expected != other_rows, name
+                    assert tool_data(await session.call_tool(name, {})) == without_user_text(
+                        expected
                     ), name
-                    assert tool_data(
-                        await session.call_tool(name, {})
-                    ) == without_user_text(expected), name
 
         asyncio.run(check())
 
@@ -204,9 +219,7 @@ def test_seit_gm_mcp_01_order_tools_use_public_risk_engine(backend):
         async def check():
             async with mcp_session(url, key) as session:
                 accepted = tool_data(
-                    await session.call_tool(
-                        "buy", {**order, "idempotency_key": "mcp-buy"}
-                    )
+                    await session.call_tool("buy", {**order, "idempotency_key": "mcp-buy"})
                 )
                 status, orders = rest(url, "/v1/orders", key=key)
                 assert status == 200 and accepted["id"] in json.dumps(orders)
@@ -222,13 +235,8 @@ def test_seit_gm_mcp_01_order_tools_use_public_risk_engine(backend):
                     body={**order, "side": "buy", "quantity": 51},
                     idempotency="api-too-large",
                 )
-                assert (
-                    api_status >= 400
-                    and api_error["error"]["code"] == "ORDER_TOO_LARGE"
-                )
-                cancelled = await session.call_tool(
-                    "cancel", {"order_id": accepted["id"]}
-                )
+                assert api_status >= 400 and api_error["error"]["code"] == "ORDER_TOO_LARGE"
+                cancelled = await session.call_tool("cancel", {"order_id": accepted["id"]})
                 assert not cancelled.isError, cancelled
                 status, order_after = rest(url, f"/v1/orders/{accepted['id']}", key=key)
                 assert status == 200 and order_after["status"] in {
