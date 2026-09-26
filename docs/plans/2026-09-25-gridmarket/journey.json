@@ -209,6 +209,16 @@
         "DEC-GM-010",
         "DEC-GM-017"
       ]
+    },
+    {
+      "id": "DEC-GM-022",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T01:47:45Z",
+      "source": "Owner in chat: 'just add that rate limit hole as an implementation slice'",
+      "decision": "The ERCOT Worker rate-limit exposure is its own implementation slice in the first wave, done by the agent lanes rather than offered to Jordan first. Scope: in ercot-hackathon/, put /api/report/* behind an allowlist of the reports the snapshot and views use; add a per-IP rate limit on /api/* (for example a KV or Durable Object counter or a Cloudflare rate-limiting binding); gate /api/snapshot?fresh behind a shared key or remove it; keep the 429 backoff. Verification: a burst test shows ERCOT upstream calls stay under 30/min while the public endpoints return 429 to abusers. Deploying it to Jordan's Cloudflare account is Jordan's action, or needs his credentials.",
+      "amends": [
+        "DEC-GM-021"
+      ]
     }
   ],
   "stages": {
@@ -961,6 +971,12 @@
         "DEC-GM-021"
       ],
       "note": "Accepted specialist artifacts on disk are reused, not replayed."
+    },
+    {
+      "stage": "planning_and_design",
+      "event": "owner_requested_restart",
+      "at": "2026-09-26T01:47:45Z",
+      "note": "Resumed session stopped after about 6 minutes, before any specialist dispatch, to add DEC-GM-022."
     }
   ]
 }
