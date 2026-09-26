@@ -97,19 +97,34 @@ coverage:
 	$(UV) diff-cover /tmp/gm-evidence/coverage.xml --compare-branch=$(BASE) --fail-under=80
 
 mutation:
+	mkdir -p backend/mutants
+	test -L backend/mutants/source-tests || ln -s ../tests backend/mutants/source-tests
 	cd backend && uv run --frozen mutmut run $(MUTANTS)
 	cd backend && uv run --frozen mutmut export-cicd-stats
 	cat backend/mutants/mutmut-cicd-stats.json
+	@python3 -c 'import json; s=json.load(open("backend/mutants/mutmut-cicd-stats.json")); n=s["killed"]+s["survived"]+s["timeout"]; assert n, "No scored mutants"; print("Mutation score: {:.2%} ({}/{})".format(s["killed"]/n, s["killed"], n))'
 
 bench:
 	$(UV) python bench/bench_matching.py --orders 100000 --seed 20260926 --out bench/results.md
 
 smoke:
 	@test -n "$(SMOKE_PROJECT)" && test -n "$(SMOKE_PORT)" && test -f deploy/compose.yaml
-	@f=$$(mktemp); trap 'docker compose -p $(SMOKE_PROJECT) -f deploy/compose.yaml down -v >/dev/null 2>&1; rm -f "$$f"' EXIT; \
+	@set -euo pipefail; f=$$(mktemp "$$PWD/.gm-smoke.XXXXXX"); \
+	  export GM_ENV_FILE="$$f" GRIDMARKET_PORT="$(SMOKE_PORT)"; \
+	  compose=(docker compose -p "$(SMOKE_PROJECT)" -f deploy/compose.yaml); \
+	  cleanup() { rc=$$?; "$${compose[@]}" down -v || rc=$$?; rm -f "$$f" || rc=$$?; exit "$$rc"; }; trap cleanup EXIT; \
 	  printf 'GRIDMARKET_NWS=off\nGRIDMARKET_BOT_SECRET=%s\nGRIDMARKET_BOT_MASTER_SEED=20260926\n' "$$(python3 -c 'import secrets;print(secrets.token_hex(16))')" > "$$f"; \
-	  GM_ENV_FILE="$$f" GRIDMARKET_PORT=$(SMOKE_PORT) docker compose -p $(SMOKE_PROJECT) -f deploy/compose.yaml up -d --build --wait app bots; \
-	  curl --fail --silent http://127.0.0.1:$(SMOKE_PORT)/v1/market/status
+	  "$${compose[@]}" up -d --build --wait --wait-timeout 60 app bots; \
+	  test "$$(curl --fail --silent --show-error --max-time 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:$(SMOKE_PORT)/v1/market/status)" = 200; \
+	  curl --fail --silent --show-error --max-time 5 http://127.0.0.1:$(SMOKE_PORT)/ | python3 -c 'import sys; html=sys.stdin.read(); assert "<html" in html.lower() and "<div id=\"root\"" in html and "<script" in html, "Dashboard HTML missing"'; \
+	  test "$$("$${compose[@]}" port app 8000)" = "127.0.0.1:$(SMOKE_PORT)"; \
+	  test "$$("$${compose[@]}" exec -T app id -u)" = 10001; \
+	  "$${compose[@]}" config --format json | python3 -c 'import json,sys; c=json.load(sys.stdin); v=c["volumes"]["gm-data"]; assert v["name"] == c["name"]+"_gm-data" and not v.get("external", False); assert any(m["type"] == "volume" and m["source"] == "gm-data" and m["target"] == "/data" for m in c["services"]["app"]["volumes"])'; \
+	  app=$$("$${compose[@]}" ps -q app); bots=$$("$${compose[@]}" ps -q bots); test -n "$$app"; test -n "$$bots"; \
+	  docker inspect "$$app" | python3 -c 'import json,sys; c=json.load(sys.stdin)[0]; assert c["HostConfig"]["ReadonlyRootfs"] is True; assert c["HostConfig"]["RestartPolicy"]["Name"] == "unless-stopped"; assert "GRIDMARKET_DB=/data/gridmarket.db" in c["Config"]["Env"]; assert any(m["Type"] == "volume" and m["Name"] == sys.argv[1]+"_gm-data" and m["Destination"] == "/data" and m["RW"] for m in c["Mounts"])' "$(SMOKE_PROJECT)"; \
+	  sleep 30; \
+	  docker inspect "$$bots" | python3 -c 'import json,sys; c=json.load(sys.stdin)[0]; assert c["State"]["Running"] and not c["State"]["Restarting"] and c["RestartCount"] == 0; assert c["State"]["Health"]["Status"] == "healthy"'; \
+	  echo "Smoke assertions passed: dashboard, loopback port, UID, read-only root, restart policy, SQLite volume, bots stable for 30s"
 
 secrets:
 	gitleaks git --config .gitleaks.toml --redact --exit-code 1 .
