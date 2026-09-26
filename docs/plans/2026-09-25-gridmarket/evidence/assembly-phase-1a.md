@@ -9,7 +9,9 @@ public_boundary: private
 
 # Phase 1a assembly — S09
 
-Outcome: **REPAIRABLE_FAILURE**. S09-A merged without conflicts but failed its required dashboard gates. It was reverted under PROC-ASSEMBLY. No assembly step is complete; S09-B through S09-E were not attempted. S09-L remains with the Orchestrator.
+Current outcome: **ENVIRONMENT_FAILURE** pending worker command amendment. S09-A is green under DIR-P1a-03. S09-B is merged with all 25 worker tests passing via explicit file selection, but its prescribed directory invocation fails before test loading. No later step runs while this gap is unresolved.
+
+Historical outcome before DIR-P1a-03: **REPAIRABLE_FAILURE**. S09-A merged without conflicts but failed its required dashboard gates. It was reverted under PROC-ASSEMBLY. No assembly step is complete; S09-B through S09-E were not attempted. S09-L remains with the Orchestrator.
 
 ## Authority and input identity
 
@@ -89,3 +91,54 @@ These blobs describe the reverted attempt only; do not adopt them as a green bas
 Toolchain observed: Python 3.12.3; uv 0.11.6; Node v22.23.2; npm 11.15.0; gitleaks 8.30.1. Vitest reported v3.2.7. Docker, compose, graphviz, draw.io, cargo and maturin were not exercised because assembly stopped at S09-A.
 
 No compose file, Dockerfile or smoke image exists at this step. Engine/provider runtime not exercised; no deployed Worker identity or credential access. Owner deployment and acceptance remain pending. S09-B/C/D/E are blocked by failed S09-A; later exit availability was not used to bypass the failed step.
+
+## DIR-P1a-03 recovery — S09-A complete
+
+Current dispatch: DIR-P1a-03 / DEC-GM-052 supersedes the earlier gate ordering and re-entry requirement. The rollback arose from a plan gate-order defect, not a product-code defect. Historical attempt and rollback evidence above remains unchanged except its outcome is explicitly historical.
+
+- Initial HEAD: `4b74f20`; branch clean before recovery.
+- Ran `git revert --no-edit c55ede7`; restoration commit: `a809ebb93cc005fc170ee33ecf1df303c4d5cbc2`.
+- Restored product tree equals the original S09-A merge `eb600c0` (evidence file excluded); comparison exit 0. No product edits outside the authorized revert.
+- S01 identity remains `4256b221081a0f145524df1da6a5a2aaa2092221`; its frozen file blob SHAs in the baseline table above are now the accepted green S09-A baseline. All twelve blobs are unchanged by recovery.
+- Existing W1 receipt confirms S01 and S25 gates; unchanged dependency identities reuse its dependency admission evidence. Setup left both lockfiles unchanged (diff exit 0).
+
+| Check | Exit | Result |
+|---|---:|---|
+| `make setup` | 0 | Frozen backend dependencies and dashboard packages installed; same two moderate development advisories as W1. |
+| `make lint` | 0 | Ruff checks pass; 25 files formatted. |
+| `make test-contracts` | 0 | 3 passed. |
+| `uv run --project backend --frozen pytest -q backend/tests` | 0 | 3 passed; complete backend portion of `test-all`. No tools/tests or MCP project exists at this step. |
+| `make secrets` | 0 | 62 commits scanned; no leaks; license and env-example checks pass. |
+| `make test-dash` | — | NOT_APPLICABLE until S09-E: no dashboard test files before the ui lane merges (DIR-P1a-03). |
+| `make test-all` | — | Backend portion executed above; full target deferred until S09-E under DIR-P1a-03. |
+| CMD-SMOKE | — | NOT_APPLICABLE: deploy/compose.yaml arrives with market at S09-C. |
+
+Reverify: NOT_APPLICABLE — source-level assembly checks; no compiled-binary claim. Frozen OCR and Reverify selections above remain unchanged; independent phase review and assurance are still pending.
+
+## S09-B assembly and invocation gap
+
+- Input S25: `4ff729401ec87f20f79dfcc7bf5f13e028b08091`.
+- External jordaaan base: `4853e51b2a5d8564631946e688e53802f83a7ab8`; verified ancestor of the integrated candidate.
+- Ran `git merge --no-ff 4ff7294`; merge commit: `5f14faf5e4d1dab1791729d1cd75d6d83b0dbf59`; tree: `1efbaeb16281c0d496c186fcc707dac6af83a5d7`.
+- No conflicts, glue, or product edits. External diff contains only `ercot-hackathon/**`. Agent commits after `4853e51` touch exactly S24's test file and S25's README, index.js and wrangler.jsonc write set. W1 records both exits green with phase assurance deferred.
+- Frozen-contract check against S01 (including dashboard/vite.config.ts): exit 0, no differences. Setup leaves both lockfiles unchanged.
+
+| Check | Exit | Result |
+|---|---:|---|
+| `make setup` | 0 | Frozen installation passes. |
+| `make lint` | 0 | Ruff checks pass; 25 files formatted. |
+| `make test-contracts` | 0 | 3 passed. |
+| `uv run --project backend --frozen pytest -q backend/tests` | 0 | 3 passed; complete backend portion of `test-all`. No tools/tests or MCP project exists. |
+| `make secrets` | 0 | 63 commits scanned including Jordan history; no leaks; license and env-example checks pass. |
+| `make rules` | 0 | Baseline-rules, Jev boundary, and author-time checks pass. |
+| `node --test ercot-hackathon/test/` | 1 | Node v22.23.2 treats the directory argument as a module; MODULE_NOT_FOUND before test loading. |
+| `node --test ercot-hackathon/test/*.test.mjs` (diagnostic) | 0 | All 25 tests pass, 0 fail, 0 skipped; all eight S24 cases, including burst and retry, exercised. |
+| `make test-dash` | — | NOT_APPLICABLE until S09-E: no dashboard test files before the ui lane merges (DIR-P1a-03). |
+| `make test-all` | — | Backend and worker portions run separately; full target deferred until S09-E. Worker directory invocation remains a gate gap pending amendment. |
+| CMD-SMOKE | — | NOT_APPLICABLE: deploy/compose.yaml arrives with market at S09-C. |
+
+Classification: AN-ENV / test-command invocation mismatch, not evidence of a worker behavior defect. Exact required worker command is not green; diagnostic test success does not silently replace that gate. Requested owner amendment to use the file-based invocation; no product or Makefile edit is authorized here. No issue filed for this in-scope plan/command mismatch.
+
+S08, S06 and S07 exit files were absent at this checkpoint. No later lane merged. S09-L, phase review/assurance, owner acceptance, deployment, and credential access remain outside this execution session.
+
+The W1 S25 receipt explicitly used `node --test ercot-hackathon/test/*.test.mjs` (25/25 green), confirming that its PASS did not exercise the prescribed directory command. `implementation.json` AN-ENV distinguishes Node/tooling failures from AN-PRODUCT-RED and retains the same candidate for environment correction; S09-B is retained pending disposition, with no product PASS or full-phase PASS claimed. The same directory invocation also occurs in Makefile's `test-all`, so S09-E will require an authorized command correction before its full gate can pass. All twelve frozen baseline blob identities independently verified at S09-B.
