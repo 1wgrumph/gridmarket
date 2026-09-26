@@ -1,19 +1,24 @@
 """S02 market behavior against the real SQLite schema and HTTP order path."""
 
+import asyncio
 import hashlib
 import sqlite3
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import httpx
 import pytest
+import uvicorn
 from fastapi.testclient import TestClient
 
 from gridmarket_server import main, market, population, seed
 from gridmarket_server.providers import enabled
 
 SCHEMA = Path(__file__).resolve().parents[1] / "gridmarket_server/schema.sql"
-HOUR = (datetime.now(UTC) + timedelta(hours=4)).replace(minute=0, second=0, microsecond=0)
+HOUR = datetime.now(UTC).replace(minute=0, second=0, microsecond=0) + timedelta(hours=5)
 SPOT_HOUR = HOUR - timedelta(hours=3)
 
 
@@ -314,3 +319,110 @@ def test_seit_gm_prov_04_offline_seller_rejected_but_buyer_allowed(exchange):
         db.execute("UPDATE provider_health SET online=1 WHERE provider_id='base_sim'")
         db.commit()
     assert place(client, "seller", "spot", "sell", 1, 20, "online").status_code < 300
+
+
+def test_s05_anom_status_returns_newest_50_rows(exchange):
+    path, client = exchange
+    response = client.get("/v1/market/status")
+    assert response.status_code == 200
+    assert response.json() == {"status": "open", "anomalies": []}
+    anomalies = [
+        {
+            "id": f"anomaly-{i}",
+            "kind": "order_burst",
+            "subject_id": "buyer" if i < 54 else None,
+            "detail": f"Burst {i}" if i < 54 else None,
+            "created_at": (HOUR + timedelta(seconds=i // 2)).isoformat(),
+        }
+        for i in range(55)
+    ]
+    with sqlite3.connect(path) as db:
+        # Insert out of timestamp order, including ties at the 50-row boundary.
+        db.executemany(
+            "INSERT INTO anomalies(id,kind,subject_id,detail,created_at) "
+            "VALUES (:id,:kind,:subject_id,:detail,:created_at)",
+            reversed(anomalies),
+        )
+    response = client.get("/v1/market/status")
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "open",
+        "anomalies": sorted(anomalies, key=lambda row: row["created_at"], reverse=True)[:50],
+    }
+
+
+def test_s05_anom_live_burst_finishes_under_half_second_without_lost_orders(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    path = tmp_path / "burst.db"
+    monkeypatch.setenv("GRIDMARKET_DB", str(path))
+    monkeypatch.setenv("GRIDMARKET_NWS", "off")
+    monkeypatch.delenv("GRIDMARKET_WORKER_URL", raising=False)
+    monkeypatch.setenv("GRIDMARKET_BOT_MASTER_SEED", "s05-anom")
+    monkeypatch.setenv("GRIDMARKET_BOT_SECRET", "s05-local-test-secret")
+    server = uvicorn.Server(
+        uvicorn.Config(main.create_app(), host="127.0.0.1", port=0, log_level="error")
+    )
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+    try:
+        deadline = time.monotonic() + 5
+        while not server.started and thread.is_alive() and time.monotonic() < deadline:
+            time.sleep(0.01)
+        assert server.started, "loopback uvicorn did not start"
+        port = server.servers[0].sockets[0].getsockname()[1]
+        with sqlite3.connect(path) as db:
+            db.execute("INSERT INTO accounts(id,display_name) VALUES ('burst','Burst')")
+            db.execute(
+                "INSERT INTO api_keys(id,account_id,key_hash,label) VALUES (?,?,?,?)",
+                ("burst", "burst", hashlib.sha256(api_key("burst").encode()).hexdigest(), "Burst"),
+            )
+
+        async def burst():
+            async with httpx.AsyncClient(
+                base_url=f"http://127.0.0.1:{port}", timeout=5, trust_env=False
+            ) as client:
+                response = await client.get("/v1/market")
+                assert response.status_code == 200
+                product = next(p["id"] for p in response.json() if p["symbol"].startswith("FLEX-"))
+                start = time.perf_counter()
+                responses = await asyncio.gather(
+                    *(
+                        client.post(
+                            "/v1/orders",
+                            headers={
+                                "Authorization": f"Bearer {api_key('burst')}",
+                                "Idempotency-Key": str(i),
+                            },
+                            json={
+                                "product_id": product,
+                                "side": "buy",
+                                "quantity": 1,
+                                "price_cents": 1,
+                            },
+                        )
+                        for i in range(50)
+                    )
+                )
+                return responses, time.perf_counter() - start
+
+        responses, elapsed = asyncio.run(burst())
+    finally:
+        server.should_exit = True
+        thread.join(timeout=5)
+    assert not thread.is_alive()
+    assert len(responses) == 50
+    assert all(response.status_code in (200, 429) for response in responses)
+    accepted = {response.json()["id"] for response in responses if response.status_code == 200}
+    assert len(accepted) >= 40
+    limited = [response for response in responses if response.status_code == 429]
+    assert limited
+    for response in limited:
+        assert response.json()["error"]["code"] == "RATE_LIMITED"
+        assert int(response.headers["Retry-After"]) >= 1
+    # Reopen after server shutdown: every acknowledged order and retry record survived.
+    with sqlite3.connect(path) as db:
+        assert {row[0] for row in db.execute("SELECT id FROM orders")} == accepted
+        assert db.execute("SELECT COUNT(*) FROM idempotency").fetchone()[0] == len(accepted)
+        assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+    assert elapsed < 1.0, f"50-order burst took {elapsed:.3f}s"
