@@ -1172,3 +1172,85 @@ risks: router F2 is reverted, views F10 and pages F3/F4/F5/F6/F9 are unassembled
 ATE-01 remains unproven, and the final gate/mutation have no Attempt-11 result.
 **S49-L NOT_RUN.** No PR, main merge, branch deletion, force push, git switch,
 spec merge, frozen-file edit, owner credential access, deployment or issue closure.
+
+
+## Attempt 12 (repair round 1 closure)
+
+**Outcome: REPAIRABLE_FAILURE — router repair returned after the cheap gate.**
+Journey GM-2026-09-25, S49, execution session, phase 1b repair round 1;
+DEC-GM-083/084. Entry `e30c917ed542e85aaad386c6ac0ec3b9b228b001`
+on `gridmarket/integration-1b`, clean. Evidence root:
+`/tmp/gm-evidence/P1b/attempt-12/`.
+
+### Assembly and recovery
+
+| Operation | Exact identity | Command exit | make lint | git diff --check |
+|---|---|---:|---:|---:|
+| Revert `ad3ccf7ed5a8b41778b2c58635121df58cc171f0`, restoring router tip `e3caa3a35588f26b976ee4062443527bdeb68a78` | `bf7f515c728ceae8d45ab0fca0683a9ef598e728` | 0 | **2** | 0 |
+| Revert only that restore (`git revert --no-edit bf7f515`) | `6f918caa4ff4880aa34fe9ff8c7a6017a10b0a1f` | 0 | 0 | 0 |
+
+`assembly.json`, `router-merge.log`, `router-lint.log`, and
+`router-diff-check.log` bind the failed step. `rollback.json`,
+`router-rollback.log`, `rollback-lint.log`, and `rollback-diff-check.log`
+bind recovery. No conflict occurred. Recovery tree
+`ade661e642a87e41e7018898f6e592a513f8a07e` exactly equals the entry tree;
+the bots repair remains, and only the router restoration was removed.
+
+Ruff check passed, but Ruff format check rejected the newly added assertion in
+`backend/tests/test_router.py:547` in `test_router_matches_live_report_ids`.
+The supplied router tip spreads the expected one-element list over three
+lines; the pinned formatter requires it on one line. `ruff-version.txt`
+records the executable version. The formatter failure is confined to the
+router delta and disappears on rollback. It is a lane formatting defect,
+not a demonstrated runtime product defect. No product/test edit or issue
+filing was performed. DEC-GM-084's dashboard-flake retry does not apply.
+Return router to its lane for formatting and a new exact repair tip.
+
+The following authorized tips were preflighted but **NOT_MERGED** due to
+stop-on-red: views `f1e6d97639d0885e918708b541586eac96a37598`, pages
+`0ef25fdab59c434cc5d4f724440b3e95df9f78b5`, design
+`6e91157d03d5362844ee2d98be646509c7820856`, market2
+`c773c8e8f20966e2c2cecded8bc42403d64cd4cc`.
+`preflight.json` binds their paths to the canonical amended lane unions.
+`frozen-baseline.json` binds the unchanged contract/lock/config blobs;
+DEC-GM-074's api.ts/hooks.ts exception was reserved for design only.
+Canonical implementation.json, journey.json and seit.json snapshots are
+retained under `canonical-*.json`. Implementation SHA-256:
+`c91cc259b6c54d4d294b21429931d909b6b972c453aaf3eda35258abba996c67`;
+journey: `34a8d6bbcd2ae52cf8774c6f5d8dbeef6cdc96104fbebfd7850ef6038da0ed99`;
+seit: `269c1903c9f0e4b27c436504d19670177a1057cdc12d80094e83effe380b5b03`.
+
+### Final-gate and proof disposition
+
+The final merge candidate was **NOT_REACHED**. All final-gate commands are
+**NOT_RUN**: lint, test-contracts, test-all, test-bots, test-router, test-data,
+test-market, test-dash, test-worker, smoke, secrets, rules, and market mutation.
+`final-gate-not-run.json` records each disposition. The cheap lint receipts
+above do not stand in for the full final gate. Mutation score: **NOT_RUN**;
+no >=70% claim. ATE-P1b-03 S28 JUnit: **NOT_RUN**, no new green binding.
+ATE-P1b-01's seeded units test remains unmerged. No smoke stack was launched.
+The canonical CMD-TEST-WORKER is `node --test ercot-hackathon/test/`
+(seit.json); this repository has no `make test-worker` target.
+
+Recovery SHA: `6f918caa4ff4880aa34fe9ff8c7a6017a10b0a1f`; there is no
+Attempt-12 final four-merge candidate. This evidence-only commit follows
+recovery. `final-verification.json` and `final-push.log` record the evidence
+commit, clean tree and authorized non-force branch push. A pushed failure
+record does not establish a green phase or landing authority.
+
+`frozen-profile.json` preserves the frozen role routes and both capabilities
+at digest `14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`.
+`capabilities.json` records OCR delegation enabled/not-required and executable
+available, **NOT_RUN: assembly, no second code review**; Reverify enabled and
+executable available, **NOT_APPLICABLE: no compiled binary claim**.
+**BRAN_UNAVAILABLE:** no native policy; Git and canonical plan evidence used.
+This receipt is diagnostic integration evidence, not independent assurance.
+
+Remaining risks: router F2 is reverted; views/pages repairs and design/pages
+flake fixes remain unassembled; the seeded units proof is unmerged; no final
+gate, mutation score, or S28 JUnit exists for this attempt. Prior carried
+SPEC_WRITESET_GAP (spec deferred to phase 2 under DEC-GM-078/083), entropy
+proof reconciliation, owner PROC-ERCOT-LIVE-CHECK, AC-GM-ACC-01, and
+MARKET_URL redeploy / VIEWS_NOT_DEPLOYED remain outside this bounded closure.
+No PR, main merge, branch deletion, force push, git switch, uv.lock edit,
+credential access, deployment, or issue closure occurred. S49-L NOT_RUN.
