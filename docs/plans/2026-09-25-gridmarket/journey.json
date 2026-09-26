@@ -617,6 +617,14 @@
       "source": "Orchestrator as owner delegate (DEC-GM-043); found in the local preview requested by the owner",
       "decision": "Two defects from the local preview (integration-1a plus the pages and providers-page lanes, served on 127.0.0.1:8765). (1) Data lane S06-repair2: nws.py raises KeyError 'updated' on the live NWS payload, so no weather reaches the scores. It is fixed in parallel with S05-repair2, before 1a assurance. (2) Pages lane S51-repair: #/market crashes on book.bids being undefined (a UI/API shape mismatch), and there is no error boundary. It is fixed in phase 1b. The owner's design rework guide follows separately.",
       "why": "Found by running the product, not by tests: the NWS fixture had an `updated` key that the live API does not return, and no test covered the Market page against the real API shape."
+    },
+    {
+      "id": "DEC-GM-060",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T12:29:53Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043)",
+      "decision": "S28 test correction (S28-fix, by the Test Implementer): in test_economy.py, set acct-capacity employed=False and acct-employed employed=True, matching the dormancy rule in design.md 600-603. S29 then continues from its uncommitted work.",
+      "why": "S29 correctly returned CONTRACT_FAILURE: the frozen test asserted that an unemployed, zero-cash, no-capacity account is not dormant. Under tdd, the Product Implementer may not change tests, so the Test Implementer corrects them."
     }
   ],
   "stages": {
