@@ -1,0 +1,7 @@
+title: GridMarket Architecture Specification
+document_id: GM-SPEC-001
+revisions:
+  - rev: "0.1"
+    date: "2026-09-26"
+    author: Claude Code (spec lane, slice S21)
+    summary: Initial draft from design.md and the technical plan of Lifecycle GM-2026-09-25

@@ -514,3 +514,7 @@ thead th{font-weight:500;letter-spacing:.02em}
 .empty.loading.reserve-predictions-zones{min-height:600px}
 .empty.loading.reserve-predictions-checks{min-height:200px}
 .empty.loading.reserve-bots{min-height:300px}
+/* S53-cls: the Bot profile loading skeleton reserves the loaded panels' height (panel head included) so they arrive without shifting the page. */
+.profile-reserve .loading{min-height:584px}
+@media(max-width:1100px) and (min-width:761px){.profile-reserve .loading{min-height:1178px}}
+@media(max-width:760px){.profile-reserve .loading{min-height:1384px}}

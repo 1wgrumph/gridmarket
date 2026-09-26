@@ -364,7 +364,21 @@ def asset(request: Request, id: str) -> dict:
 
 @router.get("/v1/providers")
 def providers() -> list[dict]:
-    return [{"id": name, "display_name": cls.display_name} for name, cls in enabled().items()]
+    from . import health
+
+    with market.connection() as db:
+        counts = dict(
+            db.execute("SELECT provider_id, COUNT(*) FROM bots GROUP BY provider_id").fetchall()
+        )
+    return [
+        {
+            "id": name,
+            "display_name": cls.display_name,
+            "participants": counts.get(name, 0),
+            "online": health.is_online(name),
+        }
+        for name, cls in enabled().items()
+    ]
 
 
 @router.post("/v1/sandbox/keys")

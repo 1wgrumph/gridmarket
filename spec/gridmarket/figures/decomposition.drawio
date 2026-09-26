@@ -1,0 +1,130 @@
+<mxfile host="azdiagram">
+  <diagram id="decomposition" name="GridMarket app decomposition">
+    <mxGraphModel pageWidth="1067.5" pageHeight="350">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="main" value="main.py composition root" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="583.5" y="20" width="181.001" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="api.py routes, auth, limits" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="257.5" y="103" width="178.999" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="market" value="market.py engine, risk, ledger" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="242.499" y="211" width="209.002" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="providers" value="providers registry" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="225.501" y="294" width="132.998" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="ercot" value="ercot.py Worker client" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="607.5" y="294" width="160.999" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="nws" value="nws.py weather client" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="786.501" y="294" width="158.998" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="scoring" value="scoring.py opportunity score" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="638.5" y="211" width="199.001" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="router" value="decision_router.py checks" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="640.999" y="103" width="182.002" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="health" value="health.py heartbeats" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="894.5" y="103" width="153" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="economy" value="economy.py payroll, statistics" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="384.502" y="157" width="202.997" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="botsapi" value="bots_api.py population routes" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="20.0012" y="211" width="203.998" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="db" value="SQLite (WAL) system of record" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="377.498" y="294" width="211.003" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-1" value="mounts" edge="1" parent="1" style="html=1;" source="main" target="api">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="583.39" y="49.39" as="sourcePoint" />
+            <mxPoint x="383.25" y="102.98" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-2" value="poller" edge="1" parent="1" style="html=1;" source="main" target="ercot">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="658.96" y="56.1" as="sourcePoint" />
+            <mxPoint x="665.29" y="293.84" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-3" value="poller" edge="1" parent="1" style="html=1;" source="main" target="nws">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="759.17" y="56" as="sourcePoint" />
+            <mxPoint x="868.35" y="293.993" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-4" value="60 s tick" edge="1" parent="1" style="html=1;" source="main" target="router">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="686.3" y="56.18" as="sourcePoint" />
+            <mxPoint x="719.72" y="102.85" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-5" value="10 s loop" edge="1" parent="1" style="html=1;" source="main" target="health">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="764.65" y="48.43" as="sourcePoint" />
+            <mxPoint x="942.85" y="103" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-6" value="60 s tick" edge="1" parent="1" style="html=1;" source="main" target="economy">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="588.27" y="56.02" as="sourcePoint" />
+            <mxPoint x="493.19" y="156.79" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-7" value="orders" edge="1" parent="1" style="html=1;" source="api" target="market">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="345.24" y="139.07" as="sourcePoint" />
+            <mxPoint x="345.24" y="210.93" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-8" value="includes" edge="1" parent="1" style="html=1;" source="api" target="botsapi">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310.85" y="139.03" as="sourcePoint" />
+            <mxPoint x="158.43" y="210.84" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-9" value="reserve capacity" edge="1" parent="1" style="html=1;" source="market" target="providers">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="309.76" y="247.166" as="sourcePoint" />
+            <mxPoint x="288.68" y="293.822" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-10" value="one transaction" edge="1" parent="1" style="html=1;" source="market" target="db">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="363.26" y="247.343" as="sourcePoint" />
+            <mxPoint x="433.48" y="293.955" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-11" value="signals" edge="1" parent="1" style="html=1;" source="scoring" target="ercot">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="727.4" y="247.178" as="sourcePoint" />
+            <mxPoint x="698.59" y="293.847" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-12" value="signals" edge="1" parent="1" style="html=1;" source="scoring" target="nws">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="765.15" y="247.178" as="sourcePoint" />
+            <mxPoint x="838.89" y="293.847" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-13" value="score" edge="1" parent="1" style="html=1;" source="router" target="scoring">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="732.96" y="139.03" as="sourcePoint" />
+            <mxPoint x="737.02" y="210.66" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-14" value="deposits" edge="1" parent="1" style="html=1;" source="economy" target="db">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="485.62" y="193.1" as="sourcePoint" />
+            <mxPoint x="483.39" y="293.615" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

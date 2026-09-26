@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="910" height="184" viewBox="0 0 910 184" font-family="Helvetica, Arial, sans-serif" font-size="12">
+  <title>Provider adapter interface</title>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" />
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="910" height="184" fill="white" />
+  <g class="line" data-id="edge-1">
+    <polyline points="229.26,52.05 283.43,59.42 350.8,68.629 411,77 413.54,77.353 416.11,77.711 418.7,78.073 428.8,79.486" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="329" y="49.5" text-anchor="middle">available, reserve, release, verify</text>
+  </g>
+  <g class="line" data-id="edge-2">
+    <polyline points="607.09,83.383 642.84,79.885 683.76,75.882 718.27,72.507 728.29,71.526" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="654.5" y="71.5" text-anchor="middle">implements</text>
+  </g>
+  <g class="line" data-id="edge-3">
+    <polyline points="607.09,100.617 633.92,103.243 663.67,106.153 691.43,108.868 701.56,109.859" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="654.5" y="98.5" text-anchor="middle">implements</text>
+  </g>
+  <g class="line" data-id="edge-4">
+    <polyline points="191.03,92 253.17,92 347.34,92 418.52,92 428.85,92" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="329" y="86.5" text-anchor="middle">enabled adapters</text>
+  </g>
+  <g class="line" data-id="edge-5">
+    <polyline points="181.04,138.493 238.58,130.698 331.1,118.11 411,107 413.54,106.647 416.11,106.289 418.7,105.927 428.8,104.514" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="329" y="101.5" text-anchor="middle">heartbeat()</text>
+  </g>
+  <g id="market">
+    <rect x="19.9992" y="20" width="209.002" height="36" fill="white" stroke="black" />
+    <text x="124.5" y="42" text-anchor="middle">market.py risk and settlement</text>
+  </g>
+  <g id="port">
+    <rect x="429.001" y="74" width="177.998" height="36" fill="white" stroke="black" />
+    <text x="518" y="96" text-anchor="middle">ProviderAdapter protocol</text>
+  </g>
+  <g id="registry">
+    <rect x="58.0008" y="74" width="132.998" height="36" fill="white" stroke="black" />
+    <text x="124.5" y="96" text-anchor="middle">providers registry</text>
+  </g>
+  <g id="basesim">
+    <rect x="728.5" y="47" width="135" height="36" fill="white" stroke="black" />
+    <text x="796" y="69" text-anchor="middle">base_sim adapter</text>
+  </g>
+  <g id="lonestar">
+    <rect x="702" y="101" width="187.999" height="36" fill="white" stroke="black" />
+    <text x="796" y="123" text-anchor="middle">lonestar adapter (phase 2)</text>
+  </g>
+  <g id="health">
+    <rect x="68.0016" y="128" width="112.997" height="36" fill="white" stroke="black" />
+    <text x="124.5" y="150" text-anchor="middle">health.py loop</text>
+  </g>
+</svg>

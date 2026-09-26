@@ -229,7 +229,15 @@ def test_seit_gm_api_04_caller_scoping_and_provider_surface(api):
 
 
 @pytest.mark.parametrize("account,burst", [("member", 40), ("sandbox", 10)])
-def test_seit_gm_api_03_keyed_rate_limits_have_no_extra_order(api, account: str, burst: int):
+def test_seit_gm_api_03_keyed_rate_limits_have_no_extra_order(
+    api, monkeypatch: pytest.MonkeyPatch, account: str, burst: int
+):
+    from gridmarket_server import api as api_module
+
+    # Prevent token refill without freezing the ASGI event loop's shared clock.
+    clock = Mock(wraps=api_module.time)
+    clock.monotonic.return_value = api_module.time.monotonic()
+    monkeypatch.setattr(api_module, "time", clock)
     path, client = api
     for _ in range(burst + 100):
         response = client.get("/v1/account", headers=headers(account))

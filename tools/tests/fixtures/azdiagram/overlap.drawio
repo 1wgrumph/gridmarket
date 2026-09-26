@@ -1,0 +1,16 @@
+<mxfile>
+  <diagram id="overlap" name="Overlap">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="alpha" value="Alpha" vertex="1" parent="1">
+          <mxGeometry x="10" y="10" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="beta" value="Beta" vertex="1" parent="1">
+          <mxGeometry x="100" y="40" width="120" height="60" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
