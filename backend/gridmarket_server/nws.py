@@ -64,8 +64,15 @@ async def _poll() -> None:
                     _forecasts[zone] = point["properties"]["forecastHourly"]
                 hourly = await _get(client, _forecasts[zone], budget)
                 alerts = await _get(client, f"/alerts/active?point={lat},{lon}", budget)
-                forecast = hourly["properties"]["periods"][0]
-                updated = hourly["properties"]["updated"]
+                props = hourly.get("properties", {})
+                forecast = props["periods"][0]
+                updated = (
+                    hourly.get("updated")
+                    or props.get("updated")
+                    or props.get("updateTime")
+                    or props.get("generatedAt")
+                    or datetime.now(UTC).isoformat()
+                )
                 _store(
                     "NWS-TEMP",
                     zone,
