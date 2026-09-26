@@ -1096,6 +1096,13 @@
       "decided_by": "Orchestrator (delegate, planning owner)",
       "decision": "Test-contract corrections found by the UX repair implementers (both stopped correctly under their contract-failure rule): S64 may change SEIT-GM-UI-03's /technician/i assertion (from the invented 'job' fixture field) to the producer's real 'employed' state and rebuild the bot-profile fixture from a captured GET /v1/bots/{id}; S63 splits the S63-T UX-04 test into spec-present (render spec/GridMarket-Specification.md, added by phase 2, in the app) and spec-missing cases, and has standing authority to correct any other S63-T test that conflicts with the merged baseline without weakening the finding's intent, listing every test diff.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-122",
+      "decided_at": "2026-09-26T16:25:00-05:00",
+      "decided_by": "Orchestrator (delegate, planning owner)",
+      "decision": "Standing test-correction authority for the UX repair slices S63 and S64: an existing test that asserts behaviour a finding explicitly requires changing may be updated to assert the new required behaviour (never weakened, never deleted without replacement), with every diff listed. Pre-approved: Overview.esr.test.tsx:37 (UX-20 no sparkline), Overview.zones.test.tsx:215 (R7-08 four load zones), Overview.zones.test.tsx:200 (UX-12 exchange-summary traders), s63-predictions.s63.test.tsx:56-57 (UX-07 label). Supersedes the narrower DEC-GM-121 notes; the implementer no longer stops on such conflicts.",
+      "reversible": true
     }
   ],
   "stages": {
