@@ -901,6 +901,14 @@
       "decision": "New slice S58 on lane ux (from lane-esr): Overview zone drill-down (keyboard-accessible zones open a detail panel with score drivers, ERCOT signals and open products), an honest no-data state instead of identical baseline scores, Participants by provider and Active traders wired to data, LZ_-only zones table, Spawn bots hint with an empty admin key, 44px copy button at 390px. TDD: S58-T red tests first, then S58. Lands with the stretch assembly S18 in place of lane-esr. Posted as DIR-PS-07.",
       "owner_quote": "I think if we click on these regions they should go into detail of what is going on it seems like a lot of data or feature are not rendering",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-096",
+      "decided_at": "2026-09-26T13:52:00-05:00",
+      "decided_by": "Owner (in chat)",
+      "decision": "Owner-confirmed dated route amendment to the frozen snapshot: every Codex CLI GPT-6 Sol route (any role, any reasoning, primary or fallback) becomes Codex CLI GPT-6 Astra at medium reasoning with fast mode (service_tier=priority). route.py applies profile_selection.amendments[].route_substitutions; running Sol jobs are restarted on the new route.",
+      "owner_quote": "switch out sol with astra medium and use fast mode",
+      "reversible": true
     }
   ],
   "stages": {
@@ -2491,6 +2499,26 @@
           }
         },
         "catalog_digest_sha256": "84dc06026e9a74e7293882cda44350f9fb776fc7ac96f0219d6ae9f51c8514cd"
+      },
+      {
+        "id": "DEC-GM-096",
+        "dated": "2026-09-26T13:52:00-05:00",
+        "owner_confirmed": true,
+        "owner_quote": "switch out sol with astra medium and use fast mode",
+        "route_substitutions": [
+          {
+            "from": {
+              "harness": "Codex CLI",
+              "model": "GPT-6 Sol"
+            },
+            "to": {
+              "model": "GPT-6 Astra",
+              "reasoning": "medium",
+              "service_tier": "priority"
+            }
+          }
+        ],
+        "scope": "every role and lane route whose harness is Codex CLI and model GPT-6 Sol, primary or fallback, for dispatches from 13:52 on; service_tier priority is Codex fast mode (2x speed, increased usage)"
       }
     ]
   },
