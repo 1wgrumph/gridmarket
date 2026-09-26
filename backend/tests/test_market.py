@@ -249,7 +249,7 @@ def test_seit_gm_mkt_05_four_intervals_settle_once_and_record_positions(exchange
                 "VALUES (?,?,?,?,15,?,'$/MWh',?,?)",
                 (
                     f"s{index}",
-                    "np6-905-cd",
+                    "NP6-905-CD",
                     "LZ_HOUSTON",
                     (HOUR + timedelta(minutes=15 * index)).isoformat(),
                     value,
@@ -262,7 +262,7 @@ def test_seit_gm_mkt_05_four_intervals_settle_once_and_record_positions(exchange
         assert db.execute("SELECT COUNT(*) FROM settlements").fetchone()[0] == 0
         db.execute(
             "INSERT INTO signals(id,report_id,zone,interval_start,interval_minutes,value,unit,published_at,fetched_at) "
-            "VALUES ('s3','np6-905-cd','LZ_HOUSTON',?,15,260,'$/MWh',?,?)",
+            "VALUES ('s3','NP6-905-CD','LZ_HOUSTON',?,15,260,'$/MWh',?,?)",
             ((HOUR + timedelta(minutes=45)).isoformat(), HOUR.isoformat(), HOUR.isoformat()),
         )
         market.settle(db, HOUR + timedelta(hours=1))
