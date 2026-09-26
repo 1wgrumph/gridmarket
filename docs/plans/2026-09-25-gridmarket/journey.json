@@ -1049,7 +1049,7 @@
     },
     {
       "id": "DEC-GM-115",
-      "decided_at": "2026-09-26T16:21:00-05:00",
+      "decided_at": "2026-09-26T16:03:00-05:00",
       "decided_by": "Orchestrator (delegate authority, DEC-GM-043)",
       "decision": "Phase 2 lands (PR #16, main 0188df3) on candidate fd1b9c4 with every deterministic gate at exit 0 except a typed gap: the final-SHA market mutation run stalled at 1,335 of 1,966 mutants (1,106 killed, 208 survived, 84% of scored; worst case 57% if all unscored survived). Accepted because the complete phase 1b run was 81.63%, the stretch gate reruns market mutation in full, and S78 repairs market.py. The sweep's pre-existing defects are disclosed in the PR and repaired in lanes landing with S18.",
       "reversible": true
