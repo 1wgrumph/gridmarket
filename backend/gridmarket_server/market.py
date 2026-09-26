@@ -38,6 +38,7 @@ def connection(write: bool = False):
     db = sqlite3.connect(os.getenv("GRIDMARKET_DB", "/data/gridmarket.db"), timeout=30)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA foreign_keys=ON")
+    db.execute("PRAGMA synchronous=NORMAL")
     try:
         if write:
             db.execute("BEGIN IMMEDIATE")
@@ -496,7 +497,12 @@ def status() -> dict[str, Any]:
         halted = db.execute(
             "SELECT 1 FROM halts WHERE account_id IS NULL AND ended_at IS NULL"
         ).fetchone()
-    return {"status": "halted" if halted else "open", "anomalies": []}
+        anomalies = rows(
+            db,
+            "SELECT id,kind,subject_id,detail,created_at FROM anomalies "
+            "ORDER BY created_at DESC,rowid DESC LIMIT 50",
+        )
+    return {"status": "halted" if halted else "open", "anomalies": anomalies}
 
 
 @router.get("/v1/market")
