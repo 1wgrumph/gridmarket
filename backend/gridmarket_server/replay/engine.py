@@ -1,4 +1,4 @@
-"""DEC-GM-113 amendments 7, 8 and 9: simulated procurement, ledger, disruptions."""
+"""DEC-GM-127 A16: DAM procurement, self-supply, sample decisions and fleet totals."""
 
 import hashlib
 import json
@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 from ..flex import Battery, EsrInformed, FixedSchedule, InformationSet, PriceBased
 from ..flex.battery import ZERO
 from ..flex.information import FeedWindow
-from ..flex.policies import CHI as POLICY_CHI
+from ..flex.policies import dam_rows, procurement_hours
 from .catalog import DISCLAIMER, ENGINE_VERSION, POLICY_VERSION, iso
 
 CHI = ZoneInfo("America/Chicago")
@@ -21,6 +21,22 @@ POLICIES = {
     "fixed_schedule": FixedSchedule,
     "price_based": PriceBased,
     "esr_informed": EsrInformed,
+}
+
+
+STRATEGY_RULES = {
+    "fixed_schedule": {
+        "display_name": "FixedSchedule",
+        "rules": "Offer next-quarter DAM procurement; otherwise charge 00:00-06:00 Central; self_supply 17:00-21:00 when not delivering.",
+    },
+    "price_based": {
+        "display_name": "PriceBased",
+        "rules": "Nearest-rank DAM Q25/Q75; overlapping quantiles hold. Offer only for next-quarter procurement delivery at DAM >= Q75; otherwise self_supply at latest eligible RT >= Q75; otherwise charge at current DAM <= Q25.",
+    },
+    "esr_informed": {
+        "display_name": "Battery-aware",
+        "rules": "PriceBased offer rule (procurement only, DAM >= Q75) with offers capped at half unreserved energy above reserve, also capped by discharge power; self_supply at RT >= DAM Q50 and charge at current DAM <= Q50; overlap (Q25 >= Q75, as PriceBased) holds. Missing ESR/RT records PriceBased fallback; half-energy cap remains. ESR trend does not add offers under A16.",
+    },
 }
 
 
@@ -132,7 +148,9 @@ def build_binding(
             ],
             "household_load": {
                 "unit": "kW",
-                "label": fleet_label,
+                "label": "simulated",
+                "scope": "per_home; same declared profile for every asset",
+                "description": "Simulated AC household load, not ERCOT measured consumption. Default Texas summer shape averages 1.2 kW on a 24-hour day, with a 2 kW evening peak.",
                 "intervals": [
                     {
                         "interval_start": iso(row["start"]),
@@ -175,7 +193,9 @@ def run_replay(
     fleet_label: str,
     binding: dict | None = None,
     run_id: str | None = None,
+    sample_asset: str | None = None,
 ) -> bytes:
+    sample_asset = sample_asset or assets[0]["asset_id"]
     grid = day_data.grid
     day_end = grid[-1][1]
     merged = merge_windows(disruptions)
@@ -217,24 +237,31 @@ def run_replay(
     rated_kw = sum((spec["max_discharge_kw"] for spec in assets), ZERO)
     demand_kwh = rated_kw * Decimal("0.25") * HOURS
 
+    procurement = procurement_hours(views[0], zone, grid[0][0])
+    if len(procurement) != 4:
+        raise ReplayDataError("Complete eligible DAM vector required at day start")
+
     def demand_for(delivery_start) -> Decimal:
-        if 17 <= delivery_start.astimezone(POLICY_CHI).hour < 21:
+        if any(hour <= delivery_start < hour + timedelta(hours=1) for hour in procurement):
             return demand_kwh
         return ZERO
 
-    dam_values = day_data.dam.get(zone, [])
+    dam_values = [r.value for r in dam_rows(views[0], zone, grid[0][0])]
     if not dam_values:
         raise ReplayDataError(f"No DAM prices for zone {zone}")
     valuation = max(ZERO, sum(dam_values, ZERO) / len(dam_values))
 
-    policies = {name: _memoize_request(POLICIES[name]()) for name in strategies}
+    policies = {name: _memoize_request(POLICIES[name](procurement)) for name in strategies}
     timeline: list[dict] = [
         {"interval_start": iso(start), "interval_end": iso(end), "decisions": [], "settlements": []}
         for start, end in grid
     ]
     scoreboard = []
+    fleet_timeline = {}
     for strategy in strategies:
         policy = policies[strategy]
+        fleet_timeline[strategy] = []
+        self_total = ZERO
         batteries = {
             spec["asset_id"]: Battery(
                 asset_id=spec["asset_id"],
@@ -262,6 +289,18 @@ def run_replay(
                 raise ReplayDataError(f"Missing RT price for {zone} at {iso(start)}")
             load_kw = load_at(start)
             step = timeline[index]
+            totals = {
+                key: ZERO
+                for key in (
+                    "charge_kw",
+                    "offered_kwh",
+                    "accepted_kwh",
+                    "delivered_kwh",
+                    "self_supply_kwh",
+                    "shortfall_kwh",
+                )
+            }
+            failed_step = 0
             due = {
                 aid: commitments.pop((aid, start))
                 for aid in batteries
@@ -287,23 +326,27 @@ def run_replay(
                 energy_base += delivered * price / 10
                 bonus_base += delivered * BONUS_PER_MWH / 10
                 penalty_base += shortfall * PENALTY_PER_MWH / 10
+                totals["delivered_kwh"] += delivered
+                totals["shortfall_kwh"] += shortfall
                 delivered_total += delivered
                 shortfall_total += shortfall
                 if shortfall > QUANTUM:
                     failed += 1
-                step["settlements"].append(
-                    {
-                        "strategy": strategy,
-                        "asset_id": asset_id,
-                        "delivery_start": iso(start),
-                        "delivery_end": iso(end),
-                        "requested_kwh": fmt(req),
-                        "accepted_kwh": fmt(acc),
-                        "delivered_kwh": fmt(delivered),
-                        "shortfall_kwh": fmt(shortfall),
-                        "cause": cause,
-                    }
-                )
+                    failed_step += 1
+                if asset_id == sample_asset:
+                    step["settlements"].append(
+                        {
+                            "strategy": strategy,
+                            "asset_id": asset_id,
+                            "delivery_start": iso(start),
+                            "delivery_end": iso(end),
+                            "requested_kwh": fmt(req),
+                            "accepted_kwh": fmt(acc),
+                            "delivered_kwh": fmt(delivered),
+                            "shortfall_kwh": fmt(shortfall),
+                            "cause": cause,
+                        }
+                    )
             observed_min = min(observed_min, sum((b.soc_kwh for b in batteries.values()), ZERO))
             offers: dict[str, Decimal] = {}
             for spec in assets:
@@ -311,24 +354,25 @@ def run_replay(
                 battery = batteries[asset_id]
                 battery.reserved_dc_kwh = max(reserved[asset_id], ZERO)
                 if offline(providers[asset_id], start):
-                    step["decisions"].append(
-                        {
-                            "strategy": strategy,
-                            "asset_id": asset_id,
-                            "decision_time": iso(start),
-                            "action": "hold",
-                            "kw": fmt(ZERO),
-                            "delivery_start": iso(start),
-                            "delivery_end": iso(end),
-                            "reason": (
-                                f"provider_offline {providers[asset_id]}: new commitments and "
-                                "dispatch blocked during the outage window."
-                            ),
-                            "policy_version": policy.policy_version,
-                            "config": {"zone": zone, "blocked": "provider_offline"},
-                            "inputs": [],
-                        }
-                    )
+                    if asset_id == sample_asset:
+                        step["decisions"].append(
+                            {
+                                "strategy": strategy,
+                                "asset_id": asset_id,
+                                "decision_time": iso(start),
+                                "action": "hold",
+                                "kw": fmt(ZERO),
+                                "delivery_start": iso(start),
+                                "delivery_end": iso(end),
+                                "reason": (
+                                    f"provider_offline {providers[asset_id]}: new commitments and "
+                                    "dispatch blocked during the outage window."
+                                ),
+                                "policy_version": policy.policy_version,
+                                "config": {"zone": zone, "blocked": "provider_offline"},
+                                "inputs": [],
+                            }
+                        )
                     continue
                 decision = policy.decide(
                     battery=battery,
@@ -342,42 +386,56 @@ def run_replay(
                     decision_time=start,
                 )
                 attempted += bool(decision.attempted_reserve_violation)
-                step["decisions"].append(
-                    {
-                        "strategy": strategy,
-                        "asset_id": asset_id,
-                        "decision_time": iso(decision.decision_time),
-                        "action": decision.action,
-                        "kw": fmt(decision.kw),
-                        "delivery_start": iso(decision.delivery_start),
-                        "delivery_end": iso(decision.delivery_end),
-                        "reason": decision.reason,
-                        "policy_version": decision.policy_version,
-                        "config": _jsonable(decision.config),
-                        "inputs": [
-                            {
-                                "name": item.name,
-                                "value": fmt(item.value)
-                                if isinstance(item.value, Decimal)
-                                else item.value,
-                                "unit": item.unit,
-                                "source": item.source,
-                                "interval_start": iso(item.interval_start),
-                                "interval_end": iso(item.interval_end),
-                                "published_at": iso(item.published_at),
-                                "available_at": iso(item.available_at),
-                                "quality": item.quality,
-                            }
-                            for item in decision.inputs
-                        ],
-                    }
-                )
+                if asset_id == sample_asset:
+                    step["decisions"].append(
+                        {
+                            "strategy": strategy,
+                            "asset_id": asset_id,
+                            "decision_time": iso(decision.decision_time),
+                            "action": decision.action,
+                            "kw": fmt(decision.kw),
+                            "delivery_start": iso(decision.delivery_start),
+                            "delivery_end": iso(decision.delivery_end),
+                            "reason": decision.reason,
+                            "policy_version": decision.policy_version,
+                            "config": _jsonable(decision.config),
+                            "inputs": [
+                                {
+                                    "name": item.name,
+                                    "value": fmt(item.value)
+                                    if isinstance(item.value, Decimal)
+                                    else item.value,
+                                    "unit": item.unit,
+                                    "source": item.source,
+                                    "interval_start": iso(item.interval_start),
+                                    "interval_end": iso(item.interval_end),
+                                    "published_at": iso(item.published_at),
+                                    "available_at": iso(item.available_at),
+                                    "quality": item.quality,
+                                }
+                                for item in decision.inputs
+                            ],
+                        }
+                    )
                 if decision.action == "offer_flex" and decision.kw > 0:
                     if decision.delivery_end <= day_end:
                         offers[asset_id] = decision.kw * HOURS
                 elif decision.action == "charge" and decision.kw > 0 and current_kw[asset_id] == 0:
                     result = battery.step(charge_kw=decision.kw, hours=HOURS, load_kw=load_kw)
+                    totals["charge_kw"] += result.charge_kw
                     charging_base += result.charge_ac_kwh * price / 10
+                    breaches += result.actual_breach
+                elif (
+                    decision.action == "self_supply"
+                    and decision.kw > 0
+                    and current_kw[asset_id] == 0
+                ):
+                    result = battery.step(
+                        discharge_kw=min(decision.kw, load_kw), hours=HOURS, load_kw=load_kw
+                    )
+                    totals["self_supply_kwh"] += result.load_served_kwh
+                    self_total += result.load_served_kwh
+                    energy_base += result.load_served_kwh * price / 10
                     breaches += result.actual_breach
             if offers:
                 delivery_start = start + timedelta(minutes=15)
@@ -386,9 +444,21 @@ def run_replay(
                     take = accepted.get(asset_id, ZERO)
                     commitments[(asset_id, delivery_start)] = (qty, take)
                     reserved[asset_id] += take / batteries[asset_id].eta_d
+                    totals["offered_kwh"] += qty
+                    totals["accepted_kwh"] += take
                     requested += qty
                     accepted_total += take
             observed_min = min(observed_min, sum((b.soc_kwh for b in batteries.values()), ZERO))
+            fleet_timeline[strategy].append(
+                {
+                    "interval_start": iso(start),
+                    "interval_end": iso(end),
+                    "soc_kwh": fmt(sum((b.soc_kwh for b in batteries.values()), ZERO)),
+                    "spp": fmt(price),
+                    "failed_commitments": failed_step,
+                    **{key: fmt(value) for key, value in totals.items()},
+                }
+            )
         if breaches:
             raise ReplayDataError("Actual reserve breach invalidates the run")
         opening_base = terminal_base = ZERO
@@ -424,6 +494,7 @@ def run_replay(
         scoreboard.append(
             {
                 "strategy": strategy,
+                "self_supply_kwh": fmt(self_total),
                 "net_value_cents": net,
                 "cash_net_cents": energy_value - charging_cost + bonus - penalty,
                 "energy_value_cents": energy_value,
@@ -458,6 +529,10 @@ def run_replay(
         "binding": binding,
         "scoreboard": scoreboard,
         "timeline": timeline,
+        "sample_asset_id": sample_asset,
+        "fleet_timeline": fleet_timeline,
+        "procurement_hours": [iso(hour) for hour in procurement],
+        "strategy_rules": {name: STRATEGY_RULES[name] for name in strategies},
     }
     return canonical(body)
 

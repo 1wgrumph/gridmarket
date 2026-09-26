@@ -3,6 +3,7 @@
 from decimal import Decimal
 
 import pytest
+
 from gridmarket_server.flex import Battery, StepResult
 
 H = Decimal("0.25")

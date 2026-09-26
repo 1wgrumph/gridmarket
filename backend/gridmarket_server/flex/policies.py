@@ -1,4 +1,4 @@
-"""DEC-GM-113 amendment 6: reproducible requests, explanations and three policies."""
+"""DEC-GM-127 A16: fixed, price-based and battery-aware simulated policies."""
 
 from copy import deepcopy
 from dataclasses import dataclass
@@ -62,7 +62,7 @@ def source_input(row, name=None):
     )
 
 
-def price_request(view, zone, now):
+def dam_rows(view, zone, now):
     start, end = day_bounds(now)
     rows = [
         r
@@ -81,15 +81,46 @@ def price_request(view, zone, now):
         or r.interval_end != start + timedelta(hours=i + 1)
         for i, r in enumerate(rows)
     ):
+        return []
+    return rows
+
+
+def procurement_hours(view, zone, now):
+    """A16: four highest eligible DAM hours, ties by earlier UTC instant."""
+    return sorted(
+        r.interval_start
+        for r in sorted(dam_rows(view, zone, now), key=lambda r: (-r.value, r.interval_start))[:4]
+    )
+
+
+def price_request(view, zone, now, *, procurement, charge_p, offer_p, self_p):
+    """DEC-GM-127 (a)(b): offers only into procurement; per-policy quantiles."""
+    start, end = day_bounds(now)
+    rows = dam_rows(view, zone, now)
+    if not rows:
         return "hold", "Missing or ineligible complete-day DAM vector.", [], None
     values = sorted(r.value for r in rows)
-    q25, q75 = (values[(p * len(values) + 99) // 100 - 1] for p in (25, 75))
-    inputs = [source_input(r, f"dam_hour_{i}") for i, r in enumerate(rows)]
-    for name, value in (("dam_q25", q25), ("dam_q75", q75)):
+    percentiles = {25, 75, charge_p, offer_p, self_p}
+    quants = {p: values[(p * len(values) + 99) // 100 - 1] for p in percentiles}
+    q_charge, q_offer, q_self = quants[charge_p], quants[offer_p], quants[self_p]
+    inputs = [
+        DecisionInput(
+            "dam_vector",
+            ",".join(str(r.value) for r in rows),
+            "USD/MWh hourly from interval_start",
+            "dam_spp",
+            start,
+            end,
+            max(r.published_at for r in rows),
+            max(r.available_at for r in rows),
+            "derived:eligible hourly vector",
+        )
+    ]
+    for percentile in sorted(quants):
         inputs.append(
             DecisionInput(
-                name,
-                value,
+                f"dam_q{percentile}",
+                quants[percentile],
                 "USD/MWh",
                 "derived:dam_spp",
                 start,
@@ -99,25 +130,39 @@ def price_request(view, zone, now):
                 "derived",
             )
         )
-    if q25 >= q75:
+    if quants[25] >= quants[75]:
         return "hold", "DAM quantiles overlap; hold energy.", inputs, None
     current = next(r for r in rows if r.interval_start <= now < r.interval_end)
     delivery = next((r for r in rows if r.interval_start <= now + QUARTER < r.interval_end), None)
-    if delivery and delivery.value >= q75:
-        return "offer_flex", "Next-quarter DAM price meets the upper threshold.", inputs, q75
-    if current.value <= q25:
-        return "charge", "Current-hour DAM price meets the lower threshold.", inputs, q75
-    return "hold", "DAM prices are between the action thresholds.", inputs, q75
+    target = now + QUARTER
+    procuring = any(hour <= target < hour + timedelta(hours=1) for hour in procurement)
+    if delivery and procuring and delivery.value >= q_offer:
+        return "offer_flex", "Next-quarter DAM price meets the offer threshold.", inputs, q_self
+    if current.value <= q_charge:
+        return "charge", "Current-hour DAM price meets the charge threshold.", inputs, q_self
+    return "hold", "DAM prices are between the action thresholds.", inputs, q_self
 
 
 class FixedSchedule:
-    policy_version = "FixedSchedule/DEC-GM-113-v1"
+    policy_version = "FixedSchedule/DEC-GM-127-A16"
+    offer_fraction = Decimal(1)
+
+    def __init__(self, procurement=None):
+        self.procurement = procurement
+
+    def procuring(self, view, zone, now):
+        hours = (
+            self.procurement if self.procurement is not None else procurement_hours(view, zone, now)
+        )
+        return any(hour <= now + QUARTER < hour + timedelta(hours=1) for hour in hours)
 
     def request(self, view, zone, now):
-        if 17 <= (now + QUARTER).astimezone(CHI).hour < 21:
-            return "offer_flex", "Next-quarter delivery is in the simulated evening schedule.", []
+        if self.procuring(view, zone, now):
+            return "offer_flex", "Next-quarter delivery is in the DAM procurement schedule.", []
         if now.astimezone(CHI).hour < 6:
             return "charge", "Current quarter is in the simulated overnight charging schedule.", []
+        if 17 <= now.astimezone(CHI).hour < 21:
+            return "self_supply", "Simulated evening household self-supply.", []
         return "hold", "Current quarter is outside the charging and delivery schedules.", []
 
     def decide(
@@ -137,12 +182,27 @@ class FixedSchedule:
             view = information
         else:
             view = information.at(now, feed_interrupts=feed_interrupts)
+        settings["procurement_hours"] = [
+            hour.isoformat()
+            for hour in (
+                self.procurement
+                if self.procurement is not None
+                else procurement_hours(view, settings["zone"], now)
+            )
+        ]
+        settings["offer_energy_fraction"] = self.offer_fraction
         action, reason, inputs = self.request(view, settings["zone"], now)
         start = now + QUARTER if action == "offer_flex" else now
         attempted = False
         kw = ZERO
         if action == "offer_flex":
-            kw = battery.feasible_discharge_kw(HOURS)
+            available = max(
+                battery.soc_kwh - battery.min_reserve_kwh - battery.reserved_dc_kwh, ZERO
+            )
+            kw = min(
+                battery.feasible_discharge_kw(HOURS),
+                available * battery.eta_d * self.offer_fraction / HOURS,
+            )
             if start + QUARTER > day_bounds(now)[1]:
                 action, kw, reason = (
                     "hold",
@@ -152,12 +212,19 @@ class FixedSchedule:
             elif kw == 0:
                 attempted = battery.soc_kwh <= battery.min_reserve_kwh + battery.reserved_dc_kwh
                 action = "preserve_backup" if attempted else "hold"
-                reason = "Reserve, reservations or discharge power prevent a new offer."
+                reason += " Reserve, reservations or discharge power prevent a new offer."
+        elif action == "self_supply":
+            kw = min(load, battery.feasible_discharge_kw(HOURS)) if not commitment else ZERO
+            if not kw:
+                action, reason = (
+                    "hold",
+                    reason + " Commitment, load or reserve prevents self-supply.",
+                )
         elif action == "charge":
             kw = battery.feasible_charge_kw(HOURS)
             if commitment or not kw:
                 action, kw = "hold", ZERO
-                reason = "Existing delivery or battery headroom prevents new charging."
+                reason += " Existing delivery or battery headroom prevents new charging."
         reason += f" Requested {kw} AC kW; acceptance and delivery are not yet determined."
         # Include state/config inputs even when no external feed is needed or available.
         state = [
@@ -196,18 +263,53 @@ class FixedSchedule:
 
 
 class PriceBased(FixedSchedule):
-    policy_version = "PriceBased/DEC-GM-113-v1"
+    policy_version = "PriceBased/DEC-GM-127-A16"
+    charge_p, offer_p, self_p = 25, 75, 75
 
     def request(self, view, zone, now):
-        action, reason, inputs, _ = price_request(view, zone, now)
+        hours = (
+            self.procurement if self.procurement is not None else procurement_hours(view, zone, now)
+        )
+        action, reason, inputs, threshold = price_request(
+            view,
+            zone,
+            now,
+            procurement=hours,
+            charge_p=self.charge_p,
+            offer_p=self.offer_p,
+            self_p=self.self_p,
+        )
+        rt = sorted(
+            (
+                r
+                for r in view.observations
+                if r.series == "rt_spp"
+                and r.zone == zone
+                and r.settlement_point in (None, zone)
+                and r.unit == "USD/MWh"
+                and r.value is not None
+                and r.interval_end <= now
+            ),
+            key=lambda r: r.interval_end,
+        )
+        if rt:
+            inputs.append(source_input(rt[-1], "rt_latest"))
+        if action != "offer_flex" and threshold is not None and rt and rt[-1].value >= threshold:
+            return (
+                "self_supply",
+                f"Latest eligible RT meets DAM Q{self.self_p}; serve simulated load.",
+                inputs,
+            )
         return action, reason, inputs
 
 
-class EsrInformed(FixedSchedule):
-    policy_version = "EsrInformed/DEC-GM-113-v1"
+class EsrInformed(PriceBased):
+    policy_version = "EsrInformed/DEC-GM-127-A16"
+    charge_p, offer_p, self_p = 50, 75, 50
+    offer_fraction = Decimal("0.5")
 
     def request(self, view, zone, now):
-        action, reason, inputs, q75 = price_request(view, zone, now)
+        action, reason, inputs = super().request(view, zone, now)
         esr = sorted(
             (
                 r
@@ -222,30 +324,12 @@ class EsrInformed(FixedSchedule):
             ),
             key=lambda r: r.interval_end,
         )[-2:]
-        rt = sorted(
-            (
-                r
-                for r in view.observations
-                if r.series == "rt_spp"
-                and r.zone == zone
-                and r.settlement_point in (None, zone)
-                and r.unit == "USD/MWh"
-                and r.value is not None
-                and r.interval_end <= now
-            ),
-            key=lambda r: r.interval_end,
-        )
-        if len(esr) < 2 or not rt or esr[0].interval_end != esr[1].interval_start:
-            return (
-                action,
-                "PriceBased fallback: missing eligible ESR or RT inputs. " + reason,
-                inputs,
-            )
-        inputs += [
-            source_input(esr[0], "esr_previous"),
-            source_input(esr[1], "esr_latest"),
-            source_input(rt[-1], "rt_latest"),
-        ]
-        if q75 is not None and rt[-1].value >= q75 and abs(esr[-1].value) < abs(esr[0].value):
-            return "offer_flex", "Simulated price/trend heuristic requests flexibility.", inputs
-        return action, reason, inputs
+        if (
+            len(esr) < 2
+            or esr[0].interval_end != esr[1].interval_start
+            or not any(i.name == "rt_latest" for i in inputs)
+        ):
+            reason = "PriceBased fallback: missing eligible ESR or RT inputs. " + reason
+        else:
+            inputs += [source_input(esr[0], "esr_previous"), source_input(esr[1], "esr_latest")]
+        return action, "Battery-aware: offer at most half available energy. " + reason, inputs

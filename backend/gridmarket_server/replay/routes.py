@@ -1,4 +1,4 @@
-"""DEC-GM-113 amendment 13: bounded replay API with byte-identical results."""
+"""DEC-GM-127 A16: bounded replay bodies and immutable decision drilldowns."""
 
 import json
 import threading
@@ -12,7 +12,7 @@ from fastapi import APIRouter, Request, Response
 from ..api import error_response
 from ..flex import Battery
 from . import engine
-from .catalog import POINTS, SOURCES, load_catalog
+from .catalog import CHI, POINTS, SOURCES, load_catalog
 from .engine import canonical
 
 router = APIRouter()
@@ -137,6 +137,20 @@ def _validated(payload: Any, catalog) -> dict:
             raise Invalid(f"Invalid asset {asset_id}") from None
         assets.append(spec)
     load = fleet.get("household_load")
+    if load is None:
+        # A16 simulated Texas summer shape: 28.8 kWh / 24 h = 1.2 kW.
+        shape = ["0.7"] * 6 + ["1.0"] * 4 + ["1.2"] * 7 + ["2.0"] * 4 + ["1.4"] * 3
+        load = {
+            "unit": "kW",
+            "intervals": [
+                {
+                    "interval_start": start.isoformat(),
+                    "interval_end": end.isoformat(),
+                    "kw": shape[start.astimezone(CHI).hour],
+                }
+                for start, end in data.grid
+            ],
+        }
     if not isinstance(load, dict) or load.get("unit", "kW") != "kW":
         raise Invalid("household_load must use kW")
     intervals = []
@@ -248,7 +262,7 @@ async def create_replay(request: Request):
     with _lock(request):
         stored = _runs(request).get(run_id)
     if stored is not None:
-        return Response(stored, media_type="application/json")
+        return Response(stored[0], media_type="application/json")
     client = request.client.host if request.client else "unknown"
     now = time.monotonic()
     with _lock(request):
@@ -284,7 +298,7 @@ async def create_replay(request: Request):
     with _lock(request):
         runs = _runs(request)
         runs.pop(run_id, None)
-        runs[run_id] = body
+        runs[run_id] = (body, checked)
         while len(runs) > MAX_RUNS:
             runs.pop(next(iter(runs)))
     return Response(body, media_type="application/json")
@@ -292,7 +306,65 @@ async def create_replay(request: Request):
 
 @router.get("/v1/replay/{run_id}")
 def get_replay(request: Request, run_id: str):
-    body = _runs(request).get(run_id)
-    if body is None:
+    stored = _runs(request).get(run_id)
+    if stored is None:
         return error_response(404, "NOT_FOUND", "Unknown run")
-    return Response(body, media_type="application/json")
+    return Response(stored[0], media_type="application/json")
+
+
+@router.get("/v1/replay/{run_id}/decisions")
+def get_decisions(request: Request, run_id: str, strategy: str, asset: str, start: str, end: str):
+    """A16: reproduce one home's decisions from immutable inputs; [start,end), <=500 rows."""
+    with _lock(request):
+        stored = _runs(request).get(run_id)
+    if stored is None:
+        return error_response(404, "NOT_FOUND", "Unknown run")
+    body, checked = stored
+    try:
+        lo, hi = _moment(start), _moment(end)
+        grid = checked["data"].grid
+        if (
+            strategy not in checked["strategies"]
+            or asset not in {a["asset_id"] for a in checked["assets"]}
+            or not grid[0][0] <= lo < hi <= grid[-1][1]
+            or sum(lo <= t < hi for t, _ in grid) > 500
+        ):
+            raise Invalid("Unknown strategy/asset or invalid decision range")
+    except Invalid as exc:
+        return error_response(422, "VALIDATION_ERROR", str(exc))
+    original = json.loads(body)
+    if asset == original["sample_asset_id"]:
+        result = original
+    else:
+        with _lock(request):
+            inflight = getattr(request.app.state, "replay_inflight", 0)
+            if inflight >= MAX_INFLIGHT:
+                return error_response(429, "RATE_LIMITED")
+            request.app.state.replay_inflight = inflight + 1
+        # ponytail: replay per drilldown; cache bounded traces if latency becomes limiting.
+        try:
+            result = json.loads(
+                engine.run_replay(
+                    day_data=checked["data"],
+                    strategies=[strategy],
+                    assets=checked["assets"],
+                    zone=checked["zone"],
+                    load_intervals=checked["intervals"],
+                    seed=checked["seed"],
+                    disruptions=checked["disruptions"],
+                    fleet_label=checked["fleet_label"],
+                    binding=original["binding"],
+                    run_id=run_id,
+                    sample_asset=asset,
+                )
+            )
+        finally:
+            with _lock(request):
+                request.app.state.replay_inflight -= 1
+    rows = [
+        row
+        for step in result["timeline"]
+        for row in step["decisions"]
+        if row["strategy"] == strategy and lo <= _moment(row["decision_time"]) < hi
+    ]
+    return Response(canonical({"run_id": run_id, "decisions": rows}), media_type="application/json")
