@@ -1,0 +1,24 @@
+[project]
+name = "gridmarket-mcp"
+version = "0.1.0"
+requires-python = ">=3.12"
+# Pinned to the newest 1.x before the 2026-09-11 admission cutoff: the v1
+# client surface (isError/structuredContent) is what the MCP tests assert.
+dependencies = ["mcp==1.30.0"]
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["gridmarket_mcp"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
