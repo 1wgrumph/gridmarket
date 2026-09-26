@@ -86,7 +86,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | Market product: `id`, `symbol`, `zone`, `delivery_hour`, `status` | market | Public product |
 | Trade: `id`, `product_id`, `buy_order_id`, `sell_order_id`, `quantity`, `price_cents`, `created_at` | market | Append-only fill |
 | Asset: `id`, `account_id`, `provider_id`, `zone`, `capacity_kwh`, `soc_kwh`, `min_reserve_kwh`, `charge_kw`, `discharge_kw` | market | Battery |
-| Prediction response: `zone`, `delivery_hour`, `score`, `level`, `confidence`, `expected_value`, `market_price`, `drivers`, `disclaimer`, `generated_at` | data | `drivers` entries have `factor`, `contribution`, `detail` |
+| Prediction response: `zone`, `delivery_hour`, `score`, `level`, `confidence`, `expected_value`, `market_price`, `drivers`, `disclaimer`, `generated_at` | data | `drivers` entries have `factor`, `contribution`, `detail`; `level` is `LOW`/`MEDIUM`/`HIGH`, or `UNAVAILABLE` when a core ERCOT input is missing (S76: missing drivers contribute 0 with an "unavailable" detail, `expected_value` is 0.0 without a DA price) |
 | Router response: `checks`, `brier`, `jev_enabled` | router | Latest results, per-check calibration, Jev flag |
 | Bot response: `id`, `bot_type`, `blend`, `provider_id`, `cash`, `net_worth`, `pnl`, `trades`, `losses`, `dormant` | bots | Public bot profile |
 | Sandbox key request: `label` | market | `^[A-Za-z0-9 _-]{1,24}$` |
@@ -164,13 +164,14 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 
 | Name | Owning lane | Contract |
 | --- | --- | --- |
-| `GET /api/snapshot`: `asOf`, `ct`, `heNow`, `errors`, `demand`, `hubs`, `dam`, `sced`, `wind`, `solar`, `weather`, `checks` | worker | Five-minute cached JSON snapshot |
+| `GET /api/snapshot`: `asOf`, `ct`, `heNow`, `errors`, `demand`, `hubs`, `dam`, `sced`, `wind`, `solar`, `weather`, `checks` | worker | Five-minute cached JSON snapshot; `demand.mw`, `hubs[{hub,price}]`, `dam{hub,price}`, `sced.systemLambda`, `errors` is an object; an all-errors body is HTTP 502 cached 30 s (S76) |
 | `GET /api/report/np6-905-cd/spp_node_zone_hub` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/np4-190-cd/dam_stlmnt_pnt_prices` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/np3-565-cd/lf_by_model_weather_zone` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/np3-233-cd/hourly_res_outage_cap` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/np6-86-cd/shdw_prices_bnd_trns_const` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/esr/charging_mw` | worker | ERCOT `{fields, data, _meta}` |
+| ERCOT report columns and filters | data | Filter-parameter names from the published Public API spec; fixtures are spec-derived with provenance in `backend/tests/fixtures/*/PROVENANCE.md` (S76, rule 7) |
 | `GRIDMARKET_WORKER_URL`, `GRIDMARKET_WORKER_KEY` | data | Market Worker client settings |
 | `GRIDMARKET_DB` | foundation | SQLite path; default `/data/gridmarket.db` |
 
