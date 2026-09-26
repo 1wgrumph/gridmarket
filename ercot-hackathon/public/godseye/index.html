@@ -196,7 +196,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--text-primary);o
 <div class="hud dock glass" id="dock"></div>
 <div class="hud market glass" id="market" hidden aria-label="Market activity and router checks (baseline rules)"></div>
 
-<script>
+<script type="module">
+import { countyToZone, tradeLink, leadPrediction } from "./geo.js";
+
 const fmt=(n,d=0)=>n==null||!isFinite(n)?'—':Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 const money=n=>n==null||!isFinite(n)?'—':(n<0?'−$':'$')+fmt(Math.abs(n),2);
 const signed=(n,d=0)=>n==null||!isFinite(n)?'—':(n>0?'+':n<0?'−':'')+fmt(Math.abs(n),d);
@@ -374,6 +376,36 @@ function renderSystem(){
   intel.querySelectorAll('[data-c]').forEach(r=>r.onclick=()=>selectPlant(+r.dataset.c));
 }
 
+/* ---------- zone scarcity (separate from plant settlement prices) ---------- */
+let marketUrl='', predictions=null;
+function zoneHTML(p){
+  if(p.ba!=='ERCO') return '';
+  const zone=countyToZone(p.county), prediction=leadPrediction(predictions,zone);
+  const href=tradeLink(marketUrl,zone);
+  return `<div class="sect eyebrow">// zone scarcity</div>
+    <div class="row"><span class="k">Load zone</span><span class="v">${zone||'Unknown county'}</span></div>
+    <div class="note">approximate, by county · navigation only</div>
+    ${prediction?`<div class="row"><span class="k">Scarcity score</span><span class="v">${fmt(prediction.score,1)} · ${esc(prediction.level)}</span></div>
+    <div class="note">Lead delivery hour: ${esc(prediction.delivery_hour)}</div>`:`<div class="note">${predictions===null?'Market not connected':'Scarcity data unavailable'}</div>`}
+    ${href?`<a class="dash" href="${esc(href)}">Trade this zone →</a>`:''}`;
+}
+async function marketGet(path){
+  const r=await fetch(marketUrl+path,{signal:AbortSignal.timeout(20000)});
+  if(!r.ok) throw new Error('Market unavailable');
+  return r.json();
+}
+async function refreshMarket(){
+  try{
+    const cfg=await fetch('/api/config',{signal:AbortSignal.timeout(20000)}).then(r=>{if(!r.ok) throw new Error('Config unavailable');return r.json();});
+    const link=tradeLink(cfg.MARKET_URL,'LZ_NORTH');
+    marketUrl=link?link.split('#')[0].replace(/\/+$/,''):'';
+    predictions=marketUrl?await marketGet('/v1/predictions'):null;
+    if(!Array.isArray(predictions)) predictions=null;
+  }catch{predictions=null;}
+  const box=document.getElementById('zoneMarket');
+  if(box&&selected) box.innerHTML=zoneHTML(selected);
+}
+
 /* ---------- plant drill-down ---------- */
 function spark(series,color){
   const v=(series||[]).filter(x=>x!=null&&isFinite(x)); if(v.length<2) return '';
@@ -419,6 +451,7 @@ function plantHTML(p){
   <div id="liveMarket">${p.ba!=='ERCO'?`<div class="note">This plant sits in ${STAT_BA[p.ba]||p.ba}, outside the ERCOT market, so ERCOT prices don't apply to it.</div>`:p.nodes.length?'<div class="livebox"><div class="lbl">Loading settlement point…</div></div>':''}</div>
   ${p.ba==='ERCO'?`<div class="row"><span class="k">Nearest hub · ${Math.round(hub[1])} km</span><span class="v">${hub[0]} ${money(state.hub[hub[0]])}</span></div>
   <div class="row"><span class="k">Weather zone (nearest, approx.)</span><span class="v">${zone[0]} ${state.temps[zone[0]]!=null?fmt(state.temps[zone[0]],1)+'°F':''}</span></div>`:''}
+  <div id="zoneMarket" aria-live="polite">${zoneHTML(p)}</div>
   ${fleet}
   ${w?`<div class="sect eyebrow">// wind turbines</div>
     <div class="row"><span class="k">Turbines</span><span class="v">${fmt(p.units.reduce((a,u)=>a+(u.wind?.n||0),0))}</span></div>
@@ -525,6 +558,7 @@ async function loadSnap(){
 }
 loadPlants().catch(e=>{intel.innerHTML=`<div class="note">Couldn't load plant data: ${esc(e.message)}</div>`;});
 loadSnap(); setInterval(loadSnap,5*60*1000);
+refreshMarket(); setInterval(refreshMarket,5*60*1000);
 
 /* ---------- target lock + readout ---------- */
 const tgt=document.getElementById('tgt'); const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
