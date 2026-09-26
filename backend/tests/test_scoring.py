@@ -31,12 +31,10 @@ def factor_id(name: str) -> str:
 
 
 def score_hour(**kwargs: object) -> Prediction:
-    assert callable(getattr(scoring, "score_hour", None))
     return scoring.score_hour(**kwargs)
 
 
 def on_peak(hour: datetime) -> bool:
-    assert callable(getattr(scoring, "on_peak", None))
     return scoring.on_peak(hour)
 
 
@@ -82,7 +80,6 @@ def test_seit_gm_score_01_seven_signed_explained_drivers_and_value() -> None:
     ("score", "expected"), [(39.99, "LOW"), (40, "MEDIUM"), (69.99, "MEDIUM"), (70, "HIGH")]
 )
 def test_seit_gm_score_01_level_boundaries(score: float, expected: str) -> None:
-    assert callable(getattr(scoring, "level_for_score", None))
     assert scoring.level_for_score(score) == expected
 
 

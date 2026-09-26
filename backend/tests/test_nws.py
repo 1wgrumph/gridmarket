@@ -111,7 +111,6 @@ def test_seit_gm_data_05_representative_points_and_forecast_alerts(
 
 def test_seit_gm_data_05_six_request_sliding_budget() -> None:
     clock = [0.0]
-    assert callable(getattr(nws, "RequestBudget", None))
     budget = nws.RequestBudget(limit=6, window_s=60, clock=lambda: clock[0])
     sent: list[float] = []
     for request in range(100):

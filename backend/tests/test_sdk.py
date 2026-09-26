@@ -60,6 +60,7 @@ def test_seit_gm_api_04_sdk_round_trip_over_real_uvicorn(server: str):
     client = sdk_class()(base_url=server, api_key=key)
     products = client.market()
     assert products
+    assert isinstance(client.predictions(), list)
     future = next(product for product in products if product["symbol"].startswith("FLEX-"))
     account = client.account()
     assert account["cash_cents"] == 100000

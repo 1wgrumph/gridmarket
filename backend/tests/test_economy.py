@@ -226,7 +226,6 @@ def test_SEIT_GM_ECON_03_losses_net_worth_dormancy(tmp_path: Path, monkeypatch) 
     assert report["worst_loss"] == pytest.approx(-5.0)
     assert report["pnl"] == pytest.approx(-2.0)
     assert report["net_worth"] == pytest.approx(140.60)
-    assert callable(getattr(economy, "dormant_rate", None))
     assert economy.dormant_rate(conn) == pytest.approx(0.25)
 
 
@@ -248,7 +247,6 @@ def test_SEIT_GM_ECON_04_restart_rebuild(tmp_path: Path, monkeypatch) -> None:
         "INSERT INTO positions (account_id, product_id, quantity) VALUES ('acct-0', 'p1', 4)"
     )
     conn.commit()
-    assert callable(getattr(economy, "rebuild", None))
     economy.rebuild(conn)
     conn.commit()
     spec = population.sample(MASTER, 0, 1)[0]

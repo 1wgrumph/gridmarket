@@ -176,14 +176,8 @@ def test_seit_gm_contract_01_live_names() -> None:
         assert name in DOCUMENT, name
     for name in MODULES:
         importlib.import_module(f"gridmarket_server.{name}")
-    sdk_spec = importlib.util.spec_from_file_location(
-        "gridmarket_sdk", ROOT / "sdk/python/gridmarket/__init__.py"
-    )
-    assert sdk_spec and sdk_spec.loader
-    sdk = importlib.util.module_from_spec(sdk_spec)
-    sdk_spec.loader.exec_module(sdk)
-    for method in ("market", "predictions", "account", "orders", "place_order", "cancel_order"):
-        assert callable(getattr(sdk.Client, method))
+    # SDK Client behaviour (market, predictions, account, orders, place_order,
+    # cancel_order) is exercised live in test_sdk.py; existence alone proves nothing.
     assert main.app is not None
     assert main.app.openapi()["paths"]["/v1/market/status"]["get"]
     assert importlib.import_module("gridmarket_server.scoring").predict() == []

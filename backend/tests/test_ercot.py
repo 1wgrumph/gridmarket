@@ -105,7 +105,6 @@ def test_seit_gm_data_01_ingests_snapshot_and_all_five_reports(
 
 def test_seit_gm_data_02_sliding_budget_over_180_seconds() -> None:
     clock = [0.0]
-    assert callable(getattr(ercot, "RequestBudget", None))
     budget = ercot.RequestBudget(limit=12, window_s=60, clock=lambda: clock[0])
     sent: list[float] = []
     for request in range(100):
@@ -135,7 +134,6 @@ def test_seit_gm_data_01_weather_zone_load_mapping() -> None:
         for name, value in zip(names, report["data"][0], strict=True)
         if name in display
     }
-    assert callable(getattr(ercot, "map_weather_zone_load", None))
     assert ercot.map_weather_zone_load(rows) == {
         "LZ_HOUSTON": 1001,
         "LZ_NORTH": 3009,
@@ -206,7 +204,6 @@ def test_seit_gm_data_03_client_errors_fail_fast(
 
 
 def test_seit_gm_data_03_backoff_caps_at_five_minutes() -> None:
-    assert callable(getattr(ercot, "backoff_seconds", None))
     assert [ercot.backoff_seconds(attempt) for attempt in (0, 1, 2, 6, 20)] == [
         5,
         10,
@@ -253,6 +250,7 @@ def test_seit_gm_data_03_failed_poll_keeps_stale_signal_api_alive(
 def test_seit_gm_data_01_worker_stats_keep_only_counters(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
+    errors_before, throttled_before = ercot.stats.errors, ercot.stats.http_429
     with worker() as (url, calls):
         monkeypatch.setenv("GRIDMARKET_WORKER_URL", url)
         monkeypatch.setenv("GRIDMARKET_WORKER_KEY", "fixture-market-key")
@@ -260,7 +258,7 @@ def test_seit_gm_data_01_worker_stats_keep_only_counters(
         asyncio.run(ercot.poll())
     stats = ercot.worker_stats()
     assert stats.requests >= len(calls) >= 6
-    assert stats.errors >= 0 and stats.http_429 >= 0
+    assert (stats.errors, stats.http_429) == (errors_before, throttled_before)
     assert stats.latencies_ms and all(latency >= 0 for latency in stats.latencies_ms)
     assert stats.snapshot_age_s is not None and stats.snapshot_age_s >= 0
     assert set(vars(stats)) == {"requests", "errors", "http_429", "latencies_ms", "snapshot_age_s"}
@@ -269,6 +267,17 @@ def test_seit_gm_data_01_worker_stats_keep_only_counters(
 def test_dir_p1a_08_poll_contains_unexpected_errors(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setenv("GRIDMARKET_DB", str(tmp_path / "signals.db"))
+    db_path = tmp_path / "signals.db"
+    monkeypatch.setenv("GRIDMARKET_DB", str(db_path))
     monkeypatch.setenv("GRIDMARKET_WORKER_URL", "http://127.0.0.2/")
+    stamp = datetime.now(UTC).isoformat()
+    with sqlite3.connect(db_path) as db:
+        db.executescript(Path(ercot.__file__).with_name("schema.sql").read_text())
+        db.execute(
+            "INSERT INTO signals VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            ("one", "NP6-905-CD", "LZ_HOUSTON", stamp, 5, 48.5, "$/MWh", stamp, stamp),
+        )
     asyncio.run(ercot.poll())  # Must not raise: conftest blocks the socket.
+    current = ercot.signals.current()
+    assert [row["value"] for row in current] == [48.5]
+    assert all(row["stale"] for row in current)
