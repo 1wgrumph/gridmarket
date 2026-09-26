@@ -1,0 +1,23 @@
+class: F1
+title: Market context
+max_width: 2000
+max_height: 2000
+nodes:
+  - id: worker
+    label: ERCOT Worker
+  - id: market
+    label: Market
+  - id: bots
+    label: Bot population
+  - id: dashboard
+    label: Dashboard
+edges:
+  - from: worker
+    to: market
+    label: snapshot
+  - from: bots
+    to: market
+    label: orders
+  - from: market
+    to: dashboard
+    label: prices

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="287.5" height="159" viewBox="0 0 287.5 159" font-family="Helvetica, Arial, sans-serif" font-size="12">
+  <title>System context</title>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" />
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="287.5" height="159" fill="white" />
+  <g class="line" data-id="edge-1">
+    <polyline points="71.997,56.178 81.185,67.454 93.354,82.389 103.61,94.976 110.023,102.847" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="122" y="79.5" text-anchor="middle">&lt;request&gt;</text>
+  </g>
+  <g class="line" data-id="edge-2">
+    <polyline points="176.93,56.044 169.77,64.716 160.92,75.423 153,85 150.28,88.283 147.42,91.739 144.6,95.148 138.17,102.914" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="180.5" y="79.5" text-anchor="middle">&lt;data&gt;</text>
+  </g>
+  <g id="system">
+    <rect x="77.9992" y="103" width="92.0016" height="36" fill="white" stroke="black" />
+    <text x="124" y="125" text-anchor="middle">&lt;System&gt;</text>
+  </g>
+  <g id="user">
+    <rect x="19.9984" y="20" width="76.0032" height="36" fill="white" stroke="black" />
+    <text x="58" y="42" text-anchor="middle">&lt;User&gt;</text>
+  </g>
+  <g id="upstream">
+    <rect x="114.5" y="20" width="153" height="36" fill="white" stroke="black" />
+    <text x="191" y="42" text-anchor="middle">&lt;Upstream service&gt;</text>
+  </g>
+</svg>

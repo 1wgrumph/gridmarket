@@ -1,0 +1,43 @@
+class: F7
+title: Order state machine
+max_width: 1200
+max_height: 800
+direction: LR
+nodes:
+  - id: submitted
+    label: Submitted
+  - id: rejected
+    label: Rejected (typed reason)
+  - id: open
+    label: Open (resting)
+  - id: partial
+    label: Partially filled
+  - id: filled
+    label: Filled
+  - id: cancelled
+    label: Cancelled
+edges:
+  - from: submitted
+    to: rejected
+    label: auth, limit, risk fail
+  - from: submitted
+    to: open
+    label: no cross
+  - from: submitted
+    to: partial
+    label: partial cross
+  - from: submitted
+    to: filled
+    label: full cross
+  - from: open
+    to: partial
+    label: incoming fill
+  - from: partial
+    to: filled
+    label: remaining filled
+  - from: open
+    to: cancelled
+    label: DELETE or close
+  - from: partial
+    to: cancelled
+    label: DELETE or close
