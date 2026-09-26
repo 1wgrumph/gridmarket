@@ -785,6 +785,14 @@
       "decision": "OWN-WORKER-ENV is done (owner-reported): Worker 'ercot-hackathon' secrets are set on the owner's Cloudflare account (ERCOT_USERNAME, ERCOT_PASSWORD, ERCOT_SUBSCRIPTION_KEY, ERCOT_ESR_SUBSCRIPTION_KEY, MARKET_KEY), and the MARKET_KEY value is in ~/.config/gridmarket/worker-key on the host. The Worker is not deployed yet: OWN-WORKER-DEPLOY follows the 1b landing. ERCOT EWS (SOAP, market participants only, with digital certificates) is out of scope: no code. It appears in the docs only as a roadmap line: the path to real settlement is aggregating household batteries through a QSE that submits bids and offers via EWS.",
       "rationale": "EWS is not available to non-registered developers. The Public API and the ESR API cover the demo. The roadmap line strengthens the judge story without adding build risk.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-081",
+      "decided_at": "2026-09-26T10:46:00-05:00",
+      "decided_by": "Orchestrator (delegate) + owner action",
+      "decision": "The owner created the KV namespace CACHE on their Cloudflare account: id 76531f2a806d487a856d6fb7e21120cc. The old id 4160071505024c7eadee41aaa38a2b01 in ercot-hackathon/wrangler.jsonc does not exist on the owner's account (kv namespace list returned []). Right after the 1b landing, a light slice S25-kv on a branch from main replaces the id and lands via a quick PR, so the owner can deploy immediately. S55 builds on top of it.",
+      "rationale": "A deploy to the owner's account would fail with namespace-not-found. KV ids are not secrets.",
+      "reversible": true
     }
   ],
   "stages": {
