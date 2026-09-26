@@ -697,6 +697,14 @@
       "decision": "S11 blockers: (1) The S10 spot fixture symbol is wrong. It is corrected to the market-generated SPOT-<zone>-<YYYYMMDDHH>, keeping every assertion. The market keeps its stable listing-time spot class. (2) population.sample arrives with the S29 exit in 1b. (3) New phase 2 slice S05-prov on lane-market3 after landed/1b: move the assets/reservations SQL from market.py into the market-owned providers package. This is a pure move with no contract name changes. S12 merges it before lonestar.",
       "rationale": "Putting S05-prov in phase 2 keeps 1b short (S05-const, S05-anom, S54). Reclassifying spot by delivery hour would flip hold rules on open orders mid-life, a market-integrity risk. The direct SQL is a real CONTRACTS deviation (reservations go via the provider layer).",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-070",
+      "decided_at": "2026-09-26T10:10:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "The S49 integration engineer is authorized to revert-the-revert for any lane whose earlier assembly merge was reverted, then merge the repaired tip; b58d6c4 (bots) now. This is a standing rule for all assemblies, and not an owner question.",
+      "rationale": "Git treats a reverted merge's commits as already merged, so re-merging the repaired tip applies only the new commits onto the reverted tree and conflicts. Revert-of-revert then merge is the standard remedy and changes no lane content.",
+      "reversible": true
     }
   ],
   "stages": {
