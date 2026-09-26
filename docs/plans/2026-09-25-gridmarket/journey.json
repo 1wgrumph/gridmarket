@@ -705,6 +705,14 @@
       "decision": "The S49 integration engineer is authorized to revert-the-revert for any lane whose earlier assembly merge was reverted, then merge the repaired tip; b58d6c4 (bots) now. This is a standing rule for all assemblies, and not an owner question.",
       "rationale": "Git treats a reverted merge's commits as already merged, so re-merging the repaired tip applies only the new commits onto the reverted tree and conflicts. Revert-of-revert then merge is the standard remedy and changes no lane content.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-071",
+      "decided_at": "2026-09-26T09:27:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "The S05-anom burst regression test asserts the requirement bound (< 1.0 s), not the 0.5 s engineering target. Accept WAL + synchronous=NORMAL: it is safe on application crash and may lose the last commits on OS crash or power loss, which is acceptable for a demo market with no real money.",
+      "rationale": "The profile showed per-commit fsync and writer-lock waits dominated (commit 0.251 to 0.0046 s). The burst went from 1.167 s to 0.18-0.22 s standalone and 0.53-0.60 s under the full suite on a machine shared with other agents. Asserting 0.5 s would be flaky; 1 s is the adversary acceptance bound.",
+      "reversible": true
     }
   ],
   "stages": {
