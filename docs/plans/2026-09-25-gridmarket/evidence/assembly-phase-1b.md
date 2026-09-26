@@ -922,3 +922,115 @@ git switch, product/test edit, credential access, deployment, issue closure,
 or Co-Authored-By line. The evidence-only commit follows the tested candidate;
 `final-verification.json` and `final-push.log` record final clean state and
 branch-only non-force push.
+
+
+## Attempt 10: PASS — market2 assembly (DIR-P1b-23)
+
+Journey GM-2026-09-25, S49 phase 1b, Integration Engineer execution.
+Entry: `87074d01ff00dcde41a45bf328ad03469ebdb59f`, clean, on
+`gridmarket/integration-1b`. This is progressive assembly evidence for
+handoff, not independent review, assurance, owner acceptance, or landing.
+Evidence root: `/tmp/gm-evidence/P1b/attempt-10/`.
+
+The exact market2 tip `073446fc0456f14cd9e192b4a28d5fc7ad1268dc` was
+merged with `--no-ff` without conflict. The chain contains S05-const
+`fa3c6a1`, S05-anom `941c393`, S54 `683d494`, and S05-flake `073446f`.
+Market2 merge and resulting tested candidate:
+`1f24d535ddb8679a0cc3c3bf0403cfd09c3fb2a5`.
+
+Entry and post-merge structural checks exit 0 (`market2-entry.json`,
+`market2-post.json`, `market2-structure.json`, `market2-merge.log`).
+PROC-ASSEMBLY's incoming non-merge history changes only market.py,
+test_market.py and test_market_mutation.py, within the S02/S05 union plus
+expressly authorized S54 test path; `manifest-receipt.json` and
+`write-sets.json` preserve authority and canonical source hashes.
+No frozen file changed in this step. The S01 comparison still carries only
+backend/pyproject.toml from phase 1a and dashboard/src/api.ts plus hooks.ts
+from the DEC-GM-074 design restoration. CONTRACTS.md and backend/uv.lock
+are unchanged from entry. The market2 step receives no new exemption.
+
+### Gate result: PASS — market2 step only
+
+| Gate | Exit | Evidence |
+|---|---:|---|
+| PROC-ASSEMBLY | 0 | `market2-proc-assembly.json`, `market2-structure.json` |
+| CMD-TEST-CONTRACTS | 0 | `market2-test-contracts.log` |
+| CMD-TEST-ALL | 0 | `market2-test-all.log` |
+| CMD-TEST-DASH | 0 | `market2-test-dash.log` |
+| CMD-SMOKE | 0 | `market2-smoke.log` |
+| CMD-SECRETS | 0 | `market2-secrets.log` |
+| CMD-RULES | 0 | `market2-rules.log` |
+| CMD-TEST-MARKET | 0 | `market2-test-market.log` |
+| Mutation (market.*) | 0 | `market2-mutation.log` |
+| Anomalies panel / real rows | 0 | `anomalies-panel.json` |
+| Mutation >= 70% | 0 | `mutation-threshold.json`, `mutmut-cicd-stats.json` |
+
+All gates ran on the market2 merge commit. Mutation measured **81.63%
+(942 killed / 1154 scored; 212 survived, 0 timeout)**. This integrated result
+is below the supplied lane receipt's 86.05%, but clears the required 70%.
+The export totals 1,694 generated mutants, leaving 540 unscored in this
+market-only invocation; they are excluded from the stated scored denominator
+and do not count as passing evidence.
+Test-all passed 119 backend tests, 47 dashboard tests and 34 Worker tests;
+the separate test-market gate passed 37 tests. The separate dashboard gate
+also built successfully. Smoke passed all assertions on the SEIT-assigned
+`gm-smoke-1b:18003` pair and removed its isolated containers/volume.
+
+Timestamps, exact commands and candidate SHA are in `market2-results.json`.
+Every gate passed on its first run: no DEC-GM-075 retry and no rollback.
+Make targets use frozen dependencies, GRIDMARKET_NWS=off and
+UV_EXCLUDE_NEWER=2026-09-11T22:00:00Z. No owner environment file was read.
+
+### Real anomalies interface check
+
+`anomalies-panel.json` exits 0. A disposable SQLite database using the real
+schema and a loopback FastAPI app served two anomalies, one with text detail
+and one with null detail/subject. The actual dashboard rendered both via
+`/v1/market/status`, showed `2 REPORTED`, replaced underscores in kinds with
+spaces, and displayed `No detail provided` for null detail. No fetch stub was
+used. Desktop and 390x844 phone evidence: `panel-status.json`,
+`panel-desktop.txt`, `panel-desktop.png`, `panel-phone.txt`, `panel-phone.png`.
+`panel-console.json` contains no captured browser warning/error. The temporary
+server was stopped and the browser viewport restored and tab closed.
+This bounded interface check does not replace independent phase visual review.
+
+A neighboring, out-of-scope observation is retained for that review:
+seeded bots show `$NaN` in the overview P&L table. The screenshots and DOM
+receipts show it; no classification, repair, issue filing, or closure is claimed.
+
+### Carried gaps and handoff limits
+
+**SPEC_WRITESET_GAP remains open for the Orchestrator.** Spec `8989e53`
+was not merged or re-attempted. Its Makefile and
+evidence/spec-tool-versions.md changes still lack canonical S19/S20/S21
+write-set authority; no manifest amendment or new evidence was supplied.
+The spec gap does not re-defer the eligible spec lane and is not closed by
+this market2 result. S49-E remains not_run.
+
+Pending owner items: **PROC-ERCOT-LIVE-CHECK**, **AC-GM-ACC-01**, and Worker
+views deployment (**VIEWS_NOT_DEPLOYED**). Prior **ENTROPY_PROOF_CONFLICT**,
+**PAGES_APP_ERROR_BOUNDARY_GAP**, live-smoke coverage limits, and Graphviz
+2.43.0 versus designed 2.42.2 remain disclosed, not revalidated or closed.
+Independent phase review, full browser visual review and Assurance Test Engineer
+remain pending. **BRAN_UNAVAILABLE**: no native policy; ordinary repository
+and Git evidence used.
+
+Frozen binding digest
+`14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`
+is preserved unchanged in `frozen-profile.json`, including role routes,
+review.coverage_assist and deterministic_verification.reverify. No live
+profile import or route substitution occurred. Capability resolution is in
+`capability-availability.json`: OpenCodeReview delegation backend available,
+enabled, required=false, **not_run** because this is assembly, not code review;
+Reverify enabled, executable available, **not applicable — no Rust/native
+compiled binary claim**. Gates do not count as Reverify or independent assurance.
+
+**S49-L NOT_RUN.** Only branch-only non-force push is authorized. No PR,
+main merge, branch deletion, force push, git switch, spec merge, product/test
+edit, frozen-file edit, credential access, owner deployment, issue closure,
+or Co-Authored-By line. The evidence-only commit follows the tested candidate;
+final-verification.json and final-push.log record final branch/tree state.
+
+Market2 blocker: **none**. Remaining phase blocker: **SPEC_WRITESET_GAP**.
+Result: **CANDIDATE_READY** for the bounded market2 handoff, with the phase
+review/assurance and owner items above still pending. Stop before S49-L.
