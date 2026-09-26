@@ -946,6 +946,14 @@
       "decision": "Owner-confirmed dated route amendment: the Coordinator role moves from the frozen AGY Gemini 3.8 Flash / Muse Spark 1.3 xhigh chain (Muse was serving) to Codex CLI GPT-6 Sol at high reasoning with fast mode, fallback GPT-6 Astra high fast. It overrides DEC-GM-096 for this role only. The running Muse P2 and PS Coordinators are stopped and relaunched with resume packets; in-flight jobs keep running.",
       "owner_quote": "lets use sol6 high instead",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-104",
+      "decided_at": "2026-09-26T15:16:00-05:00",
+      "decided_by": "Owner (in chat)",
+      "decision": "Coordinator route returns to the frozen chain (AGY Gemini 3.8 Flash primary, Muse Spark 1.3 xhigh fallback) for every NEW Coordinator session. The running GPT-6 Sol Coordinators (P2-coord4, PS-coord4) finish their current work on Sol. DEC-GM-102's role override is marked expired; DEC-GM-096 (Sol to Astra medium fast for other roles) is unchanged.",
+      "owner_quote": "ok you can go back to agy [when] the sol coordinators are done",
+      "reversible": true
     }
   ],
   "stages": {
@@ -2581,7 +2589,10 @@
             ]
           }
         },
-        "scope": "Coordinator role for every phase from this time on; overrides the DEC-GM-096 Sol-to-Astra substitution for this role only. Fast mode (service_tier=priority) is passed per call because the owner's Codex config has service_tier=default and fast_default_opt_out=true."
+        "scope": "Coordinator role for every phase from this time on; overrides the DEC-GM-096 Sol-to-Astra substitution for this role only. Fast mode (service_tier=priority) is passed per call because the owner's Codex config has service_tier=default and fast_default_opt_out=true.",
+        "expired": true,
+        "expired_at": "2026-09-26T15:16:00-05:00",
+        "expired_by": "DEC-GM-104"
       }
     ]
   },
