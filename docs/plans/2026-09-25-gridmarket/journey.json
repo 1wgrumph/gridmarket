@@ -909,6 +909,13 @@
       "decision": "Owner-confirmed dated route amendment to the frozen snapshot: every Codex CLI GPT-6 Sol route (any role, any reasoning, primary or fallback) becomes Codex CLI GPT-6 Astra at medium reasoning with fast mode (service_tier=priority). route.py applies profile_selection.amendments[].route_substitutions; running Sol jobs are restarted on the new route.",
       "owner_quote": "switch out sol with astra medium and use fast mode",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-097",
+      "decided_at": "2026-09-26T14:23:00-05:00",
+      "decided_by": "Orchestrator (delegate, planning owner)",
+      "decision": "Stretch blockers: (1) the S38 MCP test compares wall-clock generated_at across two calls; test-only fix S38-fix drops volatile timestamps from both sides and asserts them present as ISO-8601; no product change. (2) S23 ML report ships fixture-only, labelled as such; the owner's live run is optional after the Worker deploy. (3) route.py ignores FileNotFoundError on concurrent slot pruning. Posted as DIR-PS-08. Also DIR-P2-13: integration-2 fails make lint on examples/strategy-template/strategy.py (format only); fixed before or in the phase 2 repair round, and the phase 2 gate includes lint.",
+      "reversible": true
     }
   ],
   "stages": {
