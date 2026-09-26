@@ -1216,6 +1216,14 @@
       "decision": "Codex fast mode off for all new dispatches (usage); Test Implementer role moves to Claude Code / Claude Opus 5.5 / medium with Muse Spark 1.3 max fallback. Running sessions keep the tier they launched with.",
       "owner_quote": "Stop using fast mode on codex my usage is shot. Switch to opus medium for test implementer",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-140",
+      "decided_at": "2026-09-26T18:55:00-05:00",
+      "decided_by": "Owner (in chat)",
+      "decision": "AGY Gemini 3.8 Flash medium becomes the first route for implementer, light implementer and integration engineer dispatches after the running jobs finish; assurance roles unchanged.",
+      "owner_quote": "Ok use agy when runs are done",
+      "reversible": true
     }
   ],
   "stages": {
@@ -2882,6 +2890,66 @@
           }
         },
         "scope": "Codex fast mode (service_tier priority) is removed from every substitution and default route for dispatches from this time on (the DEC-GM-096 Sol-to-Astra-medium substitution stays, at the default tier). Test Implementer role routes to Claude Code / Claude Opus 5.5 / medium, fallback Muse Spark 1.3 max."
+      },
+      {
+        "id": "DEC-GM-140",
+        "dated": "2026-09-26T18:55:00-05:00",
+        "owner_confirmed": true,
+        "owner_quote": "Ok use agy when runs are done",
+        "role_routes": {
+          "implementer": {
+            "primary": {
+              "harness": "AGY",
+              "model": "Gemini 3.8 Flash",
+              "reasoning": "medium"
+            },
+            "ordered_fallbacks": [
+              {
+                "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                "harness": "Muse Code",
+                "model": "Muse Spark 1.3",
+                "reasoning": "max"
+              },
+              {
+                "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary and all preceding approved fallbacks.",
+                "harness": "Claude Code",
+                "model": "Claude Opus 5.5",
+                "reasoning": "high"
+              }
+            ]
+          },
+          "light_implementer": {
+            "primary": {
+              "harness": "AGY",
+              "model": "Gemini 3.8 Flash",
+              "reasoning": "medium"
+            },
+            "ordered_fallbacks": [
+              {
+                "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                "harness": "Muse Code",
+                "model": "Muse Spark 1.3",
+                "reasoning": "xhigh"
+              }
+            ]
+          },
+          "integration_engineer": {
+            "primary": {
+              "harness": "AGY",
+              "model": "Gemini 3.8 Flash",
+              "reasoning": "medium"
+            },
+            "ordered_fallbacks": [
+              {
+                "condition": "Verified unavailability or usage/rate-limit exhaustion of the primary route.",
+                "harness": "Claude Code",
+                "model": "Claude Opus 5.5",
+                "reasoning": "high"
+              }
+            ]
+          }
+        },
+        "scope": "New dispatches after the running jobs finish: AGY first for implementer, light implementer and integration engineer (coordinator already AGY-first by DEC-GM-104). Reviewer, Test Engineer and Test Implementer (DEC-GM-139) unchanged. AGY cap stays 2 concurrent sessions (DEC-GM-040)."
       }
     ]
   },
