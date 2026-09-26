@@ -54,7 +54,7 @@ def market(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
             )
             db.execute(
                 "INSERT INTO products (id, symbol, zone, delivery_hour) VALUES (?, ?, ?, ?)",
-                ("spot", "FLEX-LZ_HOUSTON-SPOT", "LZ_HOUSTON", delivery.isoformat()),
+                ("spot", f"SPOT-LZ_HOUSTON-{delivery:%Y%m%d%H}", "LZ_HOUSTON", delivery.isoformat()),
             )
         yield client, db_path
 
