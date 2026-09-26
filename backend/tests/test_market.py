@@ -197,12 +197,14 @@ def test_seit_gm_mkt_03_capacity_rejects_and_reserves_atomically(exchange):
 
 def test_seit_gm_mkt_04_size_position_and_cash_holds_leave_balances_unchanged(exchange):
     path, client = exchange
-    assert place(client, "buyer", "future", "buy", 50, 1000, "hold").status_code < 300
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE accounts SET cash_cents=40000 WHERE id='buyer'")
+    assert place(client, "buyer", "future", "buy", 50, 400, "hold").status_code < 300
     with sqlite3.connect(path) as db:
         before = db.execute(
             "SELECT cash_cents,flex_credits FROM accounts WHERE id='buyer'"
         ).fetchone()
-    cases = ((51, 1, "ORDER_TOO_LARGE"), (50, 1100, "INSUFFICIENT_FUNDS"))
+    cases = ((51, 1, "ORDER_TOO_LARGE"), (50, 500, "INSUFFICIENT_FUNDS"))
     for quantity, price, code in cases:
         response = place(client, "buyer", "future", "buy", quantity, price, code)
         assert response.status_code == 422 and response.json()["error"]["code"] == code
@@ -223,9 +225,11 @@ def test_seit_gm_mkt_04_size_position_and_cash_holds_leave_balances_unchanged(ex
 
 def test_seit_gm_mkt_04_future_sells_also_hold_cash(exchange):
     path, client = exchange
-    assert place(client, "seller", "future", "sell", 50, 1000, "short-hold").status_code < 300
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE accounts SET cash_cents=40000 WHERE id='seller'")
+    assert place(client, "seller", "future", "sell", 50, 400, "short-hold").status_code < 300
     before = count(path, "orders")
-    response = place(client, "seller", "future", "sell", 50, 1100, "short-over")
+    response = place(client, "seller", "future", "sell", 50, 500, "short-over")
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "INSUFFICIENT_FUNDS"
     assert count(path, "orders") == before
