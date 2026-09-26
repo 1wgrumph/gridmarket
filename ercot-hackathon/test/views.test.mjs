@@ -9,12 +9,16 @@ const PAGES = {
   "/": new URL("../public/index.html", import.meta.url),
   "/godseye/": new URL("../public/godseye/index.html", import.meta.url),
 };
-const ACTIVITY = { items: [{ name: "Harbor Desk", text: "buy 3 LZ_NORTH" }] };
+const ACTIVITY = [
+  { id: "e1", type: "fill", label: "Harbor Desk", symbol: "LZ_NORTH", side: "buy", quantity: 3, price_cents: 8, reason: null, created_at: "2026-09-26T14:00:00Z", entry_type: "fill", subject_id: "t1" },
+];
 const ROUTER = {
-  results: [
-    { check_id: "dart-lz-north", band: "alert", probability: 0.91, baseline: true },
-    { check_id: "dart-lz-west", band: "log", probability: 0.22, baseline: true },
+  checks: [
+    { check_id: "dart-lz-north", family: "dart", subject: "LZ_NORTH", horizon_s: 3600, probability: 0.91, band: "alert", baseline: true, jev_probability: null, created_at: "2026-09-26T14:00:00Z", resolves_at: "2026-09-26T15:00:00Z", outcome: null },
+    { check_id: "dart-lz-west", family: "dart", subject: "LZ_WEST", horizon_s: 3600, probability: 0.22, band: "log", baseline: true, jev_probability: null, created_at: "2026-09-26T14:00:00Z", resolves_at: "2026-09-26T15:00:00Z", outcome: null },
   ],
+  brier: {},
+  jev_enabled: false,
 };
 const ERCOT_CONTENT = "ERCOT hub prices";
 
@@ -126,6 +130,7 @@ test("S26-04 SEIT-GM-EDGE-05 red-expected renderFeed shows the activity strip an
   assert.match(el.innerHTML, /activity/i);
   assert.match(el.innerHTML, /Harbor Desk/);
   assert.match(el.innerHTML, /buy 3 LZ_NORTH/);
+  assert.match(el.innerHTML, /@ 8¢/);
   assert.match(el.innerHTML, /dart-lz-north/);
 });
 

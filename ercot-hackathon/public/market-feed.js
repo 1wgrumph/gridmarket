@@ -24,13 +24,19 @@ export async function fetchMarket(baseUrl, fetchImpl = fetch) {
   }
 }
 
+const detail = (i) => {
+  const parts = [i.side, i.quantity, i.symbol].filter((p) => p !== null && p !== undefined && p !== "");
+  if (i.price_cents !== null && i.price_cents !== undefined && i.price_cents !== "") parts.push(`@ ${i.price_cents}¢`);
+  return parts.join(" ");
+};
+
 export function renderFeed(el, data) {
   if (!data || data.offline) return;
   const items = list(data.activity, "items").slice(0, 8);
-  const alerts = list(data.router, "results").filter((r) => r.band === "alert");
+  const alerts = list(data.router, "checks").filter((r) => r.band === "alert");
   el.innerHTML = `
     <div class="mf-title">Market activity</div>
-    <ul class="mf-strip">${items.map((i) => `<li><b>${esc(i.name)}</b> ${esc(i.text)}</li>`).join("") || "<li>No trades yet</li>"}</ul>
+    <ul class="mf-strip">${items.map((i) => `<li><b>${esc(i.label)}</b> ${esc(detail(i))}</li>`).join("") || "<li>No trades yet</li>"}</ul>
     <div class="mf-title">Router alerts · baseline rules</div>
     <ul class="mf-alerts">${alerts.map((r) => `<li>${esc(r.check_id)} <b>${esc(Math.round(r.probability * 100))}%</b></li>`).join("") || "<li>No alert-band checks</li>"}</ul>`;
 }
