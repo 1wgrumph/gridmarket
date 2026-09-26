@@ -544,9 +544,7 @@ def test_router_matches_live_report_ids(monkeypatch: pytest.MonkeyPatch) -> None
     store.add("NP4-190-CD", "LZ_HOUSTON", hour, 60, 80.0)
     store.add("NP6-905-CD", "LZ_HOUSTON", HOUR + timedelta(minutes=15), 15, 90.0)
     install(monkeypatch, store, [prediction("LZ_HOUSTON", hour, 50.0)], {"t": NOW})
-    assert [c.check_id for c in decision_router.market_checks()] == [
-        check_id("LZ_HOUSTON", hour)
-    ]
+    assert [c.check_id for c in decision_router.market_checks()] == [check_id("LZ_HOUSTON", hour)]
     for minutes in (0, 15, 30, 45):
         store.add("NP6-905-CD", "LZ_HOUSTON", hour + timedelta(minutes=minutes), 15, 90.0)
     assert decision_router._market_outcome(f"LZ_HOUSTON:{hour.isoformat()}") is True
