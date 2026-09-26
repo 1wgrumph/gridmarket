@@ -1,0 +1,13 @@
+# Copy to ${GM_TUNNEL_DIR:-~/.cloudflared}/config.yml (outside the repository).
+# Create the named tunnel first (owner action):
+#   cloudflared tunnel login
+#   cloudflared tunnel create gridmarket
+#   cloudflared tunnel route dns gridmarket gridmarket.example.com
+tunnel: <TUNNEL_UUID>
+credentials-file: /etc/cloudflared/<TUNNEL_UUID>.json
+
+ingress:
+  # "app" is the compose service; the host never publishes a public port.
+  - hostname: gridmarket.example.com
+    service: http://app:8000
+  - service: http_status:404
