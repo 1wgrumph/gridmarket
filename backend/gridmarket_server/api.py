@@ -81,9 +81,8 @@ def admin_local(host: str | None) -> bool:
 
 def admin_guard(request: Request) -> None:
     # Reject remote peers before touching the secret: no key oracle remotely.
-    if (
-        "CF-Connecting-IP" in request.headers
-        or not admin_local(request.client.host if request.client else None)
+    if "CF-Connecting-IP" in request.headers or not admin_local(
+        request.client.host if request.client else None
     ):
         market.reject("FORBIDDEN", 403)
     configured = os.getenv("GRIDMARKET_ADMIN_KEY", "")
