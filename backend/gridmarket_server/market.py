@@ -13,17 +13,20 @@ from fastapi import APIRouter, HTTPException
 
 from . import adversary, health
 from .contracts import ProviderOffline
-from .providers import enabled
+from .providers import commit_capacity as _commit_capacity
+from .providers import due_capacity, enabled, reserved_capacity, set_delivery_status
 
 router = APIRouter()
 ZONES = ("LZ_HOUSTON", "LZ_NORTH", "LZ_SOUTH", "LZ_WEST")
 MAX_ORDER_QUANTITY = 50
 MAX_POSITION = 200
+MAX_PRICE_CENTS = 500  # $5.00/FC (1 FC = 1 kWh) mirrors the ERCOT $5,000/MWh offer cap
 Order = RestingOrder = dict[str, Any]
 
 
-def reject(code: str, status: int = 422) -> None:
-    raise HTTPException(status, {"code": code, "message": code.replace("_", " ").capitalize()})
+def reject(code: str, status: int = 422, message: str | None = None) -> None:
+    message = message or code.replace("_", " ").capitalize()
+    raise HTTPException(status, {"code": code, "message": message})
 
 
 def observe_rejection(exc: Exception, account_id: str | None, code: str) -> None:
@@ -190,12 +193,14 @@ def _place_order(db, account_id: str, incoming: Order) -> dict:
     quantity, price, side = incoming["quantity"], incoming["price_cents"], incoming["side"]
     if quantity > MAX_ORDER_QUANTITY:
         reject("ORDER_TOO_LARGE")
-    if (
-        quantity < 1
-        or not 0 <= price <= (2**63 - 1) // MAX_ORDER_QUANTITY
-        or side not in ("buy", "sell")
-    ):
+    if quantity < 1 or side not in ("buy", "sell"):
         reject("VALIDATION_ERROR")
+    if not 0 <= price <= MAX_PRICE_CENTS:
+        reject(
+            "VALIDATION_ERROR",
+            message=f"price_cents must be between 0 and {MAX_PRICE_CENTS} "
+            f"(${MAX_PRICE_CENTS / 100:.2f}/FC, the ERCOT ${MAX_PRICE_CENTS * 10:,}/MWh offer cap)",
+        )
     order_id = uuid.uuid4().hex
     adapters = _adapters(db, order_id)
     assets = [
@@ -313,34 +318,6 @@ def _place_order(db, account_id: str, incoming: Order) -> dict:
     return rows(db, "SELECT * FROM orders WHERE id=?", (order_id,))[0]
 
 
-def _commit_capacity(db, order_id: str, quantity: int) -> None:
-    for reservation in rows(
-        db,
-        "SELECT * FROM reservations WHERE order_id=? AND status='reserved' ORDER BY rowid",
-        (order_id,),
-    ):
-        used = min(quantity, reservation["kwh"])
-        if not used:
-            break
-        if used < reservation["kwh"]:
-            db.execute("UPDATE reservations SET kwh=kwh-? WHERE id=?", (used, reservation["id"]))
-            db.execute(
-                "INSERT INTO reservations VALUES (?,?,?,?,?,'committed')",
-                (
-                    uuid.uuid4().hex,
-                    order_id,
-                    reservation["asset_id"],
-                    reservation["delivery_hour"],
-                    used,
-                ),
-            )
-        else:
-            db.execute(
-                "UPDATE reservations SET status='committed' WHERE id=?", (reservation["id"],)
-            )
-        quantity -= used
-
-
 def cancel(db, account_id: str, order_id: str) -> dict:
     found = rows(db, "SELECT * FROM orders WHERE id=? AND account_id=?", (order_id, account_id))
     if not found:
@@ -348,11 +325,7 @@ def cancel(db, account_id: str, order_id: str) -> dict:
     if found[0]["status"] == "open":
         db.execute("UPDATE orders SET status='cancelled' WHERE id=?", (order_id,))
         adapters = _adapters(db)
-        for reservation in rows(
-            db,
-            "SELECT r.id,a.provider_id FROM reservations r JOIN assets a ON a.id=r.asset_id WHERE r.order_id=? AND r.status='reserved'",
-            (order_id,),
-        ):
+        for reservation in reserved_capacity(db, order_id):
             adapters[reservation["provider_id"]].release_capacity(db, reservation["id"])
     return rows(db, "SELECT * FROM orders WHERE id=?", (order_id,))[0]
 
@@ -446,11 +419,7 @@ def settle(db, now: datetime | None = None) -> None:
 
 def _deliver(db, now: datetime) -> None:
     adapters = _adapters(db)
-    for reservation in rows(
-        db,
-        "SELECT r.*,a.provider_id FROM reservations r JOIN assets a ON a.id=r.asset_id WHERE r.status='committed' AND julianday(r.delivery_hour)+1.0/24<=julianday(?)",
-        (now.isoformat(),),
-    ):
+    for reservation in due_capacity(db, now):
         adapter = adapters.get(reservation["provider_id"])
         delivered = adapter is not None and adapter.verify_delivery(reservation["id"])
         if not delivered:
@@ -472,10 +441,7 @@ def _deliver(db, now: datetime) -> None:
                 )
         if adapter is not None:
             adapter.release_capacity(db, reservation["id"])
-        db.execute(
-            "UPDATE reservations SET status=? WHERE id=?",
-            ("delivered" if delivered else "defaulted", reservation["id"]),
-        )
+        set_delivery_status(db, reservation["id"], delivered)
         event(
             db,
             "settlement",
