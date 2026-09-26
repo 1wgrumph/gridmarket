@@ -1,11 +1,12 @@
 /// <reference types="vite/client" />
-import { lazy, Suspense, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useRef, useState, type CSSProperties } from 'react';
 import type { Activity, Bot, MarketProduct, MarketStatus, Prediction, ProductDetail, Provider, Signal, Trade } from '../api';
 import { useResource } from '../hooks';
 import { Disclosures } from '../components/Shell';
 import Icon from '../components/Icon';
 import Panel from '../components/Panel';
-import ZoneMap, { zoneName } from '../components/ZoneMap';
+import ZoneDetail from '../components/ZoneDetail';
+import ZoneMap, { zoneName, mapZones } from '../components/ZoneMap';
 
 const PriceChart = lazy(() => import('../components/PriceChart'));
 type Resource = { data: unknown; error: string | null; loading: boolean };
@@ -88,11 +89,16 @@ export default function Overview() {
   const firstError = resources.find(r => r.error)?.error;
   const [paused, setPaused] = useState(false);
 
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+  const zoneTrigger = useRef<SVGElement | null>(null);
+  const closeZone = () => { setSelectedZone(null); zoneTrigger.current?.focus({ preventScroll: true }); };
+  const hasPrices = signals.data?.some(s => s.report_id === 'NP6-905-CD' && mapZones.includes(s.zone));
   const lead = predictions.data?.reduce<Prediction | undefined>((best, p) => !best || p.score > best.score ? p : best, undefined);
   const delivery = lead ? hourFormat.format(new Date(lead.delivery_hour)) : '—';
   const product = market.data?.find(p => p.zone === lead?.zone && p.delivery_hour === lead?.delivery_hour) ?? market.data?.[0];
   const scoreOf = (zone: string) => predictions.data?.find(p => p.zone === zone)?.score;
   const zones = [...new Set([...(predictions.data ?? []).map(p => p.zone), ...(signals.data ?? []).map(s => s.zone)])]
+    .filter(zone => zone.startsWith('LZ_'))
     .sort((a, b) => (scoreOf(b) ?? -1) - (scoreOf(a) ?? -1));
   const signalsByZone = groupBy(signals.data ?? [], s => s.zone);
   const esr = (signals.data ?? []).filter(s => s.report_id === 'ESR').sort((a, b) => a.published_at < b.published_at ? -1 : 1);
@@ -117,7 +123,7 @@ export default function Overview() {
           <div className="hero-top"><span className="eyebrow">01 / NEXT DELIVERY WINDOW</span><StaleTag res={predictions}/><span className="prediction-tag">SCARCITY OUTLOOK</span></div>
           <h2>{lead ? zoneTitle(lead.zone) : 'Awaiting predictions'}<span className="delivery"> / {delivery}</span></h2>
           <div className="prediction-numbers">
-            <div className="scarcity-number"><strong>{lead?.score ?? '—'}<span>%</span></strong><span>predicted scarcity</span></div>
+            <div className="scarcity-number"><strong>{hasPrices ? lead?.score ?? '—' : '—'}{hasPrices && lead && <span>%</span>}</strong><span>predicted scarcity</span></div>
             <div className="value-comparison">
               <div><span>Expected value</span><strong>{lead ? usd(lead.expected_value) : '—'}</strong></div>
               <span className="value-divider">/</span>
@@ -132,20 +138,22 @@ export default function Overview() {
         </div>
         <div className="map-panel">
           <div className="map-heading"><span className="eyebrow">SCARCITY ACROSS TEXAS</span><button className="motion-toggle" aria-pressed={paused} onClick={() => setPaused(!paused)} aria-label={paused ? 'Resume map motion' : 'Pause map motion'}>{paused ? 'Play' : 'Pause'}</button></div>
-          <ZoneMap predictions={predictions.data ?? []} paused={paused || !!firstError}/>
+          <ZoneMap predictions={hasPrices ? predictions.data ?? [] : []} paused={paused || !!firstError} onSelect={(zone, trigger) => { zoneTrigger.current = trigger; setSelectedZone(zone); }}/>
+          <div className="map-data-status">{!hasPrices && 'Waiting for live ERCOT data'}</div>
           <div className="map-footer"><span>Schematic · ERCOT load zones</span>{views && <a href={`${views.replace(/\/$/, '')}/godseye/`} target="_blank" rel="noreferrer">Explore in 3D <Icon name="up-right"/></a>}</div>
         </div>
       </section>
       <section className="number-strip" aria-label="Market key numbers">
         <div><span>System load</span><strong className="unavailable">unavailable</strong><span>ERCOT demand</span></div>
-        <div><span>Highest scarcity</span><strong>{lead?.score ?? '—'}<small>%</small></strong><span>{lead ? `${zoneTitle(lead.zone)} · ${delivery}` : 'Awaiting predictions'}</span></div>
+        <div><span>Highest scarcity</span><strong>{hasPrices ? lead?.score ?? '—' : '—'}{hasPrices && lead && <small>%</small>}</strong><span>{lead ? `${zoneTitle(lead.zone)} · ${delivery}` : 'Awaiting predictions'}</span></div>
         <div><span>Open interest</span><strong className="unavailable">unavailable</strong><span>Flex Credits</span></div>
-        <div><span>Active traders</span><strong className="unavailable">unavailable</strong><span>Across the exchange</span></div>
-        <div className="provider-stat"><span>Participants by provider</span><strong className="unavailable">unavailable</strong>
-          <span>{providers.data?.length ? providers.data.map((p, i) => <span key={p.id}>{i > 0 && ' / '}<b>{p.display_name}</b></span>) : providers.loading ? 'Loading providers…' : providers.error ? 'Providers unavailable' : 'No providers enabled'}</span></div>
+        <div><span>Active traders</span><strong>{bots.error ? '—' : bots.loading ? '…' : bots.data?.filter(b => !b.dormant).length ?? 0}</strong><span>Non-dormant bots</span></div>
+        <div className="provider-stat"><span>Participants by provider</span>
+          <span>{providers.data?.length ? providers.data.map((p, i) => <span key={p.id}>{i > 0 && ' / '}<b>{p.display_name}</b>{p.participants != null && <> · {p.participants}</>}</span>) : providers.loading ? 'Loading providers…' : providers.error ? 'Providers unavailable' : 'No providers enabled'}</span></div>
         {firstError && (predictions.data || providers.data) && <span className="strip-stale">Stale · last-known snapshot</span>}
       </section>
     </div>
+    {selectedZone && <ZoneDetail key={selectedZone} zone={selectedZone} title={zoneTitle(selectedZone)} predictions={predictions} signals={signals} market={market} onClose={closeZone}/>}
     <Disclosures/>
 
     <div className="market-grid">

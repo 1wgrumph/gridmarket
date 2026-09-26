@@ -493,3 +493,17 @@ thead th{font-weight:500;letter-spacing:.02em}
 .zone-cards{grid-template-columns:minmax(0,1fr)}
 .field input{min-height:44px}
 .show-book{min-height:44px}}
+/* Keep zone controls usable at every viewport without overlapping hit targets. */
+.zone-map{min-width:280px;height:252px}
+.zone-control,.map-region{cursor:pointer}
+.zone-control text,.zone-control circle{pointer-events:none}
+.zone-control:focus-visible{outline:none}
+.zone-control:focus-visible .zone-target{stroke:var(--accent);stroke-width:2}
+.map-data-status{min-height:1.5em;color:var(--muted)}
+.zone-detail{margin-bottom:20px}
+.zone-detail-body{padding:18px;display:grid;gap:12px;overflow-wrap:anywhere}
+.zone-detail .motion-toggle{min-width:44px;min-height:44px}
+.zone-drivers,.zone-signals,.zone-products{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.zone-signals li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:8px}
+.zone-drivers p{color:var(--muted)}
+@media(max-width:760px){.zone-map{width:280px;height:252px;margin-top:0}.snippet button{min-width:44px;min-height:44px}}

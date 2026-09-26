@@ -55,6 +55,7 @@ function SpawnForm() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!adminKey.trim()) { setResult({ ok: false, text: 'Enter the admin key to spawn bots' }); return; }
     setBusy(true);
     try {
       await send('POST', '/v1/admin/bots', { count: Number(count), ...(seed.trim() ? { seed: seed.trim() } : {}) }, adminKey);
@@ -66,12 +67,12 @@ function SpawnForm() {
 
   return <Panel title="Owner · spawn bots" index="01" className="span-all" meta={<span>ADMIN KEY · NOT STORED</span>}>
     <form className="form-row" onSubmit={submit}>
-      <label className="field">Admin key<input type="password" autoComplete="off" required value={adminKey} onChange={e => setAdminKey(e.target.value)}/></label>
+      <label className="field">Admin key<input type="password" autoComplete="off" value={adminKey} onChange={e => setAdminKey(e.target.value)}/></label>
       <label className="field">Count (1–10)<input style={{ width: '6rem' }} type="number" min={1} max={10} required value={count} onChange={e => setCount(e.target.value)}/></label>
       <label className="field">Seed (optional)<input style={{ width: '8rem' }} value={seed} onChange={e => setSeed(e.target.value)}/></label>
       <Button type="submit" label="Spawn bots" variant="primary" isLoading={busy}/>
     </form>
-    {result && <p className={`form-result ${result.ok ? 'muted' : 'warning-text'}`} role="status">{result.text}</p>}
+    {result && <p className={`form-result ${result.ok ? 'muted' : 'warning-text'}`} role="status" aria-live="polite">{result.text}</p>}
   </Panel>;
 }
 

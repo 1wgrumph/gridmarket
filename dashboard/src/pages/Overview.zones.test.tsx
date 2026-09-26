@@ -204,7 +204,7 @@ it.each(['loaded', 'loading', 'error'] as const)('S58-C03 Active traders %s stat
   if (state === 'loaded') await within(botPanel).findByRole('link', { name: /bot-0/ });
   if (state === 'error') await within(botPanel).findByText('Bots not yet available');
   const traders = await stat('Active traders');
-  await waitFor(() => expect(traders.textContent?.replace(/\s/g, '')).toBe(`Activetraders${state === 'loaded' ? '2' : state === 'loading' ? '…' : '—'}·`));
+  await waitFor(() => expect(traders.querySelector('strong')?.textContent).toBe(state === 'loaded' ? '2' : state === 'loading' ? '…' : '—'));
 });
 
 it('S58-D01 load-zone table excludes ERCOT ESR and hub rows', async () => {

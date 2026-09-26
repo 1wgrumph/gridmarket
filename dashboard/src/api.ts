@@ -9,7 +9,7 @@ export type PageResponse<T> = { items: T[] };
 export type MarketProduct = { id: string; symbol: string; zone: string; delivery_hour: string; status: string };
 export type ProductDetail = MarketProduct & { orders: BookLevel[] };
 export type Prediction = { zone: string; delivery_hour: string; score: number; level: string; confidence: number; expected_value: number; market_price: number | null; drivers: { factor: string; contribution: number; detail: string }[]; disclaimer: string; generated_at: string };
-export type Provider = { id: string; display_name: string; online: boolean };
+export type Provider = { id: string; display_name: string; online: boolean; participants?: number };
 export type Bot = { id: string; bot_type: string; provider_id: string; cash: number; net_worth: number; pnl: number; losses: number; dormant: boolean };
 export type RouterCheck = { check_id: string; family: 'market' | 'health'; subject: string; probability: number; band: 'log' | 'review' | 'alert'; baseline: boolean; jev_probability: number | null };
 

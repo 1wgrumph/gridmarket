@@ -232,7 +232,12 @@ describe("S52a design v2 Overview and rail", () => {
     const strip = await screen.findByRole("region", { name: /market key numbers/i });
     for (const label of ["System load", "Open interest", "Active traders", "Participants by provider"]) {
       const item = within(strip).getByText(label).parentElement;
-      expect(item?.textContent?.toLowerCase()).toContain("unavailable");
+      if (label === "Active traders") {
+        await waitFor(() => expect(item?.querySelector("strong")?.textContent).toBe("—"));
+      } else if (label === "Participants by provider") {
+        for (const provider of providers) await within(item!).findByText(provider.display_name);
+        expect(item?.textContent?.toLowerCase()).not.toContain("unavailable");
+      } else expect(item?.textContent?.toLowerCase()).toContain("unavailable");
     }
     await waitFor(() => expect(strip.textContent).toContain(String(predictions[0].score)));
   });
