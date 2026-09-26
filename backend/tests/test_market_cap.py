@@ -57,11 +57,13 @@ def test_negative_price_still_rejects(exchange):
     assert state(path) == before
 
 
-def test_quantity_and_side_failures_keep_the_generic_message(exchange):
+def test_quantity_api_error_names_field_and_engine_side_rejection_is_unchanged(exchange):
     _, client = exchange
     response = test_market.place(client, "buyer", "future", "buy", 0, 20, "zero-quantity")
     assert response.status_code == 422
-    assert response.json()["error"] == {"code": "VALIDATION_ERROR", "message": "Validation error"}
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+    assert "quantity" in response.json()["error"]["message"]
+    assert "greater than or equal to 1" in response.json()["error"]["message"]
     order = {"product_id": "future", "side": "hold", "quantity": 1, "price_cents": 20}
     with market.connection(write=True) as db, pytest.raises(market.HTTPException) as failure:
         market.place_order(db, "buyer", order)
