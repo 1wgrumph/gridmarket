@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ERCOT × Jev Decision Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F6; --surface:#FFFFFF; --ink:#15212C; --dim:#5A6874; --line:#D5DCE2;
+  --accent:#0E6B73; --accent-soft:#DCEEEF; --amber:#B5661A; --amber-soft:#F6E7D6;
+  --rt:#0E6B73; --hr:#4A5FA8; --dy:#7A5A9E; --hist:#6B7A86;
+  --good:#2E7D4F; --warn:#B5661A; --bad:#B23A3A;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F161D; --surface:#17212B; --ink:#E3E9EF; --dim:#93A1AD; --line:#2A3743;
+    --accent:#56B8BF; --accent-soft:#16363A; --amber:#E6A259; --amber-soft:#3A2A19;
+    --rt:#56B8BF; --hr:#8FA3E6; --dy:#B89BDB; --hist:#8C9AA6;
+    --good:#5FBF86; --warn:#E6A259; --bad:#E27373;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F161D; --surface:#17212B; --ink:#E3E9EF; --dim:#93A1AD; --line:#2A3743;
+  --accent:#56B8BF; --accent-soft:#16363A; --amber:#E6A259; --amber-soft:#3A2A19;
+  --rt:#56B8BF; --hr:#8FA3E6; --dy:#B89BDB; --hist:#8C9AA6;
+  --good:#5FBF86; --warn:#E6A259; --bad:#E27373;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--body);padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:1080px;margin:0 auto;display:grid;gap:40px}
+header{padding-top:40px;display:grid;gap:10px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(30px,5vw,46px)/1.05 var(--display);margin:0;text-wrap:balance}
+h2{font:700 24px/1.15 var(--display);margin:0 0 6px;text-wrap:balance}
+h3{font:600 16px/1.3 var(--body);margin:0}
+p{margin:0;max-width:68ch}
+.lead{color:var(--dim);font-size:16px}
+.sub{color:var(--dim);margin-bottom:16px}
+section{display:grid;gap:14px}
+.note{border:1px solid var(--amber);background:var(--amber-soft);border-radius:10px;padding:16px 18px;display:grid;gap:8px}
+.note h3{color:var(--amber)}
+.note ul{margin:0;padding-left:18px;display:grid;gap:4px}
+pre.ascii{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;font:12.5px/1.5 var(--mono);color:var(--ink);overflow-x:auto;white-space:pre}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font:12px/1 var(--mono);color:var(--dim)}
+.pill{display:inline-flex;align-items:center;gap:6px;font:500 11px/1 var(--mono);letter-spacing:.04em;padding:5px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.rt{color:var(--rt)} .hr{color:var(--hr)} .dy{color:var(--dy)} .hist{color:var(--hist)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.opp{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:12px;align-content:start}
+.opp-head{display:flex;justify-content:space-between;gap:10px;align-items:start}
+.q{font:500 14px/1.45 var(--mono);color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:8px 10px}
+.feeds{display:flex;flex-wrap:wrap;gap:6px}
+.feed{font:12px/1.2 var(--mono);border:1px solid var(--line);border-radius:5px;padding:4px 7px;color:var(--ink)}
+.feed b{font-weight:500;color:var(--accent)}
+.use{font-size:13.5px;color:var(--dim)}
+.use strong{color:var(--ink);font-weight:600}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.band{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;vertical-align:-1px}
+ol.phases{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:ph}
+ol.phases li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px 16px 64px;position:relative;counter-increment:ph}
+ol.phases li::before{content:counter(ph,decimal-leading-zero);position:absolute;left:18px;top:15px;font:700 22px/1 var(--display);color:var(--accent)}
+ol.phases li.done::before{content:"✓";color:var(--good)}
+ol.phases li:first-child{counter-increment:none}
+ol.phases li:first-child::before{content:"00"}
+ol.phases h3{margin-bottom:4px}
+ol.phases p{color:var(--dim);font-size:14px}
+.status{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--good);margin-left:8px}
+footer{color:var(--dim);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion:no-preference){.opp{transition:border-color .15s}.opp:hover{border-color:var(--accent)}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Organized AI · ercot-hackathon · jev-gateway</div>
+  <h1>ERCOT × Jev Decision Map</h1>
+  <p class="lead">Which ERCOT Public API reports can feed calibrated Jev checks, what each check decides, and how the answers get routed. Built from the 116 report products your Worker can reach today.</p>
+</header>
+
+<section class="note" aria-label="Access to the market">
+  <h3>Read this first: what "trading ERCOT" requires</h3>
+  <ul>
+    <li><strong>Day-ahead virtual bids, PTP obligations, and offers</strong> can only be submitted by a registered Qualified Scheduling Entity (QSE), through EWS or the MIS portal.</li>
+    <li><strong>CRRs</strong> (congestion rights) require registration as a CRR Account Holder, with credit posted to ERCOT.</li>
+    <li><strong>Without registration</strong>, the common routes are exchange-listed ERCOT futures and options through a futures broker, partnering with an existing QSE, or controlling a physical asset such as a battery.</li>
+    <li>The Public API is read-only and mostly delayed or disclosure data. It supports signals, research and paper trading, not order entry. This page is a technical map, not investment advice.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>How data flows into decisions</h2>
+  <p class="sub">Everything below the Worker line runs on Cloudflare. Jev answers each check with a calibrated probability, and the router turns that probability into an action.</p>
+<pre class="ascii">
+ ERCOT Public API (api.ercot.com/api/public-reports)
+        │   token: B2C ROPC → KV (55 min)      key: Ocp-Apim-Subscription-Key
+        ▼
+ ┌──────────────────────────── ercot-hackathon Worker ─────────────────────────────┐
+ │                                                                                 │
+ │  Cron Triggers ──► ingest jobs ──► Queue ──► normalizer                         │
+ │   5-min · hourly · daily            │            │                              │
+ │                                     │            ├──► R2   raw JSON archive     │
+ │                                     │            ├──► D1   tidy time series     │
+ │                                     │            └──► KV   latest snapshot      │
+ │                                     ▼                                           │
+ │                              feature builder (D1)                               │
+ │   DART spread · forecast error · reserve proxy · congestion rank · adders       │
+ │                                     │                                           │
+ └─────────────────────────────────────┼───────────────────────────────────────────┘
+                                       ▼
+                         jev-gateway  (calibrated checks)
+                 "P(HB_NORTH RT &gt; $150 in next 2h) = 0.71"
+                                       │
+                                       ▼
+                    router (confidence bands + policy rules)
+        ┌───────────────┬──────────────┼───────────────┬────────────────┐
+        ▼               ▼              ▼               ▼                ▼
+   log only       dashboard       Slack alert     human review     paper-trade
+   (&lt; 0.50)       (GSAP UI)       (≥ 0.80)        queue (0.50–0.80)  ledger (D1)
+                                                                        │
+        outcomes (actual SPP, actual load, actual gen) ◄────────────────┘
+                     └──► Brier score + reliability curve ──► recalibrate Jev
+</pre>
+</section>
+
+<section>
+  <h2>Opportunities, grouped by decision</h2>
+  <p class="sub">Each card is one family of Jev checks. Report IDs are the ERCOT EMIL product codes your Worker can proxy at <code>/api/report/&lt;id&gt;/&lt;report&gt;</code>.</p>
+  <div class="legend">
+    <span class="pill rt">5–15 min</span><span class="pill hr">hourly</span><span class="pill dy">daily / day-ahead</span><span class="pill hist">2-day / 60-day disclosure</span>
+  </div>
+  <div class="grid">
+
+    <article class="opp">
+      <div class="opp-head"><h3>Scarcity and price-spike watch</h3><span class="pill rt">5–15 min</span></div>
+      <div class="q">P(hub RT price &gt; $X within 2h)</div>
+      <div class="feeds">
+        <span class="feed"><b>NP6-905-CD</b> SPPs hubs/zones</span>
+        <span class="feed"><b>NP6-970-CD</b> RTD indicative LMPs</span>
+        <span class="feed"><b>NP6-323-CD</b> RT price adders</span>
+        <span class="feed"><b>NP6-325-CD</b> RTD indicative adders</span>
+        <span class="feed"><b>NP6-235-CD</b> system demand</span>
+        <span class="feed"><b>NP3-763-CD</b> short-term adequacy</span>
+        <span class="feed"><b>NP4-412-CD</b> emergency pricing hrs</span>
+      </div>
+      <p class="use"><strong>Decides:</strong> alert, hedge review, battery discharge timing. RTD indicative prices are ERCOT's own look-ahead, which makes them the strongest leading feature here.</p>
+    </article>
+
+    <article class="opp">
+      <div class="opp-head"><h3>Day-ahead vs real-time spread (DART)</h3><span class="pill dy">daily</span></div>
+      <div class="q">P(RT SPP settles above DA SPP at hub, HE n)</div>
+      <div class="feeds">
+        <span class="feed"><b>NP4-190-CD</b> DAM SPPs</span>
+        <span class="feed"><b>NP6-905-CD</b> RT SPPs</span>
+        <span class="feed"><b>NP4-523-CD</b> DAM system lambda</span>
+        <span class="feed"><b>NP6-322-CD</b> SCED system lambda</span>
+        <span class="feed"><b>NP4-183-CD</b> DAM hourly LMPs</span>
+      </div>
+      <p class="use"><strong>Decides:</strong> direction of a virtual position (QSE only), or which hours to shift flexible load into. The best first backtest, since labels arrive every day.</p>
+    </article>
+
+    <article class="opp">
+      <div class="opp-head"><h3>Wind and solar forecast error</h3><span class="pill hr">hourly · 5-min</span></div>
+      <div class="q">P(renewables under-deliver forecast by &gt; N MW)</div>
+      <div class="feeds">
+        <span class="feed"><b>NP4-442-CD</b> wind by model</span>
+        <span class="feed"><b>NP4-443-CD</b> solar by model</span>
+        <span class="feed"><b>NP4-732-CD</b> wind actual vs fcst</span>
+        <span class="feed"><b>NP4-737-CD</b> solar actual vs fcst</span>
+        <span class="feed"><b>NP4-751-CD</b> intra-hour wind</span>
+        <span class="feed"><b>NP4-752-CD</b> intra-hour solar</span>
+      </div>
+      <p class="use"><strong>Decides:</strong> net-load surprise risk, especially the evening solar ramp. Model disagreement across forecasts is a ready-made uncertainty input for Jev.</p>
+    </article>
+
+    <article class="opp">
+      <div class="opp-head"><h3>Load forecast error</h3><span class="pill hr">hourly</span></div>
+      <div class="q">P(actual load exceeds 7-day forecast by &gt; N%)</div>
+      <div class="feeds">
+        <span class="feed"><b>NP3-565-CD</b> load by model</span>
+        <span class="feed"><b>NP3-562-CD</b> intra-hour load</span>
+        <span class="feed"><b>NP6-345-CD</b> actual by weather zone</span>
+        <span class="feed"><b>NP4-722-CD</b> weather assumptions</span>
+        <span class="feed"><b>GEN-55-CD</b> load vs actual</span>
+      </div>
+      <p class="use"><strong>Decides:</strong> whether demand-side risk is rising. Pairs with weather assumptions to catch forecast temperature misses.</p>
+    </article>
+
+    <article class="opp">
+      <div class="opp-head"><h3>Congestion and basis</h3><span class="pill rt">5-min · daily</span></div>
+      <div class="q">P(node–hub basis &gt; $Y given binding constraint C)</div>
+      <div class="feeds">
+        <span class="feed"><b>NP6-86-CD</b> SCED shadow prices</span>
+        <span class="feed"><b>NP4-191-CD</b> DAM shadow prices</span>
+        <span class="feed"><b>NP6-788-CD</b> LMPs by node/hub</span>
+        <span class="feed"><b>NP5-754-CD</b> DRUC constraints</span>
+        <span class="feed"><b>NP7-464-CD</b> PTP option prices</span>
+      </div>
+      <p class="use"><strong>Decides:</strong> CRR valuation and site-level risk for a node you care about. Recurring constraints are the pattern Jev can learn from.</p>
+    </article>
+
+    <article class="opp">
+      <div class="opp-head"><h3>Ancillary services and storage</h3><span class="pill rt">15-min · daily</span></div>
+      <div class="q">P(AS capacity pays more than energy arbitrage, HE n)</div>
+      <div class="feeds">
+        <span class="feed"><b>NP4-188-CD</b> DAM MCPC</span>
+        <span class="feed"><b>NP6-331-CD</b> RT MCPC 15-min</span>
+        <span class="feed"><b>NP6-329-CD</b> RTD indicative MCPC</span>
+        <span class="feed"><b>NP4-212-CD</b> AS demand curves</span>
+        <span class="feed"><b>NP6-328-CD</b> AS capability</span>
+        <span class="feed"><b>NP4-765-ER</b> ESR integration</span>
+      </div>
+      <p class="use"><strong>Decides:</strong> how a battery splits capacity between energy and AS. This is the strongest fit if you ever partner with a storage owner.</p>
+    </article>
+
+    <article class="opp">
+      <div class="opp-head"><h3>Outages and supply adequacy</h3><span class="pill hr">hourly · daily</span></div>
+      <div class="q">P(reserve margin falls below threshold tomorrow peak)</div>
+      <div class="feeds">
+        <span class="feed"><b>NP3-233-CD</b> hourly outage capacity</span>
+        <span class="feed"><b>NP1-346-ER</b> unplanned outages</span>
+        <span class="feed"><b>NP3-162-CD</b> outage margin 7-day</span>
+        <span class="feed"><b>NP6-915-CD</b> HDL/LDL summary</span>
+        <span class="feed"><b>NP5-108-CD</b> RMR deployed</span>
+      </div>
+      <p class="use"><strong>Decides:</strong> whether to raise the alert level for the next operating day. Feeds the scarcity checks as a slower-moving prior.</p>
+    </article>
+
+    <article class="opp">
+      <div class="opp-head"><h3>Supply stack and bid behavior</h3><span class="pill hist">2-day · 60-day</span></div>
+      <div class="q">How steep is the stack near expected load? (training only)</div>
+      <div class="feeds">
+        <span class="feed"><b>NP3-907-EX</b> DAM energy curves ✓ live</span>
+        <span class="feed"><b>NP3-908-ER</b> SCED energy curves</span>
+        <span class="feed"><b>NP3-909-ER</b> DAM bids/offers</span>
+        <span class="feed"><b>NP3-965-ER</b> 60-day SCED</span>
+        <span class="feed"><b>NP3-966-ER</b> 60-day DAM</span>
+      </div>
+      <p class="use"><strong>Decides:</strong> nothing live, since the data is delayed. Use it to engineer features (stack slope, price at load ± 2 GW) and to backtest the other checks honestly.</p>
+    </article>
+
+    <article class="opp">
+      <div class="opp-head"><h3>Guardrails and data hygiene</h3><span class="pill dy">as posted</span></div>
+      <div class="q">Is this label safe to train or score on?</div>
+      <div class="feeds">
+        <span class="feed"><b>NP4-196-M</b> DAM price corrections</span>
+        <span class="feed"><b>NP4-197-M</b> RTM price corrections</span>
+        <span class="feed"><b>NP4-791-CD</b> offer caps</span>
+        <span class="feed"><b>NP4-790-CD</b> peaker net margin</span>
+      </div>
+      <p class="use"><strong>Decides:</strong> router policy, not trades. Corrected prices re-label outcomes, and offer caps bound what any price check can predict.</p>
+    </article>
+
+  </div>
+</section>
+
+<section>
+  <h2>Routing policy</h2>
+  <p class="sub">A starting policy for the router. Thresholds are per check and should move as the calibration data comes in.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Jev probability</th><th>Route</th><th>What happens</th><th>Can it act on its own?</th></tr></thead>
+    <tbody>
+      <tr><td class="num"><span class="band" style="background:var(--good)"></span>≥ 0.80</td><td>Alert + paper trade</td><td>Slack alert with the features that drove it, and an entry in the D1 paper ledger</td><td>Paper only. Real orders always go through a human.</td></tr>
+      <tr><td class="num"><span class="band" style="background:var(--warn)"></span>0.50 – 0.80</td><td>Human review</td><td>Queued on the dashboard with the probability, features and source reports</td><td>No</td></tr>
+      <tr><td class="num"><span class="band" style="background:var(--hist)"></span>&lt; 0.50</td><td>Log</td><td>Stored with its outcome for calibration scoring</td><td>No</td></tr>
+      <tr><td class="num"><span class="band" style="background:var(--bad)"></span>stale data</td><td>Abstain</td><td>If any input is older than its expected cadence, the check doesn't run and the gap is flagged</td><td>n/a</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Phased build</h2>
+  <p class="sub">In build order. Each phase depends on the one before it.</p>
+  <ol class="phases">
+    <li class="done"><h3>Foundation <span class="status">deployed</span></h3><p>ercot-hackathon Worker, B2C token cached in KV, generic report proxy, NP3-907-EX demand-curve page with GSAP.</p></li>
+    <li><h3>Ingest the real-time core</h3><p>Cron Triggers and a Queue pull hub/zone SPPs, SCED lambda, system demand, price adders, wind and solar actual vs forecast. Raw JSON to R2, tidy rows to D1, latest values to KV.</p></li>
+    <li><h3>Feature store and labels</h3><p>D1 views for DART spread, forecast errors, reserve proxy and constraint recurrence. Backfill history for the same reports so every feature has matching outcomes.</p></li>
+    <li><h3>Jev checks</h3><p>Define each check as a typed schema (inputs, horizon, threshold, outcome rule) and call jev-gateway for calibrated probabilities. Start with the DART check because labels arrive daily.</p></li>
+    <li><h3>Router, ledger and scoring</h3><p>Confidence bands, the abstain rule, Slack alerts, a paper-trade ledger in D1, and Brier score and reliability tracking per check.</p></li>
+    <li><h3>Decision dashboard</h3><p>Live signals, the review queue and calibration charts on the Worker's GSAP front end.</p></li>
+    <li><h3>Execution path decision</h3><p>Choose between partnering with a QSE, a futures broker account, or a storage partner. Any real order stays behind human approval.</p></li>
+    <li><h3>Reuse</h3><p>Expose the checks as MCP tools so Organized Router and other agents can ask the same calibrated questions.</p></li>
+  </ol>
+</section>
+
+<footer>Report list pulled live from the ERCOT Public API through ercot-hackathon.jordan-691.workers.dev/api/products on Sept 25, 2026. Market-access notes are general and not financial or legal advice.</footer>
+</div>
+
+</body>
+</html>
