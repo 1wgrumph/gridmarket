@@ -561,6 +561,14 @@
       "source": "Orchestrator as owner delegate (DEC-GM-043)",
       "decision": "Gate-order correction for phase assembly S09: in steps S09-A to S09-D, `make test-dash` is not applicable, because the skeleton has no dashboard test files and vitest exits non-zero with 'No test files found'. Those steps run every other test-all target. test-dash and test-all run in full from S09-E, when the ui lane (S04 tests, S07) merges. The Integration Engineer's S09-A revert (c55ede7) is re-applied by revert-of-revert.",
       "why": "S09-A was reverted with setup, lint, test-contracts and secrets all green. The only failure was vitest finding no test files, a plan ordering defect. No test is weakened: the dashboard gate still applies once dashboard tests exist."
+    },
+    {
+      "id": "DEC-GM-053",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T11:37:04Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043)",
+      "decision": "The SDK example test (SEIT-GM-API-04) calls GET /v1/predictions, which belongs to the data lane (CONTRACTS.md). It cannot pass in market-lane isolation, so it is verified at S09-D post-step V&V on integration-1a, after the data lane merges. The S08 exit is taken with 24 of 25 market tests green, and this test is recorded as a typed cross-lane gap. The test is not weakened.",
+      "why": "The Orchestrator reproduced the failure: 404 NOT_FOUND on /v1/predictions in lane-market after the S08 merge. The route owner is the data lane."
     }
   ],
   "stages": {
