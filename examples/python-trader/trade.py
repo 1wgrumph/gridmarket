@@ -12,8 +12,11 @@ from gridmarket import Client, GridMarketError
 url = os.getenv("GRIDMARKET_URL", "http://127.0.0.1:8000")
 client = Client(url, os.environ["GRIDMARKET_API_KEY"])
 try:
-    scores = [p for p in client.predictions() if p["zone"] == "LZ_HOUSTON"]
-    print("prediction:", scores[0] if scores else "none published yet")
+    try:
+        scores = [p for p in client.predictions() if p["zone"] == "LZ_HOUSTON"]
+        print("prediction:", scores[0] if scores else "none published yet")
+    except GridMarketError:
+        print("prediction: none published yet")
     try:  # from 16:00 to 17:59, hour 18 is a spot product, not a future
         order = client.buy("FLEX-LZ_HOUSTON-18", quantity=2, price_cents=22)
     except GridMarketError as error:
