@@ -65,13 +65,15 @@ it('S59-01 zones Scarcity hides baseline scores without ERCOT prices', async () 
     expect(cells[2].textContent).toBe('—');
   }
   expect(zones.textContent).not.toMatch(/\d+(?:\.\d+)?\s*%/);
-  expect(await screen.findByText('Waiting for live ERCOT data')).toBeTruthy();
+  expect(await screen.findByText('Grid feed pending · ERCOT price inputs not yet received')).toBeTruthy();
 });
 
 it('S59-01b zones Scarcity shows served scores with ERCOT prices', async () => {
   const zones = await zonesPanel();
   expect(await within(zones).findByText('72.4%')).toBeTruthy();
-  expect(await within(zones).findByText('45.8%')).toBeTruthy();
+  expect(within(zones).queryByText('45.8%')).toBeNull();
+  const north = within(zones).getByRole('row', { name: /North/i });
+  expect(within(north).getAllByRole('cell')[2].textContent).toBe('—');
 });
 
 it('S59-02 hero hides factor chips without ERCOT prices', async () => {
@@ -80,7 +82,7 @@ it('S59-02 hero hides factor chips without ERCOT prices', async () => {
   const region = await hero();
   expect(await within(region).findByText('No prediction factors available')).toBeTruthy();
   expect(within(region).queryByText('price spread')).toBeNull();
-  expect(await screen.findByText('Waiting for live ERCOT data')).toBeTruthy();
+  expect(await screen.findByText('Grid feed pending · ERCOT price inputs not yet received')).toBeTruthy();
 });
 
 it('S59-02b hero shows factor chips with ERCOT prices', async () => {

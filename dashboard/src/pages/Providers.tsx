@@ -16,7 +16,7 @@ const bandStyle: Record<RouterCheck['band'], CSSProperties> = {
   review: { ...chip, color: 'var(--warning)', borderColor: 'var(--warning)' },
   alert: { ...chip, color: 'var(--warning)', borderColor: 'var(--warning)', background: 'var(--warn-bg)' },
 };
-const providerGrid: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px 32px', padding: '0 18px 18px' };
+const providerGrid: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: '20px 32px', padding: '0 18px 18px' };
 const providerHead: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, minHeight: 34 };
 const rows: CSSProperties = { listStyle: 'none', margin: 0, padding: 0 };
 const rowStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, minHeight: 34, borderTop: '1px solid var(--line)', fontSize: 11 };
@@ -29,7 +29,7 @@ const actions: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 8, marg
 const panelBody: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12, padding: '0 18px 18px' };
 
 function PanelEmpty({ state }: { state: { loading: boolean; error: string | null } }) {
-  return state.error ? <p className="empty" role="alert">Feed unavailable; retrying every 2 s.</p> : <div style={providerGrid}><p className="empty loading" style={{ minHeight: 320 }}>Loading…</p><div aria-hidden="true" style={{ minHeight: 320 }}/></div>;
+  return state.error ? <p className="empty" role="alert">Feed unavailable; retrying every 2 s.</p> : <div style={providerGrid}><p className="empty loading" style={{ minHeight: 320 }}>Loading…</p></div>;
 }
 
 export default function Providers() {
@@ -88,6 +88,7 @@ export default function Providers() {
                   <li style={rowStyle}><span style={row?.outage_active ? { color: 'var(--warning)', fontWeight: 500 } : label}>{row ? (row.outage_active ? 'Outage active' : 'No outage') : 'Outage: unknown'}</span></li>
                 </ul>
                 {check?.baseline && <p className="tiny" style={{ marginTop: 8 }}>baseline rules</p>}
+                {!row?.last_heartbeat && <p className="tiny">Health setup: not connected yet. <a href="/docs">API documentation</a> · <a href="#/sandbox">Try the sandbox</a></p>}
                 <div style={actions}>
                   <Button label={`Start outage · ${provider.display_name}`} isDisabled={!adminKey.trim() || pending} onClick={() => void outage(provider, true)}>Start outage</Button>
                   <Button label={`End outage · ${provider.display_name}`} isDisabled={!adminKey.trim() || pending} onClick={() => void outage(provider, false)}>End outage</Button>

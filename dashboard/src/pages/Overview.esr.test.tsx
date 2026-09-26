@@ -29,12 +29,14 @@ afterEach(() => {
 });
 
 describe("S55 ESR battery tile (fixture: esr.json)", () => {
-  it("renders the latest ESR MW value with a sparkline", async () => {
+  it("renders the latest ESR MW value without a sparkline (UX-20)", async () => {
     render(<Overview />);
     const tile = await screen.findByRole("region", { name: /texas batteries charging now/i });
     expect(await within(tile).findByText(/812\.5/)).toBeTruthy();
     expect(within(tile).getByText((_, el) => el?.tagName === "SMALL" && (el.textContent ?? "").includes("MW"))).toBeTruthy();
-    expect(tile.querySelector("svg.esr-spark")).not.toBeNull();
+    expect(tile.querySelector("svg.esr-spark")).toBeNull();
+    expect(within(tile).getByText(/grid-scale/i)).toBeTruthy();
+    expect(within(tile).getByText(/09:00 CT/)).toBeTruthy();
   });
 
   it("shows a quiet unavailable state with no ESR signal", async () => {

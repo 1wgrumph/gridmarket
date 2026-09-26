@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { MarketProduct, Prediction, Signal } from '../api';
 import Panel from './Panel';
 import { mapZones } from './ZoneMap';
+import { missingInputs } from './predictionInputs';
 import { Stale as StaleTag } from '../pages/Market';
 
 type Feed<T> = { data: T[] | null; error: string | null; loading: boolean };
@@ -12,12 +13,12 @@ const reports = [
 const scored = ['LZ_NORTH', 'LZ_WEST', 'LZ_HOUSTON', 'LZ_SOUTH'];
 const hour = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric' });
 
-export default function ZoneDetail({ zone, title, predictions, signals, market, onClose }: {
-  zone: string; title: string; predictions: Feed<Prediction>; signals: Feed<Signal>; market: Feed<MarketProduct>; onClose: () => void;
+export default function ZoneDetail({ zone, title, deliveryHour, predictions, signals, market, onClose }: {
+  zone: string; title: string; deliveryHour?: string; predictions: Feed<Prediction>; signals: Feed<Signal>; market: Feed<MarketProduct>; onClose: () => void;
 }) {
   const close = useRef<HTMLButtonElement>(null);
   useEffect(() => { close.current?.focus({ preventScroll: true }); }, []);
-  const prediction = predictions.data?.filter(p => p.zone === zone).sort((a, b) => a.delivery_hour.localeCompare(b.delivery_hour))[0];
+  const prediction = predictions.data?.find(p => p.zone === zone && p.delivery_hour === deliveryHour);
   const products = market.data?.filter(p => p.zone === zone && p.status === 'open' && p.symbol.startsWith('FLEX-')) ?? [];
   const hasPrices = signals.data?.some(s => s.report_id === 'NP6-905-CD' && mapZones.includes(s.zone));
   const zoneSignals = signals.data?.filter(s => s.zone === zone) ?? [];
@@ -36,6 +37,7 @@ export default function ZoneDetail({ zone, title, predictions, signals, market, 
       <div className="zone-detail-body">
         <StaleTag feed={predictions}/>
         {!scored.includes(zone) ? <p>Not scored: the model covers the four largest load zones</p> : prediction ? hasPrices ? <>
+          <p className="estimate-note">Simulation estimate{prediction.drivers.some(d => missingInputs(d.factor, zone, signals.data ?? []).length) && ' · incomplete inputs'}. Scarcity is a heuristic percentage, not a calibrated probability.</p>
           <p><strong>{prediction.score}%</strong> scarcity · <span>{prediction.level}</span> · Confidence {Math.round(prediction.confidence * 100)}%</p>
           <p>Delivery <time dateTime={prediction.delivery_hour}>{hour.format(new Date(prediction.delivery_hour))} CT</time></p>
           <ul className="zone-drivers">{prediction.drivers.map(d => <li key={d.factor}><strong>{d.factor}</strong> · {d.contribution}<p>{detailFor(d)}</p></li>)}</ul>

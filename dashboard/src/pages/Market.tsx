@@ -48,19 +48,19 @@ export function PageHeading({ eyebrow, title, children }: { eyebrow: string; tit
   </div>;
 }
 
-function Depth({ title, side, levels, max }: { title: string; side: 'bid' | 'ask'; levels: Level[]; max: number }) {
+function Depth({ title, side, levels, max, unavailable }: { title: string; side: 'bid' | 'ask'; levels: Level[]; max: number; unavailable: boolean }) {
   return <div>
     <h3 className="sub-head">{title}</h3>
     <ul className={`depth-list ${side}`}>
       {levels.length ? levels.map(l => <li key={l.price_cents}>
         <i style={{ width: `${l.quantity / max * 100}%` }}/><span>{l.quantity} @ {usd(l.price_cents)}</span>
-      </li>) : <li className="none">—</li>}
+      </li>) : <li className="none">{unavailable ? 'Order book unavailable' : side === 'bid' ? 'No bids' : 'No sell orders'}</li>}
     </ul>
   </div>;
 }
 
 function Board({ products }: { products: MarketProduct[] }) {
-  const [picked, setPicked] = useState(products[0].symbol);
+  const [picked, setPicked] = useState(() => new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('symbol') ?? products[0].symbol);
   const selected = products.find(p => p.symbol === picked) ?? products[0];
   const detail = useResource<ProductDetail>(`/v1/market/${encodeURIComponent(selected.symbol)}`);
   const history = useResource<Trade[]>(`/v1/market/history?product_id=${encodeURIComponent(selected.id)}`);
@@ -79,7 +79,7 @@ function Board({ products }: { products: MarketProduct[] }) {
       <div className="table-scroll"><table className="data-table">
         <thead><tr><th scope="col">Symbol</th><th scope="col">Zone</th><th scope="col">Delivery</th><th scope="col">Status</th><th scope="col" className="end"><span className="sr-only">Book</span></th></tr></thead>
         <tbody>{products.map(p => <tr key={p.id} className={p === selected ? 'selected' : ''}>
-          <td><span className="code">{p.symbol}</span></td>
+          <td><span>{p.symbol}</span></td>
           <td>{p.zone}</td>
           <td><time dateTime={p.delivery_hour}>{time(p.delivery_hour)}</time></td>
           <td><span className={`tag ${p.status === 'open' ? 'up' : ''}`}>{p.status}</span></td>
@@ -90,10 +90,10 @@ function Board({ products }: { products: MarketProduct[] }) {
     <Panel title="Book depth" index="02" busy={detail.loading} meta={<><Stale feed={detail}/><span>{where}</span></>}>
       <p className="panel-subtitle">Resting orders · simulated $ / Flex Credit</p>
       <div className="depth-sides">
-        <Depth title="Bids" side="bid" levels={book.bids} max={max}/>
-        <Depth title="Asks" side="ask" levels={book.asks} max={max}/>
+        <Depth title="Bids" side="bid" levels={book.bids} max={max} unavailable={!!detail.error && !detail.data}/>
+        <Depth title="Asks" side="ask" levels={book.asks} max={max} unavailable={!!detail.error && !detail.data}/>
       </div>
-      {spread != null && <div className="panel-end"><span>Spread</span><strong className="num">{usd(spread)}</strong></div>}
+      <div className="panel-end"><span>Spread {spread == null && (detail.error && !detail.data ? 'unavailable: order book could not be loaded' : 'unavailable: requires bids and sell orders')}</span>{spread != null && <strong className="num">{usd(spread)}</strong>}</div>
     </Panel>
     <Panel title="Recent trades" index="03" busy={tradeFeed.loading} meta={<><Stale feed={tradeFeed}/><span>{where}</span></>}>
       <FeedBody feed={tradeFeed} reserve="reserve-market-trades">

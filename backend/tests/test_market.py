@@ -329,7 +329,12 @@ def test_s05_anom_status_returns_newest_50_rows(exchange):
     path, client = exchange
     response = client.get("/v1/market/status")
     assert response.status_code == 200
-    assert response.json() == {"status": "open", "anomalies": []}
+    assert response.json() == {
+        "status": "open",
+        "anomalies": [],
+        "open_interest": 0,
+        "active_traders": 0,
+    }
     anomalies = [
         {
             "id": f"anomaly-{i}",
@@ -352,6 +357,8 @@ def test_s05_anom_status_returns_newest_50_rows(exchange):
     assert response.json() == {
         "status": "open",
         "anomalies": sorted(anomalies, key=lambda row: row["created_at"], reverse=True)[:50],
+        "open_interest": 0,
+        "active_traders": 0,
     }
 
 

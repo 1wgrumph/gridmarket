@@ -40,12 +40,13 @@ export default function Shell({ children }: { children: ReactNode }) {
     return () => { window.removeEventListener('hashchange', update); window.clearInterval(timer); };
   }, []);
   const fixtures = import.meta.env.VITE_FIXTURES === '1';
-  const latest = signals.data?.reduce<string | undefined>((max, s) => !max || s.published_at > max ? s.published_at : max, undefined);
-  const stale = signals.data?.filter(s => s.stale).length ?? 0;
+  const gridSignals = signals.data?.filter(s => s.report_id === 'ESR' || s.report_id.startsWith('NP'));
+  const latest = gridSignals?.reduce<string | undefined>((max, s) => !max || s.published_at > max ? s.published_at : max, undefined);
+  const stale = gridSignals?.filter(s => s.stale).length ?? 0;
   const path = route.split('?')[0] || '#/';
   const freshness = signals.error ? 'Stale · connection lost'
     : latest ? `Published ${publishFormat.format(new Date(latest))}${stale ? ` · ${stale} stale` : ''}`
-    : 'Publish time unavailable';
+    : 'ERCOT feed not connected';
   return <Theme theme={gridmarketTheme} mode={mode}>
     <a className="skip-link" href="#main" onClick={event => { event.preventDefault(); document.getElementById('main')?.focus(); }}>Skip to main content</a>
     <div className="app-shell">
@@ -62,7 +63,7 @@ export default function Shell({ children }: { children: ReactNode }) {
           })}</nav>
           <div className="sidebar-bottom">
             <div className="market-clock"><p className="eyebrow">MARKET CLOCK · TEXAS</p><time className="num">{clockFormat.format(now)}<small> CT</small></time><span>{dayFormat.format(now)}</span></div>
-            <div className="freshness"><span className={`status-dot ${signals.error || stale ? 'warning' : ''}`}/><div><strong>ERCOT data</strong><p>{freshness}</p><span className="tiny">Polling every 2 seconds</span></div></div>
+            <div className="freshness"><span className={`status-dot ${signals.error || stale || !latest ? 'warning' : ''}`}/><div><strong>ERCOT data</strong><p>{freshness}</p><span className="tiny">Polling every 2 seconds</span></div></div>
             <a className="judge-cta" href="#/sandbox"><span>YOUR TURN TO TRADE</span><strong>Get API key <Icon name="up-right"/></strong><small>$1,000 simulated cash to start</small></a>
             <p className="sidebar-foot">BASE / AITX HACKATHON<span>FINAL EDITION · 2026</span></p>
           </div>

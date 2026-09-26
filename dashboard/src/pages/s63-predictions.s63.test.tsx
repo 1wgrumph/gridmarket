@@ -54,7 +54,7 @@ describe('S63-T UX-07 forecast count label', () => {
   it('UX-07 labels the count as forecasts across zones, not zones', async () => {
     const panel = await scoresPanel();
     expect(panel.textContent).toMatch(/104 forecasts across 4 zones/i);
-    expect(panel.textContent).not.toMatch(/\d+\s+zones/i);
+    expect(panel.textContent).not.toMatch(/104\s+zones/i);
   });
 });
 

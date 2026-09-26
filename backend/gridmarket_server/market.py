@@ -468,7 +468,25 @@ def status() -> dict[str, Any]:
             "SELECT id,kind,subject_id,detail,created_at FROM anomalies "
             "ORDER BY created_at DESC,rowid DESC LIMIT 50",
         )
-    return {"status": "halted" if halted else "open", "anomalies": anomalies}
+        open_interest = db.execute(
+            "SELECT COALESCE(SUM(p.quantity),0) FROM positions p "
+            "JOIN products x ON x.id=p.product_id "
+            "WHERE p.quantity>0 AND x.status='open' AND x.symbol LIKE 'FLEX-%'"
+        ).fetchone()[0]
+        active_traders = db.execute(
+            "SELECT COUNT(*) FROM ("
+            "SELECT account_id FROM bots WHERE dormant=0 UNION "
+            "SELECT o.account_id FROM orders o JOIN products x ON x.id=o.product_id "
+            "WHERE o.status='open' AND o.remaining_qty>0 AND x.status='open' UNION "
+            "SELECT p.account_id FROM positions p JOIN products x ON x.id=p.product_id "
+            "WHERE p.quantity!=0 AND x.status='open')"
+        ).fetchone()[0]
+    return {
+        "status": "halted" if halted else "open",
+        "anomalies": anomalies,
+        "open_interest": open_interest,
+        "active_traders": active_traders,
+    }
 
 
 @router.get("/v1/market")

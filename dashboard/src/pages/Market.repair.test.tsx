@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import Market from './Market';
 
 // Recorded from GET /v1/market/{symbol} (backend market.py `detail`): product row plus `orders`,
@@ -44,7 +44,10 @@ describe('Market repair S51-repair', () => {
     delete responses['/v1/market/history?product_id=product-1'];
     render(<Market />);
     expect(await screen.findByText('Book depth')).toBeTruthy();
-    expect(screen.getAllByText('—')).toHaveLength(2);
+    const book = screen.getByRole('region', { name: 'Book depth' });
+    expect(within(book).getByText('No bids')).toBeTruthy();
+    expect(within(book).getByText('No sell orders')).toBeTruthy();
+    expect(within(book).getByText(/Spread unavailable/)).toBeTruthy();
     expect(screen.queryByText(/failed to render/)).toBeNull();
   });
 

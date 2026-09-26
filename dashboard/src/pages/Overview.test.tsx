@@ -19,7 +19,7 @@ const styles = readFileSync("src/styles.css", "utf8");
 const VIEWS_URL = "https://views.example.test";
 
 type Signal = { report_id: string; zone: string; value: number; published_at: string; stale: boolean };
-type Prediction = { zone: string; score: number; level: string };
+type Prediction = { delivery_hour: string; zone: string; score: number; level: string };
 type Activity = { id: string; type: string; label: string; symbol: string; side: string; quantity: number; price_cents: number; reason?: string; created_at: string };
 type Provider = { id: string; display_name: string };
 
@@ -87,7 +87,7 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
 
   it("[SEIT-GM-UI-01] stats cards show market status", async () => {
     render(<Overview />);
-    expect(await screen.findByText(new RegExp(`^Market ${marketStatus.status}$`, "i"), { selector: ".market-status" })).toBeTruthy();
+    expect(await screen.findByText(new RegExp(`^Simulation ${marketStatus.status === "open" ? "running" : marketStatus.status}$`, "i"), { selector: ".market-status" })).toBeTruthy();
   });
 
   it("[SEIT-GM-UI-01] renders activity feed with judge-labelled order", async () => {
@@ -135,7 +135,7 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
       ["#/spec", /spec/i],
     ];
     for (const [href, name] of nav) {
-      const link = (await screen.findByRole("link", { name })) as HTMLAnchorElement;
+      const link = (await within(screen.getByRole("navigation", { name: "Primary" })).findByRole("link", { name })) as HTMLAnchorElement;
       expect(link.getAttribute("href")).toBe(href);
     }
     expect(screen.queryByText(/log in|sign in|password/i)).toBeNull();
@@ -154,7 +154,7 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
         window.location.hash = hash;
         window.dispatchEvent(new Event("hashchange"));
       });
-      expect(screen.getByRole("heading", { name: heading })).toBeTruthy();
+      expect(screen.getByRole("heading", { name: heading, level: 1 })).toBeTruthy();
     }
   });
 
@@ -230,9 +230,8 @@ describe("S52a design v2 Overview and rail", () => {
   it("key-number strip shows served load and product counts with honest fallbacks", async () => {
     render(<Overview />);
     const strip = await screen.findByRole("region", { name: /market key numbers/i });
-    const load = within(strip).getByText("System load").parentElement;
-    await waitFor(() => expect(load?.querySelector("strong")?.textContent).toBe("—"));
-    expect(load?.textContent).toContain("Waiting for ERCOT");
+    expect(within(strip).queryByText("System load")).toBeNull();
+    expect(await screen.findByText(/Grid feed connected.*pending inputs/i)).toBeTruthy();
     const products = within(strip).getByText("Open products").parentElement;
     await waitFor(() => expect(products?.querySelector("strong")?.textContent).toBe("1"));
     const traders = within(strip).getByText("Active traders").parentElement;
@@ -240,7 +239,7 @@ describe("S52a design v2 Overview and rail", () => {
     const participants = within(strip).getByText("Participants by provider").parentElement;
     for (const provider of providers) await within(participants!).findByText(provider.display_name);
     expect(strip.textContent?.toLowerCase()).not.toContain("unavailable");
-    await waitFor(() => expect(strip.textContent).toContain(String(predictions[0].score)));
+    expect(within(strip).getByText("Open interest")).toBeTruthy();
   });
 
   it("disclosure is one expandable line with the complete AC-GM-UI-02 text", async () => {
@@ -276,7 +275,9 @@ describe("S52a design v2 Overview and rail", () => {
       expect(rows).toHaveLength(zones.size + 1); // one heading row, one data row per served zone
       for (const item of predictions) {
         const row = rows.find((candidate) => candidate.textContent?.toLowerCase().includes(item.zone.replace(/^LZ_|^HB_/, "").toLowerCase()));
-        expect(row?.textContent).toContain(`${item.score}%`);
+        const selectedWindow = predictions.map(p => p.delivery_hour).sort()[0];
+        if (item.delivery_hour === selectedWindow) expect(row?.textContent).toContain(`${item.score}%`);
+        else expect(row?.textContent).not.toContain(`${item.score}%`);
       }
     });
   });

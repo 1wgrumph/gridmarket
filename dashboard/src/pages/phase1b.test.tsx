@@ -47,7 +47,9 @@ describe('phase 1b dashboard pages', () => {
 
   it('SEIT-GM-UI-01-PAGES Predictions shows signed factors, market check, band, and Brier score', async () => {
     visit('#/predictions');
-    expect(await screen.findByText('DART spread')).toBeTruthy();
+    const scores = await screen.findByRole('region', { name: /zone scores/i });
+    fireEvent.click((await within(scores).findAllByRole('button', { name: /why this estimate/i }))[0]);
+    expect(await within(scores).findByText('DART spread')).toBeTruthy();
     expect(screen.getByText('Wind')).toBeTruthy();
     expect(await within(screen.getByText('DART spread').closest('li')!).findByText('+0.18')).toBeTruthy();
     expect(await within(screen.getByText('Wind').closest('li')!).findByText('-0.12')).toBeTruthy();
@@ -147,9 +149,9 @@ describe('phase 1b dashboard pages', () => {
     expect(new Headers(orderCall?.init?.headers).get('Authorization')).toBe('Bearer gm_fixture_only_key');
   });
 
-  it('SEIT-GM-UI-01-PAGES Spec links to the generated GridMarket specification', () => {
+  it('SEIT-GM-UI-01-PAGES Spec renders the generated GridMarket specification (UX-04)', () => {
     visit('#/spec');
-    const links = screen.getAllByRole('link');
-    expect(links.some(link => link.getAttribute('href')?.startsWith('https://github.com/') && link.getAttribute('href')?.includes('spec/GridMarket-Specification.md'))).toBe(true);
+    const doc = screen.getByRole('article', { name: /gridmarket specification/i });
+    expect(within(doc).getByRole('heading', { name: 'GridMarket Architecture Specification' })).toBeTruthy();
   });
 });
