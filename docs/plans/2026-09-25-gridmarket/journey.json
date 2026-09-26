@@ -173,6 +173,14 @@
       "amends": "DEC-GM-011",
       "source": "Owner action relayed by the Orchestrator, 2026-09-25 CDT; GitHub ruleset API response HTTP 403",
       "recorded_at": "2026-09-26T01:23:55Z"
+    },
+    {
+      "id": "DEC-GM-019",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T01:25:52Z",
+      "source": "Owner in chat, verbatim: 'you can just build the spec its part of the presentation I want to show the judges. add it part of the plan if you half too'",
+      "decision": "Add a Spec lane to the GridMarket plan. It builds (1) the spec template: generated front matter plus the outline, per-section pattern (BLUF; Frame of Who/What/Why/How/When/Where; prose with no word limit; one table or figure when the structural trigger fires; at most 5 requirements per section, bound per feature), 8 table classes T1-T8 and 8 figure classes F1-F8; (2) azdiagram, a Python generator using Graphviz layout for graph classes, draw.io output from Graphviz coordinates, a grid renderer for sequence and timing, and overlap/size lint; (3) the spec-author, spec-diagram and spec-lint skills; (4) GridMarket's own specification written in that template with its figures. The GridMarket specification is a product deliverable in the gridmarket repo, shown to the judges in the demo and presentation. It is outside Bearing's five planning artifacts and requires no bearing-lite change. The lane runs in parallel and must not block the phase 1 demo.",
+      "inputs": "AZHQ journey HQ-SPEC-2026-09-25 decisions DEC-SPEC-004 through DEC-SPEC-007 and DEC-SPEC-010 (outline, section pattern, classes, tooling). Graphviz 2.42.2 and draw.io 31.5.2 are installed on spectre-dev."
     }
   ],
   "stages": {
@@ -917,7 +925,8 @@
     "decisions": [
       "DEC-GM-017",
       "DEC-GM-012 partial supersession",
-      "DEC-GM-018"
+      "DEC-GM-018",
+      "DEC-GM-019"
     ],
     "action": "Dispatch planning_and_design delta when the running P&D session returns"
   }
