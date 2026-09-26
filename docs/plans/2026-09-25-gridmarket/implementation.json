@@ -2702,7 +2702,9 @@
       },
       "write_set": [
         "spec/gridmarket/",
-        "spec/GridMarket-Specification.md"
+        "spec/GridMarket-Specification.md",
+        "Makefile",
+        "docs/plans/2026-09-25-gridmarket/evidence/spec-tool-versions.md"
       ],
       "command_ids": [
         "CMD-SPEC-LINT",
@@ -2723,7 +2725,7 @@
       },
       "work_class": "judgement",
       "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail).",
-      "notes": "DEC-GM-024: spec lane is single_implementer (tech-writing); the one implementer writes S19, then S20 and S21, continuing its lane session while identity, authority, route and generation are unchanged."
+      "notes": "DEC-GM-024: spec lane is single_implementer (tech-writing); the one implementer writes S19, then S20 and S21, continuing its lane session while identity, authority, route and generation are unchanged. DEC-GM-078: S21-fix may change Makefile spec-lint line only (PYTHONPATH=tools for azdiagram) and add the tool-versions evidence file."
     },
     {
       "id": "S22",

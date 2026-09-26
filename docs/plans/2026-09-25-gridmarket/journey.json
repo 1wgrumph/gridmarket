@@ -761,6 +761,14 @@
       "decision": "The README opens with the hosted demo for judges: what it is, the live URL (placeholder until the owner activates the tunnel), a 60-second API tour with a sandbox key, and links to the guide, llms.txt, the prompt kit and MCP. Self-hosting and local development move to a closing 'Run it yourself' section or docs/self-host.md. Directive DIR-ALL-08.",
       "rationale": "Owner asked why the Docker/self-host steps are in the README when judges use the hosted demo. They stay for reproducibility and code review, but not as the first thing a judge reads.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-078",
+      "decided_at": "2026-09-26T10:22:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "The S21 write set adds Makefile (the spec-lint azdiagram line only) and evidence/spec-tool-versions.md, both already authorized in the S21-fix packet. Spec then merges together with market2 in IE11. The design+pages combined step is green at 35e3ab6.",
+      "rationale": "A manifest omission by the Orchestrator, the same class as DEC-GM-076. The IE's SPEC_WRITESET_GAP stop was correct.",
+      "reversible": true
     }
   ],
   "stages": {
