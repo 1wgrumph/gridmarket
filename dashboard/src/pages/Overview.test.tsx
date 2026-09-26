@@ -283,6 +283,17 @@ describe("S52a design v2 Overview and rail", () => {
     expect(fetchMock.mock.calls.some(([path]) => String(path).includes("/v1/bots"))).toBe(true);
   });
 
+  it("bots panel renders P&L in dollars as /v1/bots returns it", async () => {
+    const bots = [{ id: "bot-a", bot_type: "maker", provider_id: providers[0].id, cash: 1012.5, net_worth: 1012.5, pnl: 12.5, losses: 0, dormant: false }];
+    const base = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation(async (input: string) =>
+      input.includes("/v1/bots") ? { ok: true, status: 200, json: async () => bots } : base(input));
+    render(<Overview />);
+    const panel = await screen.findByRole("region", { name: /bots setting the pace/i });
+    const row = await within(panel).findByRole("row", { name: /bot-a/i });
+    expect(row.textContent).toContain("+$12.50");
+  });
+
   it("anomalies panel follows status.anomalies rather than activity rejects", async () => {
     render(<Overview />);
     const panel = await screen.findByRole("region", { name: /anomalies|guardrails/i });

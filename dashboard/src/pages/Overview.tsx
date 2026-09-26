@@ -172,7 +172,7 @@ export default function Overview() {
           <tbody>{[...bots.data].sort((a, b) => b.pnl - a.pnl).slice(0, 6).map((b, i) => <tr key={b.id}>
             <td><a href={`#/bots/${encodeURIComponent(b.id)}`} className="bot-identity"><span className="avatar">{String(i + 1).padStart(2, '0')}</span><span><strong>{b.id}</strong><small>{b.bot_type}</small></span></a></td>
             <td><span className="provider-name">{providerName(b.provider_id)}</span></td>
-            <td className={`num ${b.pnl < 0 ? 'down-text' : 'up-text'}`}>{b.pnl >= 0 ? '+' : ''}{usd(b.pnl / 100)}</td>
+            <td className={`num ${b.pnl < 0 ? 'down-text' : 'up-text'}`}>{b.pnl >= 0 ? '+' : ''}{usd(b.pnl)}</td>
           </tr>)}</tbody>
         </table> : <Empty loading={bots.loading} label={bots.error ? 'Bots not yet available' : 'No bots yet'}/>}</div>
         <div className="panel-end"><span>Ranked by simulated P&L</span><a href="#/bots">All traders <Icon name="up-right"/></a></div>
