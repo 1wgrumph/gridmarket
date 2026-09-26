@@ -681,6 +681,14 @@
       "decision": "Rust is out of scope; the stack is Python + React. S17 (PyO3 matching core) is dropped and S18-G (the rust lane merge) is removed. GRIDMARKET_ENGINE stays on the Python engine. Supersedes the S17 part of DEC-GM-066.",
       "owner_quote": "we dont need rust I thought we settled on python and react",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-068",
+      "decided_at": "2026-09-26T09:45:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "New market-lane slice S05-anom on lane-market2 (1b), after S05-const and before S54. It serves real anomalies (anomalies table rows, newest 50) in /v1/market/status, replacing the hardcoded [], and fixes the 50-order burst to under 0.5 s, profiled first. This unblocks S14 (adversary) without Rust and feeds the design v2 anomalies panel.",
+      "rationale": "S14 is 4/6 green: market.py:499 hardcodes anomalies [] (DEC-GM-058 added only the key), and the burst takes 2.0-2.8 s against a 1 s bound. Both are market-owned files, outside the stretch write sets. Rust is out (DEC-GM-067), so the fix must be in Python.",
+      "reversible": true
     }
   ],
   "stages": {
