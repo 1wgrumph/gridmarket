@@ -1,0 +1,73 @@
+class: F2
+title: GridMarket app decomposition
+max_width: 1600
+max_height: 900
+direction: TB
+nodes:
+  - id: main
+    label: main.py composition root
+  - id: api
+    label: api.py routes, auth, limits
+  - id: market
+    label: market.py engine, risk, ledger
+  - id: providers
+    label: providers registry
+  - id: ercot
+    label: ercot.py Worker client
+  - id: nws
+    label: nws.py weather client
+  - id: scoring
+    label: scoring.py opportunity score
+  - id: router
+    label: decision_router.py checks
+  - id: health
+    label: health.py heartbeats
+  - id: economy
+    label: economy.py payroll, statistics
+  - id: botsapi
+    label: bots_api.py population routes
+  - id: db
+    label: SQLite (WAL) system of record
+edges:
+  - from: main
+    to: api
+    label: mounts
+  - from: main
+    to: router
+    label: 60 s tick
+  - from: main
+    to: economy
+    label: 60 s tick
+  - from: main
+    to: health
+    label: 10 s loop
+  - from: main
+    to: ercot
+    label: poller
+  - from: main
+    to: nws
+    label: poller
+  - from: api
+    to: market
+    label: orders
+  - from: api
+    to: botsapi
+    label: includes
+  - from: market
+    to: providers
+    label: reserve capacity
+  - from: scoring
+    to: ercot
+    label: signals
+  - from: scoring
+    to: nws
+    label: signals
+  - from: router
+    to: scoring
+    label: score
+  - from: market
+    to: db
+    label: one transaction
+  - from: economy
+    to: db
+    label: deposits

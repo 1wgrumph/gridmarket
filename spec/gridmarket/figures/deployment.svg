@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="614.5" height="408" viewBox="0 0 614.5 408" font-family="Helvetica, Arial, sans-serif" font-size="12">
+  <title>Deployment and trust boundaries</title>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" />
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="614.5" height="408" fill="white" />
+  <g class="line" data-id="edge-1">
+    <polyline points="113.5,56.18 113.5,66.81 113.5,80.69 113.5,92.8 113.5,102.85" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="129.5" y="79.5" text-anchor="middle">HTTPS</text>
+  </g>
+  <g class="line" data-id="edge-2">
+    <polyline points="113.5,139.18 113.5,149.81 113.5,163.69 113.5,175.8 113.5,185.85" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="147.5" y="162.5" text-anchor="middle">named tunnel</text>
+  </g>
+  <g class="line" data-id="edge-3">
+    <polyline points="145.62,222.1 163.55,231.29 186.46,242.46 207.5,251 220.32,256.21 234.24,261.21 247.66,265.72 257.33,268.92" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="259" y="245.5" text-anchor="middle">CF-Connecting-IP set</text>
+  </g>
+  <g class="line" data-id="edge-4">
+    <polyline points="291.81,305.178 276.2,316.991 255.29,332.82 238.2,345.758 230.16,351.847" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="295" y="328.5" text-anchor="middle">WAL writes</text>
+  </g>
+  <g class="line" data-id="edge-5">
+    <polyline points="337.19,305.178 352.8,316.991 373.71,332.82 390.8,345.758 398.84,351.847" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="416" y="328.5" text-anchor="middle">x-gridmarket-key</text>
+  </g>
+  <g class="line" data-id="edge-6">
+    <polyline points="314.5,222.18 314.5,232.81 314.5,246.69 314.5,258.8 314.5,268.85" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="339" y="245.5" text-anchor="middle">public API</text>
+  </g>
+  <g class="line" data-id="edge-7">
+    <polyline points="467.36,222.18 437.42,234.68 396.72,251.67 364.84,264.98 355.25,268.99" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="485" y="245.5" text-anchor="middle">admin requests only here</text>
+  </g>
+  <g id="internet">
+    <rect x="54.4996" y="20" width="118.001" height="36" fill="white" stroke="black" />
+    <text x="113.5" y="42" text-anchor="middle">Internet clients</text>
+  </g>
+  <g id="edge">
+    <rect x="52.0012" y="103" width="122.998" height="36" fill="white" stroke="black" />
+    <text x="113.5" y="125" text-anchor="middle">Cloudflare edge</text>
+  </g>
+  <g id="cloudflared">
+    <rect x="20.0008" y="186" width="186.998" height="36" fill="white" stroke="black" />
+    <text x="113.5" y="208" text-anchor="middle">cloudflared (profile tunnel)</text>
+  </g>
+  <g id="app">
+    <rect x="193.5" y="269" width="241.999" height="36" fill="white" stroke="black" />
+    <text x="314.5" y="291" text-anchor="middle">app container, uid 10001, read-only</text>
+  </g>
+  <g id="bots">
+    <rect x="225" y="186" width="178.999" height="36" fill="white" stroke="black" />
+    <text x="314.5" y="208" text-anchor="middle">bots container, read-only</text>
+  </g>
+  <g id="volume">
+    <rect x="118" y="352" width="178.999" height="36" fill="white" stroke="black" />
+    <text x="207.5" y="374" text-anchor="middle">gm-data volume (SQLite)</text>
+  </g>
+  <g id="loopback">
+    <rect x="422.5" y="186" width="172.001" height="36" fill="white" stroke="black" />
+    <text x="508.5" y="208" text-anchor="middle">host loopback 127.0.0.1</text>
+  </g>
+  <g id="worker">
+    <rect x="315.001" y="352" width="212.998" height="36" fill="white" stroke="black" />
+    <text x="421.5" y="374" text-anchor="middle">ERCOT Worker, owner account</text>
+  </g>
+</svg>

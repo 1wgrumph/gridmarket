@@ -1,0 +1,57 @@
+class: F6
+title: Settlement tick activity
+max_width: 1200
+max_height: 1100
+direction: TB
+nodes:
+  - id: tick
+    label: Settlement tick
+  - id: list
+    label: List spot and future products
+  - id: close
+    label: Close started products
+  - id: spot
+    label: Spot delivery hour ended?
+  - id: verify
+    label: verify_delivery
+  - id: delivered
+    label: Record delivered, release
+  - id: default
+    label: Record default, refund buyer
+  - id: future
+    label: Four RT SPP intervals stored?
+  - id: settle
+    label: Cash += (reference - avg) x qty
+  - id: record
+    label: Append settled_positions row
+edges:
+  - from: tick
+    to: list
+    label: every hour
+  - from: list
+    to: close
+    label: ""
+  - from: close
+    to: spot
+    label: spot
+  - from: close
+    to: future
+    label: future
+  - from: spot
+    to: verify
+    label: yes
+  - from: verify
+    to: delivered
+    label: online
+  - from: verify
+    to: default
+    label: offline
+  - from: future
+    to: settle
+    label: yes
+  - from: settle
+    to: record
+    label: ""
+  - from: delivered
+    to: record
+    label: ""
