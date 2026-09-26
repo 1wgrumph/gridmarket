@@ -57,7 +57,13 @@ ALERTS = {
     "updated": TOP_UPDATED,
     "features": [
         {"properties": {"severity": "Severe", "event": "Flash Flood Warning", "sent": SENT}},
-        {"properties": {"severity": "Unknown", "event": "Air Quality Alert", "sent": "2026-09-26T15:47:00-05:00"}},
+        {
+            "properties": {
+                "severity": "Unknown",
+                "event": "Air Quality Alert",
+                "sent": "2026-09-26T15:47:00-05:00",
+            }
+        },
     ],
 }
 
@@ -108,8 +114,7 @@ def test_s76_r1_06_forecast_hours_reach_product_hours(
         "2026-09-26T21:00:00+00:00",
         "2026-09-26T22:00:00+00:00",
     }
-    db_path = Path(monkeypatch.getenv("GRIDMARKET_DB"))
-    seed_db(db_path, [("p1", "S", ZONE, "2026-09-26T21:00:00+00:00")], [])
+    seed_db(tmp_path / "signals.db", [("p1", "S", ZONE, "2026-09-26T21:00:00+00:00")], [])
     (prediction,) = [p for p in scoring.predict() if p.zone == ZONE]
     assert "95" in detail(prediction, "heat-stress")
     assert "unavailable" not in detail(prediction, "heat-stress").lower()
@@ -118,7 +123,9 @@ def test_s76_r1_06_forecast_hours_reach_product_hours(
 def test_s76_r1_06_alerts_read_latest_per_zone_not_product_hour(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setattr(nws, "_get", fake_nws(hourly([("2026-09-26T15:00:00-05:00", 89.0)]), ALERTS))
+    monkeypatch.setattr(
+        nws, "_get", fake_nws(hourly([("2026-09-26T15:00:00-05:00", 89.0)]), ALERTS)
+    )
     asyncio.run(nws.poll())
     hour = (datetime.now(UTC) + timedelta(hours=3)).replace(minute=0, second=0, microsecond=0)
     seed_db(tmp_path / "signals.db", [("p1", "S", ZONE, hour.isoformat())], [])
@@ -130,7 +137,9 @@ def test_s76_r1_06_alerts_read_latest_per_zone_not_product_hour(
 def test_s76_r1_13_alert_published_at_uses_sent(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setattr(nws, "_get", fake_nws(hourly([("2026-09-26T15:00:00-05:00", 89.0)]), ALERTS))
+    monkeypatch.setattr(
+        nws, "_get", fake_nws(hourly([("2026-09-26T15:00:00-05:00", 89.0)]), ALERTS)
+    )
     asyncio.run(nws.poll())
     assert ercot.signals.latest("NWS-ALERTS", ZONE).published_at == "2026-09-26T15:47:00-05:00"
 
@@ -215,7 +224,17 @@ def test_s76_r1_10_congestion_bounded_to_latest_sced_interval(tmp_path: Path) ->
         [("p1", "S", ZONE, hour)],
         [
             ("s1", "NP6-86-CD", "OLD_X", base.isoformat(), 5, 1, "$/MWh", now, now),
-            ("s2", "NP6-86-CD", "NEW_Y", (base + timedelta(hours=1)).isoformat(), 5, 5, "$/MWh", now, now),
+            (
+                "s2",
+                "NP6-86-CD",
+                "NEW_Y",
+                (base + timedelta(hours=1)).isoformat(),
+                5,
+                5,
+                "$/MWh",
+                now,
+                now,
+            ),
         ],
     )
     (prediction,) = scoring.predict()

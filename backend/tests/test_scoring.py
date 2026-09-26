@@ -333,7 +333,8 @@ def test_predict_selects_signal_for_delivery_hour(
     )
     predictions = {item.delivery_hour: item for item in scoring.predict()}
     assert driver_detail(predictions[HOUR], "price-spread").startswith("Day-ahead 100 vs")
-    assert driver_detail(predictions[unmatched], "price-spread").startswith("Day-ahead 0 vs")
+    assert "unavailable" in driver_detail(predictions[unmatched], "price-spread").lower()
+    assert predictions[unmatched].level == "UNAVAILABLE"
 
 
 def test_predict_missing_temperature_marked_unavailable(
