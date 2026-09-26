@@ -72,7 +72,7 @@ spec-lint:
 	$(UV) python tools/spec_build.py spec/gridmarket/ spec/GridMarket-Specification.md
 	git diff --exit-code -- spec/GridMarket-Specification.md
 	$(UV) python tools/spec_lint.py spec/gridmarket/
-	$(UV) python -m azdiagram lint spec/gridmarket/
+	PYTHONPATH=tools $(UV) python -m azdiagram lint spec/gridmarket/
 
 test-all:
 	$(PYTEST) backend/tests $(if $(wildcard tools/tests),tools/tests,)
