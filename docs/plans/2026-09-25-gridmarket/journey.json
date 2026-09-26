@@ -879,6 +879,28 @@
       "decided_by": "Orchestrator (delegate, planning owner)",
       "decision": "S11 lane-sync blockers after merging post-1b main and market3: (1) the S10 providers fixture inserts a SPOT-LZ_HOUSTON symbol that main's seed now creates (UNIQUE products.symbol); test-data-only fix under DEC-GM-061 via S10-fix2. (2) circular import api -> market -> health -> decision_router -> ercot -> api.router (market already imports health on main; the LoneStar health.py adds module-level imports of decision_router and ercot); S11-repair3 makes those imports lazy inside health.py, no behavior change. Posted as DIR-P2-09.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-093",
+      "decided_at": "2026-09-26T13:31:00-05:00",
+      "decided_by": "Orchestrator (delegate, planning owner)",
+      "decision": "GET /v1/providers gains additive fields participants (distinct accounts holding a provider's asset) and online (heartbeat state), satisfying test_seit_gm_prov_02 and the CONTRACTS 'public provider summary'. S11-repair4 on lonestar may edit api.py providers() only, plus its uncommitted health.py lazy-import fix. Posted as DIR-P2-10.",
+      "reversible": true
+    },
+    {
+      "id": "DEC-GM-094",
+      "decided_at": "2026-09-26T13:40:00-05:00",
+      "decided_by": "Orchestrator (delegate)",
+      "decision": "The S02 rate-limit test test_seit_gm_api_03_keyed_rate_limits_have_no_extra_order[member-40] is timing-flaky under load: a token refills between the 429 and the order POST. Test-only fix S05-flake2 on lane-flake (from market3 5be7051) pins the limiter clock during the test; S12 merges lane-flake instead of market3 when it exits. Posted as DIR-P2-11.",
+      "reversible": true
+    },
+    {
+      "id": "DEC-GM-095",
+      "decided_at": "2026-09-26T13:45:00-05:00",
+      "decided_by": "Owner request + Orchestrator (delegate)",
+      "decision": "New slice S58 on lane ux (from lane-esr): Overview zone drill-down (keyboard-accessible zones open a detail panel with score drivers, ERCOT signals and open products), an honest no-data state instead of identical baseline scores, Participants by provider and Active traders wired to data, LZ_-only zones table, Spawn bots hint with an empty admin key, 44px copy button at 390px. TDD: S58-T red tests first, then S58. Lands with the stretch assembly S18 in place of lane-esr. Posted as DIR-PS-07.",
+      "owner_quote": "I think if we click on these regions they should go into detail of what is going on it seems like a lot of data or feature are not rendering",
+      "reversible": true
     }
   ],
   "stages": {
