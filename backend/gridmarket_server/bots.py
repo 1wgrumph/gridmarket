@@ -205,6 +205,9 @@ def strategy_order(
     zone = str(household.get("zone", "LZ_HOUSTON"))
     bias = float((profile.get("info") or {}).get("ev_bias", 0.0))
     risk = float(traits.get("risk appetite", 0.5))
+    thresholds = profile.get("thresholds") or {}
+    buy_value = float((thresholds.get("buy") or {}).get("value", 0.5))
+    sell_value = float((thresholds.get("sell") or {}).get("value", 0.5))
     if int(profile.get("losses", 0)) >= 3 and float(profile.get("loss_share", 0.0)) > 0.6:
         return None  # learned caution from settled losses
     zoned = [p for p in products if p.get("zone") == zone] or products
@@ -237,7 +240,7 @@ def strategy_order(
             market = pred.get("market_price") or 0.0
             if (
                 pred.get("level") == "HIGH"
-                and float(pred.get("confidence", 0)) > 0.75
+                and float(pred.get("confidence", 0)) > 0.75 + (0.5 - buy_value) * 0.4
                 and float(pred.get("expected_value", 0)) > float(market) * 1.2
             ):
                 return order(
@@ -245,11 +248,15 @@ def strategy_order(
                 )
         return None
     if kind == "DART trader":
+        if "DART" not in set((profile.get("info") or {}).get("families", ())):
+            return None
         zoned_checks = [c for c in checks if str(c.get("subject", "")).startswith(zone + ":")]
         if not zoned_checks:
             return None
         check = zoned_checks[pick % len(zoned_checks)]
         probability = float(check.get("probability", 0.5))
+        if abs(probability - 0.5) <= (0.5 - sell_value) * 0.2:
+            return None
         hour = str(check.get("subject", "")).split(":", 1)[1]
         product = next((p for p in flex if p.get("delivery_hour") == hour), (flex or zoned)[0])
         side = "buy" if probability > 0.5 else "sell"
@@ -344,6 +351,29 @@ def step_all(base_url: str, clock: Any) -> int:
 
 THRESHOLDS = (("buy", 0.0, 1.0), ("sell", 0.0, 1.0))
 
+# Each signal family reads these stored report ids (AC-GM-BOT-05). Families do
+# not equal report ids: a row labelled with the family name itself also matches.
+FAMILY_REPORTS = {
+    "price-spread": ("NP6-905-CD", "NP4-190-CD"),
+    "load-pressure": ("NP3-565-CD",),
+    "outage-pressure": ("NP3-233-CD",),
+    "congestion-pressure": ("NP6-86-CD", "NP6-905-CD"),
+    "heat-stress": ("NWS-TEMP",),
+    "peak-period": (),
+    "weather-alert": ("NWS-ALERTS",),
+    "DART": ("NP4-190-CD", "NP6-905-CD"),
+}
+
+
+def _stamp_key(stamp: str) -> tuple[float, str]:
+    try:
+        moment = datetime.fromisoformat(stamp)
+    except ValueError:
+        return (float("-inf"), stamp)
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=UTC)
+    return (moment.timestamp(), "")
+
 
 def observe_signals(bot: Any, signals: list[Any], now: datetime) -> dict[str, float]:
     """Signal values visible to a bot after its family filter, delay, bias and noise."""
@@ -351,9 +381,15 @@ def observe_signals(bot: Any, signals: list[Any], now: datetime) -> dict[str, fl
     delay = float(bot.info.get("delay_s", 0))
     bias = float(bot.info.get("ev_bias", 0.0))
     noise = float(bot.info.get("noise", 0.0))
-    observed = {}
+    observed: dict[str, float] = {}
+    seen: dict[str, tuple[float, str]] = {}
     for signal in signals:
-        if signal.report_id not in families:
+        matched = sorted(
+            family
+            for family in families
+            if signal.report_id == family or signal.report_id in FAMILY_REPORTS.get(family, ())
+        )
+        if not matched:
             continue
         age = (now - datetime.fromisoformat(signal.published_at)).total_seconds()
         if age < delay:
@@ -361,7 +397,12 @@ def observe_signals(bot: Any, signals: list[Any], now: datetime) -> dict[str, fl
         jitter = random.Random(f"{bot.index}:{signal.report_id}:{signal.published_at}").uniform(
             -noise, noise
         )
-        observed[signal.report_id] = float(signal.value) * (1 + bias) * (1 + jitter)
+        value = float(signal.value) * (1 + bias) * (1 + jitter)
+        key = _stamp_key(signal.published_at)
+        for family in matched:
+            if seen.get(family) is None or key > seen[family]:
+                seen[family] = key
+                observed[family] = value
     return observed
 
 

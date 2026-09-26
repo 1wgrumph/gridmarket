@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from . import economy, keys, population
-from .bots import bot_key
+from .bots import bot_key, thresholds_from_ledger
 from .contracts import BotSpec
 
 logger = logging.getLogger(__name__)
@@ -135,6 +135,7 @@ def _next_index(conn: sqlite3.Connection) -> int:
 def list_bots() -> list[dict[str, object]]:
     with _db() as conn:
         _ensure_seeded(conn)
+        master = _master_seed(conn)
         settled: dict[str, list[int]] = {}
         for account_id, pnl in conn.execute(
             "SELECT account_id, pnl_cents FROM settled_positions"
@@ -162,6 +163,7 @@ def list_bots() -> list[dict[str, object]]:
                     "employed": profile.get("employed", False),
                     "losses": losses,
                     "loss_share": losses / len(pnls) if pnls else 0.0,
+                    "thresholds": thresholds_from_ledger(conn, master, index),
                 }
             )
         return rows

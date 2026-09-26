@@ -172,9 +172,18 @@ def test_s77b_settled_results_change_roster_decisions(tmp_path: Path, monkeypatc
     ]
     products = [_product("FLEX-LZ_HOUSTON-2030010101", hour)]
     row = {"bot_index": 7, "bot_type": "score follower"}
-    buys = bots.strategy_order(row, before, products, predictions, [], {}, 0)
+
+    def decide(roster_row: dict) -> dict | None:
+        profile = dict(
+            roster_row,
+            blend={"score follower": 0.8, "noise trader": 0.1, "saver": 0.1},
+            household={"batteries": [13.5], "zone": "LZ_HOUSTON", "reserve_pct": 0.2},
+        )
+        return bots.strategy_order(row, profile, products, predictions, [], {}, 0)
+
+    buys = decide(before)
     assert buys is not None and buys["side"] == "buy"
-    assert bots.strategy_order(row, after, products, predictions, [], {}, 0) is None
+    assert decide(after) is None
 
 
 def test_s77b_cash_history_uses_actual_ledger_events(tmp_path: Path, monkeypatch) -> None:
