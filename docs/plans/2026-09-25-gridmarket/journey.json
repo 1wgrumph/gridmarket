@@ -689,6 +689,14 @@
       "decision": "New market-lane slice S05-anom on lane-market2 (1b), after S05-const and before S54. It serves real anomalies (anomalies table rows, newest 50) in /v1/market/status, replacing the hardcoded [], and fixes the 50-order burst to under 0.5 s, profiled first. This unblocks S14 (adversary) without Rust and feeds the design v2 anomalies panel.",
       "rationale": "S14 is 4/6 green: market.py:499 hardcodes anomalies [] (DEC-GM-058 added only the key), and the burst takes 2.0-2.8 s against a 1 s bound. Both are market-owned files, outside the stretch write sets. Rust is out (DEC-GM-067), so the fix must be in Python.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-069",
+      "decided_at": "2026-09-26T10:05:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "S11 blockers: (1) The S10 spot fixture symbol is wrong. It is corrected to the market-generated SPOT-<zone>-<YYYYMMDDHH>, keeping every assertion. The market keeps its stable listing-time spot class. (2) population.sample arrives with the S29 exit in 1b. (3) New phase 2 slice S05-prov on lane-market3 after landed/1b: move the assets/reservations SQL from market.py into the market-owned providers package. This is a pure move with no contract name changes. S12 merges it before lonestar.",
+      "rationale": "Putting S05-prov in phase 2 keeps 1b short (S05-const, S05-anom, S54). Reclassifying spot by delivery hour would flip hold rules on open orders mid-life, a market-integrity risk. The direct SQL is a real CONTRACTS deviation (reservations go via the provider layer).",
+      "reversible": true
     }
   ],
   "stages": {
