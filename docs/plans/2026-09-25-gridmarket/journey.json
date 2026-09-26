@@ -649,6 +649,14 @@
       "source": "Orchestrator as owner delegate (DEC-GM-043: repair acceptance)",
       "decision": "Land phase 1a at candidate 4985356 with ONE documented residual: market mutation score 65.43% (757/1157), below the 70% CMD-MUTATION threshold. All review findings F1-F6 and TE-1 to TE-4 are repaired. The Orchestrator re-ran the deterministic gates independently: test-all exit 0 (85 backend, 13 dashboard, 25 worker), lint 0, secrets 0. Coverage is 90.47%. Residual follow-up: new phase 1b slice S54 (Test Implementer, market mutation-kill tests) raises the score to >= 70% before phase 1b assurance, which re-runs mutation over the landed market code.",
       "why": "The single repair round is spent (DEC-GM-038). The shortfall is test strength, not a behaviour defect, and every functional gate is green. Holding 1a blocks every later phase. The owner can override: the landing reverts cleanly with a revert PR."
+    },
+    {
+      "id": "DEC-GM-064",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T14:07:17Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043); answers the P2 Coordinator's S37 blocker",
+      "decision": "Option (a): add named market constants MAX_ORDER_QUANTITY=50 and MAX_POSITION=200 (a pure refactor, no behaviour change) on lane-market2 in phase 1b (S05-const), which unblocks the kit test SEIT-GM-KIT-02 after the 1b landing. Rejected: (b) amending the exited red test, which weakens it; (c) dropping kit.",
+      "why": "Naming the limits is better code and costs 2 lines. The kit and prompt docs reference the limits by name."
     }
   ],
   "stages": {
