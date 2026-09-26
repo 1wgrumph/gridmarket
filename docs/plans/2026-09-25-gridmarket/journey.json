@@ -729,6 +729,14 @@
       "decision": "The P1b Coordinator is replaced by P1b-coord3, with packet P1b-r3 carrying the current state: S49 A-D green on de7fb6f, spec deferred to S12-E, exits S52b/S05-const/S05-anom, jobs S53/S54/S21-fix. Remaining order: design, then pages-v2 (S53, cutoff 13:00), then market2 (S54, cutoff 13:30, otherwise merge 941c393 and record the mutation gap), then candidate and one assurance round. The stale S49-spec-merge job from the old Coordinator was stopped before it made changes.",
       "rationale": "The old Coordinator never read directives DIR-P1b-05 through 15, so it did not know about the design, S53 or market2 lanes and would have sent a candidate without them to review. It also started a spec re-merge that would have collided with the design step in the integration worktree.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-074",
+      "decided_at": "2026-09-26T09:43:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043), applying owner DEC-GM-062",
+      "decision": "The S49 design step exempts dashboard/src/api.ts and dashboard/src/hooks.ts from the frozen-file check. The Orchestrator reviewed the diff 44b7f63..bb097f8: api.ts adds type exports only, and hooks.ts adds only the per-path poll dedupe and the error-text fix, with hook names and signatures unchanged. Every other frozen file is still checked.",
+      "rationale": "Owner-approved DEC-GM-062 permits exactly these three change kinds in those files. The IE7 CONTRACT_FAILURE was a correct fail-closed on a pre-authorized amendment.",
+      "reversible": true
     }
   ],
   "stages": {
