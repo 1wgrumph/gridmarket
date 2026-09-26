@@ -20,20 +20,20 @@
     "jev_enabled": false
   },
   "/v1/bots": [
-    { "id": "bot-7", "bot_type": "score follower", "blend": { "score follower": 0.7, "saver": 0.3 }, "provider_id": "lonestar", "cash": 912, "net_worth": 1054, "pnl": 24, "trades": 8, "losses": 2, "dormant": true },
-    { "id": "bot-8", "bot_type": "market maker", "blend": { "market maker": 1 }, "provider_id": "base-sim", "cash": 1200, "net_worth": 1260, "pnl": 60, "trades": 12, "losses": 0, "dormant": false }
+    { "id": "bot-7", "bot_index": 0, "bot_type": "score follower", "provider_id": "lonestar", "dormant": true },
+    { "id": "bot-8", "bot_index": 1, "bot_type": "market maker", "provider_id": "base-sim", "dormant": false }
   ],
   "/v1/bots/bot-7": {
     "id": "bot-7", "bot_type": "score follower", "blend": { "score follower": 0.7, "saver": 0.3 }, "provider_id": "lonestar", "cash": 912, "net_worth": 1054, "pnl": 24, "trades": 8, "losses": 2, "loss_share": 0.25, "worst_loss": -18, "dormant": true,
-    "traits": { "risk_appetite": 0.8, "patience": 0.3 },
+    "traits": { "risk appetite": 0.8, "patience": 0.3 },
     "household": { "batteries": [13.5], "zone": "NORTH", "reserve_pct": 0.2, "schedule": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] },
     "employed": true, "job": "technician", "pay": 40, "deposits": 40,
     "balance_history": [{ "at": "2026-09-25T13:00:00Z", "balance": 990 }, { "at": "2026-09-26T13:00:00Z", "balance": 1054 }]
   },
   "/v1/bots/diversity": {
-    "trait_space_coverage": 0.68,
-    "behavior_entropy": 1.47,
-    "risk_patience": [{ "bot_id": "bot-7", "risk_appetite": 0.8, "patience": 0.3 }, { "bot_id": "bot-8", "risk_appetite": 0.4, "patience": 0.7 }]
+    "coverage": 0.68,
+    "entropy": 1.47,
+    "points": [{ "risk_appetite": 0.8, "patience": 0.3 }, { "risk_appetite": 0.4, "patience": 0.7 }]
   },
   "/v1/sandbox/keys": { "account_id": "judge-7", "api_key": "gm_fixture_only_key", "label": "Judge" },
   "/v1/orders": [{ "id": "order-7", "account_id": "judge-7", "product_id": "product-1", "side": "buy", "quantity": 1, "remaining_qty": 1, "price_cents": 4200, "status": "open", "created_at": "2026-09-26T13:02:00Z" }]
