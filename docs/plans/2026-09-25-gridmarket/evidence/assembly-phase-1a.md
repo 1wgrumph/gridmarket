@@ -9,7 +9,7 @@ public_boundary: private
 
 # Phase 1a assembly — S09
 
-Current outcome: **ENVIRONMENT_FAILURE** pending worker command amendment. S09-A is green under DIR-P1a-03. S09-B is merged with all 25 worker tests passing via explicit file selection, but its prescribed directory invocation fails before test loading. No later step runs while this gap is unresolved.
+Current outcome: **REPAIRABLE_FAILURE**: DIR-P1a-04 glue is committed and its exact quoted-glob Node command passes 25/25, but the dispatch requires `make test-worker`, a target absent from this Makefile. S09-A is green; S09-B is merged. S09-C preflight passes, but assembly is paused pending resolution of this command/authority mismatch. See the DIR-P1a-04 continuation below.
 
 Historical outcome before DIR-P1a-03: **REPAIRABLE_FAILURE**. S09-A merged without conflicts but failed its required dashboard gates. It was reverted under PROC-ASSEMBLY. No assembly step is complete; S09-B through S09-E were not attempted. S09-L remains with the Orchestrator.
 
@@ -142,3 +142,27 @@ Classification: AN-ENV / test-command invocation mismatch, not evidence of a wor
 S08, S06 and S07 exit files were absent at this checkpoint. No later lane merged. S09-L, phase review/assurance, owner acceptance, deployment, and credential access remain outside this execution session.
 
 The W1 S25 receipt explicitly used `node --test ercot-hackathon/test/*.test.mjs` (25/25 green), confirming that its PASS did not exercise the prescribed directory command. `implementation.json` AN-ENV distinguishes Node/tooling failures from AN-PRODUCT-RED and retains the same candidate for environment correction; S09-B is retained pending disposition, with no product PASS or full-phase PASS claimed. The same directory invocation also occurs in Makefile's `test-all`, so S09-E will require an authorized command correction before its full gate can pass. All twelve frozen baseline blob identities independently verified at S09-B.
+
+
+## DIR-P1a-04 continuation — worker command passes, Make target absent
+
+- Execution authority: current owner dispatch, DIR-P1a-02 through DIR-P1a-05; stop before S09-L. Product write authority is limited to the exact one-line Makefile replacement in DIR-P1a-04.
+- Initial clean HEAD: `6a2999a8952cc0bcc4ca3488fd5ebcb5ab14bb8c`.
+- Applied exactly `node --test ercot-hackathon/test/` → `node --test "ercot-hackathon/test/*.test.mjs"` in the existing `test-all` recipe.
+- Glue commit: `da45d154a93671baf01f559bdf35229c8355638f`, message `Glue: Node 22 worker test glob (DEC-GM-046)`; no Co-Authored-By line.
+
+| Check | Exit | Result |
+|---|---:|---|
+| `git diff --check` before glue commit | 0 | Exactly one authorized Makefile line changed. |
+| `make test-worker` | 2 | `No rule to make target 'test-worker'. Stop.` No tests loaded. |
+| `node --test "ercot-hackathon/test/*.test.mjs"` | 0 | Node v22.23.2; 25 passed, 0 failed, 0 skipped. Exact amended recipe command. |
+| S08 frozen-contract comparison against S01, including vite.config.ts | 0 | All twelve frozen files unchanged. |
+| S08 non-merge commit write-set check against S02/S05/S08 union | 0 | All 16 changed paths within the authorized union. |
+
+Classification: AN-ENV / dispatch-to-Makefile target mismatch, not a worker behavior failure. The quoted-glob invocation fixes the original Node invocation gap. The separate `test-worker` target does not exist, and adding it exceeds this dispatch's explicit one-line glue authority. Requested a narrow amendment: accept the direct Node command as the worker gate, or authorize adding a `test-worker` target with that command. No missing gate is marked passed; no tests were weakened or skipped. No issue filed for this in-scope assembly-command mismatch.
+
+S08 recorded exit remains `6c68d70ef3659bd28a29603ec1a4298dba217a78`; preflight is ready, but S09-C was not merged while the required predecessor command remains unresolved. The later market repair tip is not substituted for this recorded exit. DIR-P1a-05 still requires the complete `test_sdk.py` suite at S09-D after S06, including the predictions-dependent example test. S06 and S07 exit files were absent at this checkpoint.
+
+BRAN remains unavailable (no native policy). Frozen OCR selection remains enabled/required=false, not_run in this assembly session; independent review remains pending. Reverify remains enabled/SELECTED_CONDITIONAL for the Rust ELF extension and NOT_APPLICABLE here because no compiled-binary claim is made. No route or live profile changed.
+
+Evidence and glue are committed and pushed only to `gridmarket/integration-1a`. No S09-C/D/E verification or phase assurance is claimed; S09-L remains with the Orchestrator.
