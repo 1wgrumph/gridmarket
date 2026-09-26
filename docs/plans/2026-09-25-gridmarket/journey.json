@@ -657,6 +657,14 @@
       "source": "Orchestrator as owner delegate (DEC-GM-043); answers the P2 Coordinator's S37 blocker",
       "decision": "Option (a): add named market constants MAX_ORDER_QUANTITY=50 and MAX_POSITION=200 (a pure refactor, no behaviour change) on lane-market2 in phase 1b (S05-const), which unblocks the kit test SEIT-GM-KIT-02 after the 1b landing. Rejected: (b) amending the exited red test, which weakens it; (c) dropping kit.",
       "why": "Naming the limits is better code and costs 2 lines. The kit and prompt docs reference the limits by name."
+    },
+    {
+      "id": "DEC-GM-065",
+      "decided_at": "2026-09-26T09:15:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "CMD-TEST-BOTS is not part of the S49 main-merge gate; it enters at S49-A with the bots lane. The attempt-2 revert of the main merge (e51b636) is undone by revert-of-revert. S52b (design port) and S05-const dispatched directly by the Orchestrator because the P1b Coordinator had not acked DIR-P1b-05..08; S05-const runs on light_implementer (mechanical 2-constant refactor). Design and market2 lanes join S49 after pages.",
+      "rationale": "test-bots files arrive with the bots lane; running it on the main merge alone always exits 2 (file not found). Every other gate on 3a986cb was green.",
+      "reversible": true
     }
   ],
   "stages": {
