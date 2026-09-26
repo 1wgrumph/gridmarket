@@ -809,6 +809,14 @@
       "decision": "Dispositions for the phase 1b Test Engineer findings. ATE-P1b-02 (proof binding): seit.json amended. SEIT-GM-UI-06 now states the owner design v2 tokens (DEC-GM-062); new rows are SEIT-GM-UI-06-V2 (S52a/S52b), SEIT-GM-MKT-07-ANOM, SEIT-GM-ADV-01-PERF (S05-anom) and SEIT-GM-QUAL-MUT-MKT (S54, gate_declarations.mutation). implementation.json binds S52a/S52b/S53 proof rows and adds slice records S05-const, S05-anom, S54 and S05-flake. ENTROPY_PROOF_CONFLICT: SEIT-GM-UI-07-API is amended so entropy is Shannon entropy in bits within 0..log2(k), matching the requirement; coverage stays 0..1. ATE-P1b-01 (live units unproven on an empty smoke DB): the repair adds a seeded regression test (one NP4-190-CD DA row plus one trade; expected_value and market_price on the same $/kWh-per-FC scale) in the router repair, next to F2's report-id case fix. ATE-P1b-03 (S28/S29 red-green binding): the repair gate records a JUnit green run of the 11 S28 ids on the repaired candidate. SPEC_WRITESET_GAP: DEC-GM-078; spec merges in phase 2 S12-E.",
       "rationale": "These are planning-owner gaps from slices added mid-phase. The Test Engineer correctly refused to invent rows. The entropy row contradicted its own requirement.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-084",
+      "decided_at": "2026-09-26T11:36:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "Answer to the P1b Coordinator's OWNER_DECISION_REQUIRED (D1/D2). Both integration flakes are test defects inside repair round 1 (DEC-GM-061 test-data rule), not new findings. D1: the pages phase1b.test.tsx '$24' query also matched wall-clock ':24'; fixed by S50-flake 0ef25fd, which scopes every value query to its panel (Orchestrator ran it 3x, 13/13 each). The design Overview zone-map aria-label was read before data loaded; fixed by S52a-flake on lane-design. D2: the Orchestrator dispatches IE13 itself from e30c917: revert ad3ccf7 (restores router), then merge views f1e6d97, pages 0ef25fd, the design tip after S52a-flake, and market2 c773c8e; full deterministic gate once plus mutation >= 70%. No second review. The final merge is the 1b candidate.",
+      "rationale": "Flaky queries were exposed only by running at integration scale; fixing tests to wait and scope is not a behaviour change. The Coordinator session ended with a question, so the Orchestrator finishes the mechanical tail directly.",
+      "reversible": true
     }
   ],
   "stages": {
