@@ -147,11 +147,18 @@ class SignalStore:
                 0,
                 (now - datetime.fromisoformat(row["fetched_at"])).total_seconds(),
             )
+            limit = 2 * POLL_MINUTES.get(row["report_id"], 5) * 60
+            if row["report_id"] == "ESR":  # A fresh fetch can still carry an old measurement.
+                measured = datetime.fromisoformat(row["interval_start"])
+                old = measured.tzinfo is None or (now - measured).total_seconds() > limit
+            else:
+                old = False
             result.append(
                 {
                     **{name: row[name] for name in Signal.__dataclass_fields__},
                     "age_s": age,
-                    "stale": age > 2 * POLL_MINUTES.get(row["report_id"], 5) * 60
+                    "stale": age > limit
+                    or old
                     or (str(self._path()), row["report_id"]) in self.failed
                     or (str(self._path()), "*") in self.failed,
                 }
@@ -215,7 +222,9 @@ def parse_snapshot(payload: dict) -> None:
     stats.snapshot_age_s = max(0, (datetime.now(UTC) - datetime.fromisoformat(at)).total_seconds())
 
 
-_ESR_TIMES = ("timestamp", "scedtimestamp", "intervalstart", "publishtime")
+# AGCExecTimeUTC is ERCOT's UTC stamp without an offset; AGCExecTime is Central
+# prevailing time, so it is deliberately not read.
+_ESR_TIMES = ("agcexectimeutc", "timestamp", "scedtimestamp", "intervalstart", "publishtime")
 _ESR_VALUES = (
     "systemwideesrchargingmw",
     "systemwidechargingmw",
@@ -226,11 +235,35 @@ _ESR_VALUES = (
 )
 
 
+def _field_names(payload: dict) -> list[str]:
+    """ERCOT sends fields as {"name", "label", "dataType"} objects; plain names pass through."""
+    return [f["name"] if isinstance(f, Mapping) else f for f in payload.get("fields") or []]
+
+
+def _esr_stamp(norm: Mapping[str, object]) -> datetime | None:
+    """The row's source measurement time in UTC, or None when it has no usable one."""
+    name = next((name for name in _ESR_TIMES if norm.get(name) is not None), None)
+    if name is None:
+        return None
+    try:
+        when = datetime.fromisoformat(str(norm[name]))
+    except ValueError:
+        return None
+    if when.tzinfo is None:
+        if name != "agcexectimeutc":
+            return None  # Unknown zone: never guess.
+        when = when.replace(tzinfo=UTC)
+    return when.astimezone(UTC)
+
+
 def parse_esr(payload: dict) -> None:
-    """Store the latest system-wide ESR charging MW row (negative = discharging)."""
-    fields = payload.get("fields") or []
+    """Store the latest system-wide ESR charging MW row (negative = discharging).
+
+    Rows without a source timestamp are skipped, never stamped with the fetch time.
+    """
+    fields = _field_names(payload)
     rows = payload.get("data") or []
-    latest: tuple[str, float, str] | None = None
+    latest: tuple[datetime, float, str] | None = None
     for row in rows:
         record = row if isinstance(row, Mapping) else dict(zip(fields, row))
         norm = {
@@ -240,20 +273,21 @@ def parse_esr(payload: dict) -> None:
         value = next((norm[name] for name in _ESR_VALUES if norm.get(name) is not None), None)
         if value is None:
             continue
-        stamp = next((norm[name] for name in _ESR_TIMES if norm.get(name) is not None), None)
-        stamp = str(stamp) if stamp is not None else datetime.now(UTC).isoformat()
-        published = str(record.get("publishTime", stamp))
+        stamp = _esr_stamp(norm)
+        if stamp is None:
+            continue
+        published = str(record.get("publishTime") or stamp.isoformat())
         if latest is None or stamp >= latest[0]:
             latest = (stamp, float(value), published)
     if latest is not None:
-        _store("ESR", "ERCOT", latest[0], 1, latest[1], "MW", latest[2])
+        _store("ESR", "ERCOT", latest[0].isoformat(), 1, latest[1], "MW", latest[2])
 
 
 def parse_report(report: str, payload: dict) -> None:
     if report == "ESR":
         parse_esr(payload)
         return
-    fields = payload["fields"]
+    fields = _field_names(payload)
     records = [dict(zip(fields, row, strict=True)) for row in payload["data"]]
     loads: dict[str, float] = {}
     for row in records:
