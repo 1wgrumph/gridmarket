@@ -641,6 +641,14 @@
       "source": "Owner design brief in chat (owner-approved Overview design v2), with amendments decided by the Orchestrator as owner delegate (DEC-GM-043)",
       "decision": "Adopt the owner's design v2 for the dashboard. Contract amendments: (1) AC-GM-UI-06 palette rule becomes 2 neutrals + 3 brand hues + at most 1 warm status hue, every text/surface pair >= 4.5:1 in both themes, and status never shown by colour alone. The palette is #000000, #F4F4F9, #586F7C, #B8DBD9 and #04724D, with warm #9E3D1C light and #F2A07E dark. (2) The font is Inter only, self-hosted under OFL. (3) The frozen hooks.ts may change for the API error text (fixing [object Object]) and for polling dedupe. (4) The UI types are pinned to REAL backend responses. Fields the backend does not serve render 'unavailable', and fixture shapes are not adopted. New phase 1b slices: S52a (Overview and shell tests for v2), S52b (port tokens, Inter, radius, Shell, PriceChart, ZoneMap and Overview, plus the open items: 3D link from VITE_VIEWS_URL, SVG arrows, labels >= 11px), S53 (pages restyle to v2). Phase 2 adds S35-v2 (Providers restyle), and the final wave's S48 builds on v2. Phase 1a lands with its current UI.",
       "why": "The owner approved the design and asked for the rework. Phase 1a is minutes from landing, so porting there would delay every later phase. Phase 1b's schedule is already set by the bots lane."
+    },
+    {
+      "id": "DEC-GM-063",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T13:59:31Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043: repair acceptance)",
+      "decision": "Land phase 1a at candidate 4985356 with ONE documented residual: market mutation score 65.43% (757/1157), below the 70% CMD-MUTATION threshold. All review findings F1-F6 and TE-1 to TE-4 are repaired. The Orchestrator re-ran the deterministic gates independently: test-all exit 0 (85 backend, 13 dashboard, 25 worker), lint 0, secrets 0. Coverage is 90.47%. Residual follow-up: new phase 1b slice S54 (Test Implementer, market mutation-kill tests) raises the score to >= 70% before phase 1b assurance, which re-runs mutation over the landed market code.",
+      "why": "The single repair round is spent (DEC-GM-038). The shortfall is test strength, not a behaviour defect, and every functional gate is green. Holding 1a blocks every later phase. The owner can override: the landing reverts cleanly with a revert PR."
     }
   ],
   "stages": {
@@ -2383,5 +2391,13 @@
     "manifest_digest": "cea7bcbdefd2f415064530b621cb4cee4284c6afcc81edf9b6116b8e5249730e",
     "candidate_revision": "f6bfb23",
     "owner_confirmed": "DEC-GM-045"
-  }
+  },
+  "phase_landings": [
+    {
+      "phase": "1a",
+      "candidate": "4985356",
+      "decision": "DEC-GM-063",
+      "landed_at": "2026-09-26T13:59:31Z"
+    }
+  ]
 }
