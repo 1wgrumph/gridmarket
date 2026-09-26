@@ -367,12 +367,6 @@ def providers() -> list[dict]:
     return [{"id": name, "display_name": cls.display_name} for name, cls in enabled().items()]
 
 
-@router.get("/v1/bots")
-def bots() -> list[dict]:
-    with market.connection() as db:
-        return market.rows(db, "SELECT id, provider_id FROM bots")
-
-
 @router.post("/v1/sandbox/keys")
 def sandbox(request: Request, body: dict) -> dict:
     label = body.get("label", "Sandbox")

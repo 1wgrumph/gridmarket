@@ -9,7 +9,7 @@ from unittest.mock import Mock
 import pytest
 from fastapi.testclient import TestClient
 
-from gridmarket_server import adversary, main, market, seed
+from gridmarket_server import adversary, main, market
 
 SCHEMA = Path(__file__).resolve().parents[1] / "gridmarket_server/schema.sql"
 ORIGIN = "https://gridmarket-worker.example"
@@ -112,26 +112,6 @@ def test_assurance_f5_activity_has_overview_fields(api):
         assert item["quantity"] == 1
         assert item["price_cents"] == 20
         assert item["reason"] is None
-
-
-def test_assurance_f6_bots_returns_empty_or_seeded_participants(api, tmp_path, monkeypatch):
-    _, client = api
-    response = client.get("/v1/bots")
-    assert response.status_code == 200
-    assert response.json() == []
-    path = tmp_path / "participants.db"
-    with sqlite3.connect(path) as db:
-        db.executescript(SCHEMA.read_text())
-        seed.seed(db)
-        expected = [
-            {"id": bot_id, "provider_id": provider_id}
-            for bot_id, provider_id in db.execute("SELECT id,provider_id FROM bots")
-        ]
-    assert expected
-    monkeypatch.setenv("GRIDMARKET_DB", str(path))
-    response = client.get("/v1/bots")
-    assert response.status_code == 200
-    assert response.json() == expected
 
 
 @pytest.mark.parametrize(
