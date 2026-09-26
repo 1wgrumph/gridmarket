@@ -123,7 +123,7 @@ describe('phase 1b dashboard pages', () => {
   it('SEIT-GM-UI-03 bot profile shows traits, economy, performance, and balance history', async () => {
     visit('#/bots/bot-7');
     expect(await screen.findByText(/risk appetite/i)).toBeTruthy();
-    for (const label of [/patience/i, /score follower/i, /saver/i, /household/i, /technician/i, /pay/i, /balance/i, /trades/i, /losses/i, /worst loss/i, /dormant/i]) {
+    for (const label of [/patience/i, /score follower/i, /saver/i, /household/i, /^(?:Not )?employed$/i, /pay/i, /balance/i, /trades/i, /losses/i, /worst loss/i, /dormant/i]) {
       expect(screen.getAllByText(label).length).toBeGreaterThan(0);
     }
     expect(await within(screen.getByText('Loss share').parentElement!).findByText('25%')).toBeTruthy();

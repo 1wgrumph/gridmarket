@@ -136,9 +136,12 @@ def list_bots() -> list[dict[str, object]]:
                 "bot_type": bot_type,
                 "provider_id": provider_id,
                 "dormant": bool(dormant),
+                "blend": json.loads(raw).get("blend", {bot_type: 1.0}),
+                **economy.stats(account_id),
             }
-            for bot_id, index, bot_type, provider_id, dormant in conn.execute(
-                "SELECT id, bot_index, bot_type, provider_id, dormant FROM bots ORDER BY bot_index"
+            for bot_id, index, bot_type, provider_id, dormant, account_id, raw in conn.execute(
+                "SELECT id, bot_index, bot_type, provider_id, dormant, account_id, profile_json "
+                "FROM bots ORDER BY bot_index"
             ).fetchall()
         ]
 

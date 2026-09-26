@@ -1,3 +1,4 @@
+import { centralTime as time } from '../format';
 import Panel from '../components/Panel';
 import { usePredictions, useResource } from '../hooks';
 import type { Prediction, RouterCheck } from '../api';
@@ -11,7 +12,6 @@ const bandTone = { alert: 'down', review: 'info', log: '' } as const;
 const levelTone = { high: 'up', medium: 'info', low: '' } as const;
 const pct = (p: number) => `${Math.round(p * 100)}%`;
 const signed = (n: number) => `${n > 0 ? '+' : ''}${n.toFixed(2)}`;
-const time = (iso: string) => iso.replace('T', ' ').replace(/:\d\dZ$/, 'Z');
 
 /** Signed contribution bar: positive grows right in turf, negative grows left in the warm status hue. */
 function FactorBar({ value, scale }: { value: number; scale: number }) {

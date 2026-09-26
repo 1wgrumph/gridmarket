@@ -1,5 +1,5 @@
 /** Typed HTTP boundary for the frozen public routes. */
-export type ApiError = { error: { code: string; message: string } };
+export type ApiError = { status?: number; retryAfter?: string; error: { code: string; message: string } };
 export type MarketStatus = { status: string; anomalies: unknown[] };
 export type Signal = { report_id: string; zone: string; value: number; unit: string; interval_start: string; interval_minutes: number; published_at: string; fetched_at: string; age_s: number; stale: boolean };
 export type Activity = { id: string; type: string; label: string; symbol: string | null; side: string | null; quantity: number | null; price_cents: number | null; reason: string | null; created_at: string; entry_type: string; subject_id: string | null };
@@ -15,7 +15,7 @@ export type RouterCheck = { check_id: string; family: 'market' | 'health'; subje
 
 export async function get<T>(path: string, key?: string): Promise<T> {
   const response = await fetch(path, { headers: key ? { Authorization: `Bearer ${key}` } : {} });
-  if (!response.ok) throw await response.json() as ApiError;
+  if (!response.ok) throw await responseError(response);
   return await response.json() as T;
 }
 
@@ -25,6 +25,17 @@ export async function send<T>(method: 'POST' | 'DELETE', path: string, body?: un
     headers: { 'Content-Type': 'application/json', ...(key ? { Authorization: `Bearer ${key}` } : {}), ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  if (!response.ok) throw await response.json() as ApiError;
+  if (!response.ok) throw await responseError(response);
   return await response.json() as T;
+}
+
+/** Edge proxies may return HTML or empty bodies instead of the API envelope. */
+async function responseError(response: Response): Promise<ApiError> {
+  const fallback = { code: `HTTP_${response.status}`, message: `Service unavailable (HTTP ${response.status})` };
+  let error = fallback;
+  try {
+    const body = await response.json();
+    if (typeof body?.error?.message === 'string' && typeof body?.error?.code === 'string') error = body.error;
+  } catch { /* Keep the readable HTTP status for non-JSON edge errors. */ }
+  return { error, status: response.status, retryAfter: response.headers?.get('Retry-After') ?? undefined };
 }

@@ -473,8 +473,8 @@ thead th{font-weight:500;letter-spacing:.02em}
 .factor-bar i.down{right:50%;background:var(--down)}
 .form-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;padding:0 18px 16px}
 .field{display:grid;gap:4px;font-size:11px;font-weight:500;letter-spacing:var(--track-caps);color:var(--muted)}
-.field input{min-height:36px;padding:6px 10px;border:1px solid var(--line);border-radius:var(--r-2);background:var(--page);color:var(--text);font-size:13px;letter-spacing:0;font-variant-numeric:tabular-nums}
-.field input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.field input,.market-board select{min-height:36px;padding:6px 10px;border:1px solid var(--line);border-radius:var(--r-2);background:var(--page);color:var(--text);font-size:13px;letter-spacing:0;font-variant-numeric:tabular-nums}
+.field input:focus-visible,.market-board select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .form-result{padding:0 18px 16px;font-size:12px}
 .key-box{padding:0 18px 16px}
 .key-box .judge-code{margin-top:6px;font-size:13px}
@@ -491,7 +491,7 @@ thead th{font-weight:500;letter-spacing:.02em}
 .stat-strip{grid-template-columns:1fr 1fr}
 .stat-strip>div:nth-child(odd){padding-left:0;border:0}
 .zone-cards{grid-template-columns:minmax(0,1fr)}
-.field input{min-height:44px}
+.field input,.market-board select{min-height:44px}
 .show-book{min-height:44px}}
 /* Keep zone controls usable at every viewport without overlapping hit targets. */
 .zone-map{min-width:280px;height:252px}
@@ -514,3 +514,16 @@ thead th{font-weight:500;letter-spacing:.02em}
 .empty.loading.reserve-predictions-zones{min-height:600px}
 .empty.loading.reserve-predictions-checks{min-height:200px}
 .empty.loading.reserve-bots{min-height:300px}
+
+/* Product browsing and its result stay together without stretching either panel. */
+.market-board{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:start}
+.market-detail{min-width:0;position:sticky;top:20px;display:grid;gap:20px}
+.market-products .table-scroll{max-height:640px}
+.market-detail .panel-copy,.market-detail .panel-head h2{overflow-wrap:anywhere}
+.market-detail .panel-head{flex-wrap:wrap}
+.market-board select{max-width:100%}
+.schedule-hours{display:flex;justify-content:space-between;padding:0 18px;color:var(--muted);font-size:11px}
+@media(max-width:760px){.market-board{grid-template-columns:minmax(0,1fr)}.market-detail{grid-row:1;position:static}.market-products{grid-row:2}}
+.empty.loading.reserve-profile{min-height:100vh}
+.market-trades{height:220px;overflow:auto}
+.empty.loading.reserve-market-products{min-height:100vh}

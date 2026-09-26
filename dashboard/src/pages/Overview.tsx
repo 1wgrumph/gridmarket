@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import { lazy, Suspense, useRef, useState, type CSSProperties } from 'react';
 import type { Activity, Bot, MarketProduct, MarketStatus, Prediction, ProductDetail, Provider, Signal, Trade } from '../api';
+import { usd as botMoney, parseTime } from '../format';
 import { useResource } from '../hooks';
 import { Disclosures } from '../components/Shell';
 import Icon from '../components/Icon';
@@ -15,9 +16,7 @@ const central = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat
 const hourFormat = central({ hour: 'numeric' });
 const clockFormat = central({ hour: '2-digit', minute: '2-digit', hour12: false });
 const dateFormat = central({ day: 'numeric', month: 'short', year: 'numeric' });
-/** Backend timestamps are ISO 8601 or SQLite UTC text ("YYYY-MM-DD HH:MM:SS"). */
-const parseTime = (value: string) => Date.parse(value.includes('T') ? value : `${value.replace(' ', 'T')}Z`);
-const usd = (value: number) => `${value < 0 ? '−' : ''}$${Math.abs(value).toFixed(Math.abs(value) < 1 && value !== 0 ? 4 : 2)}`;
+const usd = (value: number) => Number.isFinite(value) ? `${value < 0 ? '−' : ''}$${Math.abs(value).toFixed(Math.abs(value) < 1 && value !== 0 ? 4 : 2)}` : 'Unavailable';
 const mw = (value: number) => `${value < 0 ? '−' : ''}${Math.abs(value).toLocaleString('en-US', { maximumFractionDigits: 1 })}`;
 const upperZones = ['AEN', 'CPS', 'LCRA', 'RAYBN'];
 const zoneTitle = (zone: string) => {
@@ -217,10 +216,10 @@ export default function Overview() {
       <Panel title="Bots setting the pace" index="05" className="bots-panel" busy={bots.loading} meta={<span>P&L · SIMULATED</span>}>
         <div className="bots-body">{bots.data?.length ? <table className="bot-table">
           <thead><tr><th>Trader</th><th>Provider</th><th>P&L</th></tr></thead>
-          <tbody>{[...bots.data].sort((a, b) => b.pnl - a.pnl).slice(0, 6).map((b, i) => <tr key={b.id}>
-            <td><a href={`#/bots/${encodeURIComponent(b.id)}`} className="bot-identity"><span className="avatar">{String(i + 1).padStart(2, '0')}</span><span><strong>{b.id}</strong><small>{b.bot_type}</small></span></a></td>
+          <tbody>{[...bots.data].sort((a, b) => Number.isFinite(a.pnl) ? (Number.isFinite(b.pnl) ? b.pnl - a.pnl : -1) : Number.isFinite(b.pnl) ? 1 : 0).slice(0, 6).map((b, i) => <tr key={b.id}>
+            <td><a href={`#/bots/${encodeURIComponent(b.id)}`} className="bot-identity"><span className="avatar">{Number.isFinite(b.pnl) ? String(i + 1).padStart(2, '0') : '—'}</span><span><strong>{b.id}</strong><small>{b.bot_type}</small></span></a></td>
             <td><span className="provider-name">{providerName(b.provider_id)}</span></td>
-            <td className={`num ${b.pnl < 0 ? 'down-text' : 'up-text'}`}>{b.pnl >= 0 ? '+' : ''}{usd(b.pnl)}</td>
+            <td className={`num ${b.pnl < 0 ? 'down-text' : 'up-text'}`}>{Number.isFinite(b.pnl) && b.pnl >= 0 ? '+' : ''}{botMoney(b.pnl)}</td>
           </tr>)}</tbody>
         </table> : <Empty loading={bots.loading} label={bots.error ? 'Bots not yet available' : 'No bots yet'}/>}</div>
         <div className="panel-end"><span>Ranked by simulated P&L</span><a href="#/bots">All traders <Icon name="up-right"/></a></div>
