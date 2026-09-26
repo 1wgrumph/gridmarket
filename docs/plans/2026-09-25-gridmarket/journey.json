@@ -916,6 +916,13 @@
       "decided_by": "Orchestrator (delegate, planning owner)",
       "decision": "Stretch blockers: (1) the S38 MCP test compares wall-clock generated_at across two calls; test-only fix S38-fix drops volatile timestamps from both sides and asserts them present as ISO-8601; no product change. (2) S23 ML report ships fixture-only, labelled as such; the owner's live run is optional after the Worker deploy. (3) route.py ignores FileNotFoundError on concurrent slot pruning. Posted as DIR-PS-08. Also DIR-P2-13: integration-2 fails make lint on examples/strategy-template/strategy.py (format only); fixed before or in the phase 2 repair round, and the phase 2 gate includes lint.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-098",
+      "decided_at": "2026-09-26T14:39:00-05:00",
+      "decided_by": "Orchestrator (delegate)",
+      "decision": "Phase 2 review REPAIR_REQUIRED accepted: the one repair round covers F1 (Providers page bound to live documents + online-asset count), F2 (spec outage payload), F3 (Providers loading CLS at 390) and the lint format of examples/strategy-template/strategy.py; then the deterministic gate incl. lint and a providers CLS re-check. Out of phase 2 and into new slice S59 on lane ux (lands with the stretch): CLS at 390 on Market (0.20), Predictions (0.40), Bots (0.11); public read bucket raised from 10/s burst 20 to 30/s burst 60 per address so judges sharing a venue IP do not hit 429s (keyed limits unchanged; no AC fixes these numbers); S58-fix residuals; chart tick labels. The observer's no_before_image gap (no baseline or reference) is recorded; the Reviewer read the screenshots itself.",
+      "reversible": true
     }
   ],
   "stages": {
