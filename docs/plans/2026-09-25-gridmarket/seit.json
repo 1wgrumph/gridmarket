@@ -1880,6 +1880,46 @@
       "negative_or_failure_case": "a lane using a name not in CONTRACTS.md (contract test red) or an unrecorded frozen-file change fails the step",
       "command_or_procedure_id": "PROC-ASSEMBLY",
       "evidence": "assembly evidence files"
+    },
+    {
+      "seit_row_id": "SEIT-GM-UI-06-V2",
+      "acceptance_or_risk_id": "AC-GM-UI-06",
+      "design_or_contract_id": "DES-GM-UI",
+      "boundary_or_test_layer": "UI component (vitest)",
+      "positive_case": "the v2 Overview and shell render: rail links to every App.tsx route, prediction headline, key-number strip ('unavailable' for unserved fields), one-line disclosure with AC-GM-UI-02 text, price chart of real trades, zone table, order-book spread, bots panel or 'not yet available', anomalies panel from status.anomalies, sidebar freshness and API-key action, a single outage banner keeping last-known data, zone map with reduced-motion fallback, readable API errors, dark/light switch, 'Explore in 3D' only when VITE_VIEWS_URL is set",
+      "negative_or_failure_case": "any listed region missing, '[object Object]' error text, fabricated values for unserved fields, or more than one outage banner fails",
+      "command_or_procedure_id": "CMD-TEST-DASH",
+      "evidence": "dashboard/src/pages/Overview.test.tsx design-v2 suite (S52a, S52a-fix); red run 18 failed on f6fb7b3, green 31/31 on 8f6843a"
+    },
+    {
+      "seit_row_id": "SEIT-GM-MKT-07-ANOM",
+      "acceptance_or_risk_id": "AC-GM-UI-07",
+      "design_or_contract_id": "DES-GM-SETTLE",
+      "boundary_or_test_layer": "API (market status)",
+      "positive_case": "GET /v1/market/status returns anomalies as the newest 50 rows of the anomalies table {id, kind, subject_id, detail, created_at}, newest first; [] when empty",
+      "negative_or_failure_case": "a hardcoded [] with rows present, more than 50 rows, or wrong order fails",
+      "command_or_procedure_id": "CMD-TEST-MARKET",
+      "evidence": "backend/tests/test_market.py::test_s05_anom_status_returns_newest_50_rows (red on 44b7f63, green on 941c393)"
+    },
+    {
+      "seit_row_id": "SEIT-GM-ADV-01-PERF",
+      "acceptance_or_risk_id": "AC-GM-ADV-01",
+      "design_or_contract_id": "DES-GM-SETTLE",
+      "boundary_or_test_layer": "system (live uvicorn)",
+      "positive_case": "50 concurrent orders against a live uvicorn complete in < 1.0 s with no accepted order lost; 429s carry RATE_LIMITED and Retry-After (DEC-GM-071)",
+      "negative_or_failure_case": "burst >= 1.0 s, a lost acknowledged order, or a 429 without Retry-After fails",
+      "command_or_procedure_id": "CMD-TEST-MARKET",
+      "evidence": "backend/tests/test_market.py burst test (1.167 s on 44b7f63; 0.18-0.60 s on 941c393)"
+    },
+    {
+      "seit_row_id": "SEIT-GM-QUAL-MUT-MKT",
+      "acceptance_or_risk_id": "gate_declarations.mutation",
+      "design_or_contract_id": "DES-GM-SETTLE",
+      "boundary_or_test_layer": "mutation (mutmut)",
+      "positive_case": "make mutation MUTANTS=\"gridmarket_server.market.*\" reports a score >= 70%",
+      "negative_or_failure_case": "a score below 70% or no scored mutants fails",
+      "command_or_procedure_id": "CMD-MUTATION",
+      "evidence": "mutmut cicd stats: 66.29% before S54, 86.05% on lane-market2, 81.63% on integration-1b 1f24d53"
     }
   ],
   "proof_cases": [
@@ -4682,9 +4722,9 @@
         "CMD-SETUP completed in the worktree",
         "dashboard renders from the test slice's dashboard/src/fixtures/<name>.json only; fetch stubbed; no network"
       ],
-      "stimulus_or_procedure": "make test-dash \u2014 dashboard/package.json pins @astryxdesign/core 0.6.0, recharts 3.10.1 and react 19 (or the recorded DEC-GM-033 fallback shadcn/ui, Tailwind 4, recharts); the theme exposes a dark control-room theme with cyan accent and #5fdd91, #ff7a45, #f2c14e plus a light mode toggled by the shell switch",
-      "expected_result": "dashboard/package.json pins @astryxdesign/core 0.6.0, recharts 3.10.1 and react 19 (or the recorded DEC-GM-033 fallback shadcn/ui, Tailwind 4, recharts); the theme exposes a dark control-room theme with cyan accent and #5fdd91, #ff7a45, #f2c14e plus a light mode toggled by the shell switch",
-      "observable_evidence": "dashboard/src/pages/Overview.test.tsx ids tagged SEIT-GM-UI-06",
+      "stimulus_or_procedure": "make test-dash \u2014 dashboard/package.json pins @astryxdesign/core 0.6.0, recharts 3.10.1 and react 19; the theme implements owner design v2 (DEC-GM-062): neutrals #000000/#F4F4F9, brand #586F7C/#B8DBD9/#04724D, warm status #9E3D1C (light)/#F2A07E (dark), Inter only (self-hosted OFL), radius 2/4/8, dark and light modes via the shell theme switch",
+      "expected_result": "dashboard/package.json pins @astryxdesign/core 0.6.0, recharts 3.10.1 and react 19; the theme implements owner design v2 (DEC-GM-062): neutrals #000000/#F4F4F9, brand #586F7C/#B8DBD9/#04724D, warm status #9E3D1C (light)/#F2A07E (dark), Inter only (self-hosted OFL), radius 2/4/8, dark and light modes via the shell theme switch",
+      "observable_evidence": "dashboard/src/pages/Overview.test.tsx ids tagged SEIT-GM-UI-06 and the S52a design-v2 suite; screenshots /tmp/gm-evidence/S52b/visual/ (1280/390, dark/light)",
       "pass_fail_rule": "PASS iff exit 0; vitest reports 0 failed, 0 errors; `vite build` exits 0 and writes dashboard/dist/index.html, the evidence for SEIT-GM-UI-06 records the positive observation, and the negative case is checked as stated; typed gap (tool missing, not_run, backend unavailable) is never PASS",
       "method_fields": {
         "test_layer": "UI component + package inspection (vitest)",
@@ -4695,10 +4735,12 @@
           "red_green_command": "CMD-RED-GREEN"
         },
         "phase": [
-          "1a"
-        ]
+          "1a",
+          "1b"
+        ],
+        "amended_by": "DEC-GM-083"
       },
-      "negative_or_failure_case": "a different pinned version without a recorded fallback, a missing palette color, or no light mode fails"
+      "negative_or_failure_case": "a different pinned version, a missing v2 token, a non-Inter font, or no light mode fails"
     },
     {
       "id": "SEIT-GM-UI-07",
@@ -4758,9 +4800,10 @@
         "phase": [
           "1b"
         ],
-        "command_actor": "Product Implementer"
+        "command_actor": "Product Implementer",
+        "amended_by": "DEC-GM-083"
       },
-      "negative_or_failure_case": "coverage or entropy outside 0..1, or points count different from the bot count, fails"
+      "negative_or_failure_case": "coverage outside 0..1, entropy (Shannon, bits) outside 0..log2(k) where k is the number of bot types present, or points count different from the bot count, fails"
     },
     {
       "id": "SEIT-GM-EDGE-05",
@@ -5404,6 +5447,130 @@
         "command_actor": "Integration Engineer"
       },
       "negative_or_failure_case": "a lane using a name not in CONTRACTS.md (contract test red) or an unrecorded frozen-file change fails the step"
+    },
+    {
+      "id": "SEIT-GM-UI-06-V2",
+      "kind": "verification",
+      "requirement_id": "AC-GM-UI-06",
+      "design_id": "DES-GM-UI",
+      "command_id": "CMD-TEST-DASH",
+      "method": "inspection",
+      "preconditions": [
+        "candidate is the exact recorded slice exit or integrated SHA",
+        "CMD-SETUP completed in the worktree",
+        "dashboard renders from the test slice's dashboard/src/fixtures/<name>.json only; fetch stubbed; no network"
+      ],
+      "stimulus_or_procedure": "CMD-TEST-DASH \u2014 the v2 Overview and shell render: rail links to every App.tsx route, prediction headline, key-number strip ('unavailable' for unserved fields), one-line disclosure with AC-GM-UI-02 text, price chart of real trades, zone table, order-book spread, bots panel or 'not yet available', anomalies panel from status.anomalies, sidebar freshness and API-key action, a single outage banner keeping last-known data, zone map with reduced-motion fallback, readable API errors, dark/light switch, 'Explore in 3D' only when VITE_VIEWS_URL is set",
+      "expected_result": "the v2 Overview and shell render: rail links to every App.tsx route, prediction headline, key-number strip ('unavailable' for unserved fields), one-line disclosure with AC-GM-UI-02 text, price chart of real trades, zone table, order-book spread, bots panel or 'not yet available', anomalies panel from status.anomalies, sidebar freshness and API-key action, a single outage banner keeping last-known data, zone map with reduced-motion fallback, readable API errors, dark/light switch, 'Explore in 3D' only when VITE_VIEWS_URL is set",
+      "observable_evidence": "dashboard/src/pages/Overview.test.tsx design-v2 suite (S52a, S52a-fix); red run 18 failed on f6fb7b3, green 31/31 on 8f6843a",
+      "pass_fail_rule": "PASS iff exit 0; vitest reports 0 failed, 0 errors; `vite build` exits 0 and writes dashboard/dist/index.html, the evidence for SEIT-GM-UI-06 records the positive observation, and the negative case is checked as stated; typed gap (tool missing, not_run, backend unavailable) is never PASS",
+      "method_fields": {
+        "test_layer": "UI component (vitest)",
+        "tdd": {
+          "red_expected": true,
+          "test_slice": "S52a",
+          "product_slice": "S52b",
+          "red_green_command": "CMD-RED-GREEN"
+        },
+        "phase": [
+          "1b"
+        ],
+        "added_by": "DEC-GM-083"
+      },
+      "negative_or_failure_case": "any listed region missing, '[object Object]' error text, fabricated values for unserved fields, or more than one outage banner fails"
+    },
+    {
+      "id": "SEIT-GM-MKT-07-ANOM",
+      "kind": "verification",
+      "requirement_id": "AC-GM-UI-07",
+      "design_id": "DES-GM-SETTLE",
+      "command_id": "CMD-TEST-MARKET",
+      "method": "test",
+      "preconditions": [
+        "candidate is the exact recorded slice exit or integrated SHA",
+        "CMD-SETUP completed in the worktree",
+        "real SQLite database file under pytest tmp_path; SDK/bot tests use a real uvicorn server on an ephemeral 127.0.0.1 port"
+      ],
+      "stimulus_or_procedure": "CMD-TEST-MARKET \u2014 GET /v1/market/status returns anomalies as the newest 50 rows of the anomalies table {id, kind, subject_id, detail, created_at}, newest first; [] when empty",
+      "expected_result": "GET /v1/market/status returns anomalies as the newest 50 rows of the anomalies table {id, kind, subject_id, detail, created_at}, newest first; [] when empty",
+      "observable_evidence": "backend/tests/test_market.py::test_s05_anom_status_returns_newest_50_rows (red on 44b7f63, green on 941c393)",
+      "pass_fail_rule": "PASS iff exit 0; 0 failed, 0 errors; every SEIT-tagged test id in the three files passes, the test ids tagged SEIT-GM-MKT-06 pass, and the negative case is observed as stated; typed gap (tool missing, not_run, backend unavailable) is never PASS",
+      "method_fields": {
+        "test_layer": "API (market status)",
+        "tdd": {
+          "red_expected": true,
+          "test_slice": "S05-anom",
+          "product_slice": "S05-anom",
+          "red_green_command": "CMD-RED-GREEN"
+        },
+        "phase": [
+          "1b"
+        ],
+        "added_by": "DEC-GM-083"
+      },
+      "negative_or_failure_case": "a hardcoded [] with rows present, more than 50 rows, or wrong order fails"
+    },
+    {
+      "id": "SEIT-GM-ADV-01-PERF",
+      "kind": "verification",
+      "requirement_id": "AC-GM-ADV-01",
+      "design_id": "DES-GM-SETTLE",
+      "command_id": "CMD-TEST-MARKET",
+      "method": "test",
+      "preconditions": [
+        "candidate is the exact recorded slice exit or integrated SHA",
+        "CMD-SETUP completed in the worktree",
+        "real SQLite database file under pytest tmp_path; SDK/bot tests use a real uvicorn server on an ephemeral 127.0.0.1 port"
+      ],
+      "stimulus_or_procedure": "CMD-TEST-MARKET \u2014 50 concurrent orders against a live uvicorn complete in < 1.0 s with no accepted order lost; 429s carry RATE_LIMITED and Retry-After (DEC-GM-071)",
+      "expected_result": "50 concurrent orders against a live uvicorn complete in < 1.0 s with no accepted order lost; 429s carry RATE_LIMITED and Retry-After (DEC-GM-071)",
+      "observable_evidence": "backend/tests/test_market.py burst test (1.167 s on 44b7f63; 0.18-0.60 s on 941c393)",
+      "pass_fail_rule": "PASS iff exit 0; 0 failed, 0 errors; every SEIT-tagged test id in the three files passes, the test ids tagged SEIT-GM-MKT-06 pass, and the negative case is observed as stated; typed gap (tool missing, not_run, backend unavailable) is never PASS",
+      "method_fields": {
+        "test_layer": "system (live uvicorn)",
+        "tdd": {
+          "red_expected": true,
+          "test_slice": "S05-anom",
+          "product_slice": "S05-anom",
+          "red_green_command": "CMD-RED-GREEN"
+        },
+        "phase": [
+          "1b"
+        ],
+        "added_by": "DEC-GM-083"
+      },
+      "negative_or_failure_case": "burst >= 1.0 s, a lost acknowledged order, or a 429 without Retry-After fails"
+    },
+    {
+      "id": "SEIT-GM-QUAL-MUT-MKT",
+      "kind": "verification",
+      "requirement_id": "gate_declarations.mutation",
+      "design_id": "DES-GM-SETTLE",
+      "command_id": "CMD-MUTATION",
+      "method": "test",
+      "preconditions": [
+        "candidate is the exact recorded slice exit or integrated SHA",
+        "CMD-SETUP completed in the worktree",
+        "real SQLite database file under pytest tmp_path; SDK/bot tests use a real uvicorn server on an ephemeral 127.0.0.1 port"
+      ],
+      "stimulus_or_procedure": "CMD-MUTATION \u2014 make mutation MUTANTS=\"gridmarket_server.market.*\" reports a score >= 70%",
+      "expected_result": "make mutation MUTANTS=\"gridmarket_server.market.*\" reports a score >= 70%",
+      "observable_evidence": "mutmut cicd stats: 66.29% before S54, 86.05% on lane-market2, 81.63% on integration-1b 1f24d53",
+      "pass_fail_rule": "PASS iff exit 0; 0 failed, 0 errors; every SEIT-tagged test id in the three files passes, the test ids tagged SEIT-GM-MKT-06 pass, and the negative case is observed as stated; typed gap (tool missing, not_run, backend unavailable) is never PASS",
+      "method_fields": {
+        "test_layer": "mutation (mutmut)",
+        "tdd": {
+          "red_expected": true,
+          "test_slice": "S54",
+          "product_slice": "S54",
+          "red_green_command": "CMD-RED-GREEN"
+        },
+        "phase": [
+          "1b"
+        ],
+        "added_by": "DEC-GM-083"
+      },
+      "negative_or_failure_case": "a score below 70% or no scored mutants fails"
     }
   ],
   "planning_findings_for_plan_integrator": [

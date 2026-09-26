@@ -5057,7 +5057,10 @@
       "design_ids": [
         "DES-GM-UI"
       ],
-      "seit_proof_rows": [],
+      "seit_proof_rows": [
+        "SEIT-GM-UI-06",
+        "SEIT-GM-UI-06-V2"
+      ],
       "design_lenses": [
         "UI",
         "Accessibility"
@@ -5105,7 +5108,10 @@
       "design_ids": [
         "DES-GM-UI"
       ],
-      "seit_proof_rows": [],
+      "seit_proof_rows": [
+        "SEIT-GM-UI-06",
+        "SEIT-GM-UI-06-V2"
+      ],
       "design_lenses": [
         "UI",
         "Accessibility"
@@ -5154,7 +5160,12 @@
       "design_ids": [
         "DES-GM-UI"
       ],
-      "seit_proof_rows": [],
+      "seit_proof_rows": [
+        "SEIT-GM-UI-01-PAGES",
+        "SEIT-GM-UI-03",
+        "SEIT-GM-UI-07",
+        "SEIT-GM-UI-06"
+      ],
       "design_lenses": [
         "UI",
         "Accessibility"
@@ -5185,6 +5196,213 @@
       "model_route": {
         "snapshot_role": "implementer",
         "profile": "frontend"
+      },
+      "reasoning_level": {
+        "level": "profile",
+        "reason": "frontend profile per DEC-GM-024/044"
+      }
+    },
+    {
+      "authority_id": "GM-2026-09-25",
+      "dispatchable": true,
+      "parallel_safe": true,
+      "work_class": "judgement",
+      "human_decision": null,
+      "requirement_ids": [
+        "AC-GM-UI-06"
+      ],
+      "design_ids": [
+        "DES-GM-UI"
+      ],
+      "seit_proof_rows": [
+        "SEIT-GM-MKT-04"
+      ],
+      "design_lenses": [
+        "UI",
+        "Accessibility"
+      ],
+      "review_path": {
+        "reviewer": "phase",
+        "assurance": "phase",
+        "coverage_assist": "enabled-not-required"
+      },
+      "notes": "DEC-GM-064; exit fa3c6a1.",
+      "id": "S05-const",
+      "role": "Light Implementer",
+      "goal": "Name MAX_ORDER_QUANTITY=50 and MAX_POSITION=200 in market.py (pure refactor).",
+      "type": "feature",
+      "lane": "market2",
+      "branch": "gridmarket/lane-market2",
+      "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-market2",
+      "branch_base": "origin/main 44b7f63 (1a landing)",
+      "write_set": [
+        "backend/gridmarket_server/market.py"
+      ],
+      "command_ids": [
+        "CMD-TEST-MARKET",
+        "CMD-LINT"
+      ],
+      "stop_condition": "commands exit 0 at the exit commit; or return the typed failure.",
+      "model_route": {
+        "snapshot_role": "implementer",
+        "profile": "default"
+      },
+      "reasoning_level": {
+        "level": "profile",
+        "reason": "frontend profile per DEC-GM-024/044"
+      }
+    },
+    {
+      "authority_id": "GM-2026-09-25",
+      "dispatchable": true,
+      "parallel_safe": true,
+      "work_class": "judgement",
+      "human_decision": null,
+      "requirement_ids": [
+        "AC-GM-UI-06"
+      ],
+      "design_ids": [
+        "DES-GM-UI"
+      ],
+      "seit_proof_rows": [
+        "SEIT-GM-MKT-07-ANOM",
+        "SEIT-GM-ADV-01-PERF"
+      ],
+      "design_lenses": [
+        "UI",
+        "Accessibility"
+      ],
+      "review_path": {
+        "reviewer": "phase",
+        "assurance": "phase",
+        "coverage_assist": "enabled-not-required"
+      },
+      "notes": "DEC-GM-068, DEC-GM-071; exit 941c393.",
+      "id": "S05-anom",
+      "role": "Product Implementer",
+      "goal": "Serve anomalies in /v1/market/status; synchronous=NORMAL burst fix.",
+      "type": "feature",
+      "lane": "market2",
+      "branch": "gridmarket/lane-market2",
+      "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-market2",
+      "branch_base": "origin/main 44b7f63 (1a landing)",
+      "write_set": [
+        "backend/gridmarket_server/market.py",
+        "backend/gridmarket_server/api.py",
+        "backend/tests/test_market.py"
+      ],
+      "command_ids": [
+        "CMD-TEST-MARKET",
+        "CMD-TEST-ALL",
+        "CMD-LINT"
+      ],
+      "stop_condition": "commands exit 0 at the exit commit; or return the typed failure.",
+      "model_route": {
+        "snapshot_role": "implementer",
+        "profile": "default"
+      },
+      "reasoning_level": {
+        "level": "profile",
+        "reason": "frontend profile per DEC-GM-024/044"
+      }
+    },
+    {
+      "authority_id": "GM-2026-09-25",
+      "dispatchable": true,
+      "parallel_safe": true,
+      "work_class": "judgement",
+      "human_decision": null,
+      "requirement_ids": [
+        "AC-GM-UI-06"
+      ],
+      "design_ids": [
+        "DES-GM-UI"
+      ],
+      "seit_proof_rows": [
+        "SEIT-GM-QUAL-MUT-MKT"
+      ],
+      "design_lenses": [
+        "UI",
+        "Accessibility"
+      ],
+      "review_path": {
+        "reviewer": "phase",
+        "assurance": "phase",
+        "coverage_assist": "enabled-not-required"
+      },
+      "notes": "DEC-GM-063 follow-up; exit 683d494 (86.05%).",
+      "id": "S54",
+      "role": "Test Implementer",
+      "goal": "Market mutation-kill tests to reach >= 70%.",
+      "type": "feature",
+      "lane": "market2",
+      "branch": "gridmarket/lane-market2",
+      "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-market2",
+      "branch_base": "origin/main 44b7f63 (1a landing)",
+      "write_set": [
+        "backend/tests/test_market_mutation.py"
+      ],
+      "command_ids": [
+        "CMD-MUTATION",
+        "CMD-TEST-ALL"
+      ],
+      "stop_condition": "commands exit 0 at the exit commit; or return the typed failure.",
+      "model_route": {
+        "snapshot_role": "test_implementer",
+        "profile": "default"
+      },
+      "reasoning_level": {
+        "level": "profile",
+        "reason": "frontend profile per DEC-GM-024/044"
+      }
+    },
+    {
+      "authority_id": "GM-2026-09-25",
+      "dispatchable": true,
+      "parallel_safe": true,
+      "work_class": "judgement",
+      "human_decision": null,
+      "requirement_ids": [
+        "AC-GM-UI-06"
+      ],
+      "design_ids": [
+        "DES-GM-UI"
+      ],
+      "seit_proof_rows": [
+        "SEIT-GM-MKT-01",
+        "SEIT-GM-MKT-03",
+        "SEIT-GM-MKT-04",
+        "SEIT-GM-MKT-06"
+      ],
+      "design_lenses": [
+        "UI",
+        "Accessibility"
+      ],
+      "review_path": {
+        "reviewer": "phase",
+        "assurance": "phase",
+        "coverage_assist": "enabled-not-required"
+      },
+      "notes": "DEC-GM-075; exit 073446f.",
+      "id": "S05-flake",
+      "role": "Test Implementer",
+      "goal": "Keep test delivery hours >= 1 h ahead (top-of-hour flake).",
+      "type": "feature",
+      "lane": "market2",
+      "branch": "gridmarket/lane-market2",
+      "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-market2",
+      "branch_base": "origin/main 44b7f63 (1a landing)",
+      "write_set": [
+        "backend/tests/"
+      ],
+      "command_ids": [
+        "CMD-TEST-MARKET",
+        "CMD-TEST-ALL"
+      ],
+      "stop_condition": "commands exit 0 at the exit commit; or return the typed failure.",
+      "model_route": {
+        "snapshot_role": "test_implementer",
+        "profile": "default"
       },
       "reasoning_level": {
         "level": "profile",

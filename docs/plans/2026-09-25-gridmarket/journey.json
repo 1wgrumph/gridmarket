@@ -801,6 +801,14 @@
       "decision": "Realistic price cap: MAX_PRICE_CENTS = 500 ($5.00 per Flex Credit = $5,000/MWh, ERCOT's system-wide offer cap), with a floor of 0. Price above the cap is rejected with the existing VALIDATION_ERROR, so there is no contract change. New phase 2 slice S05-cap on lane-market3 after S05-prov. Docs, onboarding, the SDK and MCP state the cap.",
       "owner_quote": "yes add a realistic price cap",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-083",
+      "decided_at": "2026-09-26T11:05:00-05:00",
+      "decided_by": "Orchestrator (delegate, planning owner)",
+      "decision": "Dispositions for the phase 1b Test Engineer findings. ATE-P1b-02 (proof binding): seit.json amended. SEIT-GM-UI-06 now states the owner design v2 tokens (DEC-GM-062); new rows are SEIT-GM-UI-06-V2 (S52a/S52b), SEIT-GM-MKT-07-ANOM, SEIT-GM-ADV-01-PERF (S05-anom) and SEIT-GM-QUAL-MUT-MKT (S54, gate_declarations.mutation). implementation.json binds S52a/S52b/S53 proof rows and adds slice records S05-const, S05-anom, S54 and S05-flake. ENTROPY_PROOF_CONFLICT: SEIT-GM-UI-07-API is amended so entropy is Shannon entropy in bits within 0..log2(k), matching the requirement; coverage stays 0..1. ATE-P1b-01 (live units unproven on an empty smoke DB): the repair adds a seeded regression test (one NP4-190-CD DA row plus one trade; expected_value and market_price on the same $/kWh-per-FC scale) in the router repair, next to F2's report-id case fix. ATE-P1b-03 (S28/S29 red-green binding): the repair gate records a JUnit green run of the 11 S28 ids on the repaired candidate. SPEC_WRITESET_GAP: DEC-GM-078; spec merges in phase 2 S12-E.",
+      "rationale": "These are planning-owner gaps from slices added mid-phase. The Test Engineer correctly refused to invent rows. The entropy row contradicted its own requirement.",
+      "reversible": true
     }
   ],
   "stages": {
