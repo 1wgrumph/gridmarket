@@ -1039,6 +1039,20 @@
       "decided_by": "Orchestrator (delegate, planning owner) on independent planning review",
       "decision": "Stretch-2 planning review (Codex GPT-6 Astra high, verdict AMEND, 15 findings) adopted verbatim as amendments A1-A15 (stretch2-plan-review.md), superseding the matching plan text: captured authoritative bytes only; per-observation availability times (DAM visible from D-1, RT never informs its own interval); America/Chicago day with 92/96/100 quarters and HALF_EVEN cent ledger; AC/DC battery equations; concrete FixedSchedule/PriceBased/EsrInformed rules; simulated peak-flex procurement (17:00-21:00 Central, 25% of rated discharge, pro rata); ledger with opening and terminal marks and no double counting; provider_offline versus feed_interrupt semantics; live bot decisions advisory only (not executed); estimate and backup-hour maths; ESR dashboard sign conventions and history bounds; canonical-JSON run ids and API bounds; honest demo labels; S67 qualifies D before policy acceptance. S67 and S68-T were restarted on the amended contract (no work lost: neither had written files).",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-114",
+      "decided_at": "2026-09-26T16:05:00-05:00",
+      "decided_by": "Orchestrator (delegate, planning owner) on the owner-ordered sweep",
+      "decision": "Sweep dispositions (R1-R6 reported; R7 pending). Every reproduced finding is fixed, none filed as an issue: S76 lane esr (ERCOT/NWS data path as flown: R1-01..R1-16 except R1-15, R2-01, R3-01/05/06, R4-03..06/08/13/14, R6-03/04/05/10/14, R5-04/05); S76b lane esr after S76 (R4-07/09/12/15, R3-07/08, R6-06/13); S77 lane deploy (R5-01/02/03, R6-01/02/07/08/09/11/12, R4-01/02/11/16/17, R3-02, R2-02); S78 lane core (R2-03..08, R3-04); S79 lane api (R3-03/09/13, R5-07..12); S64 adds R3-10/11/12; godseye repair adds R1-15 and R5-06; PS lanes via DIR-PS-13 (R4-10 lane-jev, R4-06 lane-backtest). Each repair commits red tests first and proves the fix through the real boundary as flown.",
+      "reversible": true
+    },
+    {
+      "id": "DEC-GM-115",
+      "decided_at": "2026-09-26T16:21:00-05:00",
+      "decided_by": "Orchestrator (delegate authority, DEC-GM-043)",
+      "decision": "Phase 2 lands (PR #16, main 0188df3) on candidate fd1b9c4 with every deterministic gate at exit 0 except a typed gap: the final-SHA market mutation run stalled at 1,335 of 1,966 mutants (1,106 killed, 208 survived, 84% of scored; worst case 57% if all unscored survived). Accepted because the complete phase 1b run was 81.63%, the stretch gate reruns market mutation in full, and S78 repairs market.py. The sweep's pre-existing defects are disclosed in the PR and repaired in lanes landing with S18.",
+      "reversible": true
     }
   ],
   "stages": {
