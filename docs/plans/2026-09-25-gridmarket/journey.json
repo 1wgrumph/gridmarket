@@ -660,7 +660,7 @@
     },
     {
       "id": "DEC-GM-065",
-      "decided_at": "2026-09-26T09:15:00-05:00",
+      "decided_at": "2026-09-26T09:12:00-05:00",
       "decided_by": "Orchestrator (delegate, DEC-GM-043)",
       "decision": "CMD-TEST-BOTS is not part of the S49 main-merge gate; it enters at S49-A with the bots lane. The attempt-2 revert of the main merge (e51b636) is undone by revert-of-revert. S52b (design port) and S05-const dispatched directly by the Orchestrator because the P1b Coordinator had not acked DIR-P1b-05..08; S05-const runs on light_implementer (mechanical 2-constant refactor). Design and market2 lanes join S49 after pages.",
       "rationale": "test-bots files arrive with the bots lane; running it on the main merge alone always exits 2 (file not found). Every other gate on 3a986cb was green.",
@@ -668,7 +668,7 @@
     },
     {
       "id": "DEC-GM-066",
-      "decided_at": "2026-09-26T09:25:00-05:00",
+      "decided_at": "2026-09-26T09:13:00-05:00",
       "decided_by": "Orchestrator (delegate, DEC-GM-043)",
       "decision": "S17 admission order: write Cargo.toml and generate Cargo.lock first, then make depscan RUST=1 must pass before any Rust source is written or built. Redispatch S17 once on the heavyweight route. S14 merges origin/main now that 1a has landed.",
       "rationale": "S17 attempt 1 stopped because cargo audit ran before a lockfile could exist, which is a sequencing defect in the plan. The scan remains a hard gate.",
@@ -676,7 +676,7 @@
     },
     {
       "id": "DEC-GM-067",
-      "decided_at": "2026-09-26T09:35:00-05:00",
+      "decided_at": "2026-09-26T09:15:00-05:00",
       "decided_by": "Owner (in chat)",
       "decision": "Rust is out of scope; the stack is Python + React. S17 (PyO3 matching core) is dropped and S18-G (the rust lane merge) is removed. GRIDMARKET_ENGINE stays on the Python engine. Supersedes the S17 part of DEC-GM-066.",
       "owner_quote": "we dont need rust I thought we settled on python and react",
@@ -684,7 +684,7 @@
     },
     {
       "id": "DEC-GM-068",
-      "decided_at": "2026-09-26T09:45:00-05:00",
+      "decided_at": "2026-09-26T09:16:00-05:00",
       "decided_by": "Orchestrator (delegate, DEC-GM-043)",
       "decision": "New market-lane slice S05-anom on lane-market2 (1b), after S05-const and before S54. It serves real anomalies (anomalies table rows, newest 50) in /v1/market/status, replacing the hardcoded [], and fixes the 50-order burst to under 0.5 s, profiled first. This unblocks S14 (adversary) without Rust and feeds the design v2 anomalies panel.",
       "rationale": "S14 is 4/6 green: market.py:499 hardcodes anomalies [] (DEC-GM-058 added only the key), and the burst takes 2.0-2.8 s against a 1 s bound. Both are market-owned files, outside the stretch write sets. Rust is out (DEC-GM-067), so the fix must be in Python.",
@@ -692,7 +692,7 @@
     },
     {
       "id": "DEC-GM-069",
-      "decided_at": "2026-09-26T10:05:00-05:00",
+      "decided_at": "2026-09-26T09:19:00-05:00",
       "decided_by": "Orchestrator (delegate, DEC-GM-043)",
       "decision": "S11 blockers: (1) The S10 spot fixture symbol is wrong. It is corrected to the market-generated SPOT-<zone>-<YYYYMMDDHH>, keeping every assertion. The market keeps its stable listing-time spot class. (2) population.sample arrives with the S29 exit in 1b. (3) New phase 2 slice S05-prov on lane-market3 after landed/1b: move the assets/reservations SQL from market.py into the market-owned providers package. This is a pure move with no contract name changes. S12 merges it before lonestar.",
       "rationale": "Putting S05-prov in phase 2 keeps 1b short (S05-const, S05-anom, S54). Reclassifying spot by delivery hour would flip hold rules on open orders mid-life, a market-integrity risk. The direct SQL is a real CONTRACTS deviation (reservations go via the provider layer).",
@@ -700,7 +700,7 @@
     },
     {
       "id": "DEC-GM-070",
-      "decided_at": "2026-09-26T10:10:00-05:00",
+      "decided_at": "2026-09-26T09:19:00-05:00",
       "decided_by": "Orchestrator (delegate, DEC-GM-043)",
       "decision": "The S49 integration engineer is authorized to revert-the-revert for any lane whose earlier assembly merge was reverted, then merge the repaired tip; b58d6c4 (bots) now. This is a standing rule for all assemblies, and not an owner question.",
       "rationale": "Git treats a reverted merge's commits as already merged, so re-merging the repaired tip applies only the new commits onto the reverted tree and conflicts. Revert-of-revert then merge is the standard remedy and changes no lane content.",
