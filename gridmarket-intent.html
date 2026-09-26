@@ -1,0 +1,1129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GridMarket — Hackathon Intent and Build Specification</title>
+<style>
+:root {
+  --bg: #f7f8fa;
+  --paper: #ffffff;
+  --text: #18202a;
+  --muted: #65707d;
+  --border: #e3e7ec;
+  --accent: #1f5f99;
+  --code: #f1f4f7;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.62;
+}
+main {
+  max-width: 980px;
+  margin: 40px auto;
+  background: var(--paper);
+  padding: 56px 64px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(20, 30, 45, 0.06);
+}
+h1 { font-size: 2.35rem; line-height: 1.15; margin-top: 0; }
+h2 { margin-top: 2.3rem; padding-top: .5rem; border-top: 1px solid var(--border); }
+h3 { margin-top: 1.6rem; }
+a { color: var(--accent); }
+blockquote {
+  margin: 1.2rem 0;
+  padding: .8rem 1.1rem;
+  border-left: 4px solid var(--accent);
+  background: #f6f9fc;
+}
+pre {
+  overflow-x: auto;
+  padding: 16px;
+  border-radius: 10px;
+  background: #0f1720;
+  color: #edf2f7;
+}
+code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+p code, li code {
+  background: var(--code);
+  padding: .1rem .35rem;
+  border-radius: 5px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2rem 0;
+}
+th, td {
+  text-align: left;
+  border: 1px solid var(--border);
+  padding: .65rem .75rem;
+  vertical-align: top;
+}
+th { background: #f4f6f8; }
+hr { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
+@media (max-width: 760px) {
+  main { margin: 0; padding: 28px 20px; border: 0; border-radius: 0; }
+  h1 { font-size: 1.9rem; }
+}
+@media print {
+  body { background: white; }
+  main { max-width: none; margin: 0; box-shadow: none; border: 0; padding: 0; }
+  a { color: black; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<main>
+<pre># GridMarket — Hackathon Intent and Build Specification
+
+**Working title:** GridMarket  
+**Event:** Base / AITX Talent Hackathon  
+**Status:** Weekend MVP intent  
+**Primary objective:** Build a provider-neutral, API-first simulated market for distributed energy flexibility using real ERCOT market data.
+
+---
+
+## 1. Background — Why I Am Building This
+
+Distributed batteries are becoming active grid resources rather than passive backup devices. Companies such as Base coordinate residential batteries so stored energy can respond to grid conditions, wholesale prices, reliability needs, and periods of scarcity.
+
+The idea behind GridMarket is to explore the next layer above that infrastructure:
+
+&gt; **What if customers could participate in a market for the economic value of their battery flexibility, and what if that market were open to humans, algorithms, AI agents, and multiple energy providers through one common platform?**
+
+The hackathon is a good environment to test this because the concept combines:
+
+- real ERCOT market and grid data;
+- distributed-energy orchestration;
+- customer-facing energy economics;
+- predictive analytics;
+- algorithmic and AI-assisted trading;
+- platform APIs;
+- provider integrations;
+- security and adversarial resilience.
+
+The goal is **not** to recreate ERCOT, become a retail electric provider, or launch a regulated financial exchange during the hackathon. The goal is to build a realistic simulation that demonstrates how such a platform could work.
+
+The platform should answer four questions:
+
+1. Can real ERCOT data create a believable simulated energy-flexibility market?
+2. Can customers use predictions to decide when future flexibility is likely to become more valuable?
+3. Can multiple battery providers expose their customers to the same market through a normalized adapter?
+4. Can humans, algorithms, and AI agents all trade through the same safe API?
+
+---
+
+## 2. Product Intent
+
+GridMarket is a **simulated distributed-energy exchange and predictive-analysis platform**.
+
+It allows simulated energy customers to:
+
+- buy and sell flexibility credits;
+- trade simulated future flexibility contracts;
+- view predictions for energy scarcity and future flexibility value;
+- automate trading with rules, algorithms, or AI agents;
+- participate through Base-like energy providers connected through a provider adapter;
+- test strategies through a public sandbox API.
+
+Real ERCOT data drives market conditions. Battery assets, customer accounts, trades, settlement, and provider fleets are simulated for the hackathon.
+
+---
+
+## 3. Core Product Thesis
+
+Energy flexibility has different value depending on:
+
+- location;
+- time;
+- expected demand;
+- available generation;
+- generator outages;
+- renewable availability;
+- transmission congestion;
+- current and expected market prices.
+
+A customer with a battery therefore has an economic resource whose future value can change throughout the day.
+
+GridMarket makes that value:
+
+1. **visible** through predictive analytics;
+2. **tradable** through spot and future flexibility markets;
+3. **programmable** through an API;
+4. **portable** across energy providers through adapters;
+5. **safer** through policy, risk, and security controls.
+
+---
+
+## 4. Simulation Model
+
+### 4.1 Sandbox accounts
+
+Every generated user account begins with:
+
+**$1,000 of simulated trading value.**
+
+In the UI this may be displayed as **$1,000 demo credits**, but internally it should be modeled as simulated cash so it is not confused with energy Flex Credits.
+
+Each account tracks:
+
+- simulated cash balance;
+- Flex Credit inventory;
+- open orders;
+- future positions;
+- realized P&amp;L;
+- unrealized P&amp;L;
+- battery assets;
+- reserved battery capacity;
+- transaction history;
+- API credentials;
+- risk-policy settings.
+
+No real money is used.
+
+### 4.2 Simulated battery assets
+
+Each account may have one or more simulated batteries.
+
+Example:
+
+```yaml
+battery_id: bat_001
+provider: base-sim
+zone: LZ_HOUSTON
+capacity_kwh: 20
+state_of_charge_kwh: 15
+minimum_reserve_kwh: 8
+available_flexibility_kwh: 7
+max_charge_kw: 5
+max_discharge_kw: 5
+online: true
+```
+
+The market must never allow committed capacity to exceed verified available capacity.
+
+---
+
+## 5. Flex Credits
+
+A **Flex Credit** is a simulated unit representing the commitment of battery flexibility for a specific delivery interval.
+
+For the hackathon:
+
+&gt; **1 Flex Credit = 1 kWh of verified battery flexibility for a defined interval.**
+
+A Flex Credit is **not** a Renewable Energy Certificate (REC), cryptocurrency, or claim that a specific electron moves from one house to another.
+
+Example:
+
+```text
+Seller:
+  Available battery flexibility: 8 kWh
+  Minimum reserve: 40%
+
+Offer:
+  Sell 5 Flex Credits
+  Delivery: 6:00–7:00 PM
+  Minimum price: $0.20 / credit
+```
+
+---
+
+## 6. Spot Flexibility Market
+
+The spot market allows users to buy or sell Flex Credits for a near-term delivery interval.
+
+Initial market behavior:
+
+- limit orders;
+- buy and sell sides;
+- price-time priority;
+- asset-capacity reservation before accepting a sell order;
+- atomic matching;
+- append-only trade ledger;
+- simulated settlement.
+
+Example:
+
+```text
+BUY  4 FLEX-HOUSTON-18:00 @ &lt;= $0.24
+SELL 4 FLEX-HOUSTON-18:00 @ &gt;= $0.21
+
+Market clears at the configured matching price.
+```
+
+---
+
+## 7. Simulated Future Flexibility Market
+
+Users may trade contracts representing future flexibility value.
+
+Example product:
+
+```yaml
+symbol: FLEX-LZ_HOUSTON-2026-09-26-18
+zone: LZ_HOUSTON
+delivery_start: 2026-09-26T18:00
+delivery_end: 2026-09-26T19:00
+unit: 1_kwh_flexibility
+settlement: simulated_cash
+```
+
+The MVP should use a simplified settlement model.
+
+The platform must clearly state that these are **simulated future/forward flexibility contracts**, not real regulated commodity futures.
+
+MVP functions:
+
+- create future products for upcoming intervals;
+- buy/sell positions;
+- show market price;
+- calculate unrealized P&amp;L;
+- settle at expiration against a defined simulated reference value;
+- enforce position limits and account balance constraints.
+
+Do **not** add options, leverage, sophisticated margin, or real-money settlement during the weekend MVP.
+
+---
+
+## 8. ERCOT Data Layer
+
+Real ERCOT data should drive the simulation.
+
+### MVP data signals
+
+1. Real-Time Settlement Point Prices (SPP)
+2. Day-Ahead Settlement Point Prices
+3. Current/load forecast data
+4. Wind forecasts
+5. Solar forecasts
+6. Resource outage capacity
+7. Transmission congestion / binding constraints
+8. Shadow prices
+
+### Why outages matter
+
+ERCOT publishes **Hourly Resource Outage Capacity** aggregated by Load Zone for the next 168 hours and updates the report hourly.
+
+This can become a forward scarcity signal:
+
+```text
+More expected outages
++ high expected demand
++ weak renewable forecast
+= potentially higher future scarcity/value
+```
+
+### Why congestion matters
+
+ERCOT publishes public SCED shadow prices and binding transmission constraints.
+
+Congestion allows GridMarket to model the idea that flexibility can have different value in different locations.
+
+A battery in one zone may therefore have a different modeled opportunity than an equivalent battery elsewhere.
+
+---
+
+## 9. Predictive Analysis Tool
+
+Predictive analytics should be a **core product feature**, not an optional visualization.
+
+The tool should help a user answer:
+
+&gt; **When is flexibility likely to become more valuable, and why?**
+
+### 9.1 Initial inputs
+
+The predictive engine should consider:
+
+- current real-time price;
+- day-ahead price;
+- recent price movement;
+- expected system/load-zone demand;
+- generator outage capacity;
+- change in outage capacity;
+- congestion;
+- binding constraints;
+- shadow prices;
+- wind forecast;
+- solar forecast;
+- historical behavior for comparable conditions.
+
+### 9.2 Initial model
+
+For the first implementation, prefer an explainable deterministic or statistical scoring model.
+
+Example conceptual score:
+
+```text
+Opportunity Score =
+    Price Spread
+  + Load Pressure
+  + Outage Pressure
+  + Congestion Pressure
+  + Renewable Deficit
+```
+
+Each factor should be normalized before combining them.
+
+Do not present this score as guaranteed profit.
+
+### 9.3 Example output
+
+```text
+Houston — 6 PM Flexibility Outlook
+
+Expected scarcity: HIGH
+Confidence: 78%
+
+Market:
+Current simulated future: $0.19 / credit
+Predicted flexibility value: $0.26 / credit
+
+Drivers:
++ Generator outage capacity increasing
++ Binding congestion increasing
++ High forecast demand
++ Solar production falling
+- Moderate wind forecast
+
+Interpretation:
+Future flexibility may be undervalued relative to the current simulation price.
+```
+
+### 9.4 Stretch model
+
+If the platform is stable and time remains:
+
+- train XGBoost/LightGBM on historical ERCOT data;
+- compare model output to deterministic score;
+- expose feature importance;
+- backtest predictions against historical settlement prices.
+
+The model should remain explainable to judges.
+
+---
+
+## 10. Provider Adapter / Plugin Architecture
+
+GridMarket should not be tied to a single energy company.
+
+A Base-like provider connects to the platform through a normalized provider interface.
+
+Example adapter contract:
+
+```text
+getCustomers()
+getAssets()
+getStateOfCharge()
+getAvailableCapacity()
+getMinimumReserve()
+getChargeLimit()
+getDischargeLimit()
+
+reserveCapacity()
+releaseCapacity()
+verifyDelivery()
+
+getAssetStatus()
+```
+
+The provider continues to own:
+
+- customer relationship;
+- physical battery;
+- firmware;
+- telemetry;
+- device safety;
+- local dispatch authority.
+
+GridMarket owns:
+
+- normalized asset representation;
+- market participation;
+- order lifecycle;
+- prediction;
+- simulated settlement;
+- user portfolio;
+- API access;
+- market-level risk controls.
+
+### Weekend provider implementations
+
+Create at least:
+
+```text
+providers/
+  base-simulator/
+  generic-bess/
+```
+
+Stretch:
+
+```text
+  solar-plus-storage-simulator/
+```
+
+This demonstrates that the market is a platform rather than a one-off Base application.
+
+---
+
+## 11. Public Developer API
+
+The platform should expose the same trading interface used by the first-party application.
+
+### Market
+
+```text
+GET /v1/market
+GET /v1/market/{symbol}
+GET /v1/market/history
+GET /v1/predictions
+GET /v1/predictions/{zone}
+```
+
+### Account
+
+```text
+GET /v1/account
+GET /v1/portfolio
+GET /v1/positions
+GET /v1/trades
+```
+
+### Trading
+
+```text
+POST   /v1/orders
+GET    /v1/orders
+GET    /v1/orders/{id}
+DELETE /v1/orders/{id}
+```
+
+### Energy assets
+
+```text
+GET /v1/providers
+GET /v1/assets
+GET /v1/assets/{id}
+```
+
+### Stretch
+
+```text
+WS /v1/market/stream
+WS /v1/orders/stream
+```
+
+---
+
+## 12. Algorithms and AI Agents
+
+GridMarket should support a progression of automation:
+
+```text
+Manual Trading
+      ↓
+Rules
+      ↓
+Algorithms
+      ↓
+AI Agents
+```
+
+Every method should ultimately submit orders through the same trading API.
+
+### Example algorithm
+
+```python
+prediction = client.predictions(
+    zone=&quot;LZ_HOUSTON&quot;,
+    delivery=&quot;18:00&quot;
+)
+
+if (
+    prediction.expected_value &gt; prediction.market_price * 1.20
+    and prediction.confidence &gt; 0.75
+):
+    client.buy(
+        symbol=&quot;FLEX-LZ_HOUSTON-18&quot;,
+        quantity=5
+    )
+```
+
+### Example AI intent
+
+A user could eventually specify:
+
+&gt; Keep my battery above 45%, minimize my expected electricity cost, and use spare capacity when the predicted opportunity is attractive.
+
+The AI must not bypass policy checks.
+
+Flow:
+
+```text
+AI / Algorithm
+      |
+      v
+Order Intent
+      |
+      v
+Policy + Risk Engine
+      |
+      +-- minimum reserve?
+      +-- sufficient funds?
+      +-- capacity available?
+      +-- position limit?
+      +-- rate limit?
+      +-- user authorization?
+      |
+      v
+Market Engine
+```
+
+---
+
+## 13. Judge / Developer Sandbox
+
+A key demo objective is allowing another developer to interact with the market quickly.
+
+The GitHub repository should contain:
+
+```text
+/examples
+  /python-trader
+  /typescript-trader
+  /ai-agent
+
+/sdk
+  /python
+  /typescript
+```
+
+A judge should be able to:
+
+1. obtain a sandbox API key;
+2. clone/copy a minimal example;
+3. change a few lines;
+4. submit an order;
+5. immediately see that order appear on the live GridMarket dashboard.
+
+Example:
+
+```python
+from gridmarket import Client
+
+client = Client(&quot;demo-key&quot;)
+
+print(client.market(&quot;FLEX-LZ_HOUSTON-18&quot;))
+
+client.buy(
+    symbol=&quot;FLEX-LZ_HOUSTON-18&quot;,
+    quantity=2,
+    max_price=0.22
+)
+```
+
+This interaction is one of the highest-value demonstrations of the platform idea.
+
+---
+
+## 14. Authentication
+
+Authentication must not become the critical path of the hackathon.
+
+### Preferred architecture
+
+```text
+Human
+  |
+Google OAuth
+  |
+GridMarket Account
+  |
+Generate API Key
+  |
+Bot / AI / Algorithm
+```
+
+### Weekend priority
+
+**Machine access:** API key first.
+
+```http
+Authorization: Bearer gm_demo_xxxxx
+```
+
+**Human login:** Google OAuth only if the core market is already working.
+
+OAuth demonstrates product maturity but is less important than a functional market, predictions, and API.
+
+---
+
+## 15. Security, Risk, and Adversarial Behavior
+
+Because GridMarket combines energy assets, trading, APIs, and automation, adversarial behavior should be visible in the design.
+
+### Primary threats
+
+| Threat | Example |
+|---|---|
+| Double commitment | Same battery capacity sold twice |
+| Telemetry spoofing | Battery reports more energy than it has |
+| Replay | Old valid order or telemetry reused |
+| Oracle manipulation | Market signal intentionally corrupted |
+| Sybil accounts | Many fake customers manipulate demand |
+| Spoofing | Fake orders influence apparent market price |
+| Wash trading | Related accounts trade with themselves |
+| Race condition | Two trades reserve the same capacity |
+| Provider outage | Provider disappears during delivery |
+| Bot runaway | Bad algorithm rapidly loses account funds |
+| Capacity default | Seller cannot satisfy a promised interval |
+| API abuse | Automated client floods market endpoints |
+
+### Required MVP controls
+
+- atomic capacity reservation;
+- idempotent order submission;
+- order nonce/request IDs;
+- minimum battery reserve;
+- API rate limits;
+- per-account position limits;
+- maximum daily simulated loss;
+- maximum order size;
+- kill switch;
+- provider health state;
+- append-only audit trail;
+- anomaly flags;
+- market halt capability.
+
+---
+
+## 16. Core Architecture
+
+```text
+                         ┌─────────────────────┐
+                         │       ERCOT         │
+                         │ prices / load /     │
+                         │ renewables / outage │
+                         │ congestion          │
+                         └─────────┬───────────┘
+                                   │
+                                   ▼
+                         ┌─────────────────────┐
+                         │ Market Data Service │
+                         └─────────┬───────────┘
+                                   │
+                                   ▼
+                         ┌─────────────────────┐
+                         │ Predictive Engine   │
+                         └─────────┬───────────┘
+                                   │
+                     ┌─────────────┴─────────────┐
+                     │                           │
+                     ▼                           ▼
+              ┌─────────────┐             ┌──────────────┐
+              │ Spot Market │             │ Future Market│
+              └──────┬──────┘             └──────┬───────┘
+                     └─────────────┬──────────────┘
+                                   ▼
+                         ┌─────────────────────┐
+                         │ Matching / Risk     │
+                         │ Engine              │
+                         └─────────┬───────────┘
+                                   │
+                                   ▼
+                         ┌─────────────────────┐
+                         │ Settlement Ledger   │
+                         └─────────┬───────────┘
+                                   │
+                     ┌─────────────┴─────────────┐
+                     │                           │
+                     ▼                           ▼
+             ┌────────────────┐        ┌─────────────────┐
+             │ Provider SDK   │        │ Trading API     │
+             └───────┬────────┘        └────────┬────────┘
+                     │                          │
+            ┌────────┼────────┐        ┌────────┼─────────┐
+            ▼        ▼        ▼        ▼        ▼         ▼
+          Base     Other   Generic   Human     Bot       AI
+          Sim      Fleet    BESS
+```
+
+---
+
+## 17. Suggested Core Data Model
+
+### User
+
+```text
+id
+email
+display_name
+simulated_cash
+created_at
+```
+
+### Asset
+
+```text
+id
+user_id
+provider_id
+zone
+capacity_kwh
+state_of_charge_kwh
+minimum_reserve_kwh
+available_kwh
+status
+```
+
+### MarketProduct
+
+```text
+id
+symbol
+zone
+delivery_start
+delivery_end
+product_type
+status
+```
+
+### Order
+
+```text
+id
+account_id
+product_id
+side
+quantity
+limit_price
+filled_quantity
+status
+created_at
+```
+
+### Trade
+
+```text
+id
+product_id
+buy_order_id
+sell_order_id
+quantity
+price
+executed_at
+```
+
+### Position
+
+```text
+id
+account_id
+product_id
+quantity
+average_price
+realized_pnl
+unrealized_pnl
+```
+
+### Prediction
+
+```text
+zone
+delivery_time
+expected_value
+confidence
+load_score
+outage_score
+congestion_score
+renewable_score
+generated_at
+```
+
+---
+
+## 18. Weekend MVP Priority
+
+### P0 — Must exist
+
+1. ERCOT data ingestion.
+2. Simulated users with $1,000 starting balance.
+3. Simulated batteries.
+4. Spot Flex Credit products.
+5. Future Flex Credit products.
+6. Order submission.
+7. Basic matching engine.
+8. Portfolio / P&amp;L.
+9. Predictive dashboard.
+10. Outage signal.
+11. Congestion/shadow-price signal.
+12. Public REST API.
+13. Clean live dashboard.
+14. Seeded simulated people continuously interacting with the market.
+
+### P1 — High-value differentiators
+
+15. Provider adapter architecture.
+16. Base simulator adapter.
+17. Generic provider adapter.
+18. Python trading example.
+19. TypeScript trading example.
+20. API key generation.
+21. Adversarial simulation.
+22. Market kill switch / anomaly display.
+
+### P2 — Only after the platform is stable
+
+23. Google OAuth.
+24. Personal algorithmic trading bot.
+25. AI trading agent.
+26. ML prediction model.
+27. WebSockets.
+28. Historical backtesting dashboard.
+29. More sophisticated market clearing.
+
+---
+
+## 19. Suggested Build Sequence
+
+### Phase 1 — Market skeleton
+
+- account creation;
+- $1,000 simulated balance;
+- seeded users;
+- asset model;
+- order model;
+- simple matching engine;
+- transaction ledger.
+
+### Phase 2 — Real ERCOT context
+
+- ingest real-time SPP;
+- ingest day-ahead SPP;
+- ingest outage capacity;
+- ingest public congestion/shadow-price data;
+- display market context.
+
+### Phase 3 — Prediction
+
+- normalize signals;
+- create opportunity/scarcity score;
+- add confidence;
+- explain contributing factors;
+- expose prediction API.
+
+### Phase 4 — API
+
+- market read endpoints;
+- prediction endpoint;
+- portfolio endpoint;
+- order endpoint;
+- API keys;
+- minimal SDK/example.
+
+### Phase 5 — Provider abstraction
+
+- provider interface;
+- Base simulator;
+- generic BESS simulator;
+- multiple provider fleets participating simultaneously.
+
+### Phase 6 — Polish / differentiation
+
+- adversarial scenario;
+- judge API demo;
+- bot if time remains;
+- Google OAuth only if it does not jeopardize the core demo.
+
+---
+
+## 20. Demo Narrative
+
+The demonstration should tell one cohesive story.
+
+### Step 1 — The market is alive
+
+Show dozens or hundreds of simulated customers with:
+
+- different providers;
+- battery capacities;
+- reserve requirements;
+- locations;
+- trading strategies.
+
+Every account begins with $1,000 of simulated trading funds.
+
+### Step 2 — Real ERCOT conditions
+
+Show:
+
+- real-time price;
+- day-ahead price;
+- expected load;
+- generator outages;
+- congestion;
+- renewable forecast.
+
+### Step 3 — Prediction
+
+Example:
+
+```text
+Houston 6 PM
+
+Generator outages: rising
+Congestion: increasing
+Forecast demand: high
+Solar: declining
+
+Predicted scarcity: 81%
+Expected flexibility value: $0.27
+Current simulated future: $0.20
+```
+
+### Step 4 — Traders react
+
+Simulated users and algorithms begin buying the future product.
+
+The order book changes live.
+
+### Step 5 — Automated trading
+
+Show the first-party bot using the exact same public API available to anyone else.
+
+### Step 6 — Provider interoperability
+
+Show customers from two provider adapters trading on the same exchange.
+
+### Step 7 — Judge/developer interaction
+
+A judge runs:
+
+```python
+client.buy(&quot;FLEX-LZ_HOUSTON-18&quot;, quantity=2)
+```
+
+Their order appears live in the UI.
+
+### Step 8 — Adversarial event
+
+A simulated participant tries to:
+
+- sell more capacity than available; or
+- submit replayed orders; or
+- cause an abnormal automated trading burst.
+
+The risk engine rejects or contains the action.
+
+This demonstrates that GridMarket is not merely a dashboard; it is a market, platform, API, orchestration layer, and security boundary.
+
+---
+
+## 21. Non-Goals for the Hackathon
+
+Do not attempt to implement:
+
+- real electricity settlement;
+- real customer billing;
+- production Base integrations;
+- real battery dispatch;
+- real financial futures;
+- real money;
+- KYC/AML;
+- regulatory market participation;
+- QSE functionality;
+- blockchain;
+- cryptocurrency;
+- production-grade clearing;
+- sophisticated derivatives;
+- options;
+- leverage.
+
+These can be discussed as future considerations but should not consume weekend implementation time.
+
+---
+
+## 22. Success Criteria
+
+The MVP is successful if:
+
+1. Real ERCOT information is visibly driving the simulation.
+2. Generated users begin with $1,000 and can trade.
+3. Spot and future flexibility products function.
+4. Outages and congestion affect predictive analysis.
+5. Predictions provide an explanation, not just a number.
+6. Multiple simulated provider fleets can participate.
+7. External clients can use the API.
+8. A developer can submit a trade from a short example program.
+9. Automated strategies use the same API as humans.
+10. The system prevents basic unsafe or inconsistent trades.
+11. The UI tells a coherent story without requiring a long explanation.
+
+---
+
+## 23. Longer-Term Product Direction
+
+If the concept proves useful, GridMarket could evolve toward:
+
+- additional Texas DER/battery providers;
+- EV charging flexibility;
+- commercial batteries;
+- smart thermostats;
+- distributed solar;
+- demand-response assets;
+- forecasting-as-a-service;
+- strategy marketplaces;
+- provider white-label deployments;
+- enterprise fleet optimization;
+- richer historical backtesting;
+- automated customer optimization;
+- agentic energy management;
+- additional ISO/RTO markets beyond ERCOT.
+
+The long-term platform thesis is:
+
+&gt; **Energy providers connect assets once; customers and developers get a common market, prediction, and automation layer for distributed energy flexibility.**
+
+---
+
+## 24. Public ERCOT References
+
+The MVP should prefer official ERCOT public sources.
+
+- ERCOT Public API / Developer Portal:  
+  https://developer.ercot.com/applications/pubapi/user-guide/using-api/
+
+- ERCOT Market Prices:  
+  https://www.ercot.com/mktinfo/prices
+
+- ERCOT Real-Time Market:  
+  https://www.ercot.com/mktinfo/rtm
+
+- ERCOT Hourly Resource Outage Capacity (NP3-233-CD):  
+  https://www.ercot.com/mp/data-products/data-product-details?id=NP3-233-CD
+
+- ERCOT SCED Shadow Prices and Binding Transmission Constraints (NP6-86-CD):  
+  https://www.ercot.com/mp/data-products/data-product-details?id=NP6-86-CD
+
+- ERCOT Transmission Information:  
+  https://www.ercot.com/gridinfo/transmission
+
+---
+
+## 25. One-Sentence Pitch
+
+&gt; **GridMarket is an API-first simulated exchange that uses real ERCOT data to help distributed-energy customers predict, trade, and automate the future value of battery flexibility across multiple energy providers.**
+</pre>
+</main>
+</body>
+</html>
