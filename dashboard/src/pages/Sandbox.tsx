@@ -16,7 +16,7 @@ from gridmarket import Client
 
 gm = Client(base_url="${origin}", api_key=os.environ["GRIDMARKET_API_KEY"])
 product = gm.market()[0]
-order = {"product_id": product["id"], "side": "buy", "quantity": 1, "price_cents": 4200}
+order = {"product_id": product["id"], "side": "buy", "quantity": 1, "price_cents": 10}
 print(gm.place_order(order, str(uuid.uuid4())))
 print(gm.orders())`;
 

@@ -63,7 +63,9 @@ def test_zero_price_exact_cash_and_max_safe_price(exchange):
     zero = test_market.place(client, "buyer", "future", "buy", 1, 0, "zero-price")
     assert zero.status_code == 200
     assert zero.json()["price_cents"] == 0
-    exact = test_market.place(client, "seller", "future", "buy", 50, 2000, "exact-cash")
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE accounts SET cash_cents=25000 WHERE id='seller'")
+    exact = test_market.place(client, "seller", "future", "buy", 50, 500, "exact-cash")
     assert exact.status_code == 200
     assert exact.json()["status"] == "open"
     over_cash = test_market.place(client, "seller", "future", "buy", 1, 1, "over-cash")
@@ -72,7 +74,7 @@ def test_zero_price_exact_cash_and_max_safe_price(exchange):
 
     with sqlite3.connect(path) as db:
         db.execute("UPDATE accounts SET cash_cents=? WHERE id='buyer'", (2**63 - 1,))
-    maximum = (2**63 - 1) // market.MAX_ORDER_QUANTITY
+    maximum = market.MAX_PRICE_CENTS
     accepted = test_market.place(client, "buyer", "future", "buy", 1, maximum, "max-price")
     assert accepted.status_code == 200
     rejected = test_market.place(client, "buyer", "future", "buy", 1, maximum + 1, "past-max")

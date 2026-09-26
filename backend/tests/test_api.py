@@ -123,7 +123,7 @@ def test_assurance_f5_activity_has_overview_fields(api):
         ({**ORDER, "quantity": 0}, headers("member", "zero"), 422, "VALIDATION_ERROR", "member"),
         ({**ORDER, "quantity": 51}, headers("member", "large"), 422, "ORDER_TOO_LARGE", "member"),
         (
-            {**ORDER, "price_cents": 100001},
+            {**ORDER, "price_cents": 500},
             headers("member", "cash"),
             422,
             "INSUFFICIENT_FUNDS",
@@ -144,6 +144,8 @@ def test_dir_p1a_11_order_rejections_are_observed_once(
     path, client = api
     observe = Mock(wraps=adversary.observe)
     monkeypatch.setattr(adversary, "observe", observe)
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE accounts SET cash_cents=499 WHERE id='member'")
     before = snapshot(path)
     error(client.post("/v1/orders", headers=auth, json=body), status, code)
     observe.assert_called_once_with(
@@ -227,7 +229,15 @@ def test_seit_gm_api_04_caller_scoping_and_provider_surface(api):
 
 
 @pytest.mark.parametrize("account,burst", [("member", 40), ("sandbox", 10)])
-def test_seit_gm_api_03_keyed_rate_limits_have_no_extra_order(api, account: str, burst: int):
+def test_seit_gm_api_03_keyed_rate_limits_have_no_extra_order(
+    api, monkeypatch: pytest.MonkeyPatch, account: str, burst: int
+):
+    from gridmarket_server import api as api_module
+
+    # Prevent token refill without freezing the ASGI event loop's shared clock.
+    clock = Mock(wraps=api_module.time)
+    clock.monotonic.return_value = api_module.time.monotonic()
+    monkeypatch.setattr(api_module, "time", clock)
     path, client = api
     for _ in range(burst + 100):
         response = client.get("/v1/account", headers=headers(account))
