@@ -515,6 +515,14 @@
       "source": "Orchestrator as owner delegate (DEC-GM-043)",
       "decision": "Amend CMD-RED-GREEN-WORKER and CMD-TEST-WORKER to pass a glob instead of a directory: node --test \"ercot-hackathon/test/*.test.mjs\". Pass rules are unchanged.",
       "why": "On Node v22.23.2, `node --test ercot-hackathon/test/` exits with `Cannot find module .../ercot-hackathon/test` before it loads any test (S24 ENVIRONMENT_FAILURE at 00:22). The Orchestrator ran the glob form in the worker worktree: 25 tests, 12 pass, 13 fail, exit 1, which is the expected red baseline. This is a command defect only; the scope is unchanged."
+    },
+    {
+      "id": "DEC-GM-047",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T05:29:58Z",
+      "source": "Owner in chat",
+      "owner_statement": "if it fails one slice you go back to model the next slice unless its a usage quota",
+      "decision": "Route fallback scope: a failure that is not a usage quota moves only the failing slice to the next ordered fallback. The next slice starts again on the primary route. Only a verified usage-quota hit parks a route for all new sessions (60 min, then retried). This amends DEC-GM-040 and OPS-05: the Coordinator's 00:27 Muse park was removed at once, because a stream idle timeout is not a quota."
     }
   ],
   "stages": {
