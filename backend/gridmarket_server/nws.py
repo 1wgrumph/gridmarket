@@ -1,11 +1,14 @@
 """Keyless NWS forecast and severe alert polling."""
 
 import asyncio
+import logging
 from datetime import UTC, datetime
 
 import httpx
 
 from .ercot import RequestBudget, _store, backoff_seconds, signals
+
+logger = logging.getLogger(__name__)
 
 BASE_URL = "https://api.weather.gov"
 USER_AGENT = "gridmarket-hackathon (github.com/1wgrumph/gridmarket)"
@@ -35,6 +38,13 @@ async def _get(client: httpx.AsyncClient, url: str, budget: RequestBudget) -> di
 
 
 async def poll() -> None:
+    try:
+        await _poll()
+    except Exception:
+        logger.warning("nws poll failed", exc_info=True)
+
+
+async def _poll() -> None:
     global _next_zone
     budget = RequestBudget(limit=6)
     zones = list(POINTS)
@@ -76,5 +86,6 @@ async def poll() -> None:
                 _store(
                     "NWS-ALERTS", zone, datetime.now(UTC).isoformat(), 5, count, "count", published
                 )
-            except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError):
+            except Exception:
+                logger.warning("nws poll for zone %s failed", zone, exc_info=True)
                 continue

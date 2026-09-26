@@ -1,6 +1,7 @@
 """Cached ERCOT Worker signals and the shared SQLite signal store."""
 
 import asyncio
+import logging
 import os
 import sqlite3
 import time
@@ -33,6 +34,7 @@ POLL_MINUTES = {
     "NWS-ALERTS": 5,
 }
 CENTRAL = ZoneInfo("America/Chicago")
+logger = logging.getLogger(__name__)
 _last_polled: dict[tuple[str, str], float] = {}
 _latencies: deque[tuple[float, float]] = deque()
 
@@ -288,6 +290,13 @@ def _record_latency(start: float) -> None:
 
 
 async def poll() -> None:
+    try:
+        await _poll()
+    except Exception:
+        logger.warning("ercot poll failed", exc_info=True)
+
+
+async def _poll() -> None:
     base = os.getenv("GRIDMARKET_WORKER_URL")
     if not base:
         return
@@ -305,7 +314,8 @@ async def poll() -> None:
                 payload = await _get(client, path, budget, os.getenv("GRIDMARKET_WORKER_KEY", ""))
                 parse_report(report, payload) if report else parse_snapshot(payload)
                 _last_polled[stamp_key] = time.monotonic()
-            except (httpx.HTTPError, ValueError, KeyError, TypeError):
+            except Exception:
+                logger.warning("ercot poll for %s failed", path, exc_info=True)
                 complete = False
                 continue
     if complete:

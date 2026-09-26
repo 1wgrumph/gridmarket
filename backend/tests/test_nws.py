@@ -3,6 +3,7 @@
 import asyncio
 import sqlite3
 import threading
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
@@ -22,6 +23,19 @@ POINTS = {
     "LZ_SOUTH": (29.42, -98.49),
     "LZ_WEST": (31.99, -102.08),
 }
+
+
+@pytest.fixture(autouse=True)
+def _reset_poller_state() -> Iterator[None]:
+    nws._next_zone = 0
+    nws._forecasts.clear()
+    ercot._last_polled.clear()
+    ercot.signals.failed.clear()
+    yield
+    nws._next_zone = 0
+    nws._forecasts.clear()
+    ercot._last_polled.clear()
+    ercot.signals.failed.clear()
 
 
 @contextmanager
@@ -137,3 +151,20 @@ def test_seit_gm_data_05_nws_failure_keeps_stale_weather(
     assert "NWS-TEMP" in response.text
     assert '"stale":true' in response.text.replace(" ", "")
     assert "age_s" in response.text
+
+
+def test_dir_p1a_08_lifespan_survives_poller_failure(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setenv("GRIDMARKET_DB", str(tmp_path / "app.db"))
+    monkeypatch.delenv("GRIDMARKET_WORKER_URL", raising=False)
+
+    async def boom(*args: object, **kwargs: object) -> dict:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(nws, "_get", boom)
+    with TestClient(main.create_app()) as client:
+        time.sleep(1)  # Let the background poller hit the failure before shutdown.
+        assert client.get("/v1/market/status").status_code == 200

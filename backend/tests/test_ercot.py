@@ -235,3 +235,11 @@ def test_seit_gm_data_01_worker_stats_keep_only_counters(
     assert stats.latencies_ms and all(latency >= 0 for latency in stats.latencies_ms)
     assert stats.snapshot_age_s is not None and stats.snapshot_age_s >= 0
     assert set(vars(stats)) == {"requests", "errors", "http_429", "latencies_ms", "snapshot_age_s"}
+
+
+def test_dir_p1a_08_poll_contains_unexpected_errors(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("GRIDMARKET_DB", str(tmp_path / "signals.db"))
+    monkeypatch.setenv("GRIDMARKET_WORKER_URL", "http://127.0.0.2/")
+    asyncio.run(ercot.poll())  # Must not raise: conftest blocks the socket.
