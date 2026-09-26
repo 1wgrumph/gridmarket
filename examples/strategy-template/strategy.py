@@ -31,14 +31,18 @@ def rows(payload, key):
 def net_positions(payload):
     held = {}
     for row in rows(payload, "positions"):
-        field = next(f for f in ("net_position", "net_quantity", "quantity") if f in row)
+        field = next(
+            f for f in ("net_position", "net_quantity", "quantity") if f in row
+        )
         held[row["product_id"]] = held.get(row["product_id"], 0) + int(row[field])
     return held
 
 
 def cycle(client):
     predictions = rows(client.predictions(), "predictions")
-    products = [p for p in rows(client.market(), "products") if p["status"].lower() == "open"]
+    products = [
+        p for p in rows(client.market(), "products") if p["status"].lower() == "open"
+    ]
     held = net_positions(client.request("GET", "/v1/positions"))
     for prediction in predictions:
         market_price = prediction.get("market_price")
@@ -79,7 +83,9 @@ def cycle(client):
                 return
             continue
         held[product["id"]] = held.get(product["id"], 0) + quantity
-        print(f"order {result.get('id')} buy {quantity} {product['id']} @ {order['price_cents']}c")
+        print(
+            f"order {result.get('id')} buy {quantity} {product['id']} @ {order['price_cents']}c"
+        )
 
 
 def main():
@@ -87,7 +93,8 @@ def main():
     parser.add_argument("--once", action="store_true", help="run one cycle and exit")
     args = parser.parse_args()
     client = Client(
-        os.getenv("GRIDMARKET_URL", "http://127.0.0.1:8000"), os.environ["GRIDMARKET_API_KEY"]
+        os.getenv("GRIDMARKET_URL", "http://127.0.0.1:8000"),
+        os.environ["GRIDMARKET_API_KEY"],
     )
     while True:
         cycle(client)

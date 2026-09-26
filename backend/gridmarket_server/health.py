@@ -233,6 +233,12 @@ def providers_health() -> list[dict]:
                 "id": provider_id,
                 "display_name": adapter.display_name,
                 "online": online,
+                "online_assets": sum(
+                    bool(adapter().asset_status(asset["id"])["online"])
+                    for asset in adapter().list_assets()
+                )
+                if online
+                else 0,
                 "last_heartbeat": last,
                 "heartbeat_age_s": _age(last),
                 "outage_active": active,

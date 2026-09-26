@@ -287,3 +287,123 @@ Remaining risks and work: independent phase code/visual review and assurance
 are pending; PROC-ACCEPT-P2 belongs to the owner; S12-L belongs to the later
 landing session. The previously recorded moderate development-dependency
 advisories remain unchanged. Assembly blocker: none. Returned lanes: none.
+
+
+## Phase 2 repair round 1 — 2026-09-26
+
+Owner dispatch explicitly authorizes one repair round on `gridmarket/integration-2`,
+then deterministic verification and a non-force push only. Starting HEAD was
+verified as `1f0b14afde7a0f187d434d2cc926a978202f975c`, with clean status.
+This is the single repair following review `017d7fa` and assurance `1f0b14a`;
+no second review, lane write, PR, landing, deployment, issue closure, or owner
+acceptance is performed. The owner-authorized repair write set supersedes the
+normal Integration Engineer implementation restriction for this round.
+
+### Finding closure
+
+- **F1 / ATE-P2-05:** Providers joins health on `id`, reads customers from
+  `/v1/providers.participants`, and retains live heartbeat/outage fields.
+  `health.py` counts online assets through the existing adapter operations and
+  reports zero when the provider is offline. The live seeded boundary has
+  40/20 participants and 47/25 online assets; participant and asset counts are
+  deliberately separate. Real TestClient calls to providers, health, and
+  router each return 200. The health test checks every document field against
+  SQLite/clock evidence, offline zero, and expiry recovery.
+- **Independent-review test amendment authority:** F1 expressly authorizes the
+  providers fixture and UI assertions to follow the live shape. `providers.json`
+  now uses `id`, provider `participants`, and health `heartbeat_age_s`,
+  `online_assets`, heartbeat and outage fields. The offline fixture reports
+  zero online assets. The existing nine test IDs are unchanged; counts and
+  online/offline assertions are scoped to each provider card. Fixture selectors
+  use `id`. All nine pass, with all 61 dashboard tests and the build green.
+- **F2:** The spec source now says `{"active": true}` / `{"active": false}`.
+  The built specification was regenerated with `tools/spec_build.py`; the
+  route is unchanged. `make spec-lint` exits 0 with no regeneration diff.
+- **F3:** Two loading slots use the same responsive provider grid and reserve
+  320 px each. Chromium replays freshly captured live TestClient documents
+  with a 1.5-second provider delay, exercising loading-to-cards at 390 and
+  1280 px. Full-page loading/loaded screenshots were inspected at both sizes.
+  Both providers, counts, heartbeat, band, and outage state render; no page
+  errors or failed responses remain. This is deterministic repair evidence,
+  not a replacement independent observer verdict.
+- **ATE-P2-01:** Owning health tests now check the real health-router admin
+  guard/error envelope (separately from the app's outer guard), exact public
+  health documents and outage expiry, and calibrated health probabilities,
+  p95 inputs, bands, and check metadata. The same command
+  `make mutation MUTANTS="gridmarket_server.health.*"` exits 0. All 263 selected
+  mutants scored: **225 killed, 38 survived, 0 timeouts, 85.5513%**. A separate
+  metadata assertion requires complete scoring and >=70%, and exits 0.
+  No score rule, selection scope, Makefile, or dependency changed.
+- **ATE-P2-02:** Only formatting changed in the strategy template. AST equality
+  with the starting revision is verified; `make lint` exits 0.
+
+### Deterministic evidence
+
+All gates use `GRIDMARKET_NWS=off`; live Worker/Jev settings are removed.
+No owner credential or .env was read. Existing installed dependencies and locks
+are reused. Mutation runs on an isolated artifact snapshot, not another lane.
+Raw commands, exits, SHA-256 log digests, JUnit bindings, score metadata,
+live documents, and browser evidence are under
+`/tmp/gm-evidence/P2/repair-round-1/`. Focused setup failures remain in those
+logs; the final table below records completed precommit verification.
+
+| Command | Exit | Log SHA-256 |
+| --- | ---: | --- |
+| `make test-all` | 0 | `21c54c6984fb51711eb212d7673320b82ec6c1aaea45a9fec98cc269eb4be6b8` |
+| `make test-dash` | 0 | `4c7ea7e96a4992866db223a6d51ada7dc5f2acd7db11bf0bbe9e10f878c4f1d6` |
+| `make test-contracts` | 0 | `51a9bdecf011071e177c25959c2f95208c2339f5a73e2a6d187cf762cfd0a493` |
+| `make test-market` | 0 | `26321bee319c0f9ba8aa3c5907ff512673743ba71d0490737772f6c3c73d95ee` |
+| `make test-providers` | 0 | `4cf6069d03e150cd8171ddd12159dd7fe2baf8e15e9c574acbe9139a5d15b50f` |
+| `make test-kit` | 0 | `d90e32a46a6f60fcb0a53354ad60db0e2d9a2d93220e4883ac2dc182eaf4860e` |
+| `make test-spec` | 0 | `00f9c792ec88f4f22bd0e441fe87ececf908db5b1eb605730fa43a5bd70343cd` |
+| `make spec-lint` | 0 | `015dc839135e66332a17d9d492dac34349c26350855d64db6bf3809382d3f412` |
+| `make secrets` | 0 | `52cbc78c2f4f72186a44264a2eedf02abd17756cf0a9dfdc603807b3c7d467fb` |
+| `make rules` | 0 | `4ecf979e4133d8fe403586fa0b1151514e28ff4572a178e3aa716deb6ecc9145` |
+| `make lint` | 0 | `a4ede05ec8ac4e59d308695a1cc97a7464c3dfa1a4b34bd035a3f76a2ac86f23` |
+| `make smoke SMOKE_PROJECT=gm-smoke-repair-p2 SMOKE_PORT=18022` | 0 | `ff04b63548858033913a8893d5956433747a09deaa40acdeb9e07366e2c8f8d2` |
+
+Health mutation log SHA-256:
+`78380f55dd243665d2dcd8838c4e18358d66105c382d3660bac80aeb457125cd`.
+Selected-scope metadata SHA-256: `73f339bc5d9a8e7d69637e816b0b8906b15bb439edaad9941e4ba8cdacb6267b`.
+Independent threshold log SHA-256:
+`d7e6ef09eea2678ed7d8c02bd3bcab46a968b52609197442a2662d73334e329e`.
+Providers CLS: 390 px **0**; 1280 px **0.00145925** (limit 0.1).
+
+Fresh red/green bindings preserve the same twelve provider IDs and nine UI IDs:
+12 red at `701fa21`, 9 red at `60140c6`, then 12/9 green on the repair tree.
+The current amended test/fixture files are replayed on those historical product
+baselines. Kit: 2 red at `0805fc2`, 2 green. Cap: 1 red plus 3 guards at
+`60b1686`, 4 green. The new live-boundary test fails on `1f0b14a` and passes
+on the repaired health document. No collection errors count as red evidence.
+The full suite passes 181 backend/tooling, 61 dashboard and 34 Worker tests;
+the provider suite passes 17, including the existing two guards.
+
+The one commit carrying this append is the repair candidate. Its exact SHA
+will be bound to a complete postcommit gate rerun and returned only after a
+non-force push with remote equality and clean status. Postcommit logs use the
+`postcommit-` prefix in the same evidence directory. Precommit green is not
+misrepresented as an already completed postcommit run.
+
+### Residuals and capabilities
+
+**ATE-P2-03 remains OPEN / OWNER DISPOSITION:** the existing DEC-GM-090
+assertion-line authority variance needs the Orchestrator's disposition; no
+market assertion, plan or authority record was edited here.
+**ATE-P2-04 remains OPEN / VISUAL_OBSERVER_UNAVAILABLE:** the selected observer's
+`no_before_image` gap belongs to the owning review workflow. This round does
+not substitute browser measurements or ordinary tests for that observer.
+
+The frozen profile digest
+`14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`
+and role routes are preserved. `review.coverage_assist` remains enabled,
+required=false, backend OpenCodeReview delegation; its prior review execution
+is recorded in review.md. **NOT_RUN here: no second review authorized.**
+`deterministic_verification.reverify` remains enabled, backend Reverify;
+**NOT_APPLICABLE: no native compiled-binary claim or Rust lane.** No live profile
+import or model/harness substitution occurred. BRAN remains UNAVAILABLE
+because this repository has no native policy.
+
+Remaining risk: 38 surviving health mutants; the two explicit residuals above;
+prior review's out-of-scope Market/Predictions/Bots CLS and rapid-navigation
+429 observations; inherited development-dependency advisories. Owner acceptance
+and the live outage demonstration remain unrun. No repair authority blocker.

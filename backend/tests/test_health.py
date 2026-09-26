@@ -1,10 +1,12 @@
 """S10 heartbeat, health checks, and outage checks (SEIT-GM-PROV-03/04)."""
 
 import sqlite3
+from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from gridmarket_server import decision_router, ercot, health, main
@@ -191,3 +193,145 @@ def test_seit_gm_prov_04_public_health_route(service) -> None:
 
 def test_seit_gm_prov_04_heartbeat_loop_runs_every_ten_seconds() -> None:
     assert "repeat(10, health.tick)" in Path(main.__file__).read_text()
+
+
+def test_health_live_provider_documents(service, monkeypatch) -> None:
+    """F1/ATE-P2-05: real routes expose joinable counts and heartbeat/outage state."""
+    client, db_path = service
+    now = datetime.now(UTC)
+    monkeypatch.setattr(health, "_now", lambda: now)
+    health.tick()
+    decision_router.tick()
+    documents = {}
+    for path in ("/v1/providers", "/v1/providers/health", "/v1/router"):
+        response = client.get(path)
+        assert response.status_code == 200
+        documents[path] = response.json()
+    with sqlite3.connect(db_path) as db:
+        counts = dict(db.execute("SELECT provider_id, COUNT(*) FROM assets GROUP BY provider_id"))
+    rows = {row["id"]: row for row in documents["/v1/providers/health"]}
+    assert set(rows) == {"base_sim", "lonestar"}
+    for provider in documents["/v1/providers"]:
+        name = provider["id"]
+        assert provider["participants"] == (40 if name == "base_sim" else 20)
+        assert rows[name] == {
+            "id": name,
+            "display_name": provider["display_name"],
+            "online": True,
+            "online_assets": counts[name] - (name == "lonestar"),
+            "last_heartbeat": now.isoformat(),
+            "heartbeat_age_s": 0.0,
+            "outage_active": False,
+            "outage_until": None,
+        }
+        assert any(
+            check["subject"] == name and check["family"] == "health"
+            for check in documents["/v1/router"]["checks"]
+        )
+    headers = {"Authorization": "Bearer s10-local-admin-key"}
+    expiry = (now + timedelta(minutes=10)).isoformat()
+    response = client.post(
+        "/v1/admin/providers/lonestar/outage", headers=headers, json={"active": True}
+    )
+    assert response.status_code == 200
+    assert response.json() == {"provider_id": "lonestar", "active": True, "outage_until": expiry}
+    monkeypatch.setattr(health, "_now", lambda: now + timedelta(seconds=31))
+    health.tick()
+    row = next(row for row in health.providers_health() if row["id"] == "lonestar")
+    assert row == {
+        "id": "lonestar",
+        "display_name": "LoneStar Storage",
+        "online": False,
+        "online_assets": 0,
+        "last_heartbeat": now.isoformat(),
+        "heartbeat_age_s": 31.0,
+        "outage_active": True,
+        "outage_until": expiry,
+    }
+    monkeypatch.setattr(health, "_now", lambda: now + timedelta(minutes=10))
+    health.tick()
+    row = next(row for row in health.providers_health() if row["id"] == "lonestar")
+    assert row["online"] is True and row["online_assets"] == counts["lonestar"] - 1
+    assert row["outage_active"] is False and row["outage_until"] is None
+    with sqlite3.connect(db_path) as db:
+        assert db.execute(
+            "SELECT outage_until FROM provider_health WHERE provider_id='lonestar'"
+        ).fetchone() == (None,)
+
+
+def test_health_admin_error_contract(service, monkeypatch) -> None:
+    """ATE-P2-01: deny missing keys and nonlocal callers with the API envelope."""
+    # Exercise the health router guard itself; the app also guards admin paths.
+    app = FastAPI()
+    app.include_router(health.router)
+    client = TestClient(app, client=("127.0.0.1", 0))
+    url = "/v1/admin/providers/lonestar/outage"
+    authorized = {"Authorization": "Bearer s10-local-admin-key"}
+    for headers in (
+        {},
+        {"Authorization": "Bearer wrong"},
+        {"Authorization": "bearer s10-local-admin-key"},
+    ):
+        response = client.post(url, headers=headers, json={"active": True})
+        assert response.status_code == 401
+        assert response.json() == {
+            "error": {"code": "UNAUTHENTICATED", "message": "Admin key required"}
+        }
+    for host, headers in (
+        ("192.0.2.1", authorized),
+        ("untrusted", authorized),
+        ("127.0.0.1", authorized | {"CF-Connecting-IP": "192.0.2.1"}),
+    ):
+        remote = TestClient(client.app, client=(host, 0))
+        response = remote.post(url, headers=headers, json={"active": True})
+        assert response.status_code == 403
+        assert response.json() == {
+            "error": {"code": "FORBIDDEN", "message": "Admin routes are local only"}
+        }
+    for host in ("::1", "testclient"):
+        local = TestClient(client.app, client=(host, 0))
+        assert local.post(url, headers=authorized, json={"active": False}).status_code == 200
+    monkeypatch.delenv("GRIDMARKET_ADMIN_KEY")
+    response = client.post(url, headers={"Authorization": "Bearer "}, json={"active": True})
+    assert response.status_code == 401
+
+
+def test_health_risk_calibration_and_check_contract(service, monkeypatch) -> None:
+    """ATE-P2-01: health calibration, p95 and bands retain their numeric contract."""
+    import math
+
+    now = datetime.now(UTC)
+    monkeypatch.setattr(health, "_now", lambda: now)
+    health.tick()
+    # Existing worker telemetry fields: partial errors, throttling, latency and snapshot age.
+    monkeypatch.setattr(
+        ercot,
+        "worker_stats",
+        lambda: WorkerStats(
+            requests=100,
+            errors=10,
+            http_429=20,
+            latencies_ms=list(range(1000, 21000, 1000)),
+            snapshot_age_s=30,
+        ),
+    )
+    rows = {row.subject: row for row in health.checks()}
+    probability = 1 / (1 + math.exp(-(-3 + 2 * (0.1 + 0.2 + 0.95 + 0.25))))
+    assert rows["worker"].probability == pytest.approx(probability)
+    for p, band in ((0.49, "log"), (0.5, "review"), (0.79, "review"), (0.8, "alert")):
+        row = health._check("worker", p, now)
+        assert asdict(row) == {
+            "check_id": "health:worker",
+            "family": "health",
+            "subject": "worker",
+            "horizon_s": 900,
+            "probability": p,
+            "band": band,
+            "baseline": True,
+            "jev_probability": None,
+            "created_at": now.isoformat(),
+            "resolves_at": (now + timedelta(seconds=900)).isoformat(),
+            "outcome": None,
+        }
+    assert health._risk([-1, 2]) == pytest.approx(1 / (1 + math.exp(1)))
+    assert rows["base_sim"].probability == pytest.approx(1 / (1 + math.exp(3)))

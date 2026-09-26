@@ -5,8 +5,8 @@ import Panel from '../components/Panel';
 import { useProviderHealth, useProviders, useResource } from '../hooks';
 
 type Health = {
-  provider_id: string; online: boolean; last_heartbeat: string | null;
-  customers: number; online_assets: number; outage_active: boolean;
+  id: string; online: boolean; last_heartbeat: string | null;
+  online_assets: number; outage_active: boolean;
 };
 
 // Design v2 (DEC-GM-062): styles.css tokens only; page-specific layout stays inline so styles.css is untouched.
@@ -29,7 +29,7 @@ const actions: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 8, marg
 const panelBody: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12, padding: '0 18px 18px' };
 
 function PanelEmpty({ state }: { state: { loading: boolean; error: string | null } }) {
-  return state.error ? <p className="empty" role="alert">Feed unavailable; retrying every 2 s.</p> : <p className="empty loading">Loading…</p>;
+  return state.error ? <p className="empty" role="alert">Feed unavailable; retrying every 2 s.</p> : <div style={providerGrid}><p className="empty loading" style={{ minHeight: 320 }}>Loading…</p><div aria-hidden="true" style={{ minHeight: 320 }}/></div>;
 }
 
 export default function Providers() {
@@ -71,7 +71,7 @@ export default function Providers() {
           {router.error && <p role="alert" className="connection-line has-error" style={alertLine}>Health checks unavailable; retrying every 2 s.</p>}
           <div style={providerGrid}>
             {(providers.data ?? []).map(provider => {
-              const row = health.error ? undefined : (health.data as Health[] | null)?.find(h => h.provider_id === provider.id);
+              const row = health.error ? undefined : (health.data as Health[] | null)?.find(h => h.id === provider.id);
               const check = router.error ? undefined : router.data?.checks.find(c => c.family === 'health' && c.subject === provider.id);
               const heartbeat = row?.last_heartbeat ? Date.parse(row.last_heartbeat) : NaN;
               return <article key={provider.id}>
@@ -80,7 +80,7 @@ export default function Providers() {
                   <span style={status}><span className={`status-dot ${row && !row.online ? 'warning' : ''}`} style={row ? undefined : unknownDot}/>{row ? (row.online ? 'Online' : 'Offline') : 'Unknown'}</span>
                 </header>
                 <ul style={rows}>
-                  <li style={rowStyle}><span style={label}>Customers</span><span className="num" style={value}>{row?.customers ?? 'Unavailable'}</span></li>
+                  <li style={rowStyle}><span style={label}>Customers</span><span className="num" style={value}>{(provider as Provider & { participants?: number }).participants ?? 'Unavailable'}</span></li>
                   <li style={rowStyle}><span style={label}>Online assets</span><span className="num" style={value}>{row?.online_assets ?? 'Unavailable'}</span></li>
                   <li style={rowStyle}><span style={label}>Heartbeat age</span><span className="num" style={value}>{Number.isFinite(heartbeat) ? `${Math.max(0, Math.floor((Date.now() - heartbeat) / 1000))} s` : 'Unavailable'}</span></li>
                   <li style={rowStyle}><span style={label}>Health probability</span><span className="num" style={value}>{check ? `${(check.probability * 100).toFixed(0)}%` : 'Unavailable'}</span></li>

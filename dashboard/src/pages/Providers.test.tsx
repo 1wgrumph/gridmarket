@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import App from '../App';
 import fixture from '../fixtures/providers.json';
 
@@ -60,8 +60,14 @@ describe('Providers page', () => {
     visitProviders();
     expect((await screen.findAllByText('Base Simulation')).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('LoneStar Storage').length).toBeGreaterThanOrEqual(1);
-    for (const n of [/\b40\b/, /\b38\b/, /\b20\b/, /\b17\b/]) {
-      expect(screen.getAllByText(n).length).toBeGreaterThanOrEqual(1);
+    for (const [name, customers, assets, status] of [
+      ["Base Simulation", "40", "47", "Online"],
+      ["LoneStar Storage", "20", "0", "Offline"],
+    ]) {
+      const card = within(screen.getByRole("heading", { name }).closest("article")!);
+      expect(card.getByText(customers)).toBeTruthy();
+      expect(card.getByText(assets)).toBeTruthy();
+      expect(card.getByText(status)).toBeTruthy();
     }
   });
 
@@ -73,7 +79,7 @@ describe('Providers page', () => {
     expect(screen.getAllByText(/4\s*s/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/47\s*s/).length).toBeGreaterThanOrEqual(1);
     cleanup();
-    healthRows().find(r => r.provider_id === 'base_sim')!.last_heartbeat = '2026-09-26T12:59:51Z';
+    healthRows().find(r => r.id === 'base_sim')!.last_heartbeat = '2026-09-26T12:59:51Z';
     visitProviders();
     await settled();
     expect(screen.getAllByText(/9\s*s/).length).toBeGreaterThanOrEqual(1);
@@ -102,7 +108,7 @@ describe('Providers page', () => {
   });
 
   it('SEIT-GM-UI-04 shows a fallback when a provider health entry is missing', async () => {
-    responses[HEALTH_URL] = healthRows().filter(r => r.provider_id !== 'lonestar');
+    responses[HEALTH_URL] = healthRows().filter(r => r.id !== 'lonestar');
     visitProviders();
     expect((await screen.findAllByText('LoneStar Storage')).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/unknown|unavailable|error|could not load|not available/i).length).toBeGreaterThanOrEqual(1);
