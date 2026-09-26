@@ -506,7 +506,7 @@
       "decided_at": "2026-09-26T05:18:24Z",
       "source": "Owner in chat",
       "owner_statement": "yes i just read the plan its approved",
-      "decision": "The owner read the plan package (manifest digest cea7bcbd\u2026) and approved it directly. This confirms DEC-GM-044 and the integrated approval gate."
+      "decision": "The owner read the plan package (manifest digest cea7bcbd…) and approved it directly. This confirms DEC-GM-044 and the integrated approval gate."
     },
     {
       "id": "DEC-GM-046",
@@ -838,7 +838,7 @@
       "id": "DEC-GM-087",
       "decided_at": "2026-09-26T12:21:00-05:00",
       "decided_by": "Orchestrator (delegate, DEC-GM-043)",
-      "decision": "Phase 1b LANDED: PR #9 merged to main as d6cfdc3 at 12:21 CDT (plan target 16:00). Candidate 3f5b964 (plus the docs-only main merge 36549fe); main's tree equals the gated tree. Assurance: one review (F1\u2013F10) and one TE round (ATE-P1b-01..03), all repaired in round 1. The final deterministic gate (attempt 14, NWS off) had all 14 commands exit 0, with mutation at 80.28%. Merged lanes bots, router, views, pages, design, market2 and integration-1b were deleted (DEC-GM-040). Spec moves to phase 2 S12-E. Visual review was a typed gap here and is required in phase 2.",
+      "decision": "Phase 1b LANDED: PR #9 merged to main as d6cfdc3 at 12:21 CDT (plan target 16:00). Candidate 3f5b964 (plus the docs-only main merge 36549fe); main's tree equals the gated tree. Assurance: one review (F1–F10) and one TE round (ATE-P1b-01..03), all repaired in round 1. The final deterministic gate (attempt 14, NWS off) had all 14 commands exit 0, with mutation at 80.28%. Merged lanes bots, router, views, pages, design, market2 and integration-1b were deleted (DEC-GM-040). Spec moves to phase 2 S12-E. Visual review was a typed gap here and is required in phase 2.",
       "rationale": "Deterministic verification decided after the single repair round; no second review (policy).",
       "reversible": true
     },
@@ -940,6 +940,14 @@
       "reversible": true
     },
     {
+      "id": "DEC-GM-101",
+      "decided_at": "2026-09-26T15:10:00-05:00",
+      "decided_by": "Owner (in chat) + Orchestrator (delegate)",
+      "decision": "New slices from owner-approved GitHub issues: S61 on lane godseye (#12 plant-to-zone scarcity link with 'Trade this zone', #13 batteries layer with live ESR charging; separate commits on top of Jordan Hill's work) and S61b on lane ux (#12 dashboard half: #/?zone= deep link opens the zone detail). Both land with the stretch assembly S18.",
+      "owner_quote": "yes lets add",
+      "reversible": true
+    },
+    {
       "id": "DEC-GM-102",
       "decided_at": "2026-09-26T15:12:00-05:00",
       "decided_by": "Owner (in chat)",
@@ -948,11 +956,35 @@
       "reversible": true
     },
     {
+      "id": "DEC-GM-103",
+      "decided_at": "2026-09-26T15:16:00-05:00",
+      "decided_by": "Owner (in chat) + Orchestrator (delegate)",
+      "decision": "New slice S62 on lane godseye: design pass on Jordan Hill's God's Eye to the GridMarket design system (remove HUD/neon tropes, Inter, light and dark tokens, phone layout keeps the globe visible), every feature, data source and credit kept. Then two independent design reviews using the visual-review skill, Claude Code Claude Opus 5.5 high and Codex CLI GPT-6 Astra high (fast), owner-named routes; then one repair round fixing every finding from both; deterministic verification decides.",
+      "owner_quote": "have claude opuse 5.5 high and astra high both review it using the skill",
+      "reversible": true
+    },
+    {
       "id": "DEC-GM-104",
       "decided_at": "2026-09-26T15:16:00-05:00",
       "decided_by": "Owner (in chat)",
       "decision": "Coordinator route returns to the frozen chain (AGY Gemini 3.8 Flash primary, Muse Spark 1.3 xhigh fallback) for every NEW Coordinator session. The running GPT-6 Sol Coordinators (P2-coord4, PS-coord4) finish their current work on Sol. DEC-GM-102's role override is marked expired; DEC-GM-096 (Sol to Astra medium fast for other roles) is unchanged.",
       "owner_quote": "ok you can go back to agy [when] the sol coordinators are done",
+      "reversible": true
+    },
+    {
+      "id": "DEC-GM-105",
+      "decided_at": "2026-09-26T15:19:00-05:00",
+      "decided_by": "Owner (in chat) + Orchestrator (delegate)",
+      "decision": "S62 scope adds the ticker: Jordan's God's Eye top bar becomes a continuous right-to-left ticker of hub prices, system lambda, plants/GW and latest GridMarket trades from data the page already loads, about 50 px/s with duration computed from content width, pause on hover/focus, static under prefers-reduced-motion, unloaded values omitted (never '—'), camera LAT/LON/ALT moved out of the ticker. Evidence: measured px/s (target 40-60).",
+      "owner_quote": "I think Jordan was trying to make a ticker on his web page lets fix it so that it moves also at a good rate",
+      "reversible": true
+    },
+    {
+      "id": "DEC-GM-106",
+      "decided_at": "2026-09-26T15:25:00-05:00",
+      "decided_by": "Owner (commissioned review) + Orchestrator (delegate, planning owner)",
+      "decision": "The owner-commissioned dashboard UX review (build 78d005c; 19 findings UX-01..UX-19: $NaN leaderboard, stretched activity/sandbox row, overlapping chart ticks, broken Spec link, primary-button contrast 3.52:1, Show book result off screen, Predictions count and card wall, 320 px overflow, map accessible name, ERCOT status honesty, missing exchange summaries, Providers state, clickability, home arrangement, Market filters, Bots/profile legend, sandbox continuation, orders rows) is fixed in one repair round on lane ux: S63-T (Test Implementer: --no-ff merge of lane onboarding, red tests per finding), S63 (Product Implementer: --no-ff merge of main after phase 2 lands, UX-01..UX-13), S64 (Product Implementer: UX-14..UX-19). No finding is deferred to an issue. Lands with the stretch assembly S18, whose review and visual review rerun the review's flow matrix.",
+      "evidence": "review text kept outside the repository",
       "reversible": true
     }
   ],
