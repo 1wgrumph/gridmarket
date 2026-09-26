@@ -769,6 +769,14 @@
       "decision": "The S21 write set adds Makefile (the spec-lint azdiagram line only) and evidence/spec-tool-versions.md, both already authorized in the S21-fix packet. Spec then merges together with market2 in IE11. The design+pages combined step is green at 35e3ab6.",
       "rationale": "A manifest omission by the Orchestrator, the same class as DEC-GM-076. The IE's SPEC_WRITESET_GAP stop was correct.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-079",
+      "decided_at": "2026-09-26T10:34:00-05:00",
+      "decided_by": "Owner (in chat)",
+      "decision": "Add ERCOT ESR (Energy Storage Resources) data: new slice S55 after the phase 2 landing. It is display-only with no scoring change: a Worker route proxying GET /rptesr-m/4_sec_esr_charging_mw, the backend poller storing it as a signal (report_id ESR), and an Overview 'Texas batteries charging now' tile with a sparkline. The Worker secret name is ERCOT_ESR_SUBSCRIPTION_KEY (a separate ESR API subscription on the same ERCOT account). The owner sets secrets and deploys.",
+      "owner_quote": "yes lets do this this is something we need",
+      "reversible": true
     }
   ],
   "stages": {
