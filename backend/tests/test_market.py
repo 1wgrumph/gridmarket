@@ -18,7 +18,7 @@ from gridmarket_server import main, market, population, seed
 from gridmarket_server.providers import enabled
 
 SCHEMA = Path(__file__).resolve().parents[1] / "gridmarket_server/schema.sql"
-HOUR = (datetime.now(UTC) + timedelta(hours=4)).replace(minute=0, second=0, microsecond=0)
+HOUR = datetime.now(UTC).replace(minute=0, second=0, microsecond=0) + timedelta(hours=5)
 SPOT_HOUR = HOUR - timedelta(hours=3)
 
 
