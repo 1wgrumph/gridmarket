@@ -95,7 +95,7 @@ export default function Bots() {
     </section>
     <div className="page-grid">
       <Panel title="All bots" index="02" className="span-all" busy={bots.loading} meta={<><Stale feed={bots}/><span>SIMULATED ACCOUNTS</span></>}>
-        <FeedBody feed={bots} unavailable="Bots not yet available">
+        <FeedBody feed={bots} unavailable="Bots not yet available" reserve="reserve-bots">
           {rows.length ? <div className="table-scroll"><table className="data-table">
             <thead><tr>
               <th scope="col">Bot</th><th scope="col">Type</th><th scope="col">Blend</th><th scope="col">Provider</th>

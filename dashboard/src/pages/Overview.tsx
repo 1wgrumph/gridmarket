@@ -129,7 +129,7 @@ export default function Overview() {
       <section className="hero" aria-label="Next delivery prediction" aria-busy={predictions.loading}>
         <div className="prediction">
           <div className="hero-top"><span className="eyebrow">01 / NEXT DELIVERY WINDOW</span><StaleTag res={predictions}/><span className="prediction-tag">SCARCITY OUTLOOK</span></div>
-          <h2>{lead ? zoneTitle(lead.zone) : 'Awaiting predictions'}<span className="delivery"> / {delivery}</span></h2>
+          <h2>{lead ? zoneTitle(lead.zone) : 'Awaiting predictions'}{lead && <span className="delivery"> / {delivery}</span>}</h2>
           <div className="prediction-numbers">
             <div className="scarcity-number"><strong>{hasPrices ? lead?.score ?? '—' : '—'}{hasPrices && lead && <span>%</span>}</strong><span>predicted scarcity</span></div>
             <div className="value-comparison">
@@ -139,7 +139,7 @@ export default function Overview() {
               <span className="value-unit">per Flex Credit</span>
             </div>
           </div>
-          <div className="factors">{lead?.drivers.length
+          <div className="factors">{hasPrices && lead?.drivers.length
             ? [...lead.drivers].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution)).slice(0, 3).map(d => <span key={d.factor} title={d.detail}><Icon name={d.contribution >= 0 ? 'up-right' : 'down-right'}/>{d.factor}</span>)
             : <span>{predictions.loading ? 'Reading prediction factors…' : 'No prediction factors available'}</span>}</div>
           <p className="estimate-note">Simulation estimate, not guaranteed profit.</p>
@@ -181,7 +181,7 @@ export default function Overview() {
         <div className="zone-body">{zones.length ? <table className="zone-table">
           <thead><tr><th scope="col">Zone</th><th scope="col">RT $/MWh</th><th scope="col" className="trend-column">Last hours</th><th scope="col">Scarcity</th><th scope="col">Published</th></tr></thead>
           <tbody>{zones.map(zone => {
-            const score = scoreOf(zone);
+            const score = hasPrices ? scoreOf(zone) : undefined;
             const zoneSignals = signalsByZone.get(zone) ?? [];
             const rt = zoneSignals.find(s => s.report_id === 'NP6-905-CD');
             const latest = zoneSignals.reduce<Signal | undefined>((max, s) => !max || s.published_at > max.published_at ? s : max, undefined);

@@ -35,9 +35,9 @@ const time = (iso: string) => iso.replace('T', ' ').replace(/:\d\dZ$/, 'Z');
 export const Stale = ({ feed }: { feed: Feed }) => feed.error && feed.data ? <span className="stale">Stale · last known</span> : null;
 
 /** Body of a polled panel: last-known data wins; otherwise a loading or unavailable line in the same geometry. */
-export function FeedBody({ feed, unavailable = 'Feed unavailable · retrying every 2 seconds', children }: { feed: Feed; unavailable?: string; children: ReactNode }) {
+export function FeedBody({ feed, unavailable = 'Feed unavailable · retrying every 2 seconds', reserve = '', children }: { feed: Feed; unavailable?: string; reserve?: string; children: ReactNode }) {
   return feed.data ? <>{children}</>
-    : <div className={`empty ${feed.loading ? 'loading' : ''}`}>{feed.loading ? 'Connecting to the exchange…' : unavailable}</div>;
+    : <div className={`empty${feed.loading ? ` loading ${reserve}`.trimEnd() : ''}`}>{feed.loading ? 'Connecting to the exchange…' : unavailable}</div>;
 }
 
 /** Page title in the Overview heading pattern: eyebrow, display title, decorative turf period kept out of the accessible name. */
@@ -65,7 +65,7 @@ function Board({ products }: { products: MarketProduct[] }) {
   const detail = useResource<ProductDetail>(`/v1/market/${encodeURIComponent(selected.symbol)}`);
   const history = useResource<Trade[]>(`/v1/market/history?product_id=${encodeURIComponent(selected.id)}`);
   // Hold the board until the selected book arrives so products and depth appear together.
-  if (detail.loading) return <div className="empty loading">Connecting to the exchange…</div>;
+  if (detail.loading) return <div className="empty loading reserve-market-board">Connecting to the exchange…</div>;
   const book = bookOf(detail.data);
   const max = Math.max(1, ...[...book.bids, ...book.asks].map(l => l.quantity));
   const spread = book.bids.length && book.asks.length ? book.asks[0].price_cents - book.bids[0].price_cents : null;
@@ -96,7 +96,7 @@ function Board({ products }: { products: MarketProduct[] }) {
       {spread != null && <div className="panel-end"><span>Spread</span><strong className="num">{usd(spread)}</strong></div>}
     </Panel>
     <Panel title="Recent trades" index="03" busy={tradeFeed.loading} meta={<><Stale feed={tradeFeed}/><span>{where}</span></>}>
-      <FeedBody feed={tradeFeed}>
+      <FeedBody feed={tradeFeed} reserve="reserve-market-trades">
         {trades.length ? <ul className="row-list">
           {trades.map(t => <li key={t.id}>
             <time className="muted" dateTime={t.created_at}>{time(t.created_at)}</time>
@@ -129,7 +129,7 @@ function MarketPage() {
     {heading}
     {products.length ? <Board products={products}/>
       : <div className="page-grid"><Panel title="Products" index="01" className="span-all" busy={market.loading}>
-        <FeedBody feed={market}><div className="empty">No products listed.</div></FeedBody>
+        <FeedBody feed={market} reserve="reserve-market-products"><div className="empty">No products listed.</div></FeedBody>
       </Panel></div>}
   </>;
 }

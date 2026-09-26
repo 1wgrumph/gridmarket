@@ -123,7 +123,7 @@ class Boundary:
                 rate, burst = (5, 10) if sandbox else (20, 40)
                 identity = "key:" + digest
             elif public:
-                rate, burst = 10, 20
+                rate, burst = 30, 60
                 identity = "ip:" + address(request)
             if rate:
                 now = time.monotonic()

@@ -58,7 +58,7 @@ export default function Predictions() {
     <div className="page-grid">
       <Panel title="Zone scores · factor contributions" index="01" className="span-all" busy={predictions.loading}
         meta={<><Stale feed={predictions}/><span>{predictions.data?.length ?? 0} ZONES</span></>}>
-        <FeedBody feed={predictions}>
+        <FeedBody feed={predictions} reserve="reserve-predictions-zones">
           {predictions.data?.length ? <div className="zone-cards">{predictions.data.map(p => <Zone key={`${p.zone}-${p.delivery_hour}`} p={p}/>)}</div>
             : <div className="empty">No predictions served yet.</div>}
           {disclaimers.map(d => <p key={d} className="panel-end">{d}</p>)}
@@ -66,7 +66,7 @@ export default function Predictions() {
       </Panel>
       <Panel title="Market and health checks" index="02" className="span-all" busy={router.loading}
         meta={<><Stale feed={router}/><span>{checks.length} CHECKS</span></>}>
-        <FeedBody feed={router}>
+        <FeedBody feed={router} reserve="reserve-predictions-checks">
           <div className="table-scroll"><table className="data-table">
             <thead><tr>
               <th scope="col">Subject</th><th scope="col">Family</th><th scope="col" className="end">Probability</th>

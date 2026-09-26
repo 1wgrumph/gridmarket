@@ -507,3 +507,10 @@ thead th{font-weight:500;letter-spacing:.02em}
 .zone-signals li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:8px}
 .zone-drivers p{color:var(--muted)}
 @media(max-width:760px){.zone-map{width:280px;height:252px;margin-top:0}.snippet button{min-width:44px;min-height:44px}}
+/* S59 demo reserves: hold above-fold geometry while the first poll lands. */
+.empty.loading.reserve-market-products{min-height:600px}
+.empty.loading.reserve-market-board{min-height:680px}
+.empty.loading.reserve-market-trades{min-height:220px}
+.empty.loading.reserve-predictions-zones{min-height:600px}
+.empty.loading.reserve-predictions-checks{min-height:200px}
+.empty.loading.reserve-bots{min-height:300px}
