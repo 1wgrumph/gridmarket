@@ -28,8 +28,9 @@ estimates, not guaranteed profit.
 
 ## Limits (the engine enforces these; stay inside them)
 
-- Order size limit: each order is 1 to 50 credits, a whole number.
-- Position limit: your net position per product stays within ±200 credits after every fill.
+- Order size limit (`MAX_ORDER_QUANTITY` 50): each order is 1 to 50 credits, a whole number.
+- Position limit (`MAX_POSITION` 200): your net position per product stays within ±200 credits after every fill.
+- Price cap limit (`MAX_PRICE_CENTS` 500): each order price is 0 to 500 cents ($5.00/FC).
 - Never place an order that would exceed the position limit: read
   `/v1/positions` first and cap the quantity at 200 minus your current net
   position in that product.
