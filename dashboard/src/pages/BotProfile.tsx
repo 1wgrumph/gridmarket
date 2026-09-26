@@ -35,7 +35,7 @@ export default function BotProfile({ id }: { id: string }) {
     <PageHeading eyebrow="05 / BOT POPULATION" title={`Bot profile · ${id}`}>
       <a className="back-link" href="#/bots">All bots</a>
     </PageHeading>
-    {!b ? <div className="page-grid"><Panel title="Profile" index="01" className="span-all" busy={profile.loading}>
+    {!b ? <div className="page-grid"><Panel title="Profile" index="01" className="span-all profile-reserve" busy={profile.loading}>
       <FeedBody feed={profile} unavailable="Bot profile not yet available"><div className="empty">No profile.</div></FeedBody>
     </Panel></div> : <>
       <div className="page-grid thirds">
