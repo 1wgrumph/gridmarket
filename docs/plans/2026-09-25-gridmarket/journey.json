@@ -872,6 +872,13 @@
       "decision": "Work that does not depend on the phase 2 landing starts now in parallel: S55 (ESR battery tile) on new lane esr, landing with the stretch assembly S18 and its review; final-wave red-test slices S44 (docs) and S47 (onboarding) on new lanes docs and onboarding. CONTRACTS.md gets one additive Worker route row for GET /api/report/esr/charging_mw; no other contract change. S45 and S48 product slices still wait for their inputs (S45 describes only merged features).",
       "owner_quote": "Is it possible to push further left?",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-092",
+      "decided_at": "2026-09-26T13:12:00-05:00",
+      "decided_by": "Orchestrator (delegate, planning owner)",
+      "decision": "S11 lane-sync blockers after merging post-1b main and market3: (1) the S10 providers fixture inserts a SPOT-LZ_HOUSTON symbol that main's seed now creates (UNIQUE products.symbol); test-data-only fix under DEC-GM-061 via S10-fix2. (2) circular import api -> market -> health -> decision_router -> ercot -> api.router (market already imports health on main; the LoneStar health.py adds module-level imports of decision_router and ercot); S11-repair3 makes those imports lazy inside health.py, no behavior change. Posted as DIR-P2-09.",
+      "reversible": true
     }
   ],
   "stages": {
