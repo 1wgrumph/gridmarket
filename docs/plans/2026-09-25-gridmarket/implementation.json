@@ -1637,7 +1637,7 @@
       },
       "work_class": "judgement",
       "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail).",
-      "notes": " VISUAL REVIEW (DEC-GM-049): before the exit commit, run the Alphazedehq visual-review skill (/home/spectre/alphazede/Alphazedehq/skills/visual-review/SKILL.md; venv /home/spectre/.venvs/visual-review) on the local dev build. Drive the changed pages with scripts/browse.py (agent driver, local URLs only, read-only). Do not use the Jev driver: its key is owner-held. Capture desktop 1280 and phone 390 widths and screenshot each state. Run scripts/observe.py as the vision observer. Put the screenshots and observer output under /tmp/gm-evidence/<slice>/visual/. A UI that cannot run is a typed gap, not a pass. Refined per the owner's visual-review results (Alphazedehq main ae2e1ed, PRs #224-#228): give the flow file a GridMarket serve recipe and run `vr.py run --serve` so the check runs against a local copy of the dashboard. Use `--driver scripted` or an agent driving `browse.py`. The observer is `observe.py --observer claude` (Opus), which caught more than Muse in the owner's comparison."
+      "notes": " VISUAL REVIEW (DEC-GM-049): before the exit commit, review the changed pages in a running local browser at desktop (1280) and phone (390) widths and screenshot each state. Follow the Orchestrator's local visual-review guidance file (/tmp/claude-1000/-home-spectre-alphazede-Hackathons-Base/3f3d16bb-9fd4-4279-8e99-ac29f3675fda/scratchpad/ops/guidance/visual-review.md). Evidence goes under /tmp/gm-evidence/<slice>/visual/. A UI that cannot run is a typed gap, not a pass."
     },
     {
       "id": "S08",
@@ -3813,7 +3813,7 @@
       },
       "work_class": "judgement",
       "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail).",
-      "notes": " VISUAL REVIEW (DEC-GM-049): before the exit commit, run the Alphazedehq visual-review skill (/home/spectre/alphazede/Alphazedehq/skills/visual-review/SKILL.md; venv /home/spectre/.venvs/visual-review) on the local dev build. Drive the changed pages with scripts/browse.py (agent driver, local URLs only, read-only). Do not use the Jev driver: its key is owner-held. Capture desktop 1280 and phone 390 widths and screenshot each state. Run scripts/observe.py as the vision observer. Put the screenshots and observer output under /tmp/gm-evidence/<slice>/visual/. A UI that cannot run is a typed gap, not a pass. Refined per the owner's visual-review results (Alphazedehq main ae2e1ed, PRs #224-#228): give the flow file a GridMarket serve recipe and run `vr.py run --serve` so the check runs against a local copy of the dashboard. Use `--driver scripted` or an agent driving `browse.py`. The observer is `observe.py --observer claude` (Opus), which caught more than Muse in the owner's comparison."
+      "notes": " VISUAL REVIEW (DEC-GM-049): before the exit commit, review the changed pages in a running local browser at desktop (1280) and phone (390) widths and screenshot each state. Follow the Orchestrator's local visual-review guidance file (/tmp/claude-1000/-home-spectre-alphazede-Hackathons-Base/3f3d16bb-9fd4-4279-8e99-ac29f3675fda/scratchpad/ops/guidance/visual-review.md). Evidence goes under /tmp/gm-evidence/<slice>/visual/. A UI that cannot run is a typed gap, not a pass."
     },
     {
       "id": "S36",
@@ -4770,7 +4770,7 @@
       },
       "work_class": "judgement",
       "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail).",
-      "notes": " VISUAL REVIEW (DEC-GM-049): before the exit commit, run the Alphazedehq visual-review skill (/home/spectre/alphazede/Alphazedehq/skills/visual-review/SKILL.md; venv /home/spectre/.venvs/visual-review) on the local dev build. Drive the changed pages with scripts/browse.py (agent driver, local URLs only, read-only). Do not use the Jev driver: its key is owner-held. Capture desktop 1280 and phone 390 widths and screenshot each state. Run scripts/observe.py as the vision observer. Put the screenshots and observer output under /tmp/gm-evidence/<slice>/visual/. A UI that cannot run is a typed gap, not a pass. Refined per the owner's visual-review results (Alphazedehq main ae2e1ed, PRs #224-#228): give the flow file a GridMarket serve recipe and run `vr.py run --serve` so the check runs against a local copy of the dashboard. Use `--driver scripted` or an agent driving `browse.py`. The observer is `observe.py --observer claude` (Opus), which caught more than Muse in the owner's comparison."
+      "notes": " VISUAL REVIEW (DEC-GM-049): before the exit commit, review the changed pages in a running local browser at desktop (1280) and phone (390) widths and screenshot each state. Follow the Orchestrator's local visual-review guidance file (/tmp/claude-1000/-home-spectre-alphazede-Hackathons-Base/3f3d16bb-9fd4-4279-8e99-ac29f3675fda/scratchpad/ops/guidance/visual-review.md). Evidence goes under /tmp/gm-evidence/<slice>/visual/. A UI that cannot run is a typed gap, not a pass."
     },
     {
       "id": "S49",
@@ -5037,7 +5037,7 @@
       },
       "work_class": "judgement",
       "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail).",
-      "notes": " VISUAL REVIEW (DEC-GM-049): before the exit commit, run the Alphazedehq visual-review skill (/home/spectre/alphazede/Alphazedehq/skills/visual-review/SKILL.md; venv /home/spectre/.venvs/visual-review) on the local dev build. Drive the changed pages with scripts/browse.py (agent driver, local URLs only, read-only). Do not use the Jev driver: its key is owner-held. Capture desktop 1280 and phone 390 widths and screenshot each state. Run scripts/observe.py as the vision observer. Put the screenshots and observer output under /tmp/gm-evidence/<slice>/visual/. A UI that cannot run is a typed gap, not a pass. Refined per the owner's visual-review results (Alphazedehq main ae2e1ed, PRs #224-#228): give the flow file a GridMarket serve recipe and run `vr.py run --serve` so the check runs against a local copy of the dashboard. Use `--driver scripted` or an agent driving `browse.py`. The observer is `observe.py --observer claude` (Opus), which caught more than Muse in the owner's comparison."
+      "notes": " VISUAL REVIEW (DEC-GM-049): before the exit commit, review the changed pages in a running local browser at desktop (1280) and phone (390) widths and screenshot each state. Follow the Orchestrator's local visual-review guidance file (/tmp/claude-1000/-home-spectre-alphazede-Hackathons-Base/3f3d16bb-9fd4-4279-8e99-ac29f3675fda/scratchpad/ops/guidance/visual-review.md). Evidence goes under /tmp/gm-evidence/<slice>/visual/. A UI that cannot run is a typed gap, not a pass."
     }
   ],
   "integration_plan": {

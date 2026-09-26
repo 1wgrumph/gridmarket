@@ -536,8 +536,8 @@
       "status": "confirmed",
       "decided_at": "2026-09-26T11:10:42Z",
       "source": "Orchestrator as owner delegate (DEC-GM-043); carries out the owner's earlier request to add the frontend reviewer skill",
-      "decision": "The UI slices S07, S35, S51 and S48 run their visual review with the merged Alphazedehq visual-review skill. The driver is scripts/browse.py (agent driver, local only). The Jev driver is excluded because its key is owner-held. scripts/observe.py is the vision observer, and evidence covers the 1280 and 390 widths.",
-      "why": "The owner asked to add the frontend reviewer skill. The skill has since merged, and the owner's driver comparison shows agent drivers catch 4 of 4 planted defects with 0 false alarms, while Jev misses the phone-width break."
+      "decision": "UI slices S07, S35, S51 and S48 run a visual review in a running local browser at desktop and phone widths, with screenshot evidence. The tooling details are kept outside this repository.",
+      "why": "The owner asked to add their frontend reviewer tooling."
     },
     {
       "id": "DEC-GM-050",
