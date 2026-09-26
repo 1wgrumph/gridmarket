@@ -195,6 +195,38 @@ export default {
         return json({ MARKET_URL: env.MARKET_URL || null });
       }
 
+      // Anonymous dashboard allowlist: this one fixed URL, before the secret gate.
+      // The shared per-client limiter above also applies to cache hits.
+      if (p === "/api/esr-dashboard") {
+        if (request.method !== "GET") return json({ error: "Method not allowed" }, 405, { Allow: "GET, OPTIONS" });
+        const key = "esr-dashboard:v1";
+        const hit = await env.CACHE.get(key);
+        if (hit) return json(JSON.parse(hit), 200, { "x-cache": "HIT" });
+        const source = "https://www.ercot.com/api/1/services/read/dashboards/energy-storage-resources.json";
+        const response = await fetch(source, { headers: { Accept: "application/json" }, redirect: "manual", signal: AbortSignal.timeout(15000) });
+        if (!response.ok) return json({ error: "Waiting for ERCOT" }, 502);
+        const raw = await response.json();
+        const utc = value => {
+          if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}$/.test(value)) throw new Error("Waiting for ERCOT");
+          const time = new Date(value.replace(" ", "T").replace(/([+-]\d{2})(\d{2})$/, "$1:$2"));
+          if (!Number.isFinite(time.getTime())) throw new Error("Waiting for ERCOT");
+          return time.toISOString();
+        };
+        const normalize = row => {
+          if (!row || ![row.totalCharging, row.totalDischarging, row.netOutput].every(Number.isFinite) || row.totalCharging > 0 || row.totalDischarging < 0) throw new Error("Waiting for ERCOT");
+          return { timestamp: utc(row.timestamp), charging_mw: row.totalCharging, discharging_mw: row.totalDischarging, net_mw: row.netOutput };
+        };
+        const rows = [...(raw.previousDay?.data || []), ...(raw.currentDay?.data || [])]
+          .sort((a, b) => Date.parse(utc(a.timestamp)) - Date.parse(utc(b.timestamp)));
+        const latest = normalize(rows.at(-1));
+        const prior = rows.find(row => Date.parse(utc(row.timestamp)) === Date.parse(latest.timestamp) - 3600000);
+        const hourAgo = prior ? normalize(prior) : null;
+        const out = { ...latest, source, source_timestamp: raw.lastUpdated, updated_at: utc(raw.lastUpdated),
+          hour_ago: hourAgo, change_net_mw: hourAgo ? latest.net_mw - hourAgo.net_mw : null };
+        await env.CACHE.put(key, JSON.stringify(out), { expirationTtl: 60 });
+        return json(out, 200, { "x-cache": "MISS" });
+      }
+
       // The ESR route alone needs the ESR key; every other route ignores it.
       if (p === ESR_ROUTE && !env.ERCOT_ESR_SUBSCRIPTION_KEY) {
         return json({ error: "Worker secrets not set", secretsMissing: ["ERCOT_ESR_SUBSCRIPTION_KEY"] }, 503);

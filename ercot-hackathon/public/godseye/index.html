@@ -34,11 +34,29 @@
 
 <section class="hud rail glass" id="rail" aria-label="Plants and layers">
   <div class="panel-heading"><h2>Explore the grid</h2><span class="eyebrow">01</span></div>
+  <section class="help-grid" aria-label="Help the grid">
+    <h3>Help the grid</h3>
+    <div class="row2" id="helpToggles">
+      <button class="pill" data-help="demand" aria-pressed="false" aria-controls="helpDemand">Demand now</button>
+      <button class="pill" data-help="batteries" aria-pressed="false" aria-controls="helpBatteries">Batteries now</button>
+      <button class="pill" data-help="windows" aria-pressed="false" aria-controls="helpWindows">Help windows</button>
+    </div>
+    <div id="helpDemand" hidden aria-live="polite"></div>
+    <div id="helpBatteries" hidden aria-live="polite"></div>
+    <div id="helpWindows" hidden aria-live="polite"></div>
+    <div id="helpForecast" hidden>
+      <label for="helpHour">Forecast hour · Central Time</label>
+      <input id="helpHour" type="range" min="0" max="23" value="0" step="1" />
+      <output id="helpHourLabel" for="helpHour"></output>
+      <div class="note">Load relative to each zone’s own 24-hour peak. Weather-to-load-zone mapping is approximate; map areas are schematic.</div>
+      <ul id="helpZones" aria-label="Forecast load by zone"></ul>
+    </div>
+  </section>
   <div class="search"><input id="q" aria-label="Find a plant, operator or county" type="search" placeholder="Find a plant, operator or county" autocomplete="off" /></div>
   <div class="results" id="results"></div>
-  <section class="livebox" aria-label="Texas battery activity">
-    <div class="lbl">Texas battery activity</div>
-    <div id="batteryReading" aria-live="polite">Battery data unavailable</div>
+  <section class="livebox" aria-label="GridMarket battery signal">
+    <div class="lbl">GridMarket battery signal</div>
+    <div id="batteryReading" aria-live="polite">Waiting for ERCOT</div>
     <div class="note">ERCOT energy storage · refreshed every 5 minutes</div>
   </section>
   <button class="pill" id="batteriesOnly" aria-pressed="false">Batteries only · includes hybrids</button>
@@ -69,6 +87,7 @@
 </main>
 
 <script type="module">
+import { forecastHours, helpWindows, windowText, mwText, waiting } from "./help-grid.js";
 import { fetchMarket } from "/market-feed.js";
 import { countyToZone, tradeLink, leadPrediction, isBattery, latestESR, formatESR, zoneName, sectorName, ctTime, intervalText, checkName, checkQuestion, routeName, activityText } from "./geo.js";
 
@@ -139,7 +158,7 @@ const ACC=C.Color.fromCssColorString('#b8dbd9');
 const INK=C.Color.fromCssColorString('#0e1214');
 // Map text is ghost white on near-opaque ink in both themes (17:1); resource colour stays on the silhouettes.
 const MAP_TEXT=C.Color.fromCssColorString('#f4f4f9');
-const G={}; ['outline','prices','weather','plants'].forEach(k=>{G[k]=new C.CustomDataSource(k);viewer.dataSources.add(G[k]);});
+const G={}; ['outline','prices','weather','plants','help'].forEach(k=>{G[k]=new C.CustomDataSource(k);viewer.dataSources.add(G[k]);});
 
 G.outline.entities.add({polyline:{positions:C.Cartesian3.fromDegreesArray(TX.flat()),width:2,material:C.Color.fromCssColorString('#586f7c'),clampToGround:true}});
 G.outline.entities.add({position:C.Cartesian3.fromDegrees(...BASE_HQ),point:{pixelSize:7,color:C.Color.WHITE,outlineColor:ACC,outlineWidth:2},
@@ -374,6 +393,7 @@ async function refreshMarket(){
     marketUrl=url;
     predictions=Array.isArray(forecast)?forecast:null;
     esr=latestESR(signals);
+    helpSignals=Array.isArray(signals)?signals:null; helpPredictions=predictions;
     const dashboard=document.getElementById('dashboard');
     dashboard.hidden=!marketUrl;
     if(marketUrl) dashboard.href=marketUrl;
@@ -385,14 +405,73 @@ async function refreshMarket(){
       marketStale=true;
       if(!marketUrl){trades=[];marketFeed=null;}
     }
-  }catch{if(my!==marketReq) return; predictions=null;marketStale=true;}
-  renderMarket(); renderStatus(); renderTicker();
+  }catch{if(my!==marketReq) return; predictions=null;helpSignals=null;helpPredictions=null;marketStale=true;}
+  renderMarket(); renderStatus(); renderTicker(); renderHelp();
   const box=document.getElementById('zoneMarket');
   if(box&&selected) box.innerHTML=zoneHTML(selected);
   const reading=formatESR(esr);
-  document.getElementById('batteryReading').innerHTML=esc(reading)+
+  document.getElementById('batteryReading').innerHTML=esc(reading==='Battery data unavailable'?waiting:reading)+
     (reading==='Battery data unavailable'?'':`<div class="note">Updated <time datetime="${esc(esr.fetched_at)}">${esc(ctTime(esr.fetched_at))}</time></div>`);
 }
+
+/* ---------- Help the grid: independent public feeds and controls ---------- */
+const help={demand:false,batteries:false,windows:false};
+let helpSignals=null, helpPredictions=null, batteryDashboard=null, batteryStale=false;
+const helpHour=document.getElementById('helpHour');
+// Representative areas, not electrical boundaries; same approximation as the backend roll-up.
+const loadAreas={LZ_NORTH:[-97.3,33.0,160000],LZ_HOUSTON:[-95.2,29.3,95000],LZ_SOUTH:[-98.2,27.8,130000],LZ_WEST:[-102,31.8,200000]};
+const helpAreas={};
+for(const [zone,[lon,lat,radius]] of Object.entries(loadAreas)){
+  helpAreas[zone]=G.help.entities.add({position:C.Cartesian3.fromDegrees(lon,lat),
+    ellipse:{semiMajorAxis:radius,semiMinorAxis:radius,material:ACC.withAlpha(0),outline:true,outlineColor:ACC.withAlpha(.6)},
+    label:{text:zoneName(zone),font:'500 12px Inter, sans-serif',fillColor:MAP_TEXT,showBackground:true,backgroundColor:INK.withAlpha(.88),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
+}
+function renderHelp(){
+  const now=Date.now(), forecast=forecastHours(helpSignals,now), index=Number(helpHour.value);
+  for(const [name,id] of [['demand','helpDemand'],['batteries','helpBatteries'],['windows','helpWindows']]) document.getElementById(id).hidden=!help[name];
+  document.getElementById('helpForecast').hidden=!(help.demand||help.windows);
+  G.help.show=help.demand||help.windows;
+  const demand=SNAP?.demand?.mw, capacity=SNAP?.sced?.onlineHSL;
+  document.getElementById('helpDemand').innerHTML=`<b>ERCOT-wide demand</b><div>${mwText(demand)} / ${mwText(capacity)} available capacity</div>
+    <div class="note">${Number.isFinite(demand)&&Number.isFinite(capacity)&&capacity>0?`${fmt(demand/capacity*100,1)}% of available capacity`:waiting}${snapshotStale?' · Stale · last known':''}</div>`;
+  const b=batteryDashboard;
+  const stale=batteryStale||(b&&now-Date.parse(b.timestamp)>10*60*1000);
+  document.getElementById('helpBatteries').innerHTML=b?`<b>Texas grid batteries</b>
+    <div>Charging ${mwText(b.charging_mw)}</div><div>Discharging ${mwText(b.discharging_mw)}</div>
+    <div>Net ${mwText(b.net_mw)}</div><div>Net change over 1 hour: ${Number.isFinite(b.change_net_mw)?(b.change_net_mw>0?'+':'')+mwText(b.change_net_mw):waiting}</div>
+    <div class="note">${stale?'Stale · last known · ':''}Reading ${esc(ctTime(b.timestamp))}<br>Source updated ${esc(ctTime(b.updated_at))}</div>`:`<b>Texas grid batteries</b><div>${waiting}</div>`;
+  document.getElementById('helpBatteries').innerHTML+='<div class="note">ERCOT energy-storage dashboard · system-wide, not household batteries. Highlighted plants include hybrids; markers show locations, not individual output. Refreshes every minute.</div>';
+  const windows=helpWindows(helpPredictions,now);
+  const available=Array.isArray(helpPredictions)&&helpPredictions.some(p=>p.level!=='UNAVAILABLE'&&Number.isFinite(p.score)&&Date.parse(p.delivery_hour)>=now&&Date.parse(p.delivery_hour)<now+24*3600000);
+  document.getElementById('helpWindows').innerHTML='<b>Next help windows</b><div class="note">Simulation estimate, not an ERCOT alert</div><div class="help-chips">'+
+    (windows.length?windows.map(w=>`<span class="badge">${esc(windowText(w))}</span>`).join(''):`<span>${available?'No HIGH-or-above windows in supplied predictions':waiting}</span>`)+ '</div>';
+  const hour=ctTime(new Date(forecast.hours[index]).toISOString());
+  document.getElementById('helpHourLabel').textContent=hour;
+  helpHour.setAttribute('aria-valuetext',hour);
+  document.getElementById('helpZones').innerHTML=Object.entries(forecast.zones).map(([zone,data])=>{
+    const value=data.values[index], ratio=Number.isFinite(value)&&data.peak>0?value/data.peak:null;
+    const text=`${zoneName(zone)}: ${mwText(value)} · ${ratio===null?'24-hour peak: '+waiting:fmt(ratio*100)+'% of own peak'}`;
+    const area=helpAreas[zone];
+    if(area){area.ellipse.material=ratio===null?ACC.withAlpha(0):C.Color.lerp(C.Color.fromCssColorString('#b8dbd9'),C.Color.fromCssColorString('#04724d'),ratio,new C.Color()).withAlpha(.15+ratio*.4);area.label.text=zoneName(zone)+' · '+(ratio===null?waiting:fmt(ratio*100)+'% of peak');}
+    return `<li>${esc(text)}</li>`;
+  }).join('');
+}
+function highlightBatteries(){
+  for(const p of PLANTS){const e=plantEnt.get(p.code);e.billboard.scale=help.batteries&&isBattery(p)?1.3:1;
+    e.billboard.color=help.batteries&&isBattery(p)?C.Color.fromCssColorString('#88baac'):(p.ba==='ERCO'?C.Color.WHITE:C.Color.WHITE.withAlpha(.5));}
+}
+document.querySelectorAll('#helpToggles button').forEach(button=>button.onclick=()=>{
+  const key=button.dataset.help; help[key]=!help[key];button.setAttribute('aria-pressed',String(help[key]));button.classList.toggle('on',help[key]);renderHelp();highlightBatteries();
+});
+helpHour.oninput=renderHelp;
+async function refreshBatteries(){
+  try{const r=await fetch(API+'/api/esr-dashboard',{signal:AbortSignal.timeout(20000)});if(!r.ok)throw new Error(waiting);
+    const b=await r.json();if(![b.charging_mw,b.discharging_mw,b.net_mw].every(Number.isFinite)||!Number.isFinite(Date.parse(b.timestamp)))throw new Error(waiting);
+    batteryDashboard=b;batteryStale=false;
+  }catch{batteryStale=true;}
+  renderHelp();
+}
+renderHelp();refreshBatteries();setInterval(refreshBatteries,60000);
 
 /* ---------- plant drill-down ---------- */
 function spark(series,color){
@@ -523,16 +602,16 @@ handler.setInputAction(ev=>{ const hit=scene.pick(ev.endPosition);
 /* ---------- data loading ---------- */
 async function loadPlants(){
   const d=window.__PLANTS||await (await fetch(API+'/data/tx_plants.json')).json(); META=d.meta; PLANTS=d.plants;
-  addPlants(); applyFilter(); renderSystem();
+  addPlants(); applyFilter(); renderSystem(); highlightBatteries();
   const m=location.hash.match(/plant-(\d+)/); if(m) setTimeout(()=>selectPlant(+m[1]),1800);
 }
 async function loadSnap(){
   try{ const r=await fetch(API+'/api/snapshot'); if(!r.ok) throw 0; SNAP=await r.json();
     Object.keys(state.hub).forEach(k=>delete state.hub[k]); (SNAP.hubs||[]).forEach(h=>state.hub[h.hub]=h.price); (SNAP.weather?.zones||[]).forEach(z=>state.temps[z.zone]=z.tempF);
     snapshotState='live'; renderStatus();
-    snapshotPending=false; snapshotStale=false; renderTicker();
+    snapshotPending=false; snapshotStale=false; renderTicker(); renderHelp();
     renderDock(); if(!selected) renderSystem(); else if(!document.querySelector('#liveMarket .livebox .big')) selectPlant(selected.code,false);
-  }catch(e){ snapshotPending=false; snapshotState=SNAP?'stale':'down'; renderStatus(); snapshotStale=true; renderTicker(); if(!selected) renderSystem(); }
+  }catch(e){ snapshotPending=false; snapshotState=SNAP?'stale':'down'; renderStatus(); snapshotStale=true; renderTicker(); renderHelp(); if(!selected) renderSystem(); }
 }
 loadPlants().catch(e=>{intel.innerHTML=`<div class="note">Couldn't load plant data: ${esc(e.message)}</div>`;});
 loadSnap(); setInterval(loadSnap,5*60*1000);

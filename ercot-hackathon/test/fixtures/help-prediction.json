@@ -1,0 +1,55 @@
+{
+  "provenance": {
+    "source": "backend/gridmarket_server/scoring.py::score_hour",
+    "inputs": "backend/tests/test_scoring.py::inputs()",
+    "transformation": "Dataclass serialized to JSON. Internal simulation output, not an ERCOT response."
+  },
+  "prediction": {
+    "zone": "LZ_HOUSTON",
+    "delivery_hour": "2027-09-14T19:00:00-05:00",
+    "score": 83.14517367943242,
+    "level": "HIGH",
+    "confidence": 1.0,
+    "expected_value": 0.10651613894354593,
+    "market_price": null,
+    "drivers": [
+      {
+        "factor": "price-spread",
+        "contribution": 4.833446102982318,
+        "detail": "Day-ahead 80 vs real-time 50 $/MWh"
+      },
+      {
+        "factor": "load-pressure",
+        "contribution": 6.854347403601883,
+        "detail": "Load 1100 MW vs 1000 MW 24-hour mean"
+      },
+      {
+        "factor": "outage-pressure",
+        "contribution": 8.206753396920579,
+        "detail": "Outage capacity 2000 MW vs 1600 MW median"
+      },
+      {
+        "factor": "congestion-pressure",
+        "contribution": 2.621813512064318,
+        "detail": "RT vs hub spread plus constraints HOUSTON_NORTH_345KV 25"
+      },
+      {
+        "factor": "heat-stress",
+        "contribution": 2.7727029435600583,
+        "detail": "Temperature 90 F above 85 F threshold"
+      },
+      {
+        "factor": "peak-period",
+        "contribution": 4.0,
+        "detail": "NERC 5x16 on-peak hour"
+      },
+      {
+        "factor": "weather-alert",
+        "contribution": 3.8561103203032676,
+        "detail": "2 active Severe or Extreme weather alerts"
+      }
+    ],
+    "disclaimer": "Simulation estimate, not guaranteed profit.",
+    "generated_at": "2026-09-26T22:38:12.740705+00:00"
+  }
+}
