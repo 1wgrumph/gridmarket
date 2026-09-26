@@ -849,6 +849,29 @@
       "decision": "Every phase landing gets a GitHub release (tag vX.Y.0 on the main merge commit, title 'GridMarket X.Y.0') and a CHANGELOG.md entry, in the owner's release-notes format (Improvements (N) / Fixes (N), fixes last, one past-tense line each; same-release repairs fold into their improvement). Backfill v0.1.0 (1a, 44b7f63) and v0.2.0 (1b, d6cfdc3) via slice S57. Phase 2 becomes v0.3.0, stretch v0.4.0 and final v1.0.0. The notes are product-language only (the repo becomes public).",
       "owner_quote": "Are you adding these release notes? in the release so Jordan agent can know / Follow bearing-lite release template",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-089",
+      "decided_at": "2026-09-26T12:52:00-05:00",
+      "decided_by": "Orchestrator (delegate) on owner question",
+      "decision": "Phase 2 visual review adds the screenshot observer: after the scripted vr.py run at 1280 and 390, observe.py --observer claude judges every screenshot (no baseline yet), and its findings join the one review and its one repair round. Phase 1b ran the scripted driver only, so CLS, console and request checks ran but no model judged layout by eye. The Jev driver stays off (paid calls). Posted as DIR-P2-06.",
+      "owner_quote": "Are we not using the review skill that uses computer use?",
+      "reversible": true
+    },
+    {
+      "id": "DEC-GM-090",
+      "decided_at": "2026-09-26T12:58:00-05:00",
+      "decided_by": "Orchestrator (delegate, planning owner)",
+      "decision": "S05-cap attempt 1 returned CONTRACT_FAILURE: two mkt_04 tests in test_market.py place 1000- and 1100-cent orders, above the $5.00 cap. Under the DEC-GM-061 test-data rule, tests that price above 500 cents may change their price and balance DATA only, keeping every assertion line and its meaning. The Sandbox sample order literal 4200 becomes 10 so judges' first copied order is not rejected. S05-cap is the Orchestrator's (job P2-S05cap-o2); the P2 Coordinator's duplicate dispatches ended with no changes. Posted as DIR-P2-07.",
+      "reversible": true
+    },
+    {
+      "id": "DEC-GM-091",
+      "decided_at": "2026-09-26T13:05:00-05:00",
+      "decided_by": "Orchestrator (delegate) on owner request to pull the schedule further left",
+      "decision": "Work that does not depend on the phase 2 landing starts now in parallel: S55 (ESR battery tile) on new lane esr, landing with the stretch assembly S18 and its review; final-wave red-test slices S44 (docs) and S47 (onboarding) on new lanes docs and onboarding. CONTRACTS.md gets one additive Worker route row for GET /api/report/esr/charging_mw; no other contract change. S45 and S48 product slices still wait for their inputs (S45 describes only merged features).",
+      "owner_quote": "Is it possible to push further left?",
+      "reversible": true
     }
   ],
   "stages": {

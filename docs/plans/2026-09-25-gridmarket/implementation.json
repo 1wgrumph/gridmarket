@@ -5408,6 +5408,63 @@
         "level": "profile",
         "reason": "frontend profile per DEC-GM-024/044"
       }
+    },
+    {
+      "authority_id": "GM-2026-09-25",
+      "dispatchable": true,
+      "parallel_safe": true,
+      "work_class": "judgement",
+      "human_decision": "Owner live check after the Worker deploy confirms the ESR payload shape (PROC-ERCOT-LIVE-CHECK).",
+      "requirement_ids": [],
+      "design_ids": [
+        "DES-GM-EDGE",
+        "DES-GM-UI"
+      ],
+      "seit_proof_rows": [],
+      "design_lenses": [
+        "UI",
+        "Accessibility"
+      ],
+      "review_path": {
+        "reviewer": "phase",
+        "assurance": "phase",
+        "coverage_assist": "enabled-not-required"
+      },
+      "notes": "DEC-GM-079 (owner), DEC-GM-091 (pulled left; one additive CONTRACTS Worker route row). Requirement ids are Lifecycle-local: no AC row exists for ESR; the proof is the slice's own tests plus the S18 review.",
+      "id": "S55",
+      "role": "Product Implementer",
+      "goal": "Display-only ERCOT ESR (battery) charging data: Worker route GET /api/report/esr/charging_mw (bearer token + ERCOT_ESR_SUBSCRIPTION_KEY, KV cache 300 s, market-key auth), backend signal report_id ESR polled every 5 min, Overview tile 'Texas batteries charging now' with sparkline and an unavailable state; fixture tests for all three. No scoring or market change.",
+      "type": "product",
+      "lane": "esr",
+      "branch": "gridmarket/lane-esr",
+      "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-esr",
+      "branch_base": "origin/main e08cf55",
+      "write_set": [
+        "ercot-hackathon/src/index.js",
+        "ercot-hackathon/README.md",
+        "ercot-hackathon/test/esr.test.mjs",
+        "backend/gridmarket_server/ercot.py",
+        "backend/tests/test_ercot_esr.py",
+        "dashboard/src/pages/Overview.tsx",
+        "dashboard/src/styles.css",
+        "dashboard/src/pages/Overview.esr.test.tsx",
+        "dashboard/src/fixtures/esr.json",
+        "CONTRACTS.md"
+      ],
+      "command_ids": [
+        "CMD-TEST-ALL",
+        "CMD-LINT",
+        "CMD-WRITESET"
+      ],
+      "stop_condition": "make test-all and make lint exit 0 with the new Worker, backend and dashboard tests green; CMD-WRITESET exit 0; committed on gridmarket/lane-esr. Lands with the stretch assembly S18 and its review.",
+      "model_route": {
+        "snapshot_role": "implementer",
+        "profile": "default"
+      },
+      "reasoning_level": {
+        "level": "profile",
+        "reason": "frontend profile per DEC-GM-024/044"
+      }
     }
   ],
   "integration_plan": {
