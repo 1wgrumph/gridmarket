@@ -1,0 +1,21 @@
+{
+  "/v1/providers": [
+    { "id": "base_sim", "display_name": "Base Simulation", "online": true },
+    { "id": "lonestar", "display_name": "LoneStar Storage", "online": false }
+  ],
+  "/v1/providers/health": [
+    { "provider_id": "base_sim", "online": true, "last_heartbeat": "2026-09-26T12:59:56Z", "customers": 40, "online_assets": 38, "outage_active": false, "outage_until": null },
+    { "provider_id": "lonestar", "online": false, "last_heartbeat": "2026-09-26T12:59:13Z", "customers": 20, "online_assets": 17, "outage_active": true, "outage_until": "2026-09-26T13:10:00Z" }
+  ],
+  "/v1/router": {
+    "checks": [
+      { "check_id": "health-worker", "family": "health", "subject": "worker", "horizon_s": 900, "probability": 0.03, "band": "log", "baseline": true, "jev_probability": null, "created_at": "2026-09-26T12:59:00Z", "resolves_at": "2026-09-26T13:14:00Z", "outcome": null },
+      { "check_id": "health-base_sim", "family": "health", "subject": "base_sim", "horizon_s": 900, "probability": 0.08, "band": "log", "baseline": true, "jev_probability": null, "created_at": "2026-09-26T12:59:00Z", "resolves_at": "2026-09-26T13:14:00Z", "outcome": null },
+      { "check_id": "health-lonestar", "family": "health", "subject": "lonestar", "horizon_s": 900, "probability": 0.92, "band": "alert", "baseline": true, "jev_probability": null, "created_at": "2026-09-26T12:59:00Z", "resolves_at": "2026-09-26T13:14:00Z", "outcome": null }
+    ],
+    "brier": { "health-worker": 0.02, "health-base_sim": 0.05, "health-lonestar": 0.11 },
+    "jev_enabled": false
+  },
+  "/v1/admin/providers/base_sim/outage": { "ok": true },
+  "/v1/admin/providers/lonestar/outage": { "ok": true }
+}
