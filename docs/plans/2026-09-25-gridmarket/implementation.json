@@ -2410,7 +2410,7 @@
       "stop_condition": "CMD-RED-GREEN, CMD-TEST-PARITY, CMD-BENCH, CMD-DEPSCAN, CMD-SMOKE, CMD-WRITESET exit 0 at the exit commit with the parity suite green; or return the typed failure. Exit: the slice's work is committed on gridmarket/lane-rust. Parity suite green; GRIDMARKET_ENGINE=rust in compose only if the benchmark shows a gain. CMD-SMOKE with SMOKE_PROJECT=gm-smoke-rust SMOKE_PORT=18002.",
       "human_decision": null,
       "authority_id": "GM-2026-09-25",
-      "dispatchable": true,
+      "dispatchable": false,
       "lane": "rust",
       "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-rust",
       "branch": "gridmarket/lane-rust",
@@ -2422,7 +2422,8 @@
       },
       "work_class": "judgement",
       "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail).",
-      "notes": null
+      "notes": null,
+      "dropped": "DEC-GM-067 (owner): Rust out of scope"
     },
     {
       "id": "S18",
@@ -6164,7 +6165,8 @@
           "PROC-ASSEMBLY"
         ],
         "rollback": "git revert -m 1; rerun on the revert (image without Rust stage); record rust dropped",
-        "exit": "Stretch candidate recorded with dropped-lane list; assurance handoff; deterministic verification decides. If S18-G does not run, CMD-SECRETS and CMD-RULES run on the last stretch step, and Reverify is recorded not applicable: no binary artifact"
+        "exit": "Stretch candidate recorded with dropped-lane list; assurance handoff; deterministic verification decides. If S18-G does not run, CMD-SECRETS and CMD-RULES run on the last stretch step, and Reverify is recorded not applicable: no binary artifact",
+        "dropped": "DEC-GM-067 (owner): Rust out of scope"
       },
       {
         "id": "S18-L",

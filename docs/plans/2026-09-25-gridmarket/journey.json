@@ -673,6 +673,14 @@
       "decision": "S17 admission order: write Cargo.toml and generate Cargo.lock first, then make depscan RUST=1 must pass before any Rust source is written or built. Redispatch S17 once on the heavyweight route. S14 merges origin/main now that 1a has landed.",
       "rationale": "S17 attempt 1 stopped because cargo audit ran before a lockfile could exist, which is a sequencing defect in the plan. The scan remains a hard gate.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-067",
+      "decided_at": "2026-09-26T09:35:00-05:00",
+      "decided_by": "Owner (in chat)",
+      "decision": "Rust is out of scope; the stack is Python + React. S17 (PyO3 matching core) is dropped and S18-G (the rust lane merge) is removed. GRIDMARKET_ENGINE stays on the Python engine. Supersedes the S17 part of DEC-GM-066.",
+      "owner_quote": "we dont need rust I thought we settled on python and react",
+      "reversible": true
     }
   ],
   "stages": {
