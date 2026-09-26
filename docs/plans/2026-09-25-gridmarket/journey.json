@@ -1124,6 +1124,20 @@
       "decided_by": "Owner (ticked in the GridMarket experience plan)",
       "decision": "Owner approved all five experience-plan decisions: (1) product sentence 'Texas home batteries, paid to help when the grid is tight'; (2) cut stretch-2 C4 (live bot decisions, S70) and C7 (battery activity timeline, S73); (3) design the four path screens first, then build S71, S72 and S80 to the approved design (S80's queued start paused); (4) fresh-eyes run by Jordan at about 21:00; (5) owner deploys the Worker with ERCOT keys for the live data check. Owner also asked for God's Eye to show real-time usage, batteries and when customers should help the grid; proposed as slice S81 (help-the-grid layer) in the plan, awaiting the owner's tick.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-126",
+      "decided_at": "2026-09-26T17:37:00-05:00",
+      "decided_by": "Owner (in chat: 'I already checkmarked them all')",
+      "decision": "God's Eye 'help the grid' layer approved as slice S81 on lane godseye after S62r: toggles for demand now (Worker snapshot, NP3-565 zone forecast via /v1/signals), batteries now (new keyless, cached, per-client-limited Worker route /api/esr-dashboard proxying ERCOT's public energy-storage dashboard, captured fixture with provenance), and help windows (GridMarket predictions at HIGH or above, Central Time chips, 24-hour scrubber), all labelled and with 'Waiting for ERCOT' when data is missing. The design mockups are treated as approved (owner reviews and comments on the canvas; changes fold into the repair round); S80, S71 and S72 build to them.",
+      "reversible": true
+    },
+    {
+      "id": "DEC-GM-127",
+      "decided_at": "2026-09-26T17:37:00-05:00",
+      "decided_by": "Orchestrator (delegate, planning owner)",
+      "decision": "Replay model amendment A16 (stretch2-plan.md): procurement in the four highest day-ahead hours instead of fixed 17:00-21:00; self_supply action valued at RT SPP; distinct fixed rules per strategy with no day-specific tuning; compact fleet-level run body and a bounded decisions endpoint. Reason: S69's real 2026-08-26 run produced identical scoreboards because the fixed window missed the real 22:00-22:30 spike. Slice S69b on lane replay-model, merged into lane replay; S71/S72 build against the added keys.",
+      "reversible": true
     }
   ],
   "stages": {
