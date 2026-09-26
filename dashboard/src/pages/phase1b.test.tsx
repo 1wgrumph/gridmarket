@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import App from '../App';
 import fixture from './phase1b.fixture.json';
 
@@ -35,7 +35,7 @@ describe('phase 1b dashboard pages', () => {
     expect(screen.getByText(/bid/i)).toBeTruthy();
     expect(screen.getByText(/ask/i)).toBeTruthy();
     expect(screen.getByText(/recent trades/i)).toBeTruthy();
-    expect(screen.getByText(/trade-7|42\.00/)).toBeTruthy();
+    expect(await within(await screen.findByRole('region', { name: 'Recent trades' })).findByText('1 @ $42.00')).toBeTruthy();
   });
 
   it('SEIT-GM-UI-01-PAGES Market refreshes within two seconds', async () => {
@@ -49,13 +49,13 @@ describe('phase 1b dashboard pages', () => {
     visit('#/predictions');
     expect(await screen.findByText('DART spread')).toBeTruthy();
     expect(screen.getByText('Wind')).toBeTruthy();
-    expect(screen.getByText(/\+0\.18|\+18\s*%/)).toBeTruthy();
-    expect(screen.getByText(/-0\.12|-12\s*%/)).toBeTruthy();
+    expect(await within(screen.getByText('DART spread').closest('li')!).findByText('+0.18')).toBeTruthy();
+    expect(await within(screen.getByText('Wind').closest('li')!).findByText('-0.12')).toBeTruthy();
     expect(screen.getByText('NORTH 14:00')).toBeTruthy();
     expect(screen.getByText(/alert/i)).toBeTruthy();
     expect(screen.getByText(/review/i)).toBeTruthy();
     expect(screen.getByText(/brier/i)).toBeTruthy();
-    expect(screen.getByText(/0\.17|17\s*%/)).toBeTruthy();
+    expect(await within(screen.getByText('NORTH 14:00').closest('tr')!).findByText('0.17')).toBeTruthy();
   });
 
   it('SEIT-GM-UI-01-PAGES Jev column follows the /v1/router flag', async () => {
@@ -87,7 +87,7 @@ describe('phase 1b dashboard pages', () => {
     expect(screen.getByText('lonestar')).toBeTruthy();
     expect(screen.getByText('bot-8')).toBeTruthy();
     expect(screen.getByText(/dormant rate/i)).toBeTruthy();
-    expect(screen.getByText(/50\s*%|1\s*\/\s*2/)).toBeTruthy();
+    expect(await within(screen.getByText('Dormant rate').parentElement!).findByText('50%')).toBeTruthy();
   });
 
   it('SEIT-GM-UI-07 shows coverage, entropy, risk and patience diversity', async () => {
@@ -103,7 +103,7 @@ describe('phase 1b dashboard pages', () => {
     visit('#/bots');
     expect(await screen.findByText(/not yet enabled/i)).toBeTruthy();
     expect(screen.getByText(/dormant rate/i)).toBeTruthy();
-    expect(screen.getByText(/50\s*%|1\s*\/\s*2/)).toBeTruthy();
+    expect(await within(screen.getByText('Dormant rate').parentElement!).findByText('50%')).toBeTruthy();
   });
 
   it('SEIT-GM-UI-01-PAGES owner spawn sends only the key typed in the form', async () => {
@@ -126,9 +126,10 @@ describe('phase 1b dashboard pages', () => {
     for (const label of [/patience/i, /score follower/i, /saver/i, /household/i, /technician/i, /pay/i, /balance/i, /trades/i, /losses/i, /worst loss/i, /dormant/i]) {
       expect(screen.getAllByText(label).length).toBeGreaterThan(0);
     }
-    expect(screen.getByText(/25\s*%|0\.25/)).toBeTruthy();
+    expect(await within(screen.getByText('Loss share').parentElement!).findByText('25%')).toBeTruthy();
     expect(screen.getByText(/P&L/i)).toBeTruthy();
-    expect(screen.getByText(/\$?24(?:\.00)?\b/)).toBeTruthy();
+    expect(await within(screen.getByText('Cash').parentElement!).findByText('$912.00')).toBeTruthy();
+    expect(await within(screen.getByText('P&L').parentElement!).findByText('$24.00')).toBeTruthy();
     expect(screen.queryByText(/\$?64(?:\.00)?\b/)).toBeNull();
   });
 
