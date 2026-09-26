@@ -9,7 +9,9 @@ public_boundary: private
 
 # Phase 1a assembly — S09
 
-Current outcome: **REPAIRABLE_FAILURE**: S09-C passed; S09-D merged cleanly but fails application import through `api -> scoring -> ercot -> api`. S09-D was reverted under PROC-ASSEMBLY, and the restored S09-C checks pass. S09-E was not attempted; no Phase 1a candidate is ready or written. Return the integration failure to the Coordinator for lane repair.
+Current outcome: **REPAIRABLE_FAILURE** under DIR-P1a-07 / DEC-GM-054: repaired market exit and restored S06 data pass S09-D with the existing offline NWS setting. S09-E merged cleanly, but `make test-dash` runs Vitest from the repository root, collects the worker's node:test file, and fails with `No test suite found`. Production build and full S09-E gates are incomplete. The assembly is retained as an AN-ENV command-discovery checkpoint; no candidate is written. Return to the Coordinator for a bounded command correction. Stop before S09-L.
+
+Historical outcome before DIR-P1a-07: **REPAIRABLE_FAILURE**: S09-C passed; S09-D merged cleanly but failed application import through `api -> scoring -> ercot -> api`. S09-D was reverted under PROC-ASSEMBLY, and the restored S09-C checks passed. S09-E was not attempted; no Phase 1a candidate was written at that checkpoint.
 
 Historical outcome before DIR-P1a-03: **REPAIRABLE_FAILURE**. S09-A merged without conflicts but failed its required dashboard gates. It was reverted under PROC-ASSEMBLY. No assembly step is complete; S09-B through S09-E were not attempted. S09-L remains with the Orchestrator.
 
@@ -244,3 +246,58 @@ The data test files leave with the revert; the full S09-D suite cannot pass on t
 S09-E input `5d3f39ce60846a0164e0b9d04051c72f7ebad57e` remains unmerged. No candidate SHA was written: the designated `ops/candidates/1a` file was absent and remains absent. Evidence/recovery HEAD is a handoff checkpoint only, not a Phase 1a candidate. Evidence is committed and pushed only to `origin/gridmarket/integration-1a`; independent review, assurance, owner acceptance and S09-L remain pending.
 
 Re-entry follows PROC-ASSEMBLY: restore the reverted data merge with a revert-of-revert, merge the Coordinator-recorded repaired exit(s), rerun all S09-D checks including the entire SDK suite, and proceed to S09-E only after green. Merely merging an unchanged data exit cannot restore reverted content.
+
+## DIR-P1a-07 / DEC-GM-054 — S09-D re-integration passes
+
+- Execution starts at clean `1f71397a8b516049f2d01e8af8abc15cbcba9ffc` on `gridmarket/integration-1a`; DIR-P1a-03 through DIR-P1a-07 apply. Stop before S09-L.
+- Recorded S08 repair exit: `20f1e9800751f4b688ee8b369934b19ab6d6e917`; S06: `82949039d2f54b5c0b8bc8d61c208251fd754adc`; S07: `5d3f39ce60846a0164e0b9d04051c72f7ebad57e`. All match the Coordinator exit files and existing Git objects.
+- `git merge --no-ff 20f1e9800751f4b688ee8b369934b19ab6d6e917 -m "Merge S08 market repair for S09-C assembly (DIR-P1a-07)"`: exit 0, merge `22c59a35d775a71591487bcdb4a13871253a6234`.
+- `git revert --no-edit f81e154`: exit 0, restoration `146e9cac0508c787c52795416ff03bbc70be3774`, tree `d75c77bfc5161b238b5370f3274f4082d825d1b4`.
+- No conflicts, direct product edits, dependency changes, or new glue. Write-set checks pass: market repair 2 paths in S02/S05/S08; restored data 15 paths in S03/S06; UI preflight 6 paths in S04/S07. All twelve frozen files match S01 in the three lane exits and assembled S09-D tree, including vite.config.ts. Existing admission receipts remain applicable to unchanged lockfiles.
+
+| Command | Exit | Output / result |
+|---|---:|---|
+| `python -c "import gridmarket_server.main"` with backend/.venv/bin first in PATH | 0 | No output; circular import resolved. |
+| `make lint` | 0 | All checks passed; 32 files already formatted. |
+| `make test-contracts` | 0 | 3 passed. |
+| `UV_EXCLUDE_NEWER=2026-09-11T22:00:00Z uv run --project backend pytest -q backend/tests/test_market.py backend/tests/test_api.py backend/tests/test_ercot.py backend/tests/test_nws.py backend/tests/test_scoring.py backend/tests/test_sdk.py` | 1 | 64 passed, 1 failed, 21 teardown errors, 2 warnings; live NWS polling conflicts with the offline socket guard. |
+| Same complete suite with `GRIDMARKET_NWS=off` | 0 | 65 passed, 2 dependency deprecation warnings, 62.62 s; no tests skipped or deselected, including test_sdk.py. |
+| `make smoke SMOKE_PROJECT=gm-smoke-integration SMOKE_PORT=18000` | 0 | App healthy, `{"status":"open"}`; temporary stack cleaned up. Existing bots-healthcheck limitation remains. |
+
+The initial suite started the default NWS background poller in market/API TestClient lifespans. Its outbound connection hit `backend/tests/conftest.py`'s `RuntimeError("Outbound sockets are blocked in backend tests")`; the poller also advanced the global zone cursor before the later NWS fixture test expected Houston. A separate run of `test_api.py::test_seit_gm_api_01_bearer_auth_and_hash_only_storage` reproduced one passing assertion case plus one teardown error (exit 1); the same test with `GRIDMARKET_NWS=off` passed (exit 0). This is an offline test-configuration interaction, not recurrence of the import defect. The existing offline setting disables incidental live background polling only; NWS tests still invoke `nws.poll()` directly against their local fixtures. No guard or test was edited. The full same-SHA suite then passed. The bare/default-environment suite is not claimed green; subsequent backend gates use this recorded offline configuration. `UV_EXCLUDE_NEWER` retains the frozen lockfile cutoff metadata; tracked lockfiles remain unchanged.
+
+Configuration: Python 3.12.3; uv 0.11.6; Node v22.23.2; npm 11.15.0; Docker 29.1.3; Compose 2.40.3; gitleaks 8.30.1. Compose blob `582dfb94b8c00906359f60e3a4bd7ad544c4e548`; Dockerfile blob `51219672538db9c6691443b04a8d7118e32d9f6d`. S09-D smoke app image `sha256:575d9a90e05ce2e476d8e49e080e38ae3e9e9a6875ff4f9282a4e4cb3e44149b`; bots image `sha256:5b42848826139ad92d5a20e0f62e25b2b509b0807a4f4dadf4e64ecbdfd18f97`. Engine remains Python and provider registry base_sim; no live Worker delivery, credential access, or deployment was exercised.
+
+Frozen capability selections and role routes remain unchanged (profile digest `14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`). OCR: enabled, required=false, selected backend OpenCodeReview delegation; not_run in this assembly session, runtime availability unassessed, independent review pending. Reverify: enabled, SELECTED_CONDITIONAL for Rust ELF; NOT_APPLICABLE here because no native binary claim is made. Source tests, dashboard builds and container runtime checks do not establish binary analysis. BRAN unavailable (no native policy); direct plan and Git evidence used. No independent assurance or owner acceptance is claimed.
+
+## DIR-P1a-07 — S09-E command-discovery blocker
+
+- `git merge --no-ff 5d3f39ce60846a0164e0b9d04051c72f7ebad57e -m "Merge S07 UI for S09-E assembly"`: exit 0, merge `b044b8ab55f58bf765ee9b83b17cffab60d180c8`; tree `cbb681029d395f93bb6d8194c6b081b13b3db0c6`.
+- No conflicts or direct product edits. Six UI paths match S04/S07. All twelve frozen files remain identical to S01, including dashboard dependencies and vite.config.ts.
+
+| Command | Exit | Output / result |
+|---|---:|---|
+| `make lint` | 0 | All checks passed; 32 files already formatted. |
+| `make test-contracts` | 0 | 3 passed. |
+| `make test-dash` | 2 | Vitest 3.2.7: 12 dashboard tests pass; worker security.test.mjs fails collection as a Vitest suite. Production build recipe not reached. |
+| `npm --prefix dashboard exec -- vitest run ercot-hackathon/test/security.test.mjs` (isolated reproduction) | 1 | Same `No test suite found` error on the exact pinned candidate. |
+| `make secrets` | 0 | Gitleaks scans 91 commits, no leaks found; MIT and env-example checks pass. |
+| `make rules` | 0 | Baseline-rules, Jev boundary, and author-time checks pass. |
+| `make test-all` | — | NOT_RUN after blocker; invokes the same failing test-dash target. No full-suite PASS claimed. |
+| S09-E `make smoke SMOKE_PROJECT=gm-smoke-integration SMOKE_PORT=18000` | — | NOT_RUN after blocker; S09-D smoke receipt is not substituted for S09-E. |
+
+Relevant output:
+
+```text
+RUN v3.2.7 <repository-root>
+✓ dashboard/src/pages/Overview.test.tsx (12 tests)
+FAIL ercot-hackathon/test/security.test.mjs
+Error: No test suite found in file <repository-root>/ercot-hackathon/test/security.test.mjs
+Test Files  1 failed | 1 passed (2)
+Tests       12 passed (12)
+make: *** [Makefile:26: test-dash] Error 1
+```
+
+The Makefile recipe is `npm --prefix dashboard exec -- vitest run`. Its observed Vitest root is the repository root, so it collects both dashboard tests and the worker's native `node:test` file. `dashboard/package.json` already provides `"test": "vitest run"`; a bounded correction can invoke that npm script in the dashboard package (`npm --prefix dashboard test`) while retaining the native Node worker command in test-all. That correction was not applied: this dispatch prohibits direct product/configuration edits. The default command failure is reproducible with npm 11.15.0, Node v22.23.2, Vitest 3.2.7 and unchanged admitted lockfiles. It is an in-scope assembly-command mismatch (AN-ENV), not evidence of a worker behavior defect or an upstream Vitest/Astryx defect. No issue filed. JSDOM also emits CSS parsing diagnostics for Astryx theme rules; the 12 dashboard assertions still pass, and those diagnostics are not the failing gate.
+
+The failed command-discovery checkpoint is retained for the Coordinator under AN-ENV; no later assembly step is attempted and no candidate is certified. The evidence-only follow-up commit is pushed non-force to `origin/gridmarket/integration-1a`. The designated `ops/candidates/1a` file remains absent. Resume after an authorized command correction with the complete S09-E gates, recording `GRIDMARKET_NWS=off` for the offline backend gate; no tests may be skipped. Phase review (including OCR and browser visual review), Assurance Test Engineer, owner acceptance, production build, and S09-L remain pending. No main merge, deployment, credential access, or Co-Authored-By line is introduced.
