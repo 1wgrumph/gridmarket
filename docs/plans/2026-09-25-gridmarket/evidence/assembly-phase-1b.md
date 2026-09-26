@@ -375,3 +375,136 @@ Spec is unmerged, but no S49-E deferral decision is asserted.
 The evidence-only handoff commit follows the tested recovery candidate. A
 non-force push of this branch may follow; its command receipt is
 `attempt-4/push.log`. No phase 1b readiness or independent PASS is claimed.
+
+
+## Attempt 5: PASS — assembly complete, spec deferred; S49-L not entered
+
+Journey GM-2026-09-25, phase 1b, slice S49, Integration Engineer execution.
+Authority: current owner packet S49-IE5, Coordinator under DEC-GM-043.
+PASS applies to this bounded assembly with the authorized spec deferral. It does
+not establish independent review, assurance, owner acceptance, deployment, or landing.
+
+### Candidate and recovery
+
+- Starting HEAD: `be60e2d`; clean `gridmarket/integration-1b` in its authorized worktree.
+- Tested product candidate: **`ab8f825b5c1aec25f87a4105ef66c37b37d74c01`** (S49-D).
+- Recovery: `git revert --no-edit b58d6c4`, exit **0**, commit
+  **`2ef78169b723f825a7dca99ce6781f1724066f24`**. No mainline argument, reset, rebase, or prior-history rewrite.
+- All eight bots paths restored by this commit compare exactly equal to `d6e05f8`
+  (scoped diff exit **0**). Against `2842f1e`, only the four F1/F2 repair paths differ.
+  The full tree versus `d6e05f8` also contains the already restored phase-1a repairs
+  and historical evidence; global tree equality is not claimed.
+- Recovery `make lint`: **2**, exactly the known F1 formatting in bots.py,
+  bots_api.py and population.py. Recovery `make test-contracts`: **0**, 3 passed.
+  This is the authorized intermediate pre-F1 state, not a new red assembly step.
+  S49-A subsequently applies the authorized format/test repair and clears the lint.
+- Recovery evidence: `recovery-revert.log`, `recovery-results.json`,
+  `recovery-lint.log`, `recovery-test-contracts.log`, `recovery-bots-content.log`,
+  `recovery-repair-absence.log`, `recovery-full-tree-stat.log`.
+
+All paths in this receipt are relative to **`/tmp/gm-evidence/P1b/attempt-5/`**
+unless otherwise qualified. JSON gate receipts record exact command, tested SHA,
+exit, elapsed time, and log path. The evidence-only handoff commit follows this
+candidate without changing its product or test tree.
+
+### Entry, merge and post-step V&V
+
+All four merges used the exact dispatched SHA with `--no-ff`, retained both
+parents, and were conflict-free. Preflight and merge commands each exited **0**.
+No lane-content conflict resolution or product/test edit was performed.
+
+| Step | Exact lane exit | Merge SHA | Command exits on merge SHA | Evidence |
+|---|---|---|---|---|
+| S49-A bots | `2842f1e56d9590c662ed04a6b4089061e8726a1f` | `4ee5dc5b2532558dfc789b67d48e2ce45717700c` | lint: 0, test-contracts: 0, test-all: 0, test-bots: 0, test-dash: 0, smoke: 0 | `S49-A-results.json`, `S49-A-*.log`, `S49-A-proc-assembly.json` |
+| S49-B router | `fc8080df50250b564f2e1f858e9c4265a16d740e` | `a9bf3bf271be8d4c63424fb4ef840534f76e4769` | lint: 0, test-contracts: 0, test-all: 0, test-router: 0, test-dash: 0, smoke: 0 | `S49-B-results.json`, `S49-B-*.log`, `S49-B-proc-assembly.json` |
+| S49-C views | `fde33285c721b24d191d3dde36d1177a87050900` | `82aa658f7cf8dab4275b73c4a7a21b2be0f6d86f` | test-worker: 0, test-all: 0, test-dash: 0, smoke: 0, rules: 0 | `S49-C-results.json`, `S49-C-*.log`, `S49-C-proc-assembly.json` |
+| S49-D pages | `90921b98c87857f22bf4e64cee6ec0ab59909f0a` | `ab8f825b5c1aec25f87a4105ef66c37b37d74c01` | test-contracts: 0, test-all: 0, test-dash: 0, smoke: 0 | `S49-D-results.json`, `S49-D-*.log`, `S49-D-proc-assembly.json` |
+| S49-E spec | `b0fa857e9f2e7f065b7ad55fde5570069ae982ba` | none | NOT_RUN: deferred at entry | `S49-E-disposition.json`, `S49-E-entry-writeset.log` |
+
+PROC-ASSEMBLY checks for each merged step: incoming non-merge paths are inside
+the approved lane union (no outside paths); frozen-file comparison against landed
+`44b7f63` exits **0**; test-all and smoke exits are listed above; clean tracked
+state verified after gates. See each `S49-*-entry.json`, `S49-*-proc-assembly.json`,
+`S49-*-frozen-vs-landed.log`, `S49-*-frozen-vs-S01.log`, and `S49-*-status.log`.
+These are constituent receipts, not an invented single aggregate process exit.
+Final `make secrets` and `make rules`: **0 / 0**, on `ab8f825b5c1aec25f87a4105ef66c37b37d74c01`;
+see `final-results.json`, `final-secrets.log`, `final-rules.log`.
+
+The raw S01 comparison lists only backend/pyproject.toml, inherited from the
+already landed phase-1a mutation configuration (`6636375` / `44b7f63`) and recorded
+in attempt 4. No new frozen change or CONTRACTS.md amendment occurred.
+
+Exact lane exits match ops/exits. Their standalone branches predate the 1a landing;
+main-ancestry checks exit 1, retained in entry receipts. The integration branch
+contains and restores landed 1a, and this current packet explicitly authorizes
+these exact lane SHAs after recovery. No synthetic lane-main merge was made.
+Views' standalone tree lacks foundation files; its incoming non-merge delta is
+only the seven authorized Worker paths and changes no integrated frozen file.
+Bounded prior gate receipts are retained in `lane-entry-receipts.json`.
+
+Existing setup and unchanged frozen dependencies were reused. Backend tests use
+`GRIDMARKET_NWS=off` (the established offline test configuration) and retain
+`UV_EXCLUDE_NEWER=2026-09-11T22:00:00Z`. Smoke uses the seit.json-assigned
+`gm-smoke-1b:18003`, superseding the stale step annotation `gm-smoke-integration:18000`.
+Each smoke verified dashboard HTML, loopback port, UID 10001, read-only root,
+restart policy, project SQLite volume and healthy bots stable for 30 seconds,
+then removed its own stack, volume, network and throwaway environment file.
+No owner environment file was read.
+
+### Behavioral results and S49-E disposition
+
+- **BOT_01: PASS; BOT_03: PASS.** Both run without deselection in S49-A test-all
+  and test-bots, and in every later test-all. S49-A: 100 backend tests; separate
+  bots gate: 15 passed. S49-B router gate: 9 passed. S49-C Worker gate: 34 passed.
+- Final S49-D test-all: **109 backend, 29 dashboard, 34 Worker tests passed**;
+  dashboard build passed. Separate test-dash and smoke also exit **0**.
+- Slip trigger: **NOT fired**. S31 is included.
+- Spec: **DEFERRED to S12-E**, not merged, not silently accepted as green.
+  At S49-E entry the S21 SHA was unchanged and its receipt still explicitly
+  reported CMD-WRITESET exit **1** (`missing_path` on the directory argument).
+  The per-file diagnostic is **0**, but does not erase the recorded gate failure.
+  `/tmp/s21/cmd-writeset.log` was preserved as `S49-E-entry-writeset.log`.
+  S20/S21 also record the `PYTHONPATH=tools` requirement for spec-lint and Graphviz
+  2.43.0 versus designed 2.42.2; a draw.io version is not evidenced in the bounded
+  receipts. No tool fix, package change, or spec gate waiver was made here.
+  No S49-E merge or post-merge gate was attempted. Final phase secrets/rules still ran.
+- No genuinely red merged step, rollback, or lane-content conflict occurred.
+  Spec's entry deferral is the only lane return, under the complete-or-defer rule.
+
+### Owner notification, gaps and handoff
+
+After S49-C was green, the owner was notified in this session to set/update
+**MARKET_URL and redeploy the Worker from
+`82aa658f7cf8dab4275b73c4a7a21b2be0f6d86f`** (`OWN-WORKER-DEPLOY-2`).
+See `owner-notification.md`. `VIEWS_NOT_DEPLOYED` remains pending until owner
+execution is evidenced. `PROC-ERCOT-LIVE-CHECK` and `PROC-ACCEPT-P1` are pending
+owner-run procedures and were not performed.
+
+Retained gaps and risks:
+
+- `ENTROPY_PROOF_CONFLICT`: bits versus 0–1 proof interpretation remains unresolved.
+- `PAGES_APP_ERROR_BOUNDARY_GAP`: Market has its lane repair; app-wide boundary remains absent.
+- `SMOKE_PROOF_INCOMPLETE`: local smoke assertions now pass, but NWS is off;
+  deployed Worker, live ERCOT and owner acceptance are unproven by these tests.
+- `BRAN_UNAVAILABLE`: no native policy; ordinary repository/Git evidence used.
+- `SPEC_DEFERRED_WRITESET_GATE`: S21 entry gate discrepancy retained for S12-E.
+- `VIEWS_NOT_DEPLOYED`, independent phase review, browser visual review and
+  Assurance Test Engineer remain pending. Lane receipt risks remain available
+  for those reviews; this assembly is not their substitute.
+
+Frozen profile digest remains
+`14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`;
+selected Integration Engineer route remains Codex CLI / GPT-6 Astra / high.
+No profile reload or model/harness substitution occurred.
+`review.coverage_assist`: enabled, required=false, OpenCodeReview delegation;
+`ocr` available on PATH, **not_run** because this is assembly, not code review.
+`deterministic_verification.reverify`: enabled, conditional Rust ELF backend
+retained; executable available. Reverify: **not applicable — no Rust/native
+binary claim**. Ordinary test/build/smoke receipts do not substitute for Reverify.
+
+Non-force pushes after S49-A, B, C and D each exited **0**; see `S49-*-push.log`.
+The final evidence commit is pushed on this same branch only (receipt `final-push.log`).
+No active assembly blocker remains; the candidate is ready for independent
+phase assurance with the above gaps. **S49-L NOT_RUN**: no PR, main merge,
+branch/worktree deletion, force operation, owner deployment, issue closure,
+credential access, or Co-Authored-By line was introduced.
