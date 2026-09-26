@@ -499,6 +499,14 @@
       "source": "Orchestrator as owner delegate (DEC-GM-043)",
       "decision": "Accept the Planning and Design package at manifest digest cea7bcbdefd2f415064530b621cb4cee4284c6afcc81edf9b6116b8e5249730e (plan-package PASS, 0 findings; render --check RENDER_CHECK_PASS sha256:5f70ebe3...b643) as the approved Lifecycle baseline under the owner's pre-approval (DEC-GM-043). Accept the node's four readings: the S31 diversity slip check at Sat 14:00; the final wave gets the same 1 review / at most 1 repair rule; non-windowed routes capped at 3 concurrent sessions; the frontend profile covers the new UI lanes (pages, providers-page, onboarding); acceptance runs use localhost phase candidates, and the tunnel is Sunday-only. Resolve CELL-GM-DISCLAIMER-PLACEMENT: the Jordan disclaimer goes in the README Contributors section (S45) and in any receipt for a slice Jordan runs.",
       "why": "Each reading narrows the plan or restates an owner decision. None expands scope."
+    },
+    {
+      "id": "DEC-GM-045",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T05:18:24Z",
+      "source": "Owner in chat",
+      "owner_statement": "yes i just read the plan its approved",
+      "decision": "The owner read the plan package (manifest digest cea7bcbd\u2026) and approved it directly. This confirms DEC-GM-044 and the integrated approval gate."
     }
   ],
   "stages": {
@@ -1892,6 +1900,7 @@
     "lifecycle_type": "standard",
     "snapshot": "primary + lane amendments (tech-writing: spec, frontend: ui lanes)",
     "manifest_digest": "cea7bcbdefd2f415064530b621cb4cee4284c6afcc81edf9b6116b8e5249730e",
-    "candidate_revision": "f6bfb23"
+    "candidate_revision": "f6bfb23",
+    "owner_confirmed": "DEC-GM-045"
   }
 }
