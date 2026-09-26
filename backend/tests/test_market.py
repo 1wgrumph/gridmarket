@@ -14,7 +14,7 @@ import pytest
 import uvicorn
 from fastapi.testclient import TestClient
 
-from gridmarket_server import main, market, population, seed
+from gridmarket_server import health, main, market, population, seed
 from gridmarket_server.providers import enabled
 
 SCHEMA = Path(__file__).resolve().parents[1] / "gridmarket_server/schema.sql"
@@ -308,21 +308,71 @@ def test_seit_gm_mkt_06_spot_fill_moves_cash_and_credits_only_on_fill(exchange):
         assert db.execute("SELECT quantity,price_cents FROM trades").fetchall() == [(3, 20)]
 
 
-def test_seit_gm_prov_04_offline_seller_rejected_but_buyer_allowed(exchange):
+def test_seit_gm_prov_04_offline_seller_rejected_but_buyer_allowed(exchange, monkeypatch):
     path, client = exchange
-    with sqlite3.connect(path) as db:
-        db.execute("UPDATE provider_health SET online=0 WHERE provider_id='base_sim'")
-        db.commit()
+    monkeypatch.setenv("GRIDMARKET_ADMIN_KEY", "s43b-test-admin")
+    now = datetime.now(UTC)
+    monkeypatch.setattr(health, "_now", lambda: now)
+    url = "/v1/admin/providers/base_sim/outage"
+    headers = {"Authorization": "Bearer s43b-test-admin"}
+    assert client.post(url, headers=headers, json={"active": True}).status_code == 200
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        pool.submit(health.tick).result(timeout=5)
     before = (count(path, "orders"), count(path, "reservations"))
     response = place(client, "seller", "spot", "sell", 1, 20, "offline")
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "PROVIDER_OFFLINE"
     assert (count(path, "orders"), count(path, "reservations")) == before
     assert place(client, "buyer", "spot", "buy", 1, 20, "offline-buy").status_code < 300
-    with sqlite3.connect(path) as db:
-        db.execute("UPDATE provider_health SET online=1 WHERE provider_id='base_sim'")
-        db.commit()
+    assert client.post(url, headers=headers, json={"active": False}).status_code == 200
+    health.tick()
     assert place(client, "seller", "spot", "sell", 1, 20, "online").status_code < 300
+
+
+@pytest.mark.parametrize("expired", [False, True], ids=["heartbeat", "expiry-cleanup"])
+def test_s43b_owner_outage_wins_over_inflight_tick(exchange, monkeypatch, expired):
+    path, client = exchange
+    monkeypatch.setenv("GRIDMARKET_ADMIN_KEY", "s43b-test-admin")
+    now = datetime.now(UTC)
+    monkeypatch.setattr(health, "_now", lambda: now)
+    url = "/v1/admin/providers/base_sim/outage"
+    headers = {"Authorization": "Bearer s43b-test-admin"}
+    if expired:
+        assert client.post(url, headers=headers, json={"active": True}).status_code == 200
+        now += timedelta(minutes=11)
+    entered, release = threading.Event(), threading.Event()
+    read_state = health._state
+
+    def held_state(provider_id):
+        state = read_state(provider_id)
+        if (
+            provider_id == "base_sim"
+            and threading.current_thread().name.startswith("outage-race")
+            and not entered.is_set()
+        ):
+            # Hold the real DB snapshot so the owner route wins the next write.
+            entered.set()
+            assert release.wait(5), "owner outage did not release the tick"
+        return state
+
+    monkeypatch.setattr(health, "_state", held_state)
+    with ThreadPoolExecutor(max_workers=1, thread_name_prefix="outage-race") as pool:
+        tick = pool.submit(health.tick)
+        try:
+            assert entered.wait(5), "tick did not read provider state"
+            assert client.post(url, headers=headers, json={"active": True}).status_code == 200
+        finally:
+            release.set()
+        tick.result(timeout=5)
+    before = (count(path, "orders"), count(path, "reservations"))
+    response = place(client, "seller", "spot", "sell", 1, 20, "outage-race")
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "PROVIDER_OFFLINE"
+    assert (count(path, "orders"), count(path, "reservations")) == before
+    assert place(client, "buyer", "spot", "buy", 1, 20, "outage-buy").status_code == 200
+    assert client.post(url, headers=headers, json={"active": False}).status_code == 200
+    health.tick()
+    assert place(client, "seller", "spot", "sell", 1, 20, "outage-ended").status_code == 200
 
 
 def test_s05_anom_status_returns_newest_50_rows(exchange):

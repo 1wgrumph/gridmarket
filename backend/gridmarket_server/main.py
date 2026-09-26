@@ -39,7 +39,12 @@ def create_app() -> FastAPI:
             seed.seed(db)
         app.state.providers = enabled()
 
-        async def repeat(seconds: int, fn):
+        # Finish initial provider state before requests can race the first heartbeat.
+        await asyncio.to_thread(health.tick)
+
+        async def repeat(seconds: int, fn, *, delay_first: bool = False):
+            if delay_first:
+                await asyncio.sleep(seconds)
             while True:
                 if inspect.iscoroutinefunction(fn):
                     await fn()
@@ -50,7 +55,7 @@ def create_app() -> FastAPI:
         jobs = [
             asyncio.create_task(repeat(60, decision_router.tick)),
             asyncio.create_task(repeat(60, economy.tick)),
-            asyncio.create_task(repeat(10, health.tick)),
+            asyncio.create_task(repeat(10, health.tick, delay_first=True)),
         ]
         if os.getenv("GRIDMARKET_WORKER_URL"):
             jobs.append(asyncio.create_task(repeat(60, ercot.poll)))

@@ -80,7 +80,9 @@ def heartbeat(provider_id: str) -> None:
     with _db() as db:
         db.execute(
             "INSERT INTO provider_health (provider_id, online, last_heartbeat) VALUES (?, 1, ?) "
-            "ON CONFLICT(provider_id) DO UPDATE SET online=1, last_heartbeat=excluded.last_heartbeat",
+            "ON CONFLICT(provider_id) DO UPDATE SET online=1, last_heartbeat=excluded.last_heartbeat "
+            "WHERE provider_health.outage_until IS NULL "
+            "OR julianday(provider_health.outage_until)<=julianday(excluded.last_heartbeat)",
             (provider_id, _now().isoformat()),
         )
 
@@ -89,7 +91,9 @@ def is_online(provider_id: str) -> bool:
     state = _state(provider_id)
     if state is None:
         return True
-    online, last, _ = state
+    online, last, until = state
+    if until and _parse(until) > _now():
+        return False
     age = _age(last)
     if age is not None and age > OFFLINE_AFTER_S:
         if online:
@@ -115,8 +119,9 @@ def tick() -> None:
             if until and _parse(until) <= _now():
                 with _db() as db:
                     db.execute(
-                        "UPDATE provider_health SET outage_until=NULL WHERE provider_id=?",
-                        (provider_id,),
+                        "UPDATE provider_health SET outage_until=NULL "
+                        "WHERE provider_id=? AND outage_until=?",
+                        (provider_id, until),
                     )
                 until = None
             if not until:
