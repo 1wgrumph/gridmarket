@@ -8,6 +8,7 @@ and five IPv6 hosts in one /64. No external feed fixtures are used.
 import importlib.util
 import json
 import socket
+import sys
 import threading
 import time
 from pathlib import Path
@@ -30,6 +31,7 @@ def live(tmp_path, monkeypatch):
     monkeypatch.setenv("GRIDMARKET_ADMIN_KEY", ADMIN)
     monkeypatch.delenv("GRIDMARKET_WORKER_URL", raising=False)
     monkeypatch.syspath_prepend(str(ROOT / "sdk/python"))
+    monkeypatch.setattr(api, "time", SimpleNamespace(monotonic=lambda: 100.0))
     app = main.create_app()
     calls = []
 
@@ -126,10 +128,27 @@ def test_r3_09_strategy_rejections(live, monkeypatch, capsys, status):
     else:
         # Boundary rejections do not reach the observation middleware.
         assert len(attempted) == 1
-    # The next cycle runs after refill; rejection never terminates the strategy.
-    if status == 429:
+    # Run the actual template loop: each rejection must lead to the configured
+    # sleep and another cycle. Advance only the API bucket clock, without waiting.
+    sleeps = []
+
+    class Finished(Exception):
+        pass
+
+    def sleep(seconds):
+        sleeps.append(seconds)
         monkeypatch.setattr(api, "time", SimpleNamespace(monotonic=lambda: 160.0))
-    strategy.cycle(client)
+        if len(sleeps) == 2:
+            raise Finished
+
+    monkeypatch.setattr(strategy, "Client", lambda *args: client)
+    monkeypatch.setattr(strategy, "time", SimpleNamespace(sleep=sleep))
+    monkeypatch.setattr(strategy, "INTERVAL", 60)
+    monkeypatch.setenv("GRIDMARKET_API_KEY", client.api_key)
+    monkeypatch.setattr(sys, "argv", ["strategy.py"])
+    with pytest.raises(Finished):
+        strategy.main()
+    assert sleeps == [60, 60]
     assert "rejected" in capsys.readouterr().out
 
 

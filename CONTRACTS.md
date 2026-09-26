@@ -93,7 +93,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | Sandbox key response: `account_id`, `api_key`, `label` | market | Key shown once |
 | Spawn request: `count`, `seed` | bots | `count` 1–10; seed optional |
 | Outage request: `active` | lonestar | Start/end simulated outage |
-| Error response: `error.code`, `error.message` | market | Stable JSON envelope |
+| Error response: `error.code`, `error.message` | market | Stable JSON envelope; request-validation 422 messages identify the field and constraint. `Idempotency-Key` over 128 characters returns 422 `VALIDATION_ERROR`. |
 
 ## HTTP headers
 
