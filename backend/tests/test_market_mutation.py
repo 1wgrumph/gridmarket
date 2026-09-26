@@ -133,8 +133,8 @@ def test_future_round_trip_realizes_pnl_and_returns_filled_orders(exchange):
     assert [response.json()["remaining_qty"] for response in orders] == [1, 0, 1, 0]
     with sqlite3.connect(path) as db:
         assert dict(db.execute("SELECT id,cash_cents FROM accounts")) == {
-            "buyer": 100010,
-            "seller": 99990,
+            "buyer": 100000,
+            "seller": 100000,
             "second_seller": 100000,
         }
         assert set(
@@ -143,10 +143,9 @@ def test_future_round_trip_realizes_pnl_and_returns_filled_orders(exchange):
             ("buyer", 0),
             ("seller", 0),
         }
-        assert set(db.execute("SELECT account_id,quantity,pnl_cents FROM settled_positions")) == {
-            ("buyer", 0, 10),
-            ("seller", 0, -10),
-        }
+        # Closing a future defers its cash and ledger realization until expiry.
+        assert db.execute("SELECT COUNT(*) FROM settled_positions").fetchone()[0] == 0
+        assert db.execute("SELECT COUNT(*) FROM settlements").fetchone()[0] == 0
     history = client.get("/v1/market/history?product_id=future")
     assert history.status_code == 200
     assert [(trade["quantity"], trade["price_cents"]) for trade in history.json()] == [

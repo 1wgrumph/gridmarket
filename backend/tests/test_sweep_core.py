@@ -92,9 +92,21 @@ def conserved(db):
         "SELECT x.* FROM positions x JOIN products p ON p.id=x.product_id WHERE p.symbol LIKE 'FLEX-%' AND p.status!='settled'"
     ):
         position_value += market.trade_value(db, account, product) + quantity * 23
-    # Refund claims are bilateral and applied atomically in the delivery transaction.
-    pending_refunds = 0
-    assert cash + position_value + pending_refunds == initial + deposits
+    # Each undelivered reservation backs a buyer claim and a seller obligation.
+    pending = {}
+    for buyer, seller, value in db.execute(
+        "SELECT b.account_id,s.account_id,t.price_cents*t.quantity*r.kwh/"
+        "(SELECT SUM(t2.quantity) FROM trades t2 WHERE t2.sell_order_id=s.id) "
+        "FROM reservations r JOIN trades t ON t.sell_order_id=r.order_id "
+        "JOIN orders b ON b.id=t.buy_order_id JOIN orders s ON s.id=t.sell_order_id "
+        "WHERE r.status='committed'"
+    ):
+        pending[buyer] = pending.get(buyer, 0) + value
+        pending[seller] = pending.get(seller, 0) - value
+    pending_refunds = sum(pending.values())
+    assert cash + position_value + pending_refunds == pytest.approx(
+        initial + deposits, abs=1e-7, rel=0
+    )
     assert cash == initial + deposits
 
 
@@ -171,15 +183,15 @@ def test_exact_reference_and_closed_positions_settle(exchange):
         before = dict(db.execute("SELECT id,cash_cents FROM accounts"))
         market.settle(db, hour + timedelta(hours=1))
         after = dict(db.execute("SELECT id,cash_cents FROM accounts"))
-        assert after[a] - before[a] == 200
-        assert after[b] - before[b] == 353
-        assert after[c] - before[c] == -553
         assert (
             db.execute(
-                "SELECT price_cents FROM settlements WHERE product_id=?", (p["id"],)
+                "SELECT price_cents FROM settlements WHERE product_id=? ORDER BY rowid DESC LIMIT 1", (p["id"],)
             ).fetchone()[0]
             == 2.345
         )
+        assert after[a] - before[a] == 200
+        assert after[b] - before[b] == 353
+        assert after[c] - before[c] == -553
         conserved(db)
         market.settle(db, hour + timedelta(hours=1))
         assert dict(db.execute("SELECT id,cash_cents FROM accounts")) == after
