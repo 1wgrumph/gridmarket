@@ -163,6 +163,11 @@ export default {
         });
       }
 
+      // Public config for the views' market feed; the owner sets MARKET_URL at deploy.
+      if (p === "/api/config") {
+        return json({ MARKET_URL: env.MARKET_URL || null });
+      }
+
       if (p.startsWith("/api/")) {
         const missing = missingSecrets(env);
         if (missing.length) {
