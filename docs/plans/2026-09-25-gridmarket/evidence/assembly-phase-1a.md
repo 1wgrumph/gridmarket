@@ -9,7 +9,9 @@ public_boundary: private
 
 # Phase 1a assembly — S09
 
-Current outcome: **PASS — CANDIDATE_READY** under DIR-P1a-10 / DEC-GM-056 and DIR-P1a-09 / DIR-P1a-08 / DEC-GM-055. Authorized dashboard command glue and S09-D2 are assembled; all seven required post-step commands exit 0. Full backend tests run with NWS enabled. The unchanged smoke recipe disables NWS internally and proves status `open` only; its existing bots-healthcheck limitation remains. This is assembly evidence, not independent phase assurance or owner acceptance. Stop before S09-L.
+Current outcome: **REPAIRABLE_FAILURE — BLOCKED** under DIR-P1a-11, DIR-P1a-12 and DIR-P1a-13. Both repair2 exits merged cleanly; lint, contracts, dashboard, full tests, secrets and rules exit 0 with no inherited NWS disable flag. Live-poller smoke cannot meet DIR-P1a-13 because the existing recipe unconditionally writes `GRIDMARKET_NWS=off`. No product edit is authorized in this dispatch. The previous candidate file is retained unchanged and is not a DIR-P1a-13 candidate; assurance remains on hold. See the final repair2 section. Stop before S09-L.
+
+Historical outcome before DIR-P1a-13: **PASS — CANDIDATE_READY** under DIR-P1a-10 / DEC-GM-056 and DIR-P1a-09 / DIR-P1a-08 / DEC-GM-055. Authorized dashboard command glue and S09-D2 are assembled; all seven required post-step commands exit 0. Full backend tests run with NWS enabled. The unchanged smoke recipe disables NWS internally and proves status `open` only; its existing bots-healthcheck limitation remains. This is assembly evidence, not independent phase assurance or owner acceptance. Stop before S09-L.
 
 Historical outcome before DIR-P1a-10: **REPAIRABLE_FAILURE** under DIR-P1a-07 / DEC-GM-054: repaired market exit and restored S06 data pass S09-D with the existing offline NWS setting. S09-E merged cleanly, but `make test-dash` runs Vitest from the repository root, collects the worker's node:test file, and fails with `No test suite found`. Production build and full S09-E gates are incomplete. The assembly is retained as an AN-ENV command-discovery checkpoint; no candidate is written. Return to the Coordinator for a bounded command correction. Stop before S09-L.
 
@@ -342,7 +344,7 @@ Configuration identity: Python 3.12.3; uv 0.11.6; Node v22.23.2; npm 11.15.0; Do
 
 Local command transcripts: `/tmp/gm-p1a-10-test-dash.log`, `/tmp/gm-p1a-10-test-all.log`, `/tmp/gm-p1a-10-smoke.log`. Summarized results above are the committed receipts.
 
-## Candidate handoff boundary
+## Historical DIR-P1a-10 candidate handoff boundary
 
 - Outcome: **PASS / CANDIDATE_READY** for the authorized assembly and command gates only. The evidence-only commit following tested merge `83bc5f26931ac23b48ac8c540bfc802fb7dec794` is the candidate HEAD; its SHA is recorded in the designated `ops/candidates/1a` file after non-force push. Product files are identical to the tested merge.
 - Frozen configuration digest remains `14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`; Integration Engineer route remains Codex CLI / GPT-6 Astra / high. No live profile imported or route switched.
@@ -350,3 +352,37 @@ Local command transcripts: `/tmp/gm-p1a-10-test-dash.log`, `/tmp/gm-p1a-10-test-
 - `deterministic_verification.reverify`: enabled; selected conditional Rust ELF verification retained. Reverify: NOT_APPLICABLE — this candidate has no Rust/native binary claim. Source tests, JavaScript production-build receipts and container startup do not establish binary analysis; no ordinary test rerun substitutes for Reverify.
 - BRAN: unavailable (no native policy); direct plan, exit-file, Git and command evidence used.
 - Independent phase review, Assurance Test Engineer, owner acceptance and S09-L remain pending. This session neither self-certifies those gates nor opens a main PR. Only `gridmarket/integration-1a` is pushed; no Co-Authored-By lines added.
+
+## DIR-P1a-11 / DIR-P1a-12 / DIR-P1a-13 — repair2 assembly
+
+- Fresh Integration Engineer execution session for GM-2026-09-25, Phase 1a, S09. Initial clean HEAD: `d7d56d7549e5f5af082f548f83c8e677c9cef252` on `gridmarket/integration-1a`.
+- Method references remain `design.md` DES-GM-LANES, `implementation.json` S09/integration_plan and `seit.json` PROC-ASSEMBLY; the current owner dispatch requires both repair merges followed by the complete live-poller gate set.
+- S05-repair2 input `a94f9f54d5f27260edcf28d2c3772e4fc0375f9d`: authorized `git merge --no-ff` exits 0; merge `5801d5af3357df36e78e958e520d1cdb8d5dbf12`.
+- S06-repair2 input `42265ca8271e7b236f2118d5da8bdbf4d1c4b08b`: authorized `git merge --no-ff` exits 0; merge `3aa23f1fdc395ada2539fbec0cc57f6b60506c4f`.
+- Both merges are conflict-free. Non-merge write-set checks pass: market changes only api.py, market.py and test_api.py; data changes only nws.py and test_nws.py. Twelve frozen files compare identical to S01 in both inputs and the assembled HEAD (exit 0). No direct product edit or dependency change.
+- Tested merge: `3aa23f1fdc395ada2539fbec0cc57f6b60506c4f`; tree `183ab6e0bef635bcd9c7dcd482f046f9df126e5d`.
+
+Every executed make command below used `env -u GRIDMARKET_NWS`. The default NWS background poller is enabled in backend lifespans; the existing outbound-socket test guard remains active. These tests do not establish successful live weather-service retrieval.
+
+| Command | Exit | Output / result |
+|---|---:|---|
+| `make lint` | 0 | Ruff checks pass; 32 files already formatted. |
+| `make test-contracts` | 0 | 3 passed in 0.77 s. |
+| `make test-dash` | 0 | 12 passed; TypeScript check and Vite production build pass, 632 modules. |
+| `make test-all` | 0 | 80 backend tests passed, 2 deprecation warnings, 70.39 s; 12 dashboard tests and production build pass; 25 worker tests pass, 0 failed/cancelled/skipped. |
+| `make smoke SMOKE_PROJECT=gm-smoke-integration SMOKE_PORT=18000` | — | NOT_RUN: recipe forces NWS off, contrary to DIR-P1a-13. No live-poller open-status receipt. |
+| `make secrets` | 0 | 104 commits scanned; no leaks; MIT and env-example checks pass. |
+| `make rules` | 0 | Baseline rules, Jev boundary and author-time checks pass. |
+| `make -n smoke SMOKE_PROJECT=gm-smoke-integration SMOKE_PORT=18000` | 0 | Inspection only: confirms unconditional `GRIDMARKET_NWS=off` in the generated temporary env file. Not runtime verification. |
+
+Dashboard CSS parsing diagnostics and the two backend deprecation warnings remain non-failing. Local transcripts: `/tmp/gm-p1a-13-test-dash.log`, `/tmp/gm-p1a-13-test-all.log`, `/tmp/gm-p1a-13-secrets.log`. Tool versions: uv 0.11.6, Node v22.23.2, npm 11.15.0; frozen manifests/lockfiles unchanged.
+
+### Live smoke blocker and handoff
+
+The Makefile smoke recipe creates its own env file containing `GRIDMARKET_NWS=off` and passes it as `GM_ENV_FILE`. `deploy/compose.yaml` consumes that file directly, with no NWS environment override. `main.py` starts the NWS job only when that value is not `off`. Unsetting the invoking variable cannot enable the container poller. The earlier offline smoke receipt does not satisfy the new requirement. This is an in-scope command/configuration mismatch (AN-ENV), not a newly demonstrated product or upstream defect; no issue filed.
+
+Outcome: **REPAIRABLE_FAILURE / BLOCKED**. Return to the Coordinator for a bounded smoke-recipe correction or an explicitly authorized live smoke command. Product edits are prohibited in this dispatch, so no recipe or Compose override was introduced. Both repairs are retained; the evidence-only checkpoint is committed and pushed to `origin/gridmarket/integration-1a`. It is not a candidate-ready receipt.
+
+The designated `ops/candidates/1a` file remains unchanged at `d7d56d7549e5f5af082f548f83c8e677c9cef252`. That historical SHA excludes both repair2 exits and must not be used for DIR-P1a-13 assurance. No replacement candidate is written until live-poller smoke and the required gate set pass. No S09-L, main PR, owner acceptance or independent assurance performed.
+
+Frozen role routes and capability selections remain unchanged; profile digest `14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`; no live profile imported or selected route switched. `review.coverage_assist`: enabled, required=false, OpenCodeReview delegation selected; `not_run`, runtime availability unassessed in this assembly session, a pending review capability gap rather than passing evidence. No code review is claimed. `deterministic_verification.reverify`: enabled, conditional Rust ELF backend selection retained; Reverify: NOT_APPLICABLE because no Rust/native binary claim is made. Source tests and JavaScript builds are not binary-analysis receipts. BRAN: unavailable (no native policy); direct Git, plan and command evidence used. Stop before S09-L.
