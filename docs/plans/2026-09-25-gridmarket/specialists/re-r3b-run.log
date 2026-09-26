@@ -1,0 +1,34 @@
+**REPAIRABLE_FAILURE.** Candidate `docs/plans/2026-09-25-gridmarket/gridmarket-technical-plan.md` sha256 `a780d8c55df9d5a3702b693835453065f93db1d85279058403ee955bf6bb1899` matches the file on disk. The apply-source is `docs/plans/2026-09-25-gridmarket/specialists/requirements-engineer-gate-r3.md`. Every replacement there is final. No re-gate.
+
+The Sat 14:00 CDT check does **not** need new owner intent. DEC-GM-038 moved phase 1b to about Sat 16:00, so “phase 1 is not green by 14:00” would fire on every run and always pull diversity out of phase 1b. The reading that keeps both decisions is: at 14:00, judge only S31. If it is not green, layers 2, 3, 5a, and 6 move to phase 2. The dormant rate stays in phase 1b.
+
+Closed rows from the earlier gates were not reopened. `lint-sdoc.py` does not apply (no register). Planning’s numeric limits were judged only for testability.
+
+**Failing rows** (exact cell text is in the gate file):
+
+- **AC-GM-ACCT-01** — unbounded kW limits, and it cites phase 1b rows while sitting in phase 1a. Move it to phase 1b; limits are determined by capacity and lie in 2–10 kW.
+- **AC-GM-API-06** — client address is `CF-Connecting-IP` when present, else the socket peer; missing label is accepted; the owner keys command is in the row.
+- **AC-GM-API-07** — tunnel or non-loopback is HTTP 403; loopback with a bad key is HTTP 401. One status each.
+- **AC-GM-UI-01** — health checks only when that family has landed; no Jev column unless `GRIDMARKET_JEV` is `on`; Spec page only when the spec has landed; Judge sandbox route only (AC-GM-UI-05 stays final).
+- **AC-GM-UI-03** — cash after each fill and deposit, in ledger order.
+- **AC-GM-UI-07** — dormant rate always; coverage, Shannon entropy, and the scatter only when layers 2, 3, 5a, and 6 have landed.
+- **AC-GM-BOT-04, 05, 06, 07, 08** — copula and logistic-normal traits, fixed zone weights, named signal families, at least one stored threshold, dashboard spawn form that succeeds only as an admin request, SHA-256 digest and sample checks against the sampler’s fixed matrix.
+- **AC-GM-ECON-01, 02, 03** — drop “about”; 39 of 60 employed; work-hour weights; pay offset in `[0, 30)` minutes; dormant rate on the Bots page.
+- **AC-GM-ROUTER-01, 02, 04** — DART only, horizon at the end of the delivery hour, Brier score defined; router output changes state only through AC-GM-PROV-04; the Jev flag is the string `on`.
+- **AC-GM-EDGE-05** — `/`, `/diagram/`, and `/godseye/` link; `/` and `/godseye/` GET `/v1/market/activity` and `/v1/router`.
+- **AC-GM-PROV-03** — `POST /v1/admin/providers/lonestar/outage` with action `start` or `end`.
+- **AC-GM-KIT-02, AC-GM-QUANT-01, AC-GM-DOC-01** — named prompt limits; pyqlib 0.9.7 and Spearman rank IC; the guide includes a topic only when that feature landed.
+- **AC-GM-CONTRACT-01** — the six header names on the wave 1 exit commit.
+- **AC-GM-ACC-01, AC-GM-ACC-02** — Saturday acceptance is against the integrated candidate. The tunnel URL is the Sunday recording (RISK-GM-14).
+- **RISK-GM-06** control cell — S31 at 14:00; dormant rate stays.
+- **RISK-GM-11** control cell — wave 2 stays concurrent; phase order is only who gets a scarce primary slot. Included because the Phases section contradicts it.
+- **Definitions** — Sandbox key, Master seed, Settled position, Dormant bot, Net worth, ERCOT Worker (`4853e51` plus S24–S25). Band at 0.80 is alert; that closes the decision’s overlap and is not new owner intent.
+- **Allocation, phase 1b exit, schedule prose, Exit criteria, Rollback, Exclusions** — one allocation per phase 1 row; UI-01 split by page; UI-05 stays in the Final wave table; spec does not block phase 1b; repair-verification has one outcome; Jev video disclosure and the outage cut are owner actions.
+
+**Pass:** AC-GM-API-05, UI-04, UI-05, UI-06, BOT-02, BOT-03, ECON-04, ROUTER-03, PROV-04, KIT-01, MCP-01, MCP-02, DOC-02, DOC-03, DOC-04, RULE-02, LAND-01, ACC-03, RISK-GM-02, 04, 05, 12, 13, 14, 15, 16, 17, 18, 19, and the definitions Admin request, Bot, Decision router, check, band, baseline rule, Deposit.
+
+**Coverage:** DEC-GM-027 through DEC-GM-040, DEC-GM-042, SC-2-AMENDMENT, and the four CONF-GM confirmations are covered after those replacements. DEC-GM-041 stays revoked in Entry criteria. No gap needs new owner intent.
+
+**Blocker:** Apply the gate file verbatim, including RISK-GM-11.
+
+Verdict: REPAIRABLE_FAILURE

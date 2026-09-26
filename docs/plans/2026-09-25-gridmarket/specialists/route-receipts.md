@@ -37,3 +37,20 @@ full-bypass flags and stdin < /dev/null.
 | Plan Integrator | Muse Code / Muse Spark 1.3 / max | see below | pi2 |
 
 Plan Integrator pi2: Muse Code / Muse Spark 1.3 / max (primary, ran), launched 02:17Z detached; PLAN_REVIEW_READY. implementation.json, gridmarket-dod-manifest.html, plan-integrator-receipt.md written; seit.json planning_inputs digests recomputed. P&D node re-ran plan-package.cjs (PASS, 0 findings, manifest digest 1a0b6c0d3c93140e283901801f1f6947ce04f9c483ba2c056f4a84838e215260) and render --check (RENDER_CHECK_PASS).
+
+## Scope-reopen delta (DEC-GM-027..040, DEC-GM-042), 2026-09-26 UTC
+
+Same frozen snapshot and digest; reasoning levels as frozen (DEC-GM-041
+revoked by DEC-GM-042; Muse at max). Stopped runs re-r3 and sm4/sm4b (killed
+at 04:07Z with the stopped P&D session, no output) were re-dispatched as
+re-r3b and sm5. Launched detached (setsid), full-bypass flags, stdin
+< /dev/null; the P&D node blocked in the foreground until each exited. Route
+load split (DEC-GM-040): at most 2 concurrent sessions per route at any time
+(Claude Code 2: TE, IE; Muse 1; Cursor 1); AGY not used by planning roles.
+
+| Specialist (session) | Frozen primary | Effective route (ran) | Start (UTC) | Result |
+|---|---|---|---|---|
+| Requirements Engineer (planning) | Cursor Agent / Grok 4.7 / high | Cursor Agent / Grok 4.7 / high | 2026-09-26T04:27:13Z | REPAIRABLE_FAILURE (requirements-engineer-gate-r3.md); every replacement applied verbatim; one gate round, no re-gate (DEC-GM-038) |
+| Systems Modeler (planning) | Muse Code / Muse Spark 1.3 / max | Muse Code / Muse Spark 1.3 / max | 2026-09-26T04:27:13Z | READY (views final; transient stream idle retries inside the run, no fallback) |
+| Test Engineer (planning) | Claude Code / Claude Opus 5.5 / high | Claude Code / Claude Opus 5.5 / high (separate headless session) | 2026-09-26T04:27:13Z | PASS (seit.json revised); TE4-F1..F6, F10 applied; F7 resolved by the RE gate r3 acceptance-row text; F8 to the Plan Integrator; F9 to the Orchestrator |
+| Integration Engineer (planning) | Claude Code / Claude Opus 5.5 / high | Claude Code / Claude Opus 5.5 / high (separate headless session) | 2026-09-26T04:27:13Z | GAPS (CF-24..CF-34); CF-21, CF-24..CF-27, CF-29..CF-32 applied to slice-graph.md, design.md, technical plan |

@@ -125,3 +125,94 @@ claimed.
 ### Blocker
 
 - None.
+
+## Scope-reopen delta (DEC-GM-027..040, DEC-GM-042, SC-2-AMENDMENT, CONF-GM-*)
+
+- Status: READY
+- Mode: diagram-assisted (sysml_claim: false) — unchanged; no owner or
+  Lifecycle mandate for a SysML v2 semantic model, so Mermaid plus SVG
+  remains the specified medium, not a silent substitution.
+- Candidate ref: 18c3f5c623529973505fc0edd1c20425bd341c96 (journey.json checkout_lease, generation 1, still active)
+- Inputs pinned: gridmarket-technical-plan.md sha256
+  a780d8c55df9d5a3702b693835453065f93db1d85279058403ee955bf6bb1899,
+  design.md sha256
+  d3a71038e6f363d4fb21b47a9f7e00e3857b113bbfd9a61e88ce33399fd00e3b
+  (both verified before writing).
+
+### What changed
+
+- V1 (MODEL-GM-V1): owner's ERCOT Worker on the owner's account holding
+  the owner ERCOT credentials (TB-3); Worker 3D views and dashboard as
+  two linked surfaces (views read /v1/market/activity and /v1/router
+  by CORS on public reads); hosted Jev API as optional flag-gated
+  (default off) outbound with owner-held key; user's local
+  gridmarket-mcp (stdio, own sandbox key) and user-brought LLM agents
+  as external public-API clients; no remote MCP server; admin
+  loopback-only, never through the tunnel; self-serve sandbox keys.
+  Reused the stopped run's .mmd/.svg as consistent; no rework needed.
+- V2 (MODEL-GM-V2): 7 new use cases (U10-U16: 2-click sandbox key +
+  first order; observe bots + profiles; owner-only cohort spawn; watch
+  router checks; owner-triggered LoneStar outage; bring own strategy
+  via template, prompt kit, MCP; agent follows guide / onboarding
+  skill), 9 actors, 16 use cases mapped to SC-1..SC-11 with SC-2 as
+  amended. DEC-GM-038..040 reflected only as phase tags [1a/1b/2/
+  stretch/final] on each use case (added to .mmd and .svg in this run;
+  the stopped run lacked them).
+- V3 (MODEL-GM-V3): kept order path (step 4 now halt + provider check
+  with PROVIDER_OFFLINE) and signal path (dashboard poll corrected to
+  2 s); added the third column — router tick (market checks from
+  signals + score, health checks from WorkerStats + heartbeats, bands,
+  only the heartbeat rule acts), bot loop (master-seed sampler ->
+  bots container -> SDK -> public API -> risk -> matching), payroll
+  tick (deposits excluded from P&L) with settled positions feeding
+  loss statistics. Rewrote the stale .svg from the current .mmd.
+- views.json: traces rebuilt against current AC-/RISK-/DES-/
+  CONTRACT- IDs incl. DES-GM-VIEWS/ROUTER/BOTS/ECON/ONBOARD/KIT/MCP/
+  QUANT/DOCS and CONTRACT-GM-ROUTER/CONTRACT-GM-BOTS; trace_status
+  "final" on all three views; svg_sha256 recomputed; limitations
+  updated (scope-reopen rows still subject to the parallel RE gate).
+
+### Changed paths
+
+- docs/plans/2026-09-25-gridmarket/views/v1-context.mmd
+- docs/plans/2026-09-25-gridmarket/views/v1-context.svg
+- docs/plans/2026-09-25-gridmarket/views/v2-use-cases.mmd
+- docs/plans/2026-09-25-gridmarket/views/v2-use-cases.svg
+- docs/plans/2026-09-25-gridmarket/views/v3-operational-flow.mmd
+- docs/plans/2026-09-25-gridmarket/views/v3-operational-flow.svg
+- docs/plans/2026-09-25-gridmarket/views/views.json
+- docs/plans/2026-09-25-gridmarket/specialists/systems-modeler-receipt.md
+
+### Tests (sha256 checks run)
+
+- sha256sum over the three SVGs after writing; values recorded in views.json:
+  - v1-context.svg 82ba7ceb287ec21f78272c09b562399943ad79ed1e14e2b781e2230f53d3cdf1
+  - v2-use-cases.svg 7612894ecc6f26f17fb2596bb07ac025a30548ae9c1e099c39e441507544f2ea
+  - v3-operational-flow.svg efb020a27090dae6eb13ee0a3a8eb8e586f8933a8c899795f2343895d965b214
+- Sanitizer-constraint check per SVG: allowed tags/attributes only,
+  double-quoted values, no style/script/href/foreignObject, entities
+  within {&amp; &lt; &gt; &quot; &#39;}, &lt;title&gt; present, under
+  60 KB (13,234 / 14,169 / 15,465 bytes), XML parses, 1000 px width.
+- Trace ID check: all 111 distinct AC-/RISK-/DES-/CONTRACT- IDs in the
+  three traces (166 entries) grepped present in
+  gridmarket-technical-plan.md or design.md; zero missing.
+- views.json parses; recorded svg_sha256 values re-verified against
+  file bytes.
+
+### Findings
+
+- V1 boundary matches DES-GM-ARCH/DES-GM-ERCOT/DES-GM-EDGE/
+  DES-GM-VIEWS/DES-GM-MCP/CONTRACT-GM-WORKER: owner-held credentials,
+  linked surfaces, flag-gated Jev, local-only MCP, loopback admin.
+- V2 covers the seven scope-reopen use cases with phase tags and the
+  SC-2-amended outcome set; no new SC outcomes.
+- V3 router/bot/payroll column matches DES-GM-ROUTER (only the
+  heartbeat rule acts), DES-GM-BOTS (seeded sampler, public-API loop),
+  DES-GM-ECON (deposits excluded from P&L), DES-GM-PROV (heartbeats,
+  PROVIDER_OFFLINE).
+- No requirement, design, or journey IDs were changed; no other files
+  touched; nothing committed.
+
+### Blocker
+
+- None.
