@@ -26,10 +26,16 @@ ROUTES = (
 
 ZONES = ("LZ_HOUSTON", "LZ_NORTH", "LZ_SOUTH", "LZ_WEST")
 WEATHER = {
-    "LZ_HOUSTON": ("Coast",),
-    "LZ_NORTH": ("North", "North Central", "East"),
-    "LZ_SOUTH": ("South Central", "Southern"),
-    "LZ_WEST": ("West", "Far West"),
+    "LZ_HOUSTON": ("coast",),
+    "LZ_NORTH": ("north", "northCentral", "east"),
+    "LZ_SOUTH": ("southCentral", "southern"),
+    "LZ_WEST": ("west", "farWest"),
+}
+OUTAGE = {
+    "LZ_HOUSTON": "totalResourceMWZoneHouston",
+    "LZ_NORTH": "totalResourceMWZoneNorth",
+    "LZ_SOUTH": "totalResourceMWZoneSouth",
+    "LZ_WEST": "totalResourceMWZoneWest",
 }
 WEIGHTS = {
     "price-spread": 0.18,
@@ -48,15 +54,13 @@ def fetch_reports(base_url: str, key: str) -> dict[str, list[dict]]:
     """GET each allowlisted report route exactly once; return field-zipped rows."""
     reports: dict[str, list[dict]] = {}
     for route in ROUTES:
-        request = urllib.request.Request(
-            base_url + route, headers={"x-gridmarket-key": key}
-        )
+        request = urllib.request.Request(base_url + route, headers={"x-gridmarket-key": key})
         with urllib.request.urlopen(request, timeout=30) as response:
             payload = json.loads(response.read().decode())
-        fields = payload["fields"]
-        reports[route] = [
-            dict(zip(fields, row, strict=True)) for row in payload["data"]
+        fields = [
+            field["name"] if isinstance(field, dict) else field for field in payload["fields"]
         ]
+        reports[route] = [dict(zip(fields, row, strict=True)) for row in payload["data"]]
     return reports
 
 
@@ -80,10 +84,7 @@ def _spearman(xs: list[float], ys: list[float]) -> float:
         index = 0
         while index < len(values):
             end = index
-            while (
-                end + 1 < len(values)
-                and values[order[end + 1]] == values[order[index]]
-            ):
+            while end + 1 < len(values) and values[order[end + 1]] == values[order[index]]:
                 end += 1
             average = (index + end) / 2 + 1
             for cursor in range(index, end + 1):
@@ -94,9 +95,7 @@ def _spearman(xs: list[float], ys: list[float]) -> float:
     rx, ry = ranks(xs), ranks(ys)
     mean_x, mean_y = sum(rx) / len(rx), sum(ry) / len(ry)
     num = sum((a - mean_x) * (b - mean_y) for a, b in zip(rx, ry, strict=True))
-    den = math.sqrt(
-        sum((a - mean_x) ** 2 for a in rx) * sum((b - mean_y) ** 2 for b in ry)
-    )
+    den = math.sqrt(sum((a - mean_x) ** 2 for a in rx) * sum((b - mean_y) ** 2 for b in ry))
     if den == 0:
         raise ValueError("undefined spearman")
     return num / den
@@ -106,27 +105,33 @@ def score_reports(reports: dict[str, list[dict]], days: int, end: str) -> dict |
     """Score history hours; None when fewer than `days` distinct dates score."""
     rt: dict[tuple[str, int, str], list[float]] = {}
     for row in reports["/api/report/np6-905-cd/spp_node_zone_hub"]:
-        key = (row["deliveryDate"], int(row["deliveryHour"]), row["settlementPointName"])
+        key = (row["deliveryDate"], int(row["deliveryHour"]), row["settlementPoint"])
         rt.setdefault(key, []).append(float(row["settlementPointPrice"]))
     means = {key: sum(vals) / len(vals) for key, vals in rt.items() if len(vals) == 4}
     dam = {
-        (row["deliveryDate"], int(row["hourEnding"]), row["settlementPoint"]): float(
-            row["settlementPointPrice"]
-        )
+        (
+            row["deliveryDate"],
+            int(str(row["hourEnding"]).split(":")[0]),
+            row["settlementPoint"],
+        ): float(row["settlementPointPrice"])
         for row in reports["/api/report/np4-190-cd/dam_stlmnt_pnt_prices"]
     }
     load = {
-        (row["deliveryDate"], int(row["hourEnding"]), row["weatherZone"]): float(
-            row["loadForecast"]
-        )
+        (row["deliveryDate"], int(str(row["hourEnding"]).split(":")[0]), name): float(row[name])
         for row in reports["/api/report/np3-565-cd/lf_by_model_weather_zone"]
+        if row.get("inUseFlag", True)
+        for names in WEATHER.values()
+        for name in names
+        if row.get(name) is not None
     }
     outage = {
-        (row["deliveryDate"], int(row["hourEnding"]), row["loadZone"]): float(
-            row["outageCapacity"]
-        )
+        (row["operatingDate"], int(row["hourEnding"]), zone): float(row[column])
         for row in reports["/api/report/np3-233-cd/hourly_res_outage_cap"]
+        for zone, column in OUTAGE.items()
+        if row.get(column) is not None
     }
+    # NP6-86 carries SCEDTimestamp, not a publishTime. The existing backtest
+    # aggregates this report's shadow prices without using a publication time.
     shadow = sum(
         float(row["shadowPrice"])
         for row in reports["/api/report/np6-86-cd/shdw_prices_bnd_trns_const"]
@@ -222,8 +227,7 @@ def main(argv: list[str] | None = None) -> int:
         )
     )
     print(
-        f"Spearman {metrics['spearman']:.4f} n={metrics['n']}"
-        f" {metrics['start']}..{metrics['end']}"
+        f"Spearman {metrics['spearman']:.4f} n={metrics['n']} {metrics['start']}..{metrics['end']}"
     )
     return 0
 
