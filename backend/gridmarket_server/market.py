@@ -20,11 +20,13 @@ router = APIRouter()
 ZONES = ("LZ_HOUSTON", "LZ_NORTH", "LZ_SOUTH", "LZ_WEST")
 MAX_ORDER_QUANTITY = 50
 MAX_POSITION = 200
+MAX_PRICE_CENTS = 500  # $5.00/FC (1 FC = 1 kWh) mirrors the ERCOT $5,000/MWh offer cap
 Order = RestingOrder = dict[str, Any]
 
 
-def reject(code: str, status: int = 422) -> None:
-    raise HTTPException(status, {"code": code, "message": code.replace("_", " ").capitalize()})
+def reject(code: str, status: int = 422, message: str | None = None) -> None:
+    message = message or code.replace("_", " ").capitalize()
+    raise HTTPException(status, {"code": code, "message": message})
 
 
 def observe_rejection(exc: Exception, account_id: str | None, code: str) -> None:
@@ -191,12 +193,14 @@ def _place_order(db, account_id: str, incoming: Order) -> dict:
     quantity, price, side = incoming["quantity"], incoming["price_cents"], incoming["side"]
     if quantity > MAX_ORDER_QUANTITY:
         reject("ORDER_TOO_LARGE")
-    if (
-        quantity < 1
-        or not 0 <= price <= (2**63 - 1) // MAX_ORDER_QUANTITY
-        or side not in ("buy", "sell")
-    ):
+    if quantity < 1 or side not in ("buy", "sell"):
         reject("VALIDATION_ERROR")
+    if not 0 <= price <= MAX_PRICE_CENTS:
+        reject(
+            "VALIDATION_ERROR",
+            message=f"price_cents must be between 0 and {MAX_PRICE_CENTS} "
+            f"(${MAX_PRICE_CENTS / 100:.2f}/FC, the ERCOT ${MAX_PRICE_CENTS * 10:,}/MWh offer cap)",
+        )
     order_id = uuid.uuid4().hex
     adapters = _adapters(db, order_id)
     assets = [
