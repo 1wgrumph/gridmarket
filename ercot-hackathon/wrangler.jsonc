@@ -14,5 +14,6 @@
     { "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
     { "name": "ERCOT_BUDGET", "namespace_id": "1002", "simple": { "limit": 25, "period": 60 } }
   ],
+  "vars": { "MARKET_URL": "" },
   "observability": { "enabled": true }
 }

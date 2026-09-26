@@ -30,6 +30,12 @@
   .axis { stroke:var(--line); } .lbl { fill:var(--dim); font:11px "JetBrains Mono",monospace; }
   pre { font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--dim); white-space:pre-wrap; max-height:260px; overflow:auto; margin:0; }
   .meta { color:var(--dim); font-size:13px; margin-top:10px; font-family:"JetBrains Mono",monospace; }
+  .dash { display:inline-block; margin-top:14px; color:var(--cool); font:600 13px "JetBrains Mono",monospace; text-decoration:none; }
+  .dash:hover { text-decoration:underline; }
+  [hidden] { display:none !important; }
+  .mf-title { font:600 12px "JetBrains Mono",monospace; color:var(--dim); letter-spacing:.08em; text-transform:uppercase; margin:4px 0 8px; }
+  .mf-strip, .mf-alerts { list-style:none; margin:0 0 12px; padding:0; display:flex; gap:8px 16px; flex-wrap:wrap; font:13px "JetBrains Mono",monospace; }
+  .mf-strip b { color:var(--cool); font-weight:600; } .mf-alerts b { color:var(--hot); }
 </style>
 </head>
 <body>
@@ -37,6 +43,7 @@
   <div class="tag">// ORGANIZED AI × ERCOT PUBLIC DATA</div>
   <h1>ERCOT <span>Hackathon</span></h1>
   <p class="lead">2-Day Aggregate Energy Demand Curves (NP3-907-EX), pulled live through a Cloudflare Worker with token caching in KV.</p>
+  <a class="dash" id="dashboard" href="#" hidden>GridMarket dashboard →</a>
 </header>
 <main>
   <section class="card" id="statusCard">
@@ -55,6 +62,8 @@
   <section class="card">
     <svg id="chart" viewBox="0 0 900 380" role="img" aria-label="Demand curve: price vs MW"></svg>
   </section>
+
+  <section class="card" id="market" hidden aria-label="Market activity and router checks (baseline rules)"></section>
 
   <section class="card">
     <pre id="raw">Raw response appears here.</pre>
@@ -119,6 +128,10 @@ $("load").onclick = async () => {
 };
 
 health();
+</script>
+<script type="module">
+import { mountFeed } from "/market-feed.js";
+mountFeed(document.getElementById("market"), document.getElementById("dashboard"));
 </script>
 </body>
 </html>
