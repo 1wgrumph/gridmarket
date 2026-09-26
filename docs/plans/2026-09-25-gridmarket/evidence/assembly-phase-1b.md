@@ -813,3 +813,112 @@ write-set union. Return it to the Orchestrator/lane for correction or explicit
 scope amendment before re-entry. **S49-L NOT_RUN.** No PR, main merge, branch
 deletion, force push, git switch, owner deployment, credential access, issue
 closure or Co-Authored-By line.
+
+
+## Attempt 7 (continued; attempt-9 evidence): CONTRACT_FAILURE — combined step green, spec entry blocked
+
+Journey GM-2026-09-25, S49 phase 1b, Integration Engineer execution,
+DIR-P1b-20 with DEC-GM-074/075/076. Entry was clean at
+`ac9445da242f06c64a120050d194ede9448bd675` on `gridmarket/integration-1b`.
+This is progressive assembly evidence, not independent review, assurance,
+owner acceptance, or landing. Evidence root: `/tmp/gm-evidence/P1b/attempt-9/`.
+
+### Identities and structural checks
+
+| Item | SHA | Result / evidence |
+|---|---|---|
+| Design exact exit | `8f6843a69117ff3c2145ddf400a7a8d96572a0d3` | Object and clean-entry checks 0; `design-entry.json` |
+| Revert of `bdb281b` restoring design | `8dfe0d67a461f802855ed3c58ab85c369d402ccd` | Command and structural checks 0; `design-restore.log`, `design-restore.json` |
+| Pages-v2 exact exit | `bf9252fd25b7275ba54e65d931b8b15138a77195` | Entry checks 0; `pages-v2-entry.json` |
+| Combined S49-D pages-v2 merge | `35e3ab68d69bb6f1a2dd688b83dbe765c0a8fa25` | Conflict-free --no-ff; `pages-v2-merge.log`, `pages-v2-post.json` |
+| Spec exact exit | `8989e539e7499dccbcbe49ad06fbfbe4c30ea747` | Object exists, clean entry, write-set check **1**; `spec-entry.json`; merge **NOT_RUN** |
+
+The canonical implementation.json was re-read before the checks. Its digest
+and S53 declaration are in `manifest-receipt.json`; lane unions are in
+`write-sets.json`. DEC-GM-076 includes `dashboard/src/styles.css` for S53.
+The incoming stylesheet delta from design ancestry `bb097f8` is additive:
+84 additions, zero deletions. The design restoration changes only dashboard
+paths, and the pages non-merge history fits the amended pages union.
+
+DEC-GM-074 exempts **only** `dashboard/src/api.ts` and
+`dashboard/src/hooks.ts`, **only for the design restoration in step 1**,
+under DEC-GM-062 (type exports, poll deduplication, error text). All other
+frozen files are checked. Pages-v2 receives no exemption and changes no
+frozen file relative to restored design; spec would receive no exemption.
+`combined-structure.json` records the combined check and raw S01 comparison.
+The sole inherited S01 delta outside those two files is the already landed
+phase-1a mutation configuration in `backend/pyproject.toml` (`6636375` /
+`44b7f63`), unchanged from this attempt's entry and disclosed in attempt 5.
+CONTRACTS.md and backend/uv.lock are unchanged.
+
+### Combined S49-D gates at 35e3ab6
+
+| Gate | Exit | Evidence |
+|---|---:|---|
+| CMD-TEST-CONTRACTS | 0 | `combined-test-contracts.log` |
+| CMD-TEST-ALL | 0 | `combined-test-all.log` |
+| CMD-TEST-DASH | 0 | `combined-test-dash.log` |
+| CMD-SMOKE | 0 | `combined-smoke.log` |
+| PROC-ASSEMBLY | 0 | `combined-proc-assembly.json`, `combined-structure.json`, `pages-v2-post.json` |
+| CMD-SECRETS (stop-point check) | 0 | `combined-final-secrets.log` |
+| CMD-RULES (stop-point check) | 0 | `combined-final-rules.log` |
+
+Full S49-D behavioral gates ran **once on the pages merge**, never on design
+alone. Test-all reports 109 backend, 47 dashboard, and 34 Worker tests passed;
+the separate dashboard gate also passes 47 tests and the build. Smoke passes
+all assertions and tears down its isolated stack. Command timestamps, exits,
+and candidate SHAs are in `combined-results.json` and
+`combined-final-results.json`. Test-all ran 2026-09-26 15:16:15–15:18:19 UTC;
+no hour boundary or failure occurred, so DEC-GM-075 retry was not needed.
+Existing setup was reused with GRIDMARKET_NWS=off,
+UV_EXCLUDE_NEWER=2026-09-11T22:00:00Z and frozen Make targets. Smoke used
+`gm-smoke-1b:18003`, SEIT's assigned pair rather than the stale step annotation.
+No owner environment file was read. Branch push succeeded (`combined-push.log`).
+
+### Spec entry contract gap and remaining work
+
+S21 is **un-deferred/eligible** at its supplied green exit under DIR-P1b-20;
+the earlier deferral is lifted. However, PROC-ASSEMBLY's required non-merge
+history check finds two paths outside the canonical S19/S20/S21 union:
+
+- `Makefile`
+- `docs/plans/2026-09-25-gridmarket/evidence/spec-tool-versions.md`
+
+Both arrive in S21-fix `8989e53`. Its exact SHA and behavioral readiness are
+authorized, but the supplied manifest contains no S21-fix write-set amendment
+covering these paths. `spec-writeset-preflight.json` and `spec-entry.json`
+record the union and unmatched paths. Clarification was requested; no scope
+expansion or manifest edit was invented. This is **SPEC_WRITESET_GAP**, not a
+product failure. Spec was not merged; all S49-E post-step behavioral gates are
+**NOT_RUN**, and no spec rollback is applicable. The green combined step is
+retained. Spec is not re-deferred by this entry stop.
+
+Last green merge candidate: `35e3ab68d69bb6f1a2dd688b83dbe765c0a8fa25`.
+**Spec assembly and market2 remain to come**, including the anomalies-panel
+check against real status.anomalies rows and market2's S05-flake root fix.
+Owner items **PROC-ERCOT-LIVE-CHECK** and **AC-GM-ACC-01** remain pending and
+were never performed. Prior VIEWS_NOT_DEPLOYED, ENTROPY_PROOF_CONFLICT,
+PAGES_APP_ERROR_BOUNDARY_GAP, live-smoke coverage limits, and the Graphviz
+2.43.0 versus designed 2.42.2 discrepancy remain disclosed, not closed.
+Independent phase review, browser visual review and Assurance Test Engineer
+remain pending. BRAN_UNAVAILABLE: no native policy; Git and repository
+sources supplied the assembly evidence.
+
+Frozen binding digest
+`14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`
+is preserved in `frozen-profile.json`, including role routes and both
+capabilities; no changed live profile or substitute route was imported.
+review.coverage_assist remains enabled, required=false, OpenCodeReview
+delegation backend; executable available, **not_run** because this session
+is assembly, not code review. deterministic_verification.reverify remains
+enabled; executable available, **not applicable — no Rust/native compiled
+binary claim**. Availability paths are in `capability-availability.json`.
+Ordinary gate results are not Reverify or independent assurance evidence.
+
+Blocker: the spec lane needs recorded write-set authority for the two S21-fix
+paths before re-entry. No revert was necessary because the blocked step made
+no changes. **S49-L NOT_RUN**. No PR, main merge, branch deletion, force push,
+git switch, product/test edit, credential access, deployment, issue closure,
+or Co-Authored-By line. The evidence-only commit follows the tested candidate;
+`final-verification.json` and `final-push.log` record final clean state and
+branch-only non-force push.
