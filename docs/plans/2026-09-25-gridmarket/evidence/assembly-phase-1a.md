@@ -9,7 +9,7 @@ public_boundary: private
 
 # Phase 1a assembly — S09
 
-Current outcome: **REPAIRABLE_FAILURE**: DIR-P1a-04 glue is committed and its exact quoted-glob Node command passes 25/25, but the dispatch requires `make test-worker`, a target absent from this Makefile. S09-A is green; S09-B is merged. S09-C preflight passes, but assembly is paused pending resolution of this command/authority mismatch. See the DIR-P1a-04 continuation below.
+Current outcome: **REPAIRABLE_FAILURE**: S09-C passed; S09-D merged cleanly but fails application import through `api -> scoring -> ercot -> api`. S09-D was reverted under PROC-ASSEMBLY, and the restored S09-C checks pass. S09-E was not attempted; no Phase 1a candidate is ready or written. Return the integration failure to the Coordinator for lane repair.
 
 Historical outcome before DIR-P1a-03: **REPAIRABLE_FAILURE**. S09-A merged without conflicts but failed its required dashboard gates. It was reverted under PROC-ASSEMBLY. No assembly step is complete; S09-B through S09-E were not attempted. S09-L remains with the Orchestrator.
 
@@ -166,3 +166,81 @@ S08 recorded exit remains `6c68d70ef3659bd28a29603ec1a4298dba217a78`; preflight 
 BRAN remains unavailable (no native policy). Frozen OCR selection remains enabled/required=false, not_run in this assembly session; independent review remains pending. Reverify remains enabled/SELECTED_CONDITIONAL for the Rust ELF extension and NOT_APPLICABLE here because no compiled-binary claim is made. No route or live profile changed.
 
 Evidence and glue are committed and pushed only to `gridmarket/integration-1a`. No S09-C/D/E verification or phase assurance is claimed; S09-L remains with the Orchestrator.
+
+
+## Current dispatch — worker gate clarification
+
+- Execution session starts at clean `5c159069451cd74448327437c449f138865e9114`; DIR-P1a-02/03/04/05 and DEC-GM-053 apply. The current owner dispatch accepts the direct Node quoted-glob command. No optional Makefile target was needed.
+- `node --test "ercot-hackathon/test/*.test.mjs"`: exit 0, 25 passed, 0 failed/skipped. This closes the predecessor invocation gap; existing glue `da45d154a93671baf01f559bdf35229c8355638f` remains unchanged.
+- Exact recorded S08/S06/S07 exits were verified as Git objects. Non-merge write-set checks against the respective slice unions passed: market 16 paths, data 15 paths, UI 6 paths. All twelve frozen baseline files match S01 in all three exit trees; no amendment or dependency change required.
+- Frozen capability settings are retained: `review.coverage_assist.enabled=true`, `required=false`, selected backend OpenCodeReview delegation; `not_run` in this assembly session, runtime availability not assessed (review capability gap, not review PASS). `deterministic_verification.reverify.enabled=true`, selected conditional Rust ELF verification remains NOT_APPLICABLE: no Rust/native binary claim. Dashboard build and container smoke are build/runtime receipts, not binary analysis. No live profile imported or route changed.
+- BRAN unavailable: no native policy. Direct repository and Git evidence used. Existing dependency admission receipts are reused for identical lockfiles; no dependency update intended.
+
+## S09-C — market assembled
+
+- Input S08: `6c68d70ef3659bd28a29603ec1a4298dba217a78`.
+- `git merge --no-ff` exit 0; merge `80123afb2debe9594d28983d05822d11e4b462c3`; tree `8d39b16778d5400de67b29e63ad3de21563ced43`.
+- No conflicts or product edits. Frozen-contract comparison on the merged tree (including vite.config.ts) exits 0; lane write-set check exits 0.
+
+| Command | Exit | Result |
+|---|---:|---|
+| `make lint` | 0 | Ruff checks pass; 29 files formatted. |
+| `make test-contracts` | 0 | 3 passed. |
+| `uv run --project backend pytest -q backend/tests/test_contracts.py backend/tests/test_market.py backend/tests/test_api.py` | 0 | 26 passed; 2 dependency deprecation warnings. |
+| Same pytest command with `UV_EXCLUDE_NEWER=2026-09-11T22:00:00Z` | 0 | 26 passed on restored frozen lockfile; no tracked drift. |
+| `make smoke SMOKE_PROJECT=gm-smoke-integration SMOKE_PORT=18000` | 0 | Repeated after lockfile restoration; app healthy, HTTP status `open`; temporary stack cleaned up. |
+
+The first non-frozen uv invocation removed only the three-line lockfile `[options]` cutoff metadata. Its diff was inspected and exactly restored from HEAD; all package identities remained unchanged. Subsequent prescribed non-frozen uv commands retain the existing cutoff through `UV_EXCLUDE_NEWER`. This is a local invocation correction, not a product edit.
+
+Smoke limitation retained for phase review: Compose reports `container gm-smoke-integration-bots-1 has no healthcheck configured` after starting bots; the existing recipe continues to curl and exits 0 with `{"status":"open"}`. This meets the dispatched smoke exit/status gate but does not prove bot health or activity. No smoke recipe or healthcheck was changed. Dashboard/full test-all gates remain deferred until S09-E under DIR-P1a-03; the complete SDK suite becomes mandatory at S09-D under DIR-P1a-05.
+
+
+## S09-D — data integration failure
+
+- Input S06: `82949039d2f54b5c0b8bc8d61c208251fd754adc`.
+- `git merge --no-ff` exit 0, no conflicts; merge `e5859e1cfa6ad33c9df54b9a20b4387b9a4627f8`; tree `02696a1585090833e04e303745fc8fb235856ad0`.
+- Frozen-contract comparison exits 0; write-set preflight passes. The failure is interaction between the exact recorded market and data exits, not contract drift, a merge conflict, missing dependencies, or the earlier expected predictions 404.
+
+| Command | Exit | Result |
+|---|---:|---|
+| `make lint` | 0 | Ruff checks pass; 32 files formatted. |
+| `make test-contracts` | 2 | Collection fails importing main: partially initialized api has no router. |
+| `UV_EXCLUDE_NEWER=2026-09-11T22:00:00Z uv run --project backend pytest -q backend/tests/test_contracts.py backend/tests/test_market.py backend/tests/test_api.py backend/tests/test_ercot.py backend/tests/test_nws.py backend/tests/test_scoring.py backend/tests/test_sdk.py` | 2 | Seven collection errors; no test cases execute. |
+| `uv run --project backend --frozen pytest -q backend/tests/test_sdk.py` | 2 | Independent targeted reproduction: same import cycle; complete SDK suite is NOT passing. |
+| `make smoke SMOKE_PROJECT=gm-smoke-integration SMOKE_PORT=18000` | 2 | App becomes unhealthy; curl error 7 reported by make; no open status. Temporary stack cleaned up. |
+
+Root-cause evidence on the failed merge:
+
+- `backend/gridmarket_server/api.py:21` imports scoring before defining `router` at line 187.
+- `backend/gridmarket_server/scoring.py:11` imports signals from ercot.
+- `backend/gridmarket_server/ercot.py:16` imports api; its first route decorator at line 315 accesses the still-uninitialized `api.router`.
+- The SDK test imports main at line 15, so DIR-P1a-05 cannot reach its predictions-dependent example test.
+
+```text
+backend/gridmarket_server/ercot.py:315: in <module>
+    @api.router.get("/v1/signals")
+AttributeError: partially initialized module 'gridmarket_server.api' has no attribute 'router'
+```
+
+Classification: AN-PRODUCT-RED, in-scope market/data integration failure. No issue filed, no product fix attempted, no moving lane tip substituted. Repair must return through the lane owner/Coordinator; this dispatch prohibits product changes beyond merge resolution.
+
+## S09-D rollback and handoff
+
+- `git revert -m 1 --no-edit e5859e1cfa6ad33c9df54b9a20b4387b9a4627f8`: exit 0.
+- Revert commit `f81e154656dfcea9617bb36ebb9efd76f991e9d2`; tree `8d39b16778d5400de67b29e63ad3de21563ced43`.
+- `git diff --exit-code 80123afb2debe9594d28983d05822d11e4b462c3 HEAD`: exit 0. Committed tree exactly equals green S09-C; the only uncommitted change at that point is this evidence file.
+
+| Recovery command | Exit | Result |
+|---|---:|---|
+| `make lint` | 0 | 29 files formatted; checks pass. |
+| `make test-contracts` | 0 | 3 passed. |
+| `UV_EXCLUDE_NEWER=2026-09-11T22:00:00Z uv run --project backend pytest -q backend/tests/test_contracts.py backend/tests/test_market.py backend/tests/test_api.py` | 0 | 26 passed; restored S09-C gate. |
+| `make smoke SMOKE_PROJECT=gm-smoke-integration SMOKE_PORT=18000` | 0 | Status `open`; same bots-healthcheck limitation as S09-C; cleanup completed. |
+| `make secrets` | 0 | 79 commits scanned; no leaks; license and env-example checks pass. |
+| `make rules` | 0 | All three rules pass. |
+
+The data test files leave with the revert; the full S09-D suite cannot pass on this rollback. Full `make test-all` and `make test-dash` remain deferred under DIR-P1a-03 because UI has not merged. These are explicit incomplete Phase 1a gates, not passing evidence.
+
+S09-E input `5d3f39ce60846a0164e0b9d04051c72f7ebad57e` remains unmerged. No candidate SHA was written: the designated `ops/candidates/1a` file was absent and remains absent. Evidence/recovery HEAD is a handoff checkpoint only, not a Phase 1a candidate. Evidence is committed and pushed only to `origin/gridmarket/integration-1a`; independent review, assurance, owner acceptance and S09-L remain pending.
+
+Re-entry follows PROC-ASSEMBLY: restore the reverted data merge with a revert-of-revert, merge the Coordinator-recorded repaired exit(s), rerun all S09-D checks including the entire SDK suite, and proceed to S09-E only after green. Merely merging an unchanged data exit cannot restore reverted content.
