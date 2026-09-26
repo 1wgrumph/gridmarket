@@ -250,14 +250,19 @@ S69 owns procurement, accepted commitments, settlement, breach counting, and the
 Decimal day-component ledger with HALF_EVEN posting. C2 does not implement those
 APIs or claim independent review, real-source qualification, or replay acceptance.
 
-## Replay engine and API (C3, DEC-GM-113)
+## Replay engine and API (C3, DEC-GM-113; A16 DEC-GM-127)
 
 `gridmarket_server.replay` runs a labelled simulated peak-flex procurement
 programme on captured ERCOT observations; it is not ERCOT clearing. One
 catalogued day per run, stepped at local-day 15-minute quarters (92/96/100).
 Each strategy gets an independently cloned fleet; demand per procurement
 quarter is 25% of the fleet's initial rated AC discharge kW, fixed across
-strategy copies, zero outside delivery starts 17:00–21:00 Central. Offers
+strategy copies. Under A16 (DEC-GM-127, Orchestrator as planning owner), the
+programme uses all quarters of the zone's four highest DAM hours for D,
+selected from the complete eligible vector at day start (published D−1);
+ties use the earlier UTC hour, including repeated DST hours. The schedule
+is frozen for the run and returned as `procurement_hours` (UTC hour starts).
+Demand is zero outside these hours. Offers
 target the next quarter; acceptance is pro rata with deterministic
 0.000001-kWh floor and lexicographic residual; accepted energy is reserved
 immediately (AC kWh / eta_d) and released exactly once after settlement.
@@ -270,14 +275,69 @@ commitments and dispatch while retaining SoC and liabilities;
 `feed_interrupt` hides new observations (actuals expire 30 minutes after
 interval end; published DAM stays valid) and never erases settled state.
 
+A16 policies use the same parameters on every day, with no future RT inputs:
+
+- `fixed_schedule`: offer for next-quarter procurement; otherwise charge
+  00:00–06:00 Central and self-supply 17:00–21:00 when not delivering.
+- `price_based`: retain A6 nearest-rank DAM Q25/Q75 (overlap means hold).
+  `offer_flex` is issued only when the target quarter is a procurement
+  quarter, at next-quarter delivery-hour DAM >= Q75; in every other quarter
+  the policy evaluates self-supply, charge or hold, so an unacceptable
+  offer never blocks self-supply. When no offer is made, self-supply at
+  latest eligible RT >= Q75, otherwise charge at current-hour DAM <= Q25.
+  Offer has precedence over self-supply and charge.
+- `esr_informed`, displayed as **Battery-aware**: the PriceBased offer rule
+  (procurement quarters only, delivery-hour DAM >= Q75), with offers
+  capped at half the unreserved AC energy above reserve in each procurement
+  quarter, also capped by rated power; self-supply at latest eligible
+  RT >= DAM median (Q50, nearest rank) and charge at current-hour
+  DAM <= Q50. Q25 >= Q75 overlap holds, as PriceBased. ESR trends no
+  longer add offers. Missing eligible ESR/RT records a PriceBased
+  fallback; the half-energy cap remains active. Each run returns these
+  rules under `strategy_rules`.
+
+`self_supply` serves at most the current home's simulated AC load and never
+exports. Current commitments settle first and block self-supply and charging
+in that quarter; outstanding energy reservations also constrain feasibility.
+Its avoided-import value is included once in `energy_value_cents` at RT
+SPP/10 cents per kWh; it earns no flexibility bonus. `self_supply_kwh` is
+separate from committed `delivered_kwh`/`energy_delivered_kwh`.
+
+`fleet.household_load` is a timestamped AC kW profile shared by **each home**,
+not a fleet total or measured ERCOT consumption. Explicit profiles remain
+supported. If omitted, the materialized simulated Texas summer profile is
+0.7 kW 00–06, 1.0 kW 06–10, 1.2 kW 10–17, 2.0 kW 17–21, and 1.4 kW
+21–24 Central: 28.8 kWh / 24 h = 1.2 kW average, evening peak 2 kW.
+DST days repeat/omit local quarters; the profile is labelled simulated and
+returned with timestamps in the binding. No population weights are used.
+
 - `POST /v1/replay` (day, 1–3 distinct strategies, 1–1000 assets, 0–20
   disruptions, 2 MiB, 6 runs/minute/client, 2 concurrent computations) returns
   canonical JSON: `run_id` (SHA-256 of the binding), binding, scoreboard and
-  timeline. Identical requests return byte-identical bodies without timing
+  timeline. Existing keys remain; `timeline[].decisions` and `settlements`
+  now contain only `sample_asset_id` (the first request asset). Full decisions
+  include state/config and eligible inputs; `dam_vector` is a comma-separated
+  hourly vector from `interval_start`, with conservative latest publication
+  and availability timestamps for the vector. `fleet_timeline[strategy]`
+  contains each quarter's closing `soc_kwh`, `charge_kw`, `offered_kwh`,
+  `accepted_kwh`, `delivered_kwh`, `self_supply_kwh`, `shortfall_kwh`,
+  `failed_commitments`, and settlement `spp` (USD/MWh). Offers/acceptances
+  belong to the decision quarter and target the next; delivery belongs to
+  the current quarter. Scoreboard ledger totals and per-asset start/end SoC
+  remain. The 1,000-home three-strategy run body is under 2 MB.
+  Identical requests return byte-identical bodies without timing
   keys; the latest 20 completed runs are retained. Oversize is 413, invalid
   422, rate/concurrency 429, unknown day or run 404.
 - `GET /v1/replay/{run_id}` returns the stored immutable body. Reset clears
   playback state; rerun reuses the same inputs.
+- `GET /v1/replay/{run_id}/decisions?strategy=&asset=&start=&end=` returns
+  `{run_id, decisions}` for one known strategy/home, filtered by decision
+  time in UTC `[start,end)`. All four parameters are required; offset-aware
+  bounds must lie within D and be increasing. At most 500 rows (a local day
+  has at most 100). Invalid selection/range is 422; evicted/unknown run is
+  404. Other homes are deterministically recomputed from retained immutable
+  inputs under the two-computation concurrency bound; this costs a replay
+  of that strategy. No silent truncation or separate unbounded trace store.
 - `GET /v1/replay/days` lists catalogued days with quarters, gaps, synthetic
   flags, availability status and `peak_rt_price` (point, interval, value).
 - Availability: `strict` when every series carries real `available_at`;

@@ -44,11 +44,22 @@ def zulu(day: str, hour: int, minute: int = 0) -> str:
     return syn.iso(datetime(year, month, dom, hour, minute, tzinfo=syn.CHI))
 
 
+def write_day(root, day, **options):
+    """A16: preserve the ledger cases' 17-21 window via DAM, with the same mean."""
+    dam = options.get("dam", Decimal(10))
+    if isinstance(dam, Decimal):
+        options["dam"] = [
+            dam + (Decimal(1) if 17 <= start.astimezone(syn.CHI).hour < 21 else Decimal("-0.2"))
+            for start, _ in syn.hours(day)
+        ]
+    return syn.write_day(root, day, **options)
+
+
 @contextmanager
 def catalog(tmp_path, monkeypatch, **days):
     root = tmp_path / "catalog"
     for day, options in days.items():
-        syn.write_day(root, day, **(options or {}))
+        write_day(root, day, **(options or {}))
     with syn.client(root, monkeypatch) as api:
         yield api
 
@@ -74,12 +85,11 @@ def run(api, payload):
             assert name in row
         syn.money_ok(row)
         assert syn.dec(row["energy_delivered_kwh"]) == syn.dec(row["delivered_kwh"])
-        mine = [item for item in settlements if item["strategy"] == row["strategy"]]
+        mine = body["fleet_timeline"][row["strategy"]]
         assert syn.dec(row["delivered_kwh"]) == _sum(mine, "delivered_kwh")
         assert syn.dec(row["shortfall_kwh"]) == _sum(mine, "shortfall_kwh")
         assert syn.dec(row["accepted_kwh"]) == _sum(mine, "accepted_kwh")
-        failed = [item for item in mine if syn.dec(item["shortfall_kwh"]) > Decimal("0.000001")]
-        assert row["failed_commitments"] == len(failed)
+        assert row["failed_commitments"] == sum(item["failed_commitments"] for item in mine)
         assert syn.dec(row["start_soc_kwh"]) == _sum(row["assets"], "start_soc_kwh")
         assert syn.dec(row["end_soc_kwh"]) == _sum(row["assets"], "end_soc_kwh")
         reserves = [syn.dec(item["min_reserve_kwh"]) for item in row["assets"]]
@@ -168,7 +178,7 @@ def test_C3_lossy_cycle_ledger(tmp_path, monkeypatch):
 def test_R3_half_even_subcent_rounds_once_per_component(tmp_path, monkeypatch):
     day = "2026-06-17"
     root = tmp_path / "catalog"
-    syn.write_day(root, day, dam=Decimal(0), rt=Decimal(0), rt_at={zulu(day, 0, 0): Decimal(25)})
+    write_day(root, day, dam=Decimal(0), rt=Decimal(0), rt_at={zulu(day, 0, 0): Decimal(25)})
     payload = syn.body(
         day,
         ["fixed_schedule"],
@@ -194,7 +204,7 @@ def test_R3_half_even_subcent_rounds_once_per_component(tmp_path, monkeypatch):
 def test_R3_negative_spp_keeps_sign(tmp_path, monkeypatch):
     day = "2026-06-16"
     root = tmp_path / "catalog"
-    syn.write_day(root, day, rt=Decimal(10), rt_at={zulu(day, 17, 0): Decimal(-40)})
+    write_day(root, day, rt=Decimal(10), rt_at={zulu(day, 17, 0): Decimal(-40)})
     with syn.client(root, monkeypatch) as api:
         row = syn.score(run(api, syn.body(day, ["fixed_schedule"], [lossy()])), "fixed_schedule")
     assert row["energy_value_cents"] == -4
@@ -207,7 +217,7 @@ def test_R3_negative_spp_keeps_sign(tmp_path, monkeypatch):
 def test_C3_half_even_sums_assets_before_rounding(tmp_path, monkeypatch):
     day = "2026-06-18"
     root = tmp_path / "catalog"
-    syn.write_day(root, day, dam=Decimal(0), rt=Decimal(0), rt_at={zulu(day, 17, 0): Decimal(10)})
+    write_day(root, day, dam=Decimal(0), rt=Decimal(0), rt_at={zulu(day, 17, 0): Decimal(10)})
     spec = {
         "capacity_kwh": "0.5",
         "initial_soc_kwh": "0.5",
@@ -266,7 +276,7 @@ def test_C3_pro_rata_oversubscribed(tmp_path, monkeypatch):
             for row in syn.flat(run(api, syn.body(day, ["fixed_schedule"], assets)), "settlements")
             if syn.dec(row["accepted_kwh"]) > 0
         ]
-    assert taken == [Decimal("0.25")] * 32
+    assert taken == [Decimal("0.25")] * 16  # A16 sample home; fleet sum checked by run().
 
 
 def test_C3_undersubscribed_is_not_a_failure(tmp_path, monkeypatch):
@@ -305,10 +315,17 @@ def test_C3_residual_quantum_goes_to_lowest_asset_id(tmp_path, monkeypatch):
     expected = syn.allocate(demand, offers)
     with catalog(tmp_path, monkeypatch, **{day: {}}) as api:
         body = run(api, syn.body(day, ["fixed_schedule"], assets))
+        # A16 exposes one sample: rotate it to retain all three allocation assertions.
+        bodies = [body]
+        for offset in (1, 2):
+            bodies.append(
+                run(api, syn.body(day, ["fixed_schedule"], assets[offset:] + assets[:offset]))
+            )
     peak = zulu(day, 17, 0)
     got = {
         row["asset_id"]: syn.dec(row["accepted_kwh"])
-        for row in syn.flat(body, "settlements")
+        for result in bodies
+        for row in syn.flat(result, "settlements")
         if row["delivery_start"] == peak
     }
     assert got == expected
@@ -434,7 +451,7 @@ def test_C3_overlapping_outages_merge_once(tmp_path, monkeypatch):
 
 def test_C3_partial_outage_settles_exactly_once(tmp_path, monkeypatch):
     day = "2026-06-15"
-    assets = [full("synthetic-a", "base_sim"), full("synthetic-b", "other_sim")]
+    assets = [full("synthetic-b", "other_sim"), full("synthetic-a", "base_sim")]
     with catalog(tmp_path, monkeypatch, **{day: {}}) as api:
         body = run(
             api,
@@ -489,14 +506,12 @@ def test_C3_feed_interrupt_does_not_block_fixed_schedule_dispatch(tmp_path, monk
     assert all(Decimal(str(item["value"])) != 0 for item in rt_inputs)
 
 
-def test_C3_feed_interrupt_esr_changes_esr_informed(tmp_path, monkeypatch):
+def test_C3_feed_interrupt_esr_records_battery_aware_fallback(tmp_path, monkeypatch):
     day = "2026-07-01"
     root = tmp_path / "catalog"
-    # S69 correction: the spike must be eligible at the 16:45 decision. A spike on
-    # [16:30,16:45) is available 16:50, so R2 (available_at <= t) and amendment 6
-    # (offer only when latest eligible RT >= Q75) require a hold; the expected
-    # offer needs the spike on [16:15,16:30), available 16:35.
-    syn.write_day(
+    # DEC-GM-127 A16: ESR is contextual; the half-energy policy remains fixed.
+    # The spike [16:15,16:30) is eligible at 16:45; no synthetic future leak.
+    write_day(
         root,
         day,
         rt=Decimal(40),
@@ -523,13 +538,9 @@ def test_C3_feed_interrupt_esr_changes_esr_informed(tmp_path, monkeypatch):
         plain = syn.score(run(api, syn.body(day, ["esr_informed"], [asset])), "esr_informed")
         lost_body = run(api, syn.body(day, ["esr_informed"], [asset], disruptions=[interrupt]))
         lost = syn.score(lost_body, "esr_informed")
-    assert plain["energy_value_cents"] == 4
-    assert syn.dec(plain["delivered_kwh"]) == 1
-    assert syn.dec(plain["end_soc_kwh"]) == 9
-    assert lost["energy_value_cents"] == 0
-    assert syn.dec(lost["delivered_kwh"]) == 0
-    assert syn.dec(lost["end_soc_kwh"]) == 10
-    assert lost["charging_cost_cents"] == plain["charging_cost_cents"] == 0
+    # DEC-GM-127 A16 replaces ESR-trend offers with a fixed half-energy rule.
+    # Missing ESR affects the explanation, not physical availability or pricing.
+    assert plain == lost
     when = zulu(day, 16, 45)
     decision = next(
         row

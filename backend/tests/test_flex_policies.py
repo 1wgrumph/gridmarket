@@ -92,11 +92,11 @@ def dam(prices=PRICES, available=PUBLISHED) -> list[Observation]:
     return rows
 
 
-def decide(policy, when, rows, bat=None, interrupts=()):
+def decide(policy, when, rows, bat=None, interrupts=(), load=Decimal(0)):
     decision = policy.decide(
         battery=bat or battery(),
         information=InformationSet(list(rows)),
-        household_load_kw=Decimal(0),
+        household_load_kw=load,
         config={"label": "synthetic"},
         decision_time=when,
         feed_interrupts=tuple(interrupts),
@@ -133,7 +133,7 @@ def test_C2_policies_share_one_interface_and_are_deterministic():
 
 def test_C2_fixed_schedule_charges_at_night_and_offers_the_evening_peak():
     night = z(2026, 6, 15, 2, 0)
-    late_night = z(2026, 6, 15, 5, 45)
+    late_night = z(2026, 6, 15, 5, 30)
     for when in (night, late_night):
         decision = decide(FixedSchedule(), when, dam())
         assert decision.action == "charge"
@@ -141,7 +141,7 @@ def test_C2_fixed_schedule_charges_at_night_and_offers_the_evening_peak():
         assert decision.delivery_start == when
         assert decision.delivery_end == when + timedelta(minutes=15)
         assert decision.attempted_reserve_violation is False
-    offer_at = z(2026, 6, 15, 16, 45)
+    offer_at = z(2026, 6, 15, 19, 45)
     last = z(2026, 6, 15, 20, 30)
     for when in (offer_at, last):
         decision = decide(FixedSchedule(), when, dam())
@@ -152,7 +152,7 @@ def test_C2_fixed_schedule_charges_at_night_and_offers_the_evening_peak():
 
 
 def test_C2_fixed_schedule_holds_outside_its_windows():
-    for when in (z(2026, 6, 15, 6, 0), z(2026, 6, 15, 12, 0), z(2026, 6, 15, 20, 45)):
+    for when in (z(2026, 6, 15, 7, 0), z(2026, 6, 15, 12, 0), z(2026, 6, 15, 23, 0)):
         decision = decide(FixedSchedule(), when, dam())
         assert decision.action == "hold"
         assert decision.kw == Decimal(0)
@@ -166,7 +166,7 @@ def test_C2_fixed_schedule_ignores_missing_prices():
 
 
 def test_C2_preserve_backup_when_offer_would_breach_reserve():
-    when = z(2026, 6, 15, 16, 45)
+    when = z(2026, 6, 15, 19, 45)
     bat = battery(soc_kwh=Decimal(1), min_reserve_kwh=Decimal(1), capacity_kwh=Decimal(10))
     decision = decide(FixedSchedule(), when, dam(), bat=bat)
     assert decision.action == "preserve_backup"
@@ -186,10 +186,14 @@ def test_C2_price_based_nearest_rank_quantiles_ties_and_precedence():
     charged = decide(PriceBased(), z(2026, 6, 15, 5, 0), rows)
     assert charged.action == "charge" and charged.kw == Decimal(4)
     assert charged.delivery_start == z(2026, 6, 15, 5, 0)
-    offered = decide(PriceBased(), z(2026, 6, 15, 18, 0), rows)
+    offered = decide(PriceBased(), z(2026, 6, 15, 6, 0), rows)
     assert offered.action == "offer_flex" and offered.kw == Decimal(4)
-    tied = decide(PriceBased(), z(2026, 6, 15, 19, 0), rows)
-    assert tied.action == "offer_flex"
+    # DEC-GM-127 (a): delivery 100 meets Q75 but hour 18 is not procurement.
+    suppressed = decide(PriceBased(), z(2026, 6, 15, 18, 0), rows)
+    assert suppressed.action == "hold" and suppressed.kw == Decimal(0)
+    tie_prices = [Decimal(10)] * 12 + [Decimal(100)] * 12
+    tied = decide(PriceBased(), z(2026, 6, 15, 11, 45), dam(tie_prices))
+    assert tied.action == "offer_flex" and tied.kw == Decimal(4)
     both = decide(PriceBased(), z(2026, 6, 15, 5, 45), rows)
     assert both.action == "offer_flex"
     assert both.delivery_start == z(2026, 6, 15, 6, 0)
@@ -226,14 +230,14 @@ def test_C2_price_based_future_dam_revision_does_not_flip_the_decision():
     assert decide(PriceBased(), when, visible).action == "charge"
 
 
-def test_C2_esr_informed_offers_on_decreasing_charging_magnitude():
+def test_C2_esr_informed_trend_does_not_override_a16_procurement():
     when = z(2026, 6, 15, 16, 45)
     rows = [*dam(), *_esr(Decimal(-80), Decimal(-20)), _rt(Decimal(200))]
     price = decide(PriceBased(), when, rows)
     informed = decide(EsrInformed(), when, rows)
     assert price.action == "hold"
-    assert informed.action == "offer_flex" and informed.kw == Decimal(4)
-    assert "simulated" in informed.reason.lower()
+    assert informed.action == "hold" and informed.kw == 0  # A16: zero household load.
+    assert "commitment, load or reserve" in informed.reason.lower()
 
 
 def test_C2_esr_informed_does_not_offer_when_charging_magnitude_increases():
@@ -257,7 +261,8 @@ def test_C2_esr_informed_uses_only_the_latest_two_complete_bins():
 
 
 def test_C2_esr_informed_fallback_when_esr_or_rt_missing():
-    when = z(2026, 6, 15, 8, 0)
+    # DEC-GM-127 (b): 18:00 holds since current 100 exceeds Q50; 08:00 would charge.
+    when = z(2026, 6, 15, 18, 0)
     no_esr = decide(EsrInformed(), when, dam())
     no_rt = decide(EsrInformed(), when, [*dam(), *_esr(Decimal(-80), Decimal(-20))])
     for decision in (no_esr, no_rt):
@@ -276,19 +281,53 @@ def test_C2_esr_informed_fallback_when_esr_or_rt_missing():
 
 
 def test_C2_esr_future_rt_spike_does_not_create_an_offer():
-    when = z(2026, 6, 15, 16, 45)
-    rows = [*dam(), *_esr(Decimal(-80), Decimal(-20)), _rt(Decimal(30))]
-    spike = _rt(Decimal(9000), available=when + timedelta(minutes=5))
-    assert decide(EsrInformed(), when, rows).action == "hold"
-    assert decide(EsrInformed(), when, [*rows, spike]).action == "hold"
-    seen = [*dam(), *_esr(Decimal(-80), Decimal(-20)), _rt(Decimal(9000))]
-    assert decide(EsrInformed(), when, seen).action == "offer_flex"
+    # DEC-GM-127 (b): moved to 18:45 so current 100 exceeds Q50; fixtures follow.
+    when = z(2026, 6, 15, 18, 45)
+    rows = [*dam(), *_esr(Decimal(-80), Decimal(-20), 18), _rt(Decimal(30), hour=18)]
+    spike = _rt(Decimal(9000), available=when + timedelta(minutes=5), hour=18)
+    assert decide(EsrInformed(), when, rows, load=Decimal(2)).action == "hold"
+    assert decide(EsrInformed(), when, [*rows, spike], load=Decimal(2)).action == "hold"
+    seen = [*dam(), *_esr(Decimal(-80), Decimal(-20), 18), _rt(Decimal(9000), hour=18)]
+    assert decide(EsrInformed(), when, seen, load=Decimal(2)).action == "self_supply"
 
 
-def _esr(previous: Decimal, latest: Decimal) -> list[Observation]:
+def test_C2_battery_aware_q50_triggers_differ_from_price_based():
+    # DEC-GM-127 (b): PRICES Q50=50. At 08:00 current DAM is exactly 50.
+    when = z(2026, 6, 15, 8, 0)
+    assert nearest_rank(list(PRICES), 50) == Decimal(50)
+    price = decide(PriceBased(), when, dam())
+    aware = decide(EsrInformed(), when, dam())
+    assert price.action == "hold" and price.kw == Decimal(0)
+    assert aware.action == "charge" and aware.kw == Decimal(4)
+    assert named(aware, "dam_q50").value == Decimal(50)
+    assert "fallback" in aware.reason.lower()
+    # RT 60 meets Q50 but not Q75: Battery-aware serves load, PriceBased holds.
+    start = when - timedelta(minutes=15)
+    rt = obs(
+        series="rt_spp",
+        source="rt_spp",
+        value=Decimal(60),
+        interval_start=start,
+        interval_end=when,
+        published_at=when,
+        available_at=when,
+    )
+    loaded = [*dam(), *_esr(Decimal(-80), Decimal(-20)), rt]
+    price = decide(PriceBased(), when, loaded, load=Decimal(2))
+    aware = decide(EsrInformed(), when, loaded, load=Decimal(2))
+    assert price.action == "hold" and price.kw == Decimal(0)
+    assert aware.action == "self_supply" and aware.kw == Decimal(2)
+    # Overlapping quantiles still hold for both policies.
+    flat = [Decimal(40)] * 24
+    for cls in (PriceBased, EsrInformed):
+        held = decide(cls(), z(2026, 6, 15, 18, 0), dam(flat))
+        assert held.action == "hold" and held.kw == Decimal(0)
+
+
+def _esr(previous: Decimal, latest: Decimal, hour: int = 16) -> list[Observation]:
     return [
-        _esr_bin(z(2026, 6, 15, 16, 15), previous),
-        _esr_bin(z(2026, 6, 15, 16, 30), latest),
+        _esr_bin(z(2026, 6, 15, hour, 15), previous),
+        _esr_bin(z(2026, 6, 15, hour, 30), latest),
     ]
 
 
@@ -309,8 +348,8 @@ def _esr_bin(start, value: Decimal, available=None) -> Observation:
     )
 
 
-def _rt(value: Decimal, available=None) -> Observation:
-    start = z(2026, 6, 15, 16, 30)
+def _rt(value: Decimal, available=None, hour: int = 16) -> Observation:
+    start = z(2026, 6, 15, hour, 30)
     end = start + timedelta(minutes=15)
     stamp = end if available is None else available
     return obs(
