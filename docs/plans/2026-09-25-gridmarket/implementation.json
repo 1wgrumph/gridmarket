@@ -475,7 +475,10 @@
         "S43",
         "S49",
         "S50",
-        "S51"
+        "S51",
+        "S52a",
+        "S52b",
+        "S53"
       ],
       "lanes": [
         "market",
@@ -5038,6 +5041,151 @@
       "work_class": "judgement",
       "work_class_reason": "judgement: module structure, error paths and edge cases are chosen in-session; inputs do not fully determine the output (light criteria 1, 2 and 4 fail).",
       "notes": " VISUAL REVIEW (DEC-GM-049): before the exit commit, review the changed pages in a running local browser at desktop (1280) and phone (390) widths and screenshot each state. Follow the Orchestrator's local visual-review guidance file (/tmp/claude-1000/-home-spectre-alphazede-Hackathons-Base/3f3d16bb-9fd4-4279-8e99-ac29f3675fda/scratchpad/ops/guidance/visual-review.md). Evidence goes under /tmp/gm-evidence/<slice>/visual/. A UI that cannot run is a typed gap, not a pass."
+    },
+    {
+      "authority_id": "GM-2026-09-25",
+      "dispatchable": true,
+      "parallel_safe": true,
+      "work_class": "judgement",
+      "human_decision": null,
+      "requirement_ids": [
+        "AC-GM-UI-06"
+      ],
+      "design_ids": [
+        "DES-GM-UI"
+      ],
+      "seit_proof_rows": [],
+      "design_lenses": [
+        "UI",
+        "Accessibility"
+      ],
+      "review_path": {
+        "reviewer": "phase",
+        "assurance": "phase",
+        "coverage_assist": "enabled-not-required"
+      },
+      "notes": "DEC-GM-062 owner design v2; guidance in the Orchestrator's local ops/guidance/design-v2.md.",
+      "id": "S52a",
+      "role": "Test Implementer",
+      "goal": "Update and extend dashboard Overview and shell tests for design v2 (11 improvements, real API shapes, unavailable fields, readable error text).",
+      "type": "feature",
+      "lane": "design",
+      "branch": "gridmarket/lane-design",
+      "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-design",
+      "branch_base": "gridmarket/integration-1a HEAD, then origin/main after landed/1a",
+      "write_set": [
+        "dashboard/src/"
+      ],
+      "command_ids": [
+        "CMD-RED-GREEN",
+        "CMD-WRITESET"
+      ],
+      "stop_condition": "commands exit 0 at the exit commit; or return the typed failure.",
+      "model_route": {
+        "snapshot_role": "test_implementer",
+        "profile": "frontend"
+      },
+      "reasoning_level": {
+        "level": "profile",
+        "reason": "frontend profile per DEC-GM-024/044"
+      }
+    },
+    {
+      "authority_id": "GM-2026-09-25",
+      "dispatchable": true,
+      "parallel_safe": true,
+      "work_class": "judgement",
+      "human_decision": null,
+      "requirement_ids": [
+        "AC-GM-UI-06"
+      ],
+      "design_ids": [
+        "DES-GM-UI"
+      ],
+      "seit_proof_rows": [],
+      "design_lenses": [
+        "UI",
+        "Accessibility"
+      ],
+      "review_path": {
+        "reviewer": "phase",
+        "assurance": "phase",
+        "coverage_assist": "enabled-not-required"
+      },
+      "notes": "DEC-GM-062 owner design v2; guidance in the Orchestrator's local ops/guidance/design-v2.md.",
+      "id": "S52b",
+      "role": "Product Implementer",
+      "goal": "Port design v2 (tokens, Inter, radius 2/4/8, Shell, PriceChart, ZoneMap, Overview) into dashboard/ with the open-item fixes, until S52a is green and test-dash passes; visual review.",
+      "type": "feature",
+      "lane": "design",
+      "branch": "gridmarket/lane-design",
+      "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-design",
+      "branch_base": "gridmarket/integration-1a HEAD, then origin/main after landed/1a",
+      "write_set": [
+        "dashboard/"
+      ],
+      "command_ids": [
+        "CMD-RED-GREEN",
+        "CMD-TEST-DASH",
+        "CMD-WRITESET"
+      ],
+      "stop_condition": "commands exit 0 at the exit commit; or return the typed failure.",
+      "model_route": {
+        "snapshot_role": "implementer",
+        "profile": "frontend"
+      },
+      "reasoning_level": {
+        "level": "profile",
+        "reason": "frontend profile per DEC-GM-024/044"
+      }
+    },
+    {
+      "authority_id": "GM-2026-09-25",
+      "dispatchable": true,
+      "parallel_safe": true,
+      "work_class": "judgement",
+      "human_decision": null,
+      "requirement_ids": [
+        "AC-GM-UI-06"
+      ],
+      "design_ids": [
+        "DES-GM-UI"
+      ],
+      "seit_proof_rows": [],
+      "design_lenses": [
+        "UI",
+        "Accessibility"
+      ],
+      "review_path": {
+        "reviewer": "phase",
+        "assurance": "phase",
+        "coverage_assist": "enabled-not-required"
+      },
+      "notes": "DEC-GM-062 owner design v2; guidance in the Orchestrator's local ops/guidance/design-v2.md.",
+      "id": "S53",
+      "role": "Product Implementer",
+      "goal": "Restyle the Market, Predictions, Bots, Bot profile and Sandbox pages to the design v2 tokens and components after the lane-sync of the S52b exit; S50 tests stay green; visual review.",
+      "type": "feature",
+      "lane": "pages",
+      "branch": "gridmarket/lane-pages",
+      "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-pages",
+      "branch_base": "lane-pages after the lane-sync of the S52b exit",
+      "write_set": [
+        "dashboard/src/pages/"
+      ],
+      "command_ids": [
+        "CMD-TEST-DASH",
+        "CMD-WRITESET"
+      ],
+      "stop_condition": "commands exit 0 at the exit commit; or return the typed failure.",
+      "model_route": {
+        "snapshot_role": "implementer",
+        "profile": "frontend"
+      },
+      "reasoning_level": {
+        "level": "profile",
+        "reason": "frontend profile per DEC-GM-024/044"
+      }
     }
   ],
   "integration_plan": {
