@@ -3,7 +3,7 @@
 import os
 import sqlite3
 import uuid
-from contextlib import closing
+from contextlib import closing, contextmanager
 from typing import Any
 
 from ..contracts import ProviderOffline
@@ -22,9 +22,28 @@ def _db() -> sqlite3.Connection:
     return sqlite3.connect(os.getenv("GRIDMARKET_DB", "/data/gridmarket.db"))
 
 
+def _dicts(cursor: sqlite3.Cursor) -> list[dict[str, Any]]:
+    """Rows as dicts whatever the connection's row_factory."""
+    names = [column[0] for column in cursor.description]
+    return [dict(zip(names, row, strict=True)) for row in cursor.fetchall()]
+
+
 class LoneStar:
     provider_id = "lonestar"
     display_name = "LoneStar Storage"
+
+    def __init__(self, tx: sqlite3.Connection | None = None, order_id: str | None = None):
+        """The market binds the adapter to its open transaction and the order being placed."""
+        self.tx = tx
+        self.order_id = order_id
+
+    @contextmanager
+    def _read(self):
+        if self.tx is not None:
+            yield self.tx
+        else:
+            with closing(_db()) as db:
+                yield db
 
     def _offline_asset(self, db: sqlite3.Connection) -> str | None:
         """One bot-owned battery reports offline so the provider page shows asset health."""
@@ -36,7 +55,7 @@ class LoneStar:
         return row[0] if row else None
 
     def list_customers(self) -> list[dict[str, Any]]:
-        with closing(_db()) as db:
+        with self._read() as db:
             rows = db.execute(
                 "SELECT DISTINCT c.id, c.display_name FROM accounts c "
                 "JOIN assets a ON a.account_id = c.id WHERE a.provider_id=? ORDER BY c.id",
@@ -48,14 +67,15 @@ class LoneStar:
         ]
 
     def list_assets(self) -> list[dict[str, Any]]:
-        with closing(_db()) as db:
-            db.row_factory = sqlite3.Row
+        with self._read() as db:
             offline = self._offline_asset(db)
-            rows = db.execute(
-                f"SELECT {ASSET_FIELDS} FROM assets WHERE provider_id=? ORDER BY id",
-                (self.provider_id,),
-            ).fetchall()
-        assets = [dict(row) | {"online": row["id"] != offline} for row in rows]
+            rows = _dicts(
+                db.execute(
+                    f"SELECT {ASSET_FIELDS} FROM assets WHERE provider_id=? ORDER BY id",
+                    (self.provider_id,),
+                )
+            )
+        assets = [row | {"online": row["id"] != offline} for row in rows]
         return sorted(assets, key=lambda asset: not asset["online"])
 
     def _capacity(self, db: sqlite3.Connection, asset_id: str, hour: str) -> float:
@@ -68,7 +88,7 @@ class LoneStar:
         return max(0.0, row[0] - db.execute(RESERVED, (asset_id, hour)).fetchone()[0])
 
     def available_capacity(self, asset_id: str, hour: str) -> float:
-        with closing(_db()) as db:
+        with self._read() as db:
             return self._capacity(db, asset_id, hour)
 
     def reserve_capacity(self, tx: Any, asset_id: str, hour: str, kwh: float) -> str:
@@ -76,13 +96,13 @@ class LoneStar:
             raise ProviderOffline(f"{self.display_name} asset {asset_id} is offline")
         if kwh <= 0 or kwh > self._capacity(tx, asset_id, hour):
             raise ValueError("INSUFFICIENT_CAPACITY")
-        # ponytail: the contract passes no order id; the caller inserts its order in tx first.
-        order = tx.execute("SELECT id FROM orders ORDER BY rowid DESC LIMIT 1").fetchone()
-        reservation_id = str(uuid.uuid4())
+        if self.order_id is None:
+            raise ValueError("An order_id is required for a capacity reservation")
+        reservation_id = uuid.uuid4().hex
         tx.execute(
             "INSERT INTO reservations (id, order_id, asset_id, delivery_hour, kwh, status) "
             "VALUES (?, ?, ?, ?, ?, 'reserved')",
-            (reservation_id, order[0] if order else "", asset_id, hour, kwh),
+            (reservation_id, self.order_id, asset_id, hour, kwh),
         )
         return reservation_id
 
@@ -94,7 +114,7 @@ class LoneStar:
         )
 
     def verify_delivery(self, reservation_id: str) -> bool:
-        with closing(_db()) as db:
+        with self._read() as db:
             row = db.execute(
                 "SELECT r.asset_id FROM reservations r JOIN assets a ON a.id = r.asset_id "
                 "WHERE r.id=? AND a.provider_id=? AND r.status!='released'",
@@ -103,7 +123,7 @@ class LoneStar:
             return row is not None and row[0] != self._offline_asset(db)
 
     def asset_status(self, asset_id: str) -> dict[str, Any]:
-        with closing(_db()) as db:
+        with self._read() as db:
             return {"online": asset_id != self._offline_asset(db)}
 
     def heartbeat(self) -> None:

@@ -13,9 +13,9 @@ from pathlib import Path
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from . import decision_router, ercot
+# Module import, not `from .providers import enabled`: base_sim imports health back.
+from . import decision_router, ercot, providers
 from .contracts import CheckResult
-from .providers import enabled
 
 router = APIRouter()
 log = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ def is_online(provider_id: str) -> bool:
 
 def tick() -> None:
     """Every 10 s: each enabled adapter heartbeats unless in a simulated outage."""
-    for provider_id, adapter in enabled().items():
+    for provider_id, adapter in providers.enabled().items():
         try:
             state = _state(provider_id)
             until = state[2] if state else None
@@ -151,7 +151,7 @@ def checks() -> list[CheckResult]:
         (stats.snapshot_age_s or 0.0) / (2 * SNAPSHOT_POLL_S),
     ]
     results = [_check("worker", _risk(worker), now)]
-    for provider_id in enabled():
+    for provider_id in providers.enabled():
         if is_online(provider_id):
             state = _state(provider_id)
             age = _age(state[1]) if state else None
@@ -194,7 +194,7 @@ async def outage(id: str, request: Request):
     provider_id = id
     if denied := _admin_denied(request):
         return denied
-    if provider_id not in enabled():
+    if provider_id not in providers.enabled():
         return _error(404, "NOT_FOUND", "Unknown provider")
     try:
         body = await request.json()
@@ -216,7 +216,7 @@ async def outage(id: str, request: Request):
 @router.get("/v1/providers/health")
 def providers_health() -> list[dict]:
     rows = []
-    for provider_id, adapter in enabled().items():
+    for provider_id, adapter in providers.enabled().items():
         online = is_online(provider_id)
         _, last, until = _state(provider_id) or (1, None, None)
         active = bool(until) and _parse(until) > _now()
