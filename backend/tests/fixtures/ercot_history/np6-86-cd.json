@@ -1,1 +1,1 @@
-{"fields":["scedTimestamp","constraintName","shadowPrice","publishTime"],"data":[["2026-08-31T05:00:00Z","NONE",0,"2026-08-31T05:00:00Z"]],"_meta":{"totalRecords":1}}
+{"fields":[{"name":"constraintName","label":"constraintName","dataType":"VARCHAR"},{"name":"shadowPrice","label":"shadowPrice","dataType":"DOUBLE"},{"name":"SCEDTimestamp","label":"SCEDTimestamp","dataType":"DATETIME"},{"name":"repeatedHourFlag","label":"repeatedHourFlag","dataType":"BOOLEAN"}],"data":[["NONE",0,"2026-08-31T00:00:00",false]]}

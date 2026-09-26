@@ -1,4 +1,4 @@
-"""SEIT-GM-BT-01 red tests for `python -m gridmarket_server.backtest`.
+"""R4-06 / SEIT-GM-BT-01 red tests for `python -m gridmarket_server.backtest`.
 
 `--days N --end YYYY-MM-DD` scores load-zone hours from the delivery date
 `end - (N - 1)` through `end`. History comes from the five allowlisted Worker
@@ -6,6 +6,7 @@ report routes and header `x-gridmarket-key`. A scored hour has a DAM price and
 four RT intervals for LZ_HOUSTON, LZ_NORTH, LZ_SOUTH, or LZ_WEST. Spearman is
 against that hour's mean RT. Price-spread and congestion use the previous
 hour's mean RT (HB_HUBAVG for the hub). NWS is not fetched (85 F, 0 alerts).
+Fixtures use published ERCOT Field objects and columns (see ercot_history/PROVENANCE.json).
 Missing load or outage hours are omitted, not zero-filled. Stdout is one JSON
 object with keys spearman, n, start, end, plus a text line containing
 Spearman, the correlation to 4 decimals, n, and both delivery dates. Fewer
@@ -42,10 +43,10 @@ PATHS = {
 }
 ZONES = ("LZ_HOUSTON", "LZ_NORTH", "LZ_SOUTH", "LZ_WEST")
 WEATHER = {
-    "LZ_HOUSTON": ("Coast",),
-    "LZ_NORTH": ("North", "North Central", "East"),
-    "LZ_SOUTH": ("South Central", "Southern"),
-    "LZ_WEST": ("West", "Far West"),
+    "LZ_HOUSTON": ("coast",),
+    "LZ_NORTH": ("north", "northCentral", "east"),
+    "LZ_SOUTH": ("southCentral", "southern"),
+    "LZ_WEST": ("west", "farWest"),
 }
 WEIGHTS = {
     "price-spread": 0.18,
@@ -60,7 +61,7 @@ WEIGHTS = {
 
 def _rows(path: Path) -> list[dict]:
     payload = json.loads(path.read_text())
-    fields = payload["fields"]
+    fields = [field["name"] for field in payload["fields"]]
     return [dict(zip(fields, row, strict=True)) for row in payload["data"]]
 
 
@@ -104,24 +105,28 @@ def _spearman(xs: list[float], ys: list[float]) -> float:
 def reference_metrics(root: Path, days: int, end: str) -> dict | None:
     rt: dict[tuple[str, int, str], list[float]] = {}
     for row in _rows(root / "np6-905-cd.json"):
-        key = (row["deliveryDate"], int(row["deliveryHour"]), row["settlementPointName"])
+        key = (row["deliveryDate"], int(row["deliveryHour"]), row["settlementPoint"])
         rt.setdefault(key, []).append(float(row["settlementPointPrice"]))
     means = {key: sum(vals) / len(vals) for key, vals in rt.items() if len(vals) == 4}
     dam = {
-        (row["deliveryDate"], int(row["hourEnding"]), row["settlementPoint"]): float(
+        (row["deliveryDate"], int(row["hourEnding"].split(":")[0]), row["settlementPoint"]): float(
             row["settlementPointPrice"]
         )
         for row in _rows(root / "np4-190-cd.json")
     }
     load = {
-        (row["deliveryDate"], int(row["hourEnding"]), row["weatherZone"]): float(
-            row["loadForecast"]
-        )
+        (row["deliveryDate"], int(row["hourEnding"].split(":")[0]), name): float(row[name])
         for row in _rows(root / "np3-565-cd.json")
+        if row["inUseFlag"]
+        for names in WEATHER.values()
+        for name in names
     }
     outage = {
-        (row["deliveryDate"], int(row["hourEnding"]), row["loadZone"]): float(row["outageCapacity"])
+        (row["operatingDate"], row["hourEnding"], zone): float(
+            row["totalResourceMWZone" + zone.removeprefix("LZ_").title()]
+        )
         for row in _rows(root / "np3-233-cd.json")
+        for zone in ZONES
     }
     shadow = sum(float(row["shadowPrice"]) for row in _rows(root / "np6-86-cd.json"))
     end_day = date.fromisoformat(end)
@@ -289,7 +294,13 @@ def test_seit_gm_bt_01_spearman_n_and_range(tmp_path: Path) -> None:
     import gridmarket_server.backtest  # noqa: F401
 
     expected = reference_metrics(FULL, DAYS, END)
-    assert expected is not None
+    # Frozen independently of the schema migration; preserve the original oracle.
+    assert expected == {
+        "spearman": -0.21428571428571427,
+        "n": 7,
+        "start": "2026-09-01",
+        "end": END,
+    }
     proc, _paths, _times = _run(FULL, tmp_path)
     assert proc.returncode == 0, proc.stderr
     got = _metrics(proc.stdout)
@@ -308,7 +319,7 @@ def test_seit_gm_bt_01_metrics_only(tmp_path: Path) -> None:
     got = _metrics(proc.stdout)
     assert set(got) == {"spearman", "n", "start", "end"}
     blob = proc.stdout + proc.stderr
-    for marker in ("settlementPointPrice", "loadForecast", "outageCapacity", "shadowPrice"):
+    for marker in ("settlementPointPrice", "coast", "totalResourceMWZoneHouston", "SCEDTimestamp"):
         assert marker not in blob
         for path in tmp_path.rglob("*"):
             if path.is_file():
