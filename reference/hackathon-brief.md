@@ -3,8 +3,7 @@
 Sources (captured 2026-09-25):
 - Notion hacker guide: https://common-scooter-829.notion.site/Base-AITX-Talent-Hackathon-3e01e636288e80a7b914c993f90ae6c5
 - Luma link https://luma.link/FYD1mmToGx redirects to the Pitch kickoff deck
-  https://pitch.com/v/baseaitxhackathon-6zfcrj (25 slides, canvas-rendered).
-  Deck text NOT captured: the viewer froze on screenshot capture. Gap — transcribe manually if needed.
+  https://pitch.com/v/baseaitxhackathon-6zfcrj (25 slides). Transcribed below under "Kickoff deck".
 
 ## Event
 
@@ -17,7 +16,9 @@ Sources (captured 2026-09-25):
 ## Submission
 
 - Due **Sunday, Sep 27, 11:00 AM**.
-- Each team submits a **5-minute demo video** plus a **link to the codebase**.
+- Submission must include: **link to GitHub**, **project description**, and a
+  **3–5 minute MAX video demo on Loom** (deck). Notion says "5-minute demo video".
+- Submitting takes 15–20 minutes. Record the demo video as soon as possible.
 - Top submissions in each track present live during awards.
 - The Notion "Submission Checklist" toggle did not expand during capture; check it on the page.
 
@@ -68,3 +69,26 @@ Judged off the 5-minute demo video and the codebase.
 - Parking limited; rideshare recommended. Premium Parking lot at 150 E Riverside Dr.
 - Factory tours Saturday 10:30 AM and 1:30 PM; meet at office entrance 5 minutes
   early; closed-toe shoes required; safety glasses provided.
+
+## Kickoff deck (slides 1–25, transcribed 2026-09-25)
+
+- **Rules — Don't cheat:** all code required for the submission to run MUST be
+  written during the hackathon. Open source code may be used only if it has been
+  open sourced for at least the past 2 weeks.
+- **Tracks:** themes of impact, not limits on the idea. Open Grid Data: "The Texas
+  grid publishes a huge amount of real time and historical data and almost nobody
+  does anything with it. Prices, load, generation mix, outages." Orchestration:
+  coordinate many independent things; what matters is how it holds up when pieces
+  fail. Most Commercializable: build something that could be a product; name who
+  it is for and what problem it solves.
+- **Prizes (each track winner):** 1st $1,000 cash total plus guaranteed interviews
+  for the whole team; 2nd $500; 3rd $250.
+- **Teams:** optional but highly encouraged; max team size 5.
+- **Logistics:** no photography inside Base Power offices; keep wristbands (entry
+  tickets); hard cutoff 12 AM midnight (Bennu Coffee next door is open 24/7);
+  common areas and office rooms on all 3 floors; only desks with a "Hackathon"
+  sticky note (1st and 3rd floors); doors 8 AM, breakfast 8:30 AM.
+- **Conduct:** treat the space with respect, do not touch personal items, clean up,
+  golden rule, absolutely zero drugs or alcohol; organizers mediate conflicts.
+- **FAQ:** late submissions are not eligible; submission takes 15+ minutes.
+- Slides with QR codes point to the Notion page and the Discord.
