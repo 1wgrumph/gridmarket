@@ -1,6 +1,7 @@
 """FastAPI composition root for the contract-first skeleton."""
 
 import asyncio
+import inspect
 import os
 import sqlite3
 from contextlib import asynccontextmanager, suppress
@@ -40,9 +41,10 @@ def create_app() -> FastAPI:
 
         async def repeat(seconds: int, fn):
             while True:
-                result = fn()
-                if asyncio.iscoroutine(result):
-                    await result
+                if inspect.iscoroutinefunction(fn):
+                    await fn()
+                else:
+                    await asyncio.to_thread(fn)
                 await asyncio.sleep(seconds)
 
         jobs = [
