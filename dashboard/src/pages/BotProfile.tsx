@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { Badge } from '@astryxdesign/core';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import Panel from '../components/Panel';
 import { useBotProfile } from '../hooks';
 import type { Bot } from '../api';
+import { FeedBody, PageHeading, Stale } from './Market';
 
 /** Contract Bot fields plus the profile extras; extras may be absent, so they render as "—". */
 type Profile = Bot & Partial<{
@@ -17,74 +17,80 @@ type Profile = Bot & Partial<{
 const pct = (p?: number) => p === undefined ? '—' : `${Math.round(p * 100)}%`;
 const usd = (n?: number) => n === undefined ? '—' : n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 const day = (iso: string) => iso.slice(5, 16).replace('T', ' ');
+const tick = { fill: 'var(--muted)', fontSize: 11 };
+const tooltip = { background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', fontSize: 12, borderRadius: 'var(--r-2)' };
 
 function Facts({ rows }: { rows: [string, ReactNode][] }) {
-  return <ul className="gm-rows">
-    {rows.map(([label, value]) => <li key={label}><span>{label}</span><span className="gm-num">{value}</span></li>)}
-  </ul>;
+  return <dl className="facts">
+    {rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+  </dl>;
 }
 
 export default function BotProfile({ id }: { id: string }) {
   const profile = useBotProfile(id);
   const b = profile.data as Profile | null;
+  const meta = <><Stale feed={profile}/><span>SIMULATED</span></>;
 
-  return <section className="gm-page">
-    <div className="gm-page-head">
-      <h1>Bot profile · {id}</h1>
-      <a className="gm-views-link" href="#/bots">← All bots</a>
-    </div>
-    {!b ? <Panel title="Profile" state={profile}><p className="gm-muted">No profile.</p></Panel> : <>
-      <div className="gm-stats">
-        <Panel title="Traits">
-          <Facts rows={[['Risk appetite', pct(b.traits?.risk_appetite)], ['Patience', pct(b.traits?.patience)]]} />
-          <h3 className="gm-panel-title gm-note">Strategy blend</h3>
-          <Facts rows={Object.entries(b.blend ?? {}).map(([type, w]) => [type, pct(w)])} />
+  return <>
+    <PageHeading eyebrow="05 / BOT POPULATION" title={`Bot profile · ${id}`}>
+      <a className="back-link" href="#/bots">All bots</a>
+    </PageHeading>
+    {!b ? <div className="page-grid"><Panel title="Profile" index="01" className="span-all" busy={profile.loading}>
+      <FeedBody feed={profile} unavailable="Bot profile not yet available"><div className="empty">No profile.</div></FeedBody>
+    </Panel></div> : <>
+      <div className="page-grid thirds">
+        <Panel title="Traits" index="01" meta={meta}>
+          <Facts rows={[['Risk appetite', pct(b.traits?.risk_appetite)], ['Patience', pct(b.traits?.patience)]]}/>
+          <h3 className="sub-head">Strategy blend</h3>
+          <Facts rows={Object.entries(b.blend ?? {}).map(([type, w]) => [type, pct(w)])}/>
         </Panel>
-        <Panel title="Economy">
+        <Panel title="Economy" index="02" meta={meta}>
           <Facts rows={[
             ['Employment', b.employed === undefined ? '—' : b.employed ? b.job ?? 'employed' : 'unemployed'],
             ['Pay per period', usd(b.pay)],
             ['Deposits', usd(b.deposits)],
             ['Provider', b.provider_id],
-          ]} />
+          ]}/>
         </Panel>
-        <Panel title="Household">
+        <Panel title="Household" index="03" meta={meta}>
           <Facts rows={[
             ['Zone', b.household?.zone ?? '—'],
             ['Batteries', b.household?.batteries.map(k => `${k} kWh`).join(', ') || '—'],
             ['Reserve', pct(b.household?.reserve_pct)],
-          ]} />
-          <div aria-label="Hourly load schedule" role="img" style={{ display: 'grid', gridTemplateColumns: 'repeat(24, 1fr)', gap: 2, marginTop: '0.5rem' }}>
-            {(b.household?.schedule ?? []).map((load, hour) => <span key={hour} title={`${hour}:00 · load ${load}`}
-              style={{ height: '0.75rem', borderRadius: 2, background: 'var(--color-accent)', opacity: 0.25 + 0.75 * Math.min(1, load) }} />)}
+          ]}/>
+          <h3 className="sub-head">Hourly load schedule</h3>
+          <div className="schedule" aria-label="Hourly load schedule" role="img">
+            {(b.household?.schedule ?? []).map((load, hour) => <span key={hour} title={`${hour}:00 · load ${load}`} style={{ opacity: 0.25 + 0.75 * Math.min(1, load) }}/>)}
           </div>
         </Panel>
       </div>
-      <div className="gm-stats">
-        <Panel title="Performance">
+      <div className="page-grid thirds">
+        <Panel title="Performance" index="04" meta={meta}>
           <Facts rows={[
             ['Cash', usd(b.cash)],
             ['Net worth', usd(b.net_worth)],
-            ['P&L', usd(b.pnl)],
+            ['P&L', <span key="pnl" className={b.pnl < 0 ? 'down-text' : 'up-text'}>{usd(b.pnl)}</span>],
             ['Trades', b.trades ?? '—'],
             ['Losses', b.losses],
             ['Loss share', pct(b.loss_share)],
             ['Worst loss', usd(b.worst_loss)],
-            ['State', <Badge key="state" variant={b.dormant ? 'warning' : 'success'} label={b.dormant ? 'dormant' : 'active'} />],
-          ]} />
+            ['State', <span key="state" className={`tag ${b.dormant ? 'down' : 'up'}`}>{b.dormant ? 'dormant' : 'active'}</span>],
+          ]}/>
         </Panel>
-        <Panel title="Balance history" className="gm-span-2">
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={b.balance_history ?? []} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-              <CartesianGrid stroke="var(--color-border)" />
-              <XAxis dataKey="at" tickFormatter={day} stroke="var(--color-text-secondary)" />
-              <YAxis domain={['auto', 'auto']} stroke="var(--color-text-secondary)" />
-              <Tooltip formatter={v => usd(Number(v))} labelFormatter={l => day(String(l))} />
-              <Line type="monotone" dataKey="balance" stroke="var(--color-accent)" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+        <Panel title="Balance history" index="05" className="span-2" meta={meta}>
+          <div className="chart" role="img" aria-label={`Simulated balance, ${b.balance_history?.length ?? 0} points.`}>
+            {b.balance_history?.length ? <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <LineChart data={b.balance_history} margin={{ top: 24, right: 36, left: 0, bottom: 2 }}>
+                <CartesianGrid stroke="var(--line)" vertical={false} strokeDasharray="2 4"/>
+                <XAxis dataKey="at" tickFormatter={day} axisLine={false} tickLine={false} tick={tick}/>
+                <YAxis domain={['auto', 'auto']} tickFormatter={v => `$${v}`} axisLine={false} tickLine={false} tick={tick}/>
+                <Tooltip formatter={v => [usd(Number(v)), 'Balance']} labelFormatter={l => day(String(l))} contentStyle={tooltip} itemStyle={{ color: 'var(--text)' }} isAnimationActive={false}/>
+                <Line type="monotone" dataKey="balance" stroke="var(--accent)" strokeWidth={3} dot={false} isAnimationActive={false}/>
+              </LineChart>
+            </ResponsiveContainer> : <div className="empty">No balance history served.</div>}
+          </div>
         </Panel>
       </div>
     </>}
-  </section>;
+  </>;
 }

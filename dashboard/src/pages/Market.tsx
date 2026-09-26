@@ -1,5 +1,4 @@
 import { Component, useState, type ReactNode } from 'react';
-import { Badge, Button, Table } from '@astryxdesign/core';
 import Panel from '../components/Panel';
 import { useMarket, useResource } from '../hooks';
 import type { MarketProduct } from '../api';
@@ -16,6 +15,7 @@ type ProductDetail = MarketProduct & {
   book?: { bids?: Level[]; asks?: Level[] };
   recent_trades?: Trade[];
 };
+type Feed = { data: unknown; error: string | null; loading: boolean };
 
 const list = <T,>(value: unknown): T[] => Array.isArray(value) ? value : [];
 
@@ -31,85 +31,109 @@ function bookOf(detail: ProductDetail | null): { bids: Level[]; asks: Level[] } 
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 const time = (iso: string) => iso.replace('T', ' ').replace(/:\d\dZ$/, 'Z');
 
-/** Lets a wide table scroll sideways on phones (Astryx scroll wrapper) without widening the page grid. */
-const Wide = ({ children }: { children: ReactNode }) => <div style={{ contain: 'inline-size' }}>{children}</div>;
+/** Panel-meta tag: the last poll failed and the panel still shows last-known data. Shared by the phase 1b pages. */
+export const Stale = ({ feed }: { feed: Feed }) => feed.error && feed.data ? <span className="stale">Stale · last known</span> : null;
 
-function Depth({ title, levels }: { title: string; levels: Level[] }) {
+/** Body of a polled panel: last-known data wins; otherwise a loading or unavailable line in the same geometry. */
+export function FeedBody({ feed, unavailable = 'Feed unavailable · retrying every 2 seconds', children }: { feed: Feed; unavailable?: string; children: ReactNode }) {
+  return feed.data ? <>{children}</>
+    : <div className={`empty ${feed.loading ? 'loading' : ''}`}>{feed.loading ? 'Connecting to the exchange…' : unavailable}</div>;
+}
+
+/** Page title in the Overview heading pattern: eyebrow, display title, decorative turf period kept out of the accessible name. */
+export function PageHeading({ eyebrow, title, children }: { eyebrow: string; title: string; children?: ReactNode }) {
+  return <div className="page-heading">
+    <div><p className="eyebrow">{eyebrow}</p><h1>{title}<span className="title-period" aria-hidden="true">.</span></h1></div>
+    {children}
+  </div>;
+}
+
+function Depth({ title, side, levels, max }: { title: string; side: 'bid' | 'ask'; levels: Level[]; max: number }) {
   return <div>
-    <h3 className="gm-panel-title">{title}</h3>
-    <ul className="gm-rows">
-      {levels.length ? levels.map(l => <li key={l.price_cents}><span className="gm-num">{l.quantity} @ {usd(l.price_cents)}</span></li>)
-        : <li className="gm-muted">—</li>}
+    <h3 className="sub-head">{title}</h3>
+    <ul className={`depth-list ${side}`}>
+      {levels.length ? levels.map(l => <li key={l.price_cents}>
+        <i style={{ width: `${l.quantity / max * 100}%` }}/><span>{l.quantity} @ {usd(l.price_cents)}</span>
+      </li>) : <li className="none">—</li>}
     </ul>
   </div>;
 }
 
 function Board({ products }: { products: MarketProduct[] }) {
   const [picked, setPicked] = useState(products[0].symbol);
-  const selected = products.some(p => p.symbol === picked) ? picked : products[0].symbol;
-  const detail = useResource<ProductDetail>(`/v1/market/${encodeURIComponent(selected)}`);
-  const productId = products.find(p => p.symbol === selected)?.id ?? '';
-  const history = useResource<Trade[]>(`/v1/market/history?product_id=${encodeURIComponent(productId)}`);
-  // Hold the table until the selected book arrives so products and depth appear together.
-  if (detail.loading) return <p className="gm-muted">Loading…</p>;
+  const selected = products.find(p => p.symbol === picked) ?? products[0];
+  const detail = useResource<ProductDetail>(`/v1/market/${encodeURIComponent(selected.symbol)}`);
+  const history = useResource<Trade[]>(`/v1/market/history?product_id=${encodeURIComponent(selected.id)}`);
+  // Hold the board until the selected book arrives so products and depth appear together.
+  if (detail.loading) return <div className="empty loading">Connecting to the exchange…</div>;
   const book = bookOf(detail.data);
+  const max = Math.max(1, ...[...book.bids, ...book.asks].map(l => l.quantity));
+  const spread = book.bids.length && book.asks.length ? book.asks[0].price_cents - book.bids[0].price_cents : null;
   // The live detail carries no trades; the public history route does.
   const inline = Array.isArray(detail.data?.recent_trades);
   const trades = inline ? list<Trade>(detail.data?.recent_trades) : list<Trade>(history.data);
-  const tradeState = inline ? detail : history;
-  return <>
-    <Panel title="Products">
-      <Wide><Table<MarketProduct> style={{ minWidth: '34rem' }} data={products} idKey="id" density="compact" hasHover columns={[
-        { key: 'symbol', header: 'Symbol', renderCell: p => <span className="gm-code">{p.symbol}</span> },
-        { key: 'zone', header: 'Zone' },
-        { key: 'delivery_hour', header: 'Delivery', renderCell: p => <time dateTime={p.delivery_hour}>{time(p.delivery_hour)}</time> },
-        { key: 'status', header: 'Status', renderCell: p => <Badge variant={p.status === 'open' ? 'success' : 'neutral'} label={p.status} /> },
-        { key: 'book', header: '', renderCell: p => <Button label={p.symbol === selected ? 'Shown' : 'Show book'} size="sm"
-          variant={p.symbol === selected ? 'primary' : 'secondary'} onClick={() => setPicked(p.symbol)} /> },
-      ]} /></Wide>
+  const tradeFeed = inline ? detail : history;
+  const where = `${selected.zone} · ${time(selected.delivery_hour)}`;
+  return <div className="page-grid">
+    <Panel title="Products" index="01" className="span-all" meta={<span>{products.length} LISTED</span>}>
+      <div className="table-scroll"><table className="data-table">
+        <thead><tr><th scope="col">Symbol</th><th scope="col">Zone</th><th scope="col">Delivery</th><th scope="col">Status</th><th scope="col" className="end"><span className="sr-only">Book</span></th></tr></thead>
+        <tbody>{products.map(p => <tr key={p.id} className={p === selected ? 'selected' : ''}>
+          <td><span className="code">{p.symbol}</span></td>
+          <td>{p.zone}</td>
+          <td><time dateTime={p.delivery_hour}>{time(p.delivery_hour)}</time></td>
+          <td><span className={`tag ${p.status === 'open' ? 'up' : ''}`}>{p.status}</span></td>
+          <td className="end"><button type="button" className="show-book" aria-pressed={p === selected} onClick={() => setPicked(p.symbol)}>{p === selected ? 'Shown' : 'Show book'}</button></td>
+        </tr>)}</tbody>
+      </table></div>
     </Panel>
-    <div className="gm-stats">
-      <Panel title="Book depth" state={detail}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <Depth title="Bids" levels={book.bids} />
-          <Depth title="Asks" levels={book.asks} />
-        </div>
-      </Panel>
-      <Panel title="Recent trades" state={tradeState} className="gm-span-2">
-        <ul className="gm-rows">
+    <Panel title="Book depth" index="02" busy={detail.loading} meta={<><Stale feed={detail}/><span>{where}</span></>}>
+      <p className="panel-subtitle">Resting orders · simulated $ / Flex Credit</p>
+      <div className="depth-sides">
+        <Depth title="Bids" side="bid" levels={book.bids} max={max}/>
+        <Depth title="Asks" side="ask" levels={book.asks} max={max}/>
+      </div>
+      {spread != null && <div className="panel-end"><span>Spread</span><strong className="num">{usd(spread)}</strong></div>}
+    </Panel>
+    <Panel title="Recent trades" index="03" busy={tradeFeed.loading} meta={<><Stale feed={tradeFeed}/><span>{where}</span></>}>
+      <FeedBody feed={tradeFeed}>
+        {trades.length ? <ul className="row-list">
           {trades.map(t => <li key={t.id}>
-            <span className="gm-muted"><time dateTime={t.created_at}>{time(t.created_at)}</time></span>
-            <span className="gm-num">{t.quantity} @ {usd(t.price_cents)}</span>
+            <time className="muted" dateTime={t.created_at}>{time(t.created_at)}</time>
+            <span className="num">{t.quantity} @ {usd(t.price_cents)}</span>
           </li>)}
-        </ul>
-        {trades.length === 0 && <p className="gm-muted">No trades yet.</p>}
-      </Panel>
-    </div>
-  </>;
+        </ul> : <div className="empty">No trades yet.</div>}
+      </FeedBody>
+    </Panel>
+  </div>;
 }
+
+const heading = <PageHeading eyebrow="02 / FLEX CREDIT FUTURES" title="Market"/>;
 
 /** Page-level boundary: a bad response shape shows an alert here instead of blanking the whole app. */
 class MarketBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state: { error: Error | null } = { error: null };
   static getDerivedStateFromError(error: Error) { return { error }; }
   render() {
-    return this.state.error ? <section className="gm-page">
-      <div className="gm-page-head"><h1>Market</h1></div>
-      <p className="gm-muted" role="alert">Market view failed to render: {this.state.error.message}</p>
-    </section> : this.props.children;
+    return this.state.error ? <>
+      {heading}
+      <p className="connection-line has-error" role="alert">Market view failed to render: {this.state.error.message}</p>
+    </> : this.props.children;
   }
 }
 
 function MarketPage() {
   const market = useMarket();
   const products = list<MarketProduct>(market.data);
-  return <section className="gm-page">
-    <div className="gm-page-head"><h1>Market</h1></div>
-    {products.length ? <Board products={products} />
-      : <Panel title="Products" state={market}><p className="gm-muted">No products listed.</p></Panel>}
-  </section>;
+  return <>
+    {heading}
+    {products.length ? <Board products={products}/>
+      : <div className="page-grid"><Panel title="Products" index="01" className="span-all" busy={market.loading}>
+        <FeedBody feed={market}><div className="empty">No products listed.</div></FeedBody>
+      </Panel></div>}
+  </>;
 }
 
 export default function Market() {
-  return <MarketBoundary><MarketPage /></MarketBoundary>;
+  return <MarketBoundary><MarketPage/></MarketBoundary>;
 }
