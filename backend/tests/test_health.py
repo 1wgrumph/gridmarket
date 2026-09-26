@@ -290,9 +290,11 @@ def test_health_admin_error_contract(service, monkeypatch) -> None:
         assert response.json() == {
             "error": {"code": "FORBIDDEN", "message": "Admin routes are local only"}
         }
-    for host in ("::1", "testclient"):
+    for host in ("::1", "172.23.0.1"):
         local = TestClient(client.app, client=(host, 0))
         assert local.post(url, headers=authorized, json={"active": False}).status_code == 200
+    denied = TestClient(client.app, client=("testclient", 0))
+    assert denied.post(url, headers=authorized, json={"active": False}).status_code == 403
     monkeypatch.delenv("GRIDMARKET_ADMIN_KEY")
     response = client.post(url, headers={"Authorization": "Bearer "}, json={"active": True})
     assert response.status_code == 401

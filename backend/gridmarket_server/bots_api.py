@@ -1,6 +1,8 @@
 """Public bot population routes and the admin spawn endpoint."""
 
 import hashlib
+import hmac
+import ipaddress
 import json
 import logging
 import math
@@ -16,8 +18,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from . import economy, population
-from .bots import bot_key
+from . import economy, keys, population
+from .bots import bot_key, thresholds_from_ledger
 from .contracts import BotSpec
 
 logger = logging.getLogger(__name__)
@@ -33,7 +35,7 @@ class SpawnRequest(BaseModel):
 
 
 def _db() -> sqlite3.Connection:
-    conn = sqlite3.connect(Path(os.getenv("GRIDMARKET_DB", "/data/gridmarket.db")))
+    conn = sqlite3.connect(Path(os.getenv("GRIDMARKET_DB") or "/data/gridmarket.db"))
     conn.execute(
         "INSERT OR IGNORE INTO providers (id, display_name) VALUES ('base_sim', 'Base Simulation')"
     )
@@ -57,24 +59,27 @@ def _master_seed(conn: sqlite3.Connection) -> str:
     return drawn
 
 
-def _insert_bot(conn: sqlite3.Connection, spec: BotSpec) -> str:
+def _insert_bot(conn: sqlite3.Connection, spec: BotSpec, seed: str | None = None) -> str:
     bot_id = f"bot-{spec.index}"
     account_id = f"acct-bot-{spec.index}"
     conn.execute(
         "INSERT OR IGNORE INTO accounts (id, display_name, cash_cents) VALUES (?, ?, ?)",
         (account_id, bot_id, round(spec.start_cash * 100)),
     )
+    # Without a configured secret, seed random keys like seed.py; never derive from "".
+    secret = os.getenv("GRIDMARKET_BOT_SECRET")
+    key = bot_key(spec.index, secret) if secret else keys.sandbox_key()
     conn.execute(
         "INSERT OR IGNORE INTO api_keys (id, account_id, key_hash, label) VALUES (?, ?, ?, 'bot')",
         (
             f"key-bot-{spec.index}",
             account_id,
-            hashlib.sha256(bot_key(spec.index).encode()).hexdigest(),
+            hashlib.sha256(key.encode()).hexdigest(),
         ),
     )
     reserve_pct = float(spec.household.get("reserve_pct", 0.2))
     for position, capacity in enumerate(spec.household.get("batteries", [])):
-        limit = round(min(10.0, max(2.0, float(capacity) / 4)), 2)
+        limit = round(min(10.0, max(2.0, float(capacity) * 0.37)), 2)
         conn.execute(
             """
             INSERT OR IGNORE INTO assets (
@@ -94,6 +99,7 @@ def _insert_bot(conn: sqlite3.Connection, spec: BotSpec) -> str:
                 limit,
             ),
         )
+    profile = asdict(spec) | {"cohort_seed": seed}
     conn.execute(
         """
         INSERT OR IGNORE INTO bots (
@@ -106,7 +112,7 @@ def _insert_bot(conn: sqlite3.Connection, spec: BotSpec) -> str:
             spec.index,
             spec.bot_type,
             spec.provider_id,
-            json.dumps(asdict(spec)),
+            json.dumps(profile),
         ),
     )
     return bot_id
@@ -129,18 +135,38 @@ def _next_index(conn: sqlite3.Connection) -> int:
 def list_bots() -> list[dict[str, object]]:
     with _db() as conn:
         _ensure_seeded(conn)
-        return [
-            {
-                "id": bot_id,
-                "bot_index": index,
-                "bot_type": bot_type,
-                "provider_id": provider_id,
-                "dormant": bool(dormant),
-            }
-            for bot_id, index, bot_type, provider_id, dormant in conn.execute(
-                "SELECT id, bot_index, bot_type, provider_id, dormant FROM bots ORDER BY bot_index"
-            ).fetchall()
-        ]
+        master = _master_seed(conn)
+        settled: dict[str, list[int]] = {}
+        for account_id, pnl in conn.execute(
+            "SELECT account_id, pnl_cents FROM settled_positions"
+        ).fetchall():
+            settled.setdefault(account_id, []).append(pnl)
+        rows = []
+        for bot_id, account_id, index, bot_type, provider_id, dormant, raw in conn.execute(
+            "SELECT id, account_id, bot_index, bot_type, provider_id, dormant, profile_json "
+            "FROM bots ORDER BY bot_index"
+        ).fetchall():
+            profile = json.loads(raw)
+            pnls = settled.get(account_id, [])
+            losses = sum(1 for pnl in pnls if pnl < 0)
+            rows.append(
+                {
+                    "id": bot_id,
+                    "bot_index": index,
+                    "bot_type": bot_type,
+                    "provider_id": provider_id,
+                    "dormant": bool(dormant),
+                    "blend": profile.get("blend", {bot_type: 1.0}),
+                    "traits": profile.get("traits", {}),
+                    "household": profile.get("household", {}),
+                    "info": profile.get("info", {}),
+                    "employed": profile.get("employed", False),
+                    "losses": losses,
+                    "loss_share": losses / len(pnls) if pnls else 0.0,
+                    "thresholds": thresholds_from_ledger(conn, master, index),
+                }
+            )
+        return rows
 
 
 @router.get("/v1/bots/diversity")
@@ -184,6 +210,7 @@ def bot_profile(id: str) -> JSONResponse:
         "provider_id": provider_id,
         "traits": profile.get("traits", {}),
         "household": profile.get("household", {}),
+        "info": profile.get("info", {}),
         "employed": profile.get("employed", False),
         "pay": profile.get("pay", 0.0),
     }
@@ -191,15 +218,38 @@ def bot_profile(id: str) -> JSONResponse:
     return JSONResponse(content=body)
 
 
+_ADMIN_NETS = (
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("fd00::/8"),
+)
+
+
+def _admin_local(request: Request) -> bool:
+    """Same rule as api.admin_local: loopback or a compose-subnet peer, never the tunnel."""
+    if "CF-Connecting-IP" in request.headers:
+        return False
+    host = request.client.host if request.client else ""
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return address.is_loopback or any(address in net for net in _ADMIN_NETS)
+
+
 @router.post("/v1/admin/bots")
 def spawn_bots(request: Request, spawn: SpawnRequest) -> JSONResponse:
-    if "CF-Connecting-IP" in request.headers:
-        return _error(403, "FORBIDDEN", "admin requests must come from the host loopback")
-    if request.client and request.client.host not in ("127.0.0.1", "::1", "testclient"):
+    if not _admin_local(request):
         return _error(403, "FORBIDDEN", "admin requests must come from the host loopback")
     admin = os.getenv("GRIDMARKET_ADMIN_KEY", "")
-    if not admin or request.headers.get("Authorization") != f"Bearer {admin}":
+    given = request.headers.get("Authorization", "")
+    if not admin or not hmac.compare_digest(
+        given.encode("utf-8", "ignore"), f"Bearer {admin}".encode()
+    ):
         return _error(401, "UNAUTHENTICATED", "admin key required")
+    if not os.getenv("GRIDMARKET_BOT_SECRET"):
+        return _error(503, "BOT_SECRET_UNSET", "set GRIDMARKET_BOT_SECRET before spawning bots")
     with _db() as conn:
         total = int(conn.execute("SELECT COUNT(*) FROM bots").fetchone()[0])
         if total + spawn.count > BOT_CAP:
@@ -207,7 +257,7 @@ def spawn_bots(request: Request, spawn: SpawnRequest) -> JSONResponse:
         master = _master_seed(conn)
         specs = population.sample(master, _next_index(conn), spawn.count, seed=spawn.seed)
         for spec in specs:
-            _insert_bot(conn, spec)
+            _insert_bot(conn, spec, seed=spawn.seed)
         conn.commit()
     used = spawn.seed if spawn.seed is not None else master
     logger.info("spawned %d bots with seed %s", spawn.count, used)

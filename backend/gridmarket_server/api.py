@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import ipaddress
 import json
+import logging
 import math
 import os
 import re
@@ -53,12 +54,36 @@ def address(request: Request) -> str:
     return str(ip)
 
 
+# Loopback plus the subnets compose gateways come from. Explicit ranges, not
+# is_private: that also matches TEST-NET documentation addresses.
+ADMIN_NETS = (
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("fd00::/8"),
+)
+
+
+def admin_local(host: str | None) -> bool:
+    """Loopback or a compose-subnet peer (the bridge gateway) with no tunnel header.
+
+    The published port binds 127.0.0.1 only, so such a peer is the host owner
+    or another compose service; tunnel traffic always carries CF-Connecting-IP.
+    """
+    if not host:
+        return False
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return address.is_loopback or any(address in net for net in ADMIN_NETS)
+
+
 def admin_guard(request: Request) -> None:
     # Reject remote peers before touching the secret: no key oracle remotely.
     if (
         "CF-Connecting-IP" in request.headers
-        or not request.client
-        or request.client.host not in ("127.0.0.1", "::1", "testclient")
+        or not admin_local(request.client.host if request.client else None)
     ):
         market.reject("FORBIDDEN", 403)
     configured = os.getenv("GRIDMARKET_ADMIN_KEY", "")
@@ -98,6 +123,11 @@ async def validation_error(request: Request, exc: RequestValidationError):
     problem = exc.errors()[0]
     field = ".".join(str(part) for part in problem["loc"])
     return error_response(422, "VALIDATION_ERROR", f"{field}: {problem['msg']}")
+
+
+async def unhandled_error(request: Request, exc: Exception):
+    logging.getLogger(__name__).exception("unhandled %s %s", request.method, request.url.path)
+    return error_response(500, "INTERNAL_ERROR", "Internal error")
 
 
 class Boundary:
@@ -193,6 +223,7 @@ async def lifespan(app):
     app.user_middleware.insert(0, middleware)
     app.exception_handlers[HTTPException] = http_error
     app.exception_handlers[RequestValidationError] = validation_error
+    app.exception_handlers[Exception] = unhandled_error
     app.middleware_stack = app.build_middleware_stack()
 
     async def repeat():

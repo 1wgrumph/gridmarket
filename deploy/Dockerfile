@@ -24,6 +24,8 @@ COPY backend/pyproject.toml backend/uv.lock backend/
 RUN uv sync --project backend --frozen --no-dev --no-install-project
 # main.py resolves docs/ and dashboard/dist relative to /app (parents[2] of the package).
 COPY backend/gridmarket_server backend/gridmarket_server
+# The bots loop imports the SDK; PYTHONPATH=/app/backend makes it `import gridmarket`.
+COPY sdk/python/gridmarket backend/gridmarket
 COPY docs/ docs/
 COPY --from=dashboard /src/dashboard/dist dashboard/dist
 RUN groupadd --gid 10001 gridmarket \
@@ -32,5 +34,5 @@ RUN groupadd --gid 10001 gridmarket \
 USER 10001:10001
 EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
-    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v1/market/status', timeout=2)"]
+    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v1/market/status', timeout=2); import gridmarket_server.health as h; assert h.db_writable(), 'database is not writable'"]
 CMD ["uvicorn", "gridmarket_server.main:app", "--host", "0.0.0.0", "--port", "8000"]

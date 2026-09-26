@@ -306,7 +306,7 @@ def test_SEIT_GM_BOT_07_admin_spawn(server) -> None:
 def test_phase1b_F1_admin_spawn_rejects_non_loopback_peer(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """AC-GM-API-07: a non-loopback peer gets 403 and spawns nothing, even with the key."""
+    """AC-GM-API-07: a nonlocal peer gets 403 and spawns nothing, even with the key."""
     db_path = tmp_path / "gridmarket.db"
     conn = sqlite3.connect(db_path)
     conn.executescript(SCHEMA.read_text())
@@ -314,11 +314,12 @@ def test_phase1b_F1_admin_spawn_rejects_non_loopback_peer(
     conn.close()
     monkeypatch.setenv("GRIDMARKET_DB", str(db_path))
     monkeypatch.setenv("GRIDMARKET_NWS", "off")
+    monkeypatch.setenv("GRIDMARKET_BOT_SECRET", SECRET)
     monkeypatch.setenv("GRIDMARKET_BOT_MASTER_SEED", "20260926")
     monkeypatch.setenv("GRIDMARKET_ADMIN_KEY", ADMIN)
     app = main.create_app()
     headers = {"Authorization": f"Bearer {ADMIN}"}
-    denied = TestClient(app, client=("10.1.2.3", 50000)).post(
+    denied = TestClient(app, client=("203.0.113.5", 50000)).post(
         "/v1/admin/bots", json={"count": 1}, headers=headers
     )
     assert denied.status_code == 403
@@ -327,7 +328,9 @@ def test_phase1b_F1_admin_spawn_rejects_non_loopback_peer(
         assert conn.execute("SELECT COUNT(*) FROM bots").fetchone()[0] == 0
     finally:
         conn.close()
-    allowed = TestClient(app).post("/v1/admin/bots", json={"count": 1}, headers=headers)
+    allowed = TestClient(app, client=("127.0.0.1", 50000)).post(
+        "/v1/admin/bots", json={"count": 1}, headers=headers
+    )
     assert allowed.status_code == 200
 
 

@@ -29,11 +29,16 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile
     command: ["python", "-m", "gridmarket_server.bots"]
+    environment:
+      # Inside this container, loopback is itself; the API lives on `app`.
+      GRIDMARKET_URL: http://app:8000
     healthcheck:
-      test: ["CMD", "python", "-c", "from pathlib import Path; assert Path('/proc/1/cmdline').read_bytes().split(bytes([0]))[:3] == [b'python', b'-m', b'gridmarket_server.bots']"]
-      interval: 5s
+      # The loop rewrites this file after every pass that places an order.
+      test: ["CMD", "python", "-c", "import time; from pathlib import Path; assert time.time() - float(Path('/tmp/gridmarket-bots-pass').read_text()) < 120"]
+      interval: 30s
       timeout: 3s
       retries: 3
+      start_period: 60s
     volumes:
       - gm-data:/data
     depends_on:

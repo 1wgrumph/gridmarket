@@ -28,7 +28,16 @@ from .providers import enabled
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def normalize_env() -> None:
+    """Empty means unset: a blank ``KEY=`` line in ``.env`` must not override defaults."""
+    for name, value in list(os.environ.items()):
+        if name.startswith("GRIDMARKET_") and value == "":
+            del os.environ[name]
+
+
 def create_app() -> FastAPI:
+    normalize_env()
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         db_path = Path(os.getenv("GRIDMARKET_DB", "/data/gridmarket.db"))
@@ -37,6 +46,7 @@ def create_app() -> FastAPI:
             db.execute("PRAGMA journal_mode=WAL")
             db.executescript((Path(__file__).with_name("schema.sql")).read_text())
             seed.seed(db)
+            economy.rebuild(db)
         app.state.providers = enabled()
 
         # Finish initial provider state before requests can race the first heartbeat.
