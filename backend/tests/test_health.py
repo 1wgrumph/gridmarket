@@ -1,6 +1,8 @@
 """S10 heartbeat, health checks, and outage checks (SEIT-GM-PROV-03/04)."""
 
+import asyncio
 import sqlite3
+import threading
 from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -192,7 +194,7 @@ def test_seit_gm_prov_04_public_health_route(service) -> None:
 
 
 def test_seit_gm_prov_04_heartbeat_loop_runs_every_ten_seconds() -> None:
-    assert "repeat(10, health.tick)" in Path(main.__file__).read_text()
+    assert "repeat(10, health.tick, delay_first=True)" in Path(main.__file__).read_text()
 
 
 def test_health_live_provider_documents(service, monkeypatch) -> None:
@@ -335,3 +337,32 @@ def test_health_risk_calibration_and_check_contract(service, monkeypatch) -> Non
         }
     assert health._risk([-1, 2]) == pytest.approx(1 / (1 + math.exp(1)))
     assert rows["base_sim"].probability == pytest.approx(1 / (1 + math.exp(3)))
+
+
+def test_s43b_startup_waits_for_first_health_tick(tmp_path, monkeypatch):
+    monkeypatch.setenv("GRIDMARKET_DB", str(tmp_path / "startup.db"))
+    monkeypatch.setenv("GRIDMARKET_NWS", "off")
+    monkeypatch.delenv("GRIDMARKET_WORKER_URL", raising=False)
+    entered, release = threading.Event(), threading.Event()
+    real_tick = health.tick
+
+    def held_tick():
+        entered.set()
+        assert release.wait(5), "startup test did not release health tick"
+        real_tick()
+
+    monkeypatch.setattr(health, "tick", held_tick)
+
+    async def start():
+        app = main.create_app()
+        lifespan = app.router.lifespan_context(app)
+        startup = asyncio.create_task(lifespan.__aenter__())
+        try:
+            assert await asyncio.to_thread(entered.wait, 5), "first health tick did not start"
+            assert not startup.done(), "startup accepted requests before health tick completed"
+        finally:
+            release.set()
+            await startup
+            await lifespan.__aexit__(None, None, None)
+
+    asyncio.run(start())
