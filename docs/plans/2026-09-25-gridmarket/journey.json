@@ -1053,6 +1053,20 @@
       "decided_by": "Orchestrator (delegate authority, DEC-GM-043)",
       "decision": "Phase 2 lands (PR #16, main 0188df3) on candidate fd1b9c4 with every deterministic gate at exit 0 except a typed gap: the final-SHA market mutation run stalled at 1,335 of 1,966 mutants (1,106 killed, 208 survived, 84% of scored; worst case 57% if all unscored survived). Accepted because the complete phase 1b run was 81.63%, the stretch gate reruns market mutation in full, and S78 repairs market.py. The sweep's pre-existing defects are disclosed in the PR and repaired in lanes landing with S18.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-116",
+      "decided_at": "2026-09-26T16:08:00-05:00",
+      "decided_by": "Orchestrator (delegate)",
+      "decision": "S78 authority widened to the market and economy scheduler loops and lifespan in api.py and main.py (needed for R2-05 tick isolation); every repair packet's stop rule now continues past a single out-of-authority finding instead of stopping.",
+      "reversible": true
+    },
+    {
+      "id": "DEC-GM-117",
+      "decided_at": "2026-09-26T16:08:00-05:00",
+      "decided_by": "Owner (commissioned acceptance audit) + Orchestrator (delegate)",
+      "decision": "Owner's Astra-medium acceptance audit of fd1b9c4 (9 gaps A1-A9) mapped to repair lanes: A1 snapshot crash = R1-01 (S76) plus the empty-response case (S76b); A2 bot strategy, signal selection and learning not wired = R4-02 (S77) plus learning and signals (new S77b after S77); A3 DART resolution on duplicate readings (S76b); A4 refund rounding across reservations (new S78b after S78); A5 cash history, A6 net worth, A7 dormancy (S77b); A8 outage alert within 60 s (S76b); A9 remote admin 401 vs 403 ordering = R5-07 (S79). Evidence gaps (live ERCOT schema, restart reconstruction, strategy template resting orders, browser, container smoke, mutation) are carried as gaps until observed.",
+      "reversible": true
     }
   ],
   "stages": {
