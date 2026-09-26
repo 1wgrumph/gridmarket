@@ -1145,6 +1145,13 @@
       "decided_by": "Orchestrator (delegate) applying the owner's AZHQ Product Flow Standard v1.0",
       "decision": "GridMarket's experience work follows the owner's AZHQ Product Flow Standard v1.0 (26 September 2026). S80 re-scoped: the detached #/tour becomes a first-run checklist ('Your first 3 minutes') whose items deep-link into the real Replay, Your turn and Judge sandbox pages and tick on the real action (A7 step 16), plus next-step links at every task end (FLOW-001/022), zone and time window carried in the URL (FLOW-013/020), every alert and activity item linked to its object at its time (FLOW-027/060), and wayfinding (FLOW-010/011/012). S72 adds URL-carried slider state and next steps. The S18 independent UX critique scores the integrated build against the standard's Part C flow checks at 1440x900 and 390x844 (A7 step 18) and B2 (energy) and B4 (developer tools) journeys; the fresh-eyes run with Jordan is the A5 human check. The standard's text stays outside the product repository.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-129",
+      "decided_at": "2026-09-26T17:50:00-05:00",
+      "decided_by": "Orchestrator (delegate)",
+      "decision": "Pull the stretch assembly left: S18 starts now on the verified lanes (PS lanes, then public, core, api, deploy, ux2 in that order) on gridmarket/integration-stretch from main; esr, ux, godseye and replay merge as their last slices exit (pins file ops/candidates/S18-pins, READY/PENDING). Known conflict rule: the admin guard keeps S77's topology-before-key order plus S79's byte-safe compare, rate limit and identical 403 path. Also recorded: a stopped S80 session survived a process-group kill and kept writing for 11 minutes; stops now use a descendant-aware stop.sh.",
+      "reversible": true
     }
   ],
   "stages": {
