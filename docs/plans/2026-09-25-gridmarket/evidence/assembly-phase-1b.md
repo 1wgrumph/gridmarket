@@ -1254,3 +1254,76 @@ proof reconciliation, owner PROC-ERCOT-LIVE-CHECK, AC-GM-ACC-01, and
 MARKET_URL redeploy / VIEWS_NOT_DEPLOYED remain outside this bounded closure.
 No PR, main merge, branch deletion, force push, git switch, uv.lock edit,
 credential access, deployment, or issue closure occurred. S49-L NOT_RUN.
+
+
+## Attempt 14 (repair round 1 closure gate)
+
+**Outcome: PASS — deterministic repair-round gate only.**
+Journey GM-2026-09-25, phase 1b repair round 1, Integration Engineer execution
+session; DEC-GM-084/085. All gates ran on the already assembled candidate
+`3f5b964593e3e1c268ee0429a60a6d39688d7694`, branch
+`gridmarket/integration-1b`, with a clean entry and unchanged product tree.
+No assembly, merge, revert, product/test edit or second review was performed.
+
+Evidence root: `/tmp/gm-evidence/P1b/attempt-14/`.
+`gate-results.json` records exact commands, exits, timings and candidate;
+`gate-commands.json` preserves their arguments. **Every command inherited
+`export GRIDMARKET_NWS=off`**, the SEIT no-network precondition required by
+DEC-GM-085. Python Makefile commands retained `uv --frozen`; no lockfile changed.
+Attempt 13's missing-environment stall is not counted as a product failure.
+
+| Gate | Exit | Log (relative to evidence root) |
+|---|---:|---|
+| lint | 0 | `lint.log` |
+| test-contracts | 0 | `test-contracts.log` |
+| test-all | 0 | `test-all.log` |
+| test-bots | 0 | `test-bots.log` |
+| test-router | 0 | `test-router.log` |
+| test-data | 0 | `test-data.log` |
+| test-market | 0 | `test-market.log` |
+| test-dash | 0 | `test-dash.log` |
+| test-worker | 0 | `test-worker.log` |
+| smoke | 0 | `smoke.log` |
+| secrets | 0 | `secrets.log` |
+| rules | 0 | `rules.log` |
+| mutation | 0 | `mutation.log` |
+| S28-green | 0 | `S28-green.log` |
+
+The Worker gate used canonical CMD-TEST-WORKER:
+`node --test "ercot-hackathon/test/*.test.mjs"` (DEC-GM-046); this candidate
+has no `make test-worker` target. Smoke used `SMOKE_PROJECT=gm-smoke-1b`
+and `SMOKE_PORT=18003`; assertions and isolated stack cleanup passed.
+Both dashboard invocations passed first try; DEC-GM-084's single immediate
+flake rerun was not needed. Every listed gate ran once.
+
+`make mutation MUTANTS="gridmarket_server.market.*"` exited 0.
+Mutation score: **80.28% (1,221 killed / 1,521 scored), PASS >=70%**;
+300 survived, 0 timed out. The prescribed denominator is killed + survived +
+timeout. Exported inventory total is 1,766; it is not the scored denominator.
+The original exported statistics are retained in `mutmut-cicd-stats.json`.
+
+**ATE-P1b-03: PASS for the 11 required S28 IDs on this candidate.**
+`make red-green PHASE=green SUITE=backend TESTS=<11 exact IDs>` exited 0:
+11 passed, 0 failures/errors/skips. JUnit:
+`/tmp/gm-evidence/P1b/attempt-14/S28-green.xml`.
+`S28-required-ids.json` preserves the original ID source;
+`ate-p1b-03-binding.json` verifies exact set equality and binds the receipt
+hash to the candidate. JUnit SHA-256:
+`1d0f7349f7ae71c1c8998e090b4891905046c3b8b26ad8631b79646b6c5cd934`.
+
+`frozen-profile.json` preserves the existing frozen role routes and both
+capability settings (digest
+`14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`).
+`capabilities.json` records available OpenCodeReview delegation, enabled and
+not required, **NOT_RUN: no second code review authorized**. Reverify remains
+enabled/available, **NOT_APPLICABLE: no compiled binary claim**. These gates
+are not substitutes for either capability or independent assurance.
+**BRAN_UNAVAILABLE:** no native policy; Git and canonical plan evidence used.
+
+Only this evidence document is committed after the tested candidate.
+`final-verification.json` records the evidence commit identity, sole changed
+path, clean tree and matching origin branch after the authorized non-force
+push; `final-push.log` records that push. No PR, landing, main merge, branch
+switch, force push, deployment, credential access or issue closure occurred.
+Prior owner acceptance/deployment actions and separate planning/assurance
+items remain outside this deterministic gate's scope.
