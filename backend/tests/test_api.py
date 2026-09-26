@@ -9,7 +9,7 @@ from unittest.mock import Mock
 import pytest
 from fastapi.testclient import TestClient
 
-from gridmarket_server import adversary, main, market
+from gridmarket_server import adversary, main, market, seed
 
 SCHEMA = Path(__file__).resolve().parents[1] / "gridmarket_server/schema.sql"
 ORIGIN = "https://gridmarket-worker.example"
@@ -89,6 +89,49 @@ def test_dir_p1a_11_market_status_exposes_anomalies(api):
     response = client.get("/v1/market/status")
     assert response.status_code == 200
     assert response.json()["anomalies"] == []
+
+
+def test_assurance_f5_activity_has_overview_fields(api):
+    _, client = api
+    assert client.get("/v1/market/activity").json() == []
+    for account, side in (("member", "buy"), ("sandbox", "sell")):
+        response = client.post(
+            "/v1/orders", headers=headers(account, "activity"), json={**ORDER, "side": side}
+        )
+        assert response.status_code == 200
+    response = client.get("/v1/market/activity")
+    assert response.status_code == 200
+    activity = response.json()
+    assert len(activity) == 4
+    assert {item["type"] for item in activity} == {"order", "fill"}
+    for item in activity:
+        assert item["id"] and item["created_at"]
+        assert item["label"] in ("member", "sandbox")
+        assert item["symbol"] == "FLEX-LZ_HOUSTON-test"
+        assert item["side"] == ("buy" if item["label"] == "member" else "sell")
+        assert item["quantity"] == 1
+        assert item["price_cents"] == 20
+        assert item["reason"] is None
+
+
+def test_assurance_f6_bots_returns_empty_or_seeded_participants(api, tmp_path, monkeypatch):
+    _, client = api
+    response = client.get("/v1/bots")
+    assert response.status_code == 200
+    assert response.json() == []
+    path = tmp_path / "participants.db"
+    with sqlite3.connect(path) as db:
+        db.executescript(SCHEMA.read_text())
+        seed.seed(db)
+        expected = [
+            {"id": bot_id, "provider_id": provider_id}
+            for bot_id, provider_id in db.execute("SELECT id,provider_id FROM bots")
+        ]
+    assert expected
+    monkeypatch.setenv("GRIDMARKET_DB", str(path))
+    response = client.get("/v1/bots")
+    assert response.status_code == 200
+    assert response.json() == expected
 
 
 @pytest.mark.parametrize(
