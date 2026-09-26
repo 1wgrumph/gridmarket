@@ -737,6 +737,14 @@
       "decision": "The S49 design step exempts dashboard/src/api.ts and dashboard/src/hooks.ts from the frozen-file check. The Orchestrator reviewed the diff 44b7f63..bb097f8: api.ts adds type exports only, and hooks.ts adds only the per-path poll dedupe and the error-text fix, with hook names and signatures unchanged. Every other frozen file is still checked.",
       "rationale": "Owner-approved DEC-GM-062 permits exactly these three change kinds in those files. The IE7 CONTRACT_FAILURE was a correct fail-closed on a pre-authorized amendment.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-075",
+      "decided_at": "2026-09-26T10:03:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "(1) Design and pages-v2 merge as ONE assembly step: revert-of-revert 58a7f89, merge pages-v2 bf9252f, then gate. Design alone cannot build against the S51 pages (the v2 Panel requires index). (2) The attempt-7 market failures (PRODUCT_CLOSED in 4 test_market tests) are a time-of-day flake: SPOT_HOUR = floor(now+1h) at import, so a test-all that crosses the top of the hour sees its spot product close. New slice S05-flake on lane-market2 after S54: compute the fixture hours so spot is at least 1h ahead for the whole run, keeping every assertion (DEC-GM-061 test-data rule). The same audit covers every backend test that derives hours from now().",
+      "rationale": "The attempt-7 test-all started at about 09:59:50 and the spot delivery hour 10:00 began mid-run. The same tree passed at 09:30 and passes on the 10:02 revert run. Design touches no backend file.",
+      "reversible": true
     }
   ],
   "stages": {
