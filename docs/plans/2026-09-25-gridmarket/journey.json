@@ -482,6 +482,15 @@
       "supersedes": [
         "DEC-GM-041"
       ]
+    },
+    {
+      "id": "DEC-GM-043",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T04:20:32Z",
+      "source": "Owner in chat",
+      "owner_statement": "when this is done just go ahead and start I am about to go to sleep plan is already approved / If gaps or problems arise I need you act as the delegate authority and keep this running please get this done do not stop for no reason",
+      "decision": "Owner pre-approves the Planning and Design package that the current delta (DEC-GM-027..040, 042) produces, once plan-package PASS and the Manifest render. Wave dispatch starts without a further approval stop. Overnight, the Orchestrator acts as delegate authority for OWNER_DECISION_REQUIRED returns inside the approved scope: route fallbacks, repair acceptance, slice drops per the documented drop order, and schedule re-sequencing. Each delegated decision is recorded as a dated DEC-GM entry with source 'Orchestrator as owner delegate (DEC-GM-043)'.",
+      "excluded": "Owner-only actions stay owner-only: credential access (ERCOT, Cloudflare, Jev keys), production deploy (wrangler deploy, public tunnel activation), making the repository public, and the Loom/submission. Scope expansion beyond the approved package is not delegated."
     }
   ],
   "stages": {
