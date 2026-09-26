@@ -3,6 +3,7 @@
 import sqlite3
 import uuid
 from contextlib import contextmanager
+from datetime import datetime
 from typing import Any
 
 from .. import health
@@ -100,3 +101,60 @@ class BaseSim:
 
     def heartbeat(self) -> None:
         health.heartbeat(self.provider_id)
+
+
+def commit_capacity(db, order_id: str, quantity: int) -> None:
+    from ..market import rows
+
+    for reservation in rows(
+        db,
+        "SELECT * FROM reservations WHERE order_id=? AND status='reserved' ORDER BY rowid",
+        (order_id,),
+    ):
+        used = min(quantity, reservation["kwh"])
+        if not used:
+            break
+        if used < reservation["kwh"]:
+            db.execute("UPDATE reservations SET kwh=kwh-? WHERE id=?", (used, reservation["id"]))
+            db.execute(
+                "INSERT INTO reservations VALUES (?,?,?,?,?,'committed')",
+                (
+                    uuid.uuid4().hex,
+                    order_id,
+                    reservation["asset_id"],
+                    reservation["delivery_hour"],
+                    used,
+                ),
+            )
+        else:
+            db.execute(
+                "UPDATE reservations SET status='committed' WHERE id=?", (reservation["id"],)
+            )
+        quantity -= used
+
+
+def reserved_capacity(db, order_id: str) -> list[dict[str, Any]]:
+    from ..market import rows
+
+    return rows(
+        db,
+        "SELECT r.id,a.provider_id FROM reservations r JOIN assets a ON a.id=r.asset_id WHERE r.order_id=? AND r.status='reserved'",
+        (order_id,),
+    )
+
+
+def due_capacity(db, now: datetime) -> list[dict[str, Any]]:
+    from ..market import rows
+
+    return rows(
+        db,
+        "SELECT r.*,a.provider_id FROM reservations r JOIN assets a ON a.id=r.asset_id WHERE r.status='committed' AND julianday(r.delivery_hour)+1.0/24<=julianday(?)",
+        (now.isoformat(),),
+    )
+
+
+def set_delivery_status(db, reservation_id: str, delivered: bool) -> None:
+    db.execute(
+        "UPDATE reservations SET status=? WHERE id=?",
+        ("delivered" if delivered else "defaulted", reservation_id),
+    )
