@@ -3,13 +3,16 @@ PYTEST := GRIDMARKET_NWS=off $(UV) pytest -q
 LINT_PATHS := $(wildcard backend tools sdk examples bench mcp-server)
 SHELL := /bin/bash
 
-.PHONY: setup lint test-contracts test-market test-data test-dash test-providers test-bots test-router test-kit test-mcp test-quant test-jev test-docs test-adversary test-backtest test-parity test-ml test-spec spec-lint test-all red-green coverage mutation bench smoke secrets depscan rules
+.PHONY: setup lint check-public test-contracts test-market test-data test-dash test-providers test-bots test-router test-kit test-mcp test-quant test-jev test-docs test-adversary test-backtest test-parity test-ml test-spec spec-lint test-all red-green coverage mutation bench smoke secrets depscan rules
 
 setup:
 	uv sync --project backend --frozen --all-groups --extra ml
 	npm ci --prefix dashboard
 
-lint:
+check-public:
+	python3 scripts/check_public.py
+
+lint: check-public
 	$(UV) ruff check $(LINT_PATHS)
 	$(UV) ruff format --check $(LINT_PATHS)
 

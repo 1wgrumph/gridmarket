@@ -1,7 +1,0 @@
-Round 2 of the requirements gate is a **REPAIRABLE_FAILURE**. The candidate hash matches `daf96efa4268ce5cae515e850a65dc9ea9dfaa9d17fb584a91cf426f5dbb9afc`. The record is `docs/plans/2026-09-25-gridmarket/specialists/requirements-engineer-gate-r2.md`.
-
-`AC-GM-MKT-06` matches the round-1 text. The mechanical lint is still 47 rows and 0 flagged. These rows need the replacement text in that file, applied verbatim: `AC-GM-DATA-01`, `AC-GM-SCORE-04`, `AC-GM-SCORE-05`, `AC-GM-API-05`, `AC-GM-EDGE-02`, `AC-GM-EDGE-04`, `AC-GM-SPEC-01`, `AC-GM-SPEC-02`, `AC-GM-SPEC-03`, `AC-GM-RULE-02`, `RISK-GM-11`, the Report allowlist definition, and the DEC-GM-020 Exclusions bullet.
-
-DEC-GM-017 through DEC-GM-022 are covered once those replacements land. Nothing in this round needs a new owner decision. The on-peak definition stays as written: NERC moves a Sunday fixed-date holiday to Monday, and a Saturday holiday stays on Saturday.
-
-Verdict: REPAIRABLE_FAILURE
