@@ -545,6 +545,14 @@
       "decided_at": "2026-09-26T11:13:01Z",
       "source": "Orchestrator as owner delegate (DEC-GM-043); owner asked 'how can we make up ground without it being risky?'",
       "decision": "Catch-up plan after the 5h20m wave 2 delay: (1) reserve slots for phases 1a and 1b (OPS-08). (2) Evaluate the S31 slip valve at about 12:00 CDT instead of 14:00. If S31 is not close to green, phase 1b assembles with S29 and S31 moves to phase 2. (3) Stretch uses only spare capacity. At 18:00 CDT, if the schedule is still behind, drop S17 (Rust) first. The Sat 22:00 cutoff stands. (4) Later phase assemblies merge lanes as each finishes, instead of waiting for all of them. Not taken: skipping or merging phase reviews, raising the AGY cap, weakening tests, larger review packets."
+    },
+    {
+      "id": "DEC-GM-051",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T11:21:21Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043); owner asked to 'pull the schedule back to the left'",
+      "decision": "Schedule pull-left, with scope unchanged. (1) Overlapped assembly: the next phase's Integration Engineer may pre-assemble on the previous phase's assembled candidate, then merge origin/main after that phase lands. Review and Test Engineer run only on a candidate that contains main. (2) S08 (SDK, Dockerfile) runs in parallel with S05 in a side worktree and merges into lane-market after the S05 exit; the write sets are disjoint. (3) S30 (diversity red tests) runs in parallel with S28/S29 in a side worktree and merges into lane-bots after the S29 exit; the write sets are disjoint. (4) S09 assembly starts now with the foundation and worker merges, and each remaining lane merges as it exits. (5) A directives channel lets Coordinators take Orchestrator instructions mid-wave. All four wave 2 Coordinators were relaunched in resume mode to get it. Their in-flight jobs kept running. (6) Coordinators no longer queue behind worker slices for placement.",
+      "why": "Only phase assembly is serial. Overlapping it and parallelising disjoint slices on the 1a and bots critical paths recovers about 3h. Review, tests, caps and scope are unchanged."
     }
   ],
   "stages": {
