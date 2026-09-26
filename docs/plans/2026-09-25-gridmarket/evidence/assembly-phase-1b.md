@@ -160,3 +160,97 @@ Remaining blocker: S49-A required gates are red on the merged lane content.
 The rollback has green command exits but cannot certify phase 1b. No PR,
 main merge, branch deletion, force operation, owner deployment, credential
 access, issue closure, or Co-Authored-By line was introduced.
+
+
+## Attempt 3 (final): OWNER_DECISION_REQUIRED — stopped before S49-A
+
+Journey GM-2026-09-25, S49 retry, phase 1b, Integration Engineer execution.
+The current owner dispatch authorizes only the listed `--no-ff` merges,
+previous-phase repair-delta conflict resolution, red-step `revert -m 1`,
+and evidence commits. Its stop condition requires stopping when authority
+is insufficient. This attempt encountered a Git ancestry/authority blocker,
+not a product failure or a red gate.
+
+### Identity and observed blocker
+
+- Candidate at stop: `e51b6368c0a7924f0cdc8242c6cf7509c3ce6865` (unchanged
+  product tree; **not** a phase-1b-ready candidate). The evidence-only handoff
+  commit has this candidate as its parent.
+- `git diff --stat 7a4e541..HEAD`: exit **0**, empty output.
+  `git diff --exit-code 7a4e541 HEAD`: exit **0**.
+  Both trees are `98f22a9c96f69504ec0cf79b42964d1440ed7c92`.
+- `origin/main` resolves to the pinned
+  `44b7f63cac9a35730059a791c7f1aab461f5d245`.
+- `git merge-base --is-ancestor 44b7f63 HEAD`: exit **0**. The earlier
+  merge `3a986cbe8032c73a47e3611f023ce43bc1ef1866` already records that
+  parent; reverting it in `e51b636` removed content but retained ancestry.
+- Executed `git merge --no-ff origin/main -m "Merge phase 1a landing for S49 attempt 3"`:
+  exit **0**, **Already up to date.** No merge commit was created and no
+  landing content was restored. Exit 0 is not successful restoration.
+- Comparison with the previous merged tree (`git diff --stat HEAD 3a986cb`)
+  shows the 16 previous-phase repair/evidence paths still absent or different.
+- The same ancestry risk applies to bots: original S31 `5ddc28c` is an
+  ancestor of both HEAD and retry exit `2842f1e56d9590c662ed04a6b4089061e8726a1f`.
+  The retry adds only four changed files (format and BOT_03 repairs) relative
+  to original S31. A merge of that descendant cannot be assumed to restore
+  the complete content removed by `b58d6c4`. No bots merge was attempted.
+- All three explicitly named bots test files remain absent. The dispatched
+  pre-bots `make test-bots` missing-file outcome remains **EXPECTED / inapplicable**;
+  it was not run or used to trigger a revert in this attempt.
+
+Evidence root: `/tmp/gm-evidence/P1b/attempt-3/`.
+
+| Operation | Exit / status | Evidence |
+|---|---|---|
+| Base equality and pinned identity | 0 | `entry-results.json`, `base-tree.log`, `base-tree-exact.log`, `identity.log`, `main-ref.log` |
+| Main ancestry and earlier merge parents | 0 | `main-ancestry.log`, `prior-merge.log` |
+| Requested main merge | 0, no-op | `origin-main-merge.log` |
+| Missing 1a restoration | inspection, 16 paths differ | `main-content-absent.log` |
+| Bots ancestry and repair-only delta | 0 | `bots-existing-ancestry.log`, `bots-prior-ancestry.log`, `bots-retry-delta.log`, `bots-repair-history.log`, `bots-files.json` |
+
+### Step and verification disposition
+
+| Step | Exact input | Attempt-3 merge SHA | post_step_vv |
+|---|---|---|---|
+| Origin/main | `44b7f63cac9a35730059a791c7f1aab461f5d245` | none (already ancestor) | NOT_RUN: restoration did not occur |
+| S49-A bots | `2842f1e56d9590c662ed04a6b4089061e8726a1f` | none | NOT_RUN: blocked before entry |
+| S49-B router | `fc8080df50250b564f2e1f858e9c4265a16d740e` | none | NOT_RUN: S49-A not green |
+| S49-C views | `fde33285c721b24d191d3dde36d1177a87050900` | none | NOT_RUN: S49-B not green |
+| S49-D pages | `90921b98c87857f22bf4e64cee6ec0ab59909f0a` | none | NOT_RUN: preceding steps not green |
+| S49-E spec | `b0fa857e9f2e7f065b7ad55fde5570069ae982ba` | none | NOT_RUN: entry not reached |
+
+Lint, contracts, test-all, test-dash, smoke and BOT_01/BOT_03 are **NOT_RUN**
+in attempt 3. There is no new V&V PASS, gate failure, rollback, or lane-return
+finding. No gate is useful as proof of the requested restored candidate until
+that candidate actually exists. Spec-defer: **not evaluated**, S49-E not
+entered; no S12-E deferral is asserted. Slip trigger: **NOT fired**.
+
+### Required owner decision and retained gaps
+
+`REVERTED_MERGE_ANCESTRY_BLOCKS_RETRY`: authorize restoration of the reverted
+1a merge and the reverted original bots merge before applying their retry
+sequence, or supply another explicitly authorized recovery sequence. Reverting
+`e51b636` would restore the earlier 1a merge; restoring the original bots
+content requires addressing `b58d6c4` as well before merging `2842f1e`.
+These are reversals of earlier revert commits, not the currently authorized
+`revert -m 1` of a genuinely red step. Neither was executed. No reset,
+cherry-pick, synthetic merge, lane edit, frozen-file edit, or history rewrite
+was substituted.
+
+Retained nonblocking gaps: `ENTROPY_PROOF_CONFLICT`,
+`PAGES_APP_ERROR_BOUNDARY_GAP`, `SMOKE_PROOF_INCOMPLETE`, and
+`BRAN_UNAVAILABLE` (no native policy; ordinary Git/repository discovery).
+The repaired BOT_01/BOT_03 behavior remains unproven on the intended combined
+candidate. Prior attempt receipts are historical, not current passes.
+
+Owner actions remain pending: MARKET_URL and Worker redeployment from a green
+S49-C head (`VIEWS_NOT_DEPLOYED`), `PROC-ERCOT-LIVE-CHECK`, and `PROC-ACCEPT-P1`.
+S49-C was not reached, so no green-head deployment notification is claimed.
+Independent phase review, browser visual review, and assurance remain pending.
+Frozen route and capability selections recorded above are retained unchanged:
+OpenCodeReview delegation `not_run` because this is no code-review session;
+Reverify **not applicable — no native binary claim**. Neither is passing evidence.
+
+Only this evidence file changed. No remote push was attempted (no green
+assembly step); no PR, landing, deployment, credential access, branch deletion,
+force operation, issue closure, or Co-Authored-By trailer. S49-L was not entered.
