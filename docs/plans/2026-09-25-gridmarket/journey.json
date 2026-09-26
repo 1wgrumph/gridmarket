@@ -825,6 +825,14 @@
       "decision": "The phase gate environment exports GRIDMARKET_NWS=off, per the SEIT backend-test precondition 'no network; fixtures only'. IE15 reruns the full repair-round gate on candidate 3f5b964 under that setting. Phase 2 follow-up (foundation): set GRIDMARKET_NWS=off inside the Makefile PYTEST/test targets, so a bare make test-all never reaches the network.",
       "rationale": "IE14's test-all stalled after 3 tests with NWS unset: the NWS poller started inside TestClient lifespans and made real HTTP calls. Earlier green gates (attempts 5-11) set NWS=off. No product defect was shown.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-086",
+      "decided_at": "2026-09-26T12:09:00-05:00",
+      "decided_by": "Owner (in chat) + Orchestrator",
+      "decision": "New docs-only slice S56 on lane-design-docs from origin/main: docs/design/DESIGN.md (the as-built design system), docs/design/screenshots/ (as-built 1280/390 dark/light) and skills/gridmarket-frontend-design/SKILL.md, plus a README link, so Jordan can review the UI. It is privacy-scrubbed (no internal tooling, paths or design-poc content) and lands via its own PR. GitHub issues #6 (Overview onboarding and greeting) and #7 (notification inbox, savings alert and opt-in opportunity scanner) are filed as enhancements. They are not scheduled into the pre-freeze plan unless the owner asks.",
+      "owner_quote": "add the frontend design skill and references so Jordan can take alook; add a gh issue to optimize onboarding and greeting on the main screen",
+      "reversible": true
     }
   ],
   "stages": {
