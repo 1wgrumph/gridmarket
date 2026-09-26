@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="586.5" height="579" viewBox="0 0 586.5 579" font-family="Helvetica, Arial, sans-serif" font-size="12">
+  <title>Settlement tick activity</title>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" />
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="586.5" height="579" fill="white" />
+  <g class="line" data-id="edge-1">
+    <polyline points="350.5,56.18 350.5,66.81 350.5,80.69 350.5,92.8 350.5,102.85" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="377" y="79.5" text-anchor="middle">every hour</text>
+  </g>
+  <g class="line" data-id="edge-2">
+    <polyline points="350.5,139.19 350.5,147.21 350.5,156.95 350.5,165.93 350.5,175.97" fill="none" stroke="black" marker-end="url(#arrow)" />
+  </g>
+  <g class="line" data-id="edge-3">
+    <polyline points="328.23,212.18 313.06,223.88 292.77,239.53 276.09,252.4 267.74,258.85" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="314.5" y="235.5" text-anchor="middle">spot</text>
+  </g>
+  <g class="line" data-id="edge-4">
+    <polyline points="373.19,212.18 388.8,223.99 409.71,239.82 426.8,252.76 434.84,258.85" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="424.5" y="235.5" text-anchor="middle">future</text>
+  </g>
+  <g class="line" data-id="edge-5">
+    <polyline points="245.5,295.18 245.5,305.81 245.5,319.69 245.5,331.8 245.5,341.85" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="255.5" y="318.5" text-anchor="middle">true</text>
+  </g>
+  <g class="line" data-id="edge-6">
+    <polyline points="223.65,378.03 200.98,395.7 165.36,423.46 139.94,443.27 131.75,449.66" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="214" y="414" text-anchor="middle">online</text>
+  </g>
+  <g class="line" data-id="edge-7">
+    <polyline points="257.07,378.03 268.65,395.08 286.62,421.54 299.96,441.18 305.72,449.66" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="308" y="414" text-anchor="middle">offline</text>
+  </g>
+  <g class="line" data-id="edge-8">
+    <polyline points="150.7,486.006 174.67,495.901 205.08,508.455 230.55,518.967 240.04,522.886" fill="none" stroke="black" marker-end="url(#arrow)" />
+  </g>
+  <g class="line" data-id="edge-9">
+    <polyline points="457.5,295.1 457.5,317.9 457.5,358.52 457.5,385.61 457.5,395.61" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="467.5" y="318.5" text-anchor="middle">true</text>
+  </g>
+  <g class="line" data-id="edge-10">
+    <polyline points="454.06,432.13 450.02,448.07 441.84,471.486 426.5,486 410.92,500.744 390.95,511.544 370.85,519.426 361.3,522.955" fill="none" stroke="black" marker-end="url(#arrow)" />
+  </g>
+  <g id="tick">
+    <rect x="290.999" y="20" width="119.002" height="36" fill="white" stroke="black" />
+    <text x="350.5" y="42" text-anchor="middle">Settlement tick</text>
+  </g>
+  <g id="list">
+    <rect x="250.499" y="103" width="200.002" height="36" fill="white" stroke="black" />
+    <text x="350.5" y="125" text-anchor="middle">List spot and future products</text>
+  </g>
+  <g id="close">
+    <rect x="269" y="176" width="163.001" height="36" fill="white" stroke="black" />
+    <text x="350.5" y="198" text-anchor="middle">Close started products</text>
+  </g>
+  <g id="spot">
+    <rect x="153.002" y="259" width="184.997" height="36" fill="white" stroke="black" />
+    <text x="245.5" y="281" text-anchor="middle">Spot delivery hour ended?</text>
+  </g>
+  <g id="verify">
+    <rect x="188.001" y="342" width="114.998" height="36" fill="white" stroke="black" />
+    <text x="245.5" y="364" text-anchor="middle">verify_delivery</text>
+  </g>
+  <g id="delivered">
+    <rect x="20.0004" y="450" width="178.999" height="36" fill="white" stroke="black" />
+    <text x="109.5" y="472" text-anchor="middle">Record delivered, release</text>
+  </g>
+  <g id="default">
+    <rect x="217.499" y="450" width="200.002" height="36" fill="white" stroke="black" />
+    <text x="317.5" y="472" text-anchor="middle">Record default, refund buyer</text>
+  </g>
+  <g id="future">
+    <rect x="356.002" y="259" width="202.997" height="36" fill="white" stroke="black" />
+    <text x="457.5" y="281" text-anchor="middle">Four RT SPP intervals stored?</text>
+  </g>
+  <g id="settle">
+    <rect x="348.499" y="396" width="218.002" height="36" fill="white" stroke="black" />
+    <text x="457.5" y="418" text-anchor="middle">Cash += (reference - avg) x qty</text>
+  </g>
+  <g id="record">
+    <rect x="180.002" y="523" width="202.997" height="36" fill="white" stroke="black" />
+    <text x="281.5" y="545" text-anchor="middle">Append settled_positions row</text>
+  </g>
+</svg>

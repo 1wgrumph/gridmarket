@@ -1,0 +1,21 @@
+class: F5
+title: Order submission
+max_width: 2000
+max_height: 2000
+participants:
+  - id: trader
+    label: Trader
+  - id: api
+    label: API
+  - id: market
+    label: Market
+messages:
+  - from: trader
+    to: api
+    label: POST /v1/orders
+  - from: api
+    to: market
+    label: submit
+  - from: market
+    to: trader
+    label: fill
