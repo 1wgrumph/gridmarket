@@ -170,6 +170,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `GET /api/report/np3-565-cd/lf_by_model_weather_zone` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/np3-233-cd/hourly_res_outage_cap` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/np6-86-cd/shdw_prices_bnd_trns_const` | worker | ERCOT `{fields, data, _meta}` |
+| `GET /api/report/esr/charging_mw` | worker | ERCOT `{fields, data, _meta}` |
 | `GRIDMARKET_WORKER_URL`, `GRIDMARKET_WORKER_KEY` | data | Market Worker client settings |
 | `GRIDMARKET_DB` | foundation | SQLite path; default `/data/gridmarket.db` |
 

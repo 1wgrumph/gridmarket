@@ -208,6 +208,11 @@ to{background:transparent}}
 .activity-feed time{text-align:right}
 .tape-kind{font-size:11px;line-height:normal;font-weight:400;color:var(--info)}
 .tape-kind.fill{color:var(--up)}
+.esr-body{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:120px;padding:6px 18px 16px}
+.esr-value strong{display:block;font-size:28px;line-height:1.2;font-weight:500}
+.esr-value strong small{font-size:11px;color:var(--muted);font-weight:400}
+.esr-value>span{font-size:11px;color:var(--muted)}
+.esr-spark{width:120px;height:36px;flex:none}
 .empty{min-height:inherit;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;padding:20px}
 .loading{background:repeating-linear-gradient(0deg,transparent 0 30px,var(--secondary) 30px 31px)}
 .page-footer{display:flex;justify-content:space-between;gap:20px;padding:25px 0;color:var(--muted);font-size:11px;line-height:normal;font-weight:400}

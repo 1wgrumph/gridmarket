@@ -23,6 +23,7 @@ REPORTS = {
     "NP3-565-CD": "/api/report/np3-565-cd/lf_by_model_weather_zone",
     "NP3-233-CD": "/api/report/np3-233-cd/hourly_res_outage_cap",
     "NP6-86-CD": "/api/report/np6-86-cd/shdw_prices_bnd_trns_const",
+    "ESR": "/api/report/esr/charging_mw",
 }
 POLL_MINUTES = {
     "NP6-905-CD": 5,
@@ -30,6 +31,7 @@ POLL_MINUTES = {
     "NP3-565-CD": 60,
     "NP3-233-CD": 60,
     "NP6-86-CD": 5,
+    "ESR": 5,
     "NWS-TEMP": 60,
     "NWS-ALERTS": 5,
 }
@@ -213,7 +215,44 @@ def parse_snapshot(payload: dict) -> None:
     stats.snapshot_age_s = max(0, (datetime.now(UTC) - datetime.fromisoformat(at)).total_seconds())
 
 
+_ESR_TIMES = ("timestamp", "scedtimestamp", "intervalstart", "publishtime")
+_ESR_VALUES = (
+    "systemwideesrchargingmw",
+    "systemwidechargingmw",
+    "esrchargingmw",
+    "chargingmw",
+    "mw",
+    "value",
+)
+
+
+def parse_esr(payload: dict) -> None:
+    """Store the latest system-wide ESR charging MW row (negative = discharging)."""
+    fields = payload.get("fields") or []
+    rows = payload.get("data") or []
+    latest: tuple[str, float, str] | None = None
+    for row in rows:
+        record = row if isinstance(row, Mapping) else dict(zip(fields, row))
+        norm = {
+            "".join(ch for ch in str(key).lower() if ch.isalnum()): val
+            for key, val in record.items()
+        }
+        value = next((norm[name] for name in _ESR_VALUES if norm.get(name) is not None), None)
+        if value is None:
+            continue
+        stamp = next((norm[name] for name in _ESR_TIMES if norm.get(name) is not None), None)
+        stamp = str(stamp) if stamp is not None else datetime.now(UTC).isoformat()
+        published = str(record.get("publishTime", stamp))
+        if latest is None or stamp >= latest[0]:
+            latest = (stamp, float(value), published)
+    if latest is not None:
+        _store("ESR", "ERCOT", latest[0], 1, latest[1], "MW", latest[2])
+
+
 def parse_report(report: str, payload: dict) -> None:
+    if report == "ESR":
+        parse_esr(payload)
+        return
     fields = payload["fields"]
     records = [dict(zip(fields, row, strict=True)) for row in payload["data"]]
     loads: dict[str, float] = {}
@@ -305,6 +344,10 @@ async def _poll() -> None:
     complete = True
     async with httpx.AsyncClient(base_url=base, timeout=20) as client:
         for report, path in [(None, "/api/snapshot"), *REPORTS.items()]:
+            # ESR rides a separate API product/key; opt in per deployment so fleets
+            # without the ESR key don't burn retry budget on a 503 every cycle.
+            if report == "ESR" and os.getenv("GRIDMARKET_ESR", "off") == "off":
+                continue
             report_key = report or "SNAPSHOT"
             stamp_key = (str(signals._path()), report_key)
             minutes = POLL_MINUTES.get(report_key, 5)

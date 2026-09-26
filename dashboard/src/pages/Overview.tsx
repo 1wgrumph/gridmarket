@@ -17,6 +17,7 @@ const dateFormat = central({ day: 'numeric', month: 'short', year: 'numeric' });
 /** Backend timestamps are ISO 8601 or SQLite UTC text ("YYYY-MM-DD HH:MM:SS"). */
 const parseTime = (value: string) => Date.parse(value.includes('T') ? value : `${value.replace(' ', 'T')}Z`);
 const usd = (value: number) => `${value < 0 ? '−' : ''}$${Math.abs(value).toFixed(Math.abs(value) < 1 && value !== 0 ? 4 : 2)}`;
+const mw = (value: number) => `${value < 0 ? '−' : ''}${Math.abs(value).toLocaleString('en-US', { maximumFractionDigits: 1 })}`;
 const upperZones = ['AEN', 'CPS', 'LCRA', 'RAYBN'];
 const zoneTitle = (zone: string) => {
   const name = zoneName(zone);
@@ -29,6 +30,17 @@ function StaleTag({ res }: { res: Resource }) {
 }
 function Empty({ loading, label = 'No observations yet' }: { loading: boolean; label?: string }) {
   return <div className={`empty ${loading ? 'loading' : ''}`}>{loading ? 'Connecting to the exchange…' : label}</div>;
+}
+
+function EsrSparkline({ points }: { points: number[] }) {
+  if (!points.length) return null;
+  const w = 120, h = 36;
+  const min = Math.min(...points), span = Math.max(...points) - min || 1;
+  const coords = points.map((v, i) => [i / Math.max(1, points.length - 1) * w, h - 4 - (v - min) / span * (h - 8)] as const);
+  return <svg className="esr-spark" viewBox={`0 0 ${w} ${h}`} role="img" aria-label={`Recent battery charging: ${points.length} readings, latest ${points[points.length - 1]} MW.`}>
+    {coords.length > 1 && <polyline points={coords.map(([x, y]) => `${x},${y}`).join(' ')} fill="none" stroke="var(--accent)" strokeWidth="2"/>}
+    {coords.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2" fill="var(--accent)"/>)}
+  </svg>;
 }
 
 function BookRows({ levels, side, max }: { levels: ProductDetail['orders']; side: 'ask' | 'bid'; max: number }) {
@@ -83,6 +95,8 @@ export default function Overview() {
   const zones = [...new Set([...(predictions.data ?? []).map(p => p.zone), ...(signals.data ?? []).map(s => s.zone)])]
     .sort((a, b) => (scoreOf(b) ?? -1) - (scoreOf(a) ?? -1));
   const signalsByZone = groupBy(signals.data ?? [], s => s.zone);
+  const esr = (signals.data ?? []).filter(s => s.report_id === 'ESR').sort((a, b) => a.published_at < b.published_at ? -1 : 1);
+  const latestEsr = esr[esr.length - 1];
   const trades = (history.data ?? []).map(t => ({ at: parseTime(t.created_at), price: t.price_cents / 100 })).sort((a, b) => a.at - b.at);
   const anomalies = (status.data?.anomalies ?? []) as { id?: string; kind?: string; detail?: string | null }[];
   const providerName = (id: string) => providers.data?.find(p => p.id === id)?.display_name ?? id;
@@ -194,8 +208,18 @@ export default function Overview() {
           </li>)}</ul>
         </div>) : <Empty loading={activity.loading} label="No activity yet"/>}
       </Panel>
+      <Panel title="Texas batteries charging now" index="08" className="esr-panel" busy={signals.loading} meta={<><StaleTag res={signals}/><span>ESR · MW</span></>}>
+        {latestEsr ? <div className="esr-body">
+          <div className="esr-value">
+            <strong className="num">{mw(latestEsr.value)} <small>MW</small></strong>
+            <span>{latestEsr.value < 0 ? 'discharging to the grid' : latestEsr.value > 0 ? 'charging from the grid' : 'idle'}{latestEsr.stale && <> · <span className="stale">Stale</span></>}</span>
+          </div>
+          <EsrSparkline points={esr.map(s => s.value)}/>
+        </div> : <div className="esr-body"><Empty loading={signals.loading} label="Battery data not yet available"/></div>}
+        <div className="panel-end"><span>System-wide · ERCOT</span><span>{latestEsr ? <time className="num" dateTime={latestEsr.published_at} title={new Date(latestEsr.published_at).toLocaleString()}>{clockFormat.format(new Date(latestEsr.published_at))}</time> : 'Awaiting first poll'}</span></div>
+      </Panel>
       <section className="panel judge-panel" aria-labelledby="judge-title">
-        <p className="eyebrow">08 / SANDBOX</p>
+        <p className="eyebrow">09 / SANDBOX</p>
         <h2 id="judge-title">Trade it yourself<span className="title-period">.</span></h2>
         <p>Developers get a sandbox key and <strong>$1,000</strong> of simulated funds. Orders show up on this page within 2 s.</p>
         <code className="judge-code">client.buy("FLEX-LZ_HOUSTON-18", 2)</code>

@@ -1,5 +1,5 @@
 // ercot-hackathon — Cloudflare Worker proxy for the ERCOT Public Data API
-// Secrets (set with `wrangler secret put`): ERCOT_USERNAME, ERCOT_PASSWORD, ERCOT_SUBSCRIPTION_KEY, MARKET_KEY
+// Secrets (set with `wrangler secret put`): ERCOT_USERNAME, ERCOT_PASSWORD, ERCOT_SUBSCRIPTION_KEY, ERCOT_ESR_SUBSCRIPTION_KEY, MARKET_KEY
 
 import { buildSnapshot } from "./snapshot.js";
 
@@ -11,7 +11,13 @@ const TOKEN_KEY = "ercot:id_token";
 const TOKEN_TTL = 55 * 60; // ERCOT ID tokens last 60 min and can't be refreshed
 const DATA_TTL = 10 * 60; // cache report responses for 10 min
 
-// Only these five reports may be proxied; anything else under /api/report/ is 404.
+// ESR charging is a separate API product with its own subscription key and base.
+const ESR_ROUTE = "/api/report/esr/charging_mw";
+const ESR_API_BASE = "https://api.ercot.com/api/public-data";
+const ESR_PATH = "/rptesr-m/4_sec_esr_charging_mw";
+const ESR_TTL = 5 * 60; // cache ESR responses for 5 min
+
+// Only these five reports plus the ESR route may be proxied; anything else under /api/report/ is 404.
 const ALLOWED_REPORTS = new Set([
   "/api/report/np6-905-cd/spp_node_zone_hub",
   "/api/report/np4-190-cd/dam_stlmnt_pnt_prices",
@@ -70,8 +76,9 @@ async function getToken(env, force = false) {
   return data.id_token;
 }
 
-async function ercotGet(env, path, search) {
-  const url = `${API_BASE}${path}${search || ""}`;
+async function ercotGet(env, path, search, opts = {}) {
+  const base = opts.base || API_BASE;
+  const url = `${base}${path}${search || ""}`;
   const cacheKey = `data:${path}${search || ""}`;
   const hit = await env.CACHE.get(cacheKey);
   if (hit) return json(JSON.parse(hit), 200, { "x-cache": "HIT" });
@@ -85,7 +92,7 @@ async function ercotGet(env, path, search) {
     fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Ocp-Apim-Subscription-Key": env.ERCOT_SUBSCRIPTION_KEY,
+        "Ocp-Apim-Subscription-Key": opts.subKey || env.ERCOT_SUBSCRIPTION_KEY,
         Accept: "application/json",
       },
     });
@@ -100,7 +107,7 @@ async function ercotGet(env, path, search) {
     body = { raw: text };
   }
   if (res.ok) {
-    await env.CACHE.put(cacheKey, JSON.stringify(body), { expirationTtl: DATA_TTL });
+    await env.CACHE.put(cacheKey, JSON.stringify(body), { expirationTtl: opts.ttl || DATA_TTL });
   }
   return json(body, res.status, { "x-cache": "MISS" });
 }
@@ -160,12 +167,18 @@ export default {
           worker: "ercot-hackathon",
           secretsMissing: missing,
           tokenCached: Boolean(await env.CACHE.get(TOKEN_KEY)),
+          esrKey: Boolean(env.ERCOT_ESR_SUBSCRIPTION_KEY),
         });
       }
 
       // Public config for the views' market feed; the owner sets MARKET_URL at deploy.
       if (p === "/api/config") {
         return json({ MARKET_URL: env.MARKET_URL || null });
+      }
+
+      // The ESR route alone needs the ESR key; every other route ignores it.
+      if (p === ESR_ROUTE && !env.ERCOT_ESR_SUBSCRIPTION_KEY) {
+        return json({ error: "Worker secrets not set", secretsMissing: ["ERCOT_ESR_SUBSCRIPTION_KEY"] }, 503);
       }
 
       if (p.startsWith("/api/")) {
@@ -212,6 +225,15 @@ export default {
       // List all EMIL products
       if (p === "/api/products") {
         return await ercotGet(env, "", url.search);
+      }
+
+      // ESR charging (separate API product): same auth and limiters, 5 min cache.
+      if (p === ESR_ROUTE) {
+        return await ercotGet(env, ESR_PATH, url.search, {
+          base: ESR_API_BASE,
+          subKey: env.ERCOT_ESR_SUBSCRIPTION_KEY,
+          ttl: ESR_TTL,
+        });
       }
 
       // Allowlisted reports only: /api/report/<emil-id>/<report>
