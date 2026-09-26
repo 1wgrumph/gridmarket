@@ -192,6 +192,23 @@
         "DEC-GM-017",
         "DEC-GM-004"
       ]
+    },
+    {
+      "id": "DEC-GM-021",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T01:38:44Z",
+      "source": "Owner choice in chat (Hybrid) after review of teammate branch origin/jordaaan @ bae0a16",
+      "decision": "Hybrid architecture. Jordan Hill's Cloudflare Worker (ercot-hackathon/: ERCOT Azure B2C auth, /api/snapshot with demand, hub RT SPP, DAM HB_NORTH and DART, SCED lambda and adder and headroom, wind and solar actual vs forecast, NP4-722 weather-zone temperatures, 3 baseline probability checks, plus 3D views at /, /diagram/, /planet/) is the ERCOT data edge and the visualization lane, owned by Jordan. The Python/FastAPI market consumes /api/snapshot as its Market Data Service input, and market activity is exposed for his views. ERCOT credentials are held by Jordan as Worker secrets, which amends DEC-GM-007's owner-registered-key assumption. His Worker is publicly hosted on his Cloudflare account; the market stays on spectre-dev behind a tunnel (DEC-GM-009).",
+      "required_fixes": [
+        "Security: /api/report/* is an open proxy with CORS * and ?fresh bypasses the snapshot cache, so any caller can exhaust the ERCOT 30 req/min limit during the demo. Add a report allowlist and a rate limit or key on fresh and proxy routes.",
+        "Hackathon rule (DEC-GM-020): the 'Jev' decision engine referenced in the views may appear only if it is code written during the hackathon or open source for at least 2 weeks; the baseline checks are compliant."
+      ],
+      "amends": [
+        "DEC-GM-007",
+        "DEC-GM-009",
+        "DEC-GM-010",
+        "DEC-GM-017"
+      ]
     }
   ],
   "stages": {
@@ -938,7 +955,8 @@
       "DEC-GM-012 partial supersession",
       "DEC-GM-018",
       "DEC-GM-019",
-      "DEC-GM-020"
+      "DEC-GM-020",
+      "DEC-GM-021"
     ],
     "action": "Dispatch planning_and_design delta when the running P&D session returns"
   }
