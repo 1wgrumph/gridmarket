@@ -42,6 +42,7 @@ export default function Shell({ children }: { children: ReactNode }) {
   const fixtures = import.meta.env.VITE_FIXTURES === '1';
   const latest = signals.data?.reduce<string | undefined>((max, s) => !max || s.published_at > max ? s.published_at : max, undefined);
   const stale = signals.data?.filter(s => s.stale).length ?? 0;
+  const path = route.split('?')[0] || '#/';
   const freshness = signals.error ? 'Stale · connection lost'
     : latest ? `Published ${publishFormat.format(new Date(latest))}${stale ? ` · ${stale} stale` : ''}`
     : 'Publish time unavailable';
@@ -56,7 +57,7 @@ export default function Shell({ children }: { children: ReactNode }) {
         <div id="sidebar-content" className={`sidebar-content ${menu ? 'is-open' : ''}`}>
           <p className="eyebrow nav-caption">THE EXCHANGE</p>
           <nav aria-label="Primary">{nav.map(([href, label, number]) => {
-            const current = href === '#/' ? route === '#/' : route === href || route.startsWith(`${href}/`);
+            const current = href === '#/' ? path === '#/' : path === href || path.startsWith(`${href}/`);
             return <a key={href} href={href} className={current ? 'selected' : ''} aria-current={current ? 'page' : undefined}><span className="nav-number">{number}</span>{label}{current && <span className="nav-arrow"><Icon name="up-right"/></span>}</a>;
           })}</nav>
           <div className="sidebar-bottom">
@@ -77,7 +78,7 @@ export default function Shell({ children }: { children: ReactNode }) {
             </SegmentedControl>
           </div>
         </header>
-        <main id="main" tabIndex={-1}>{children}{route !== '#/' && <Disclosures/>}</main>
+        <main id="main" tabIndex={-1}>{children}{path !== '#/' && <Disclosures/>}</main>
         <footer className="page-footer"><span>Real grid context. Simulated energy markets.</span><span>GridMarket</span></footer>
       </div>
     </div>

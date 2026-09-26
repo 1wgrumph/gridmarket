@@ -75,6 +75,12 @@ function groupBy<T>(rows: T[], key: (row: T) => string) {
   return groups;
 }
 
+/** God's Eye deep link `#/?zone=<LZ_ZONE>`; unknown values are ignored. */
+const zoneFromHash = () => {
+  const zone = new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('zone');
+  return zone && mapZones.includes(zone) ? zone : null;
+};
+
 export default function Overview() {
   const signals = useResource<Signal[]>('/v1/signals');
   const history = useResource<Trade[]>('/v1/market/history');
@@ -89,9 +95,21 @@ export default function Overview() {
   const firstError = resources.find(r => r.error)?.error;
   const [paused, setPaused] = useState(false);
 
-  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+  const [selectedZone, setSelectedZone] = useState<string | null>(zoneFromHash);
   const zoneTrigger = useRef<SVGElement | null>(null);
-  const closeZone = () => { setSelectedZone(null); zoneTrigger.current?.focus({ preventScroll: true }); };
+  const closeZone = () => {
+    setSelectedZone(null);
+    zoneTrigger.current?.focus({ preventScroll: true });
+    const q = window.location.hash.indexOf('?');
+    if (q >= 0) {
+      const params = new URLSearchParams(window.location.hash.slice(q + 1));
+      if (params.has('zone')) {
+        params.delete('zone');
+        const rest = params.toString();
+        window.location.hash = window.location.hash.slice(0, q) + (rest ? `?${rest}` : '');
+      }
+    }
+  };
   const hasPrices = signals.data?.some(s => s.report_id === 'NP6-905-CD' && mapZones.includes(s.zone));
   const lead = predictions.data?.reduce<Prediction | undefined>((best, p) => !best || p.score > best.score ? p : best, undefined);
   const delivery = lead ? hourFormat.format(new Date(lead.delivery_hour)) : '—';
