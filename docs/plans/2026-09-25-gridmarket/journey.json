@@ -1180,6 +1180,13 @@
       "decided_by": "Orchestrator (delegate)",
       "decision": "S18-D stop root-caused by the Orchestrator: lane-jev's R4-10 change runs sync scheduler ticks via asyncio.to_thread, so the first health.tick can override a raw provider_health write in test_seit_gm_prov_04 (bisected: 4/4 pass at 8eba27e, 3/4 fail at a93bfb8; 6/6 pass on phase 2). Repair S43b on lane-jev: owner-declared outages win over heartbeat ticks, deterministic startup under test, and the test uses the real outage path. Assembly merge rule for main.py repeat(): keep R4-10's to_thread for sync ticks inside S78's per-tick exception isolation. Posted as DIR-PS-16.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-135",
+      "decided_at": "2026-09-26T18:28:00-05:00",
+      "decided_by": "Orchestrator (delegate)",
+      "decision": "Standing assembly authority (DIR-PS-17): the Integration Engineer may fix purely mechanical, behaviour-free merge fallout on integration-stretch in a separate 'assembly:' commit (ruff import sorting/format on merged files, duplicated CONTRACTS.md rows, lockfile regeneration by the Makefile's own frozen rules) and rerun the gate; behaviour or assertion changes still stop the assembly. First use: Ruff I001 in backend/tests/test_quant.py:244 after the S41 quant merge.",
+      "reversible": true
     }
   ],
   "stages": {
