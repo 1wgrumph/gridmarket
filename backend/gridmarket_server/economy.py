@@ -12,7 +12,7 @@ from . import population
 
 
 def _db() -> sqlite3.Connection:
-    return sqlite3.connect(Path(os.getenv("GRIDMARKET_DB", "/data/gridmarket.db")))
+    return sqlite3.connect(Path(os.getenv("GRIDMARKET_DB") or "/data/gridmarket.db"))
 
 
 def _dormant(conn: sqlite3.Connection, account_id: str, employed: bool) -> bool:
@@ -85,12 +85,13 @@ def tick(tx: Any = None, now: Any = None) -> None:
 
 def rebuild(conn: sqlite3.Connection) -> None:
     row = conn.execute("SELECT value FROM bot_meta WHERE key = 'master_seed'").fetchone()
-    master = row[0] if row else os.getenv("GRIDMARKET_BOT_MASTER_SEED", "20260926")
-    for bot_id, account_id, index in conn.execute(
-        "SELECT id, account_id, bot_index FROM bots"
+    master = row[0] if row else os.getenv("GRIDMARKET_BOT_MASTER_SEED") or "20260926"
+    for bot_id, _account_id, index, raw in conn.execute(
+        "SELECT id, account_id, bot_index, profile_json FROM bots"
     ).fetchall():
-        spec = population.sample(master, index, 1)[0]
-        profile = asdict(spec)
+        cohort = json.loads(raw).get("cohort_seed") if raw else None
+        spec = population.sample(master, index, 1, seed=cohort)[0]
+        profile = asdict(spec) | {"cohort_seed": cohort}
         conn.execute(
             "UPDATE bots SET bot_type = ?, provider_id = ?, profile_json = ? WHERE id = ?",
             (spec.bot_type, spec.provider_id, json.dumps(profile), bot_id),

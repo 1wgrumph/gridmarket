@@ -17,7 +17,6 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
-import httpx
 import pytest
 import uvicorn
 from fastapi.testclient import TestClient
@@ -29,9 +28,9 @@ if str(SDK) not in sys.path:
 if str(ROOT / "backend") not in sys.path:
     sys.path.insert(0, str(ROOT / "backend"))
 
-from gridmarket import Client, GridMarketError  # noqa: E402
+from gridmarket import GridMarketError
 
-from gridmarket_server import bots, economy, health, main, population  # noqa: E402
+from gridmarket_server import bots, economy, health, main, population
 
 SCHEMA = ROOT / "backend/gridmarket_server/schema.sql"
 SECRET = "s77-bot-secret"
@@ -86,9 +85,7 @@ def test_s77_env_example_comments_defaulted_keys() -> None:
 def test_s77_gateway_peer_with_key_may_act(app_env, path: str) -> None:
     body = {"count": 1} if path.endswith("bots") else {"active": True}
     with TestClient(main.create_app(), client=GATEWAY) as client:
-        response = client.post(
-            path, json=body, headers={"Authorization": f"Bearer {ADMIN}"}
-        )
+        response = client.post(path, json=body, headers={"Authorization": f"Bearer {ADMIN}"})
         assert response.status_code == 200, response.text
 
 
@@ -233,9 +230,7 @@ def test_s77_score_follower_buys_only_high_conviction() -> None:
     products = _products()
     row = {"bot_index": 4, "bot_type": "score follower"}
     profile = _profile("score follower")
-    high = bots.strategy_order(
-        row, profile, products, _predictions("HIGH", 0.9, 0.5), [], {}, 0
-    )
+    high = bots.strategy_order(row, profile, products, _predictions("HIGH", 0.9, 0.5), [], {}, 0)
     assert high is not None and high["side"] == "buy" and high["product_id"].startswith("FLEX-")
     assert bots.strategy_order(row, profile, products, _predictions(), [], {}, 0) is None
 
@@ -355,7 +350,9 @@ def test_s77_rebuild_replays_cohort_seed(tmp_path: Path, monkeypatch: pytest.Mon
     assert rebuilt["cohort_seed"] == "cohort-seed"
 
 
-def test_s77_startup_rebuilds_spawned_cohort(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_s77_startup_rebuilds_spawned_cohort(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     db_path = tmp_path / "s77-restart.db"
     monkeypatch.setenv("GRIDMARKET_DB", str(db_path))
     monkeypatch.setenv("GRIDMARKET_NWS", "off")

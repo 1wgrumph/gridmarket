@@ -39,7 +39,8 @@ BIAS, WEIGHT = -3.0, 2.0
 
 
 def _path() -> Path:
-    return Path(os.getenv("GRIDMARKET_DB", "/data/gridmarket.db"))
+    # Health probes run in fresh processes, so empty means unset here too.
+    return Path(os.getenv("GRIDMARKET_DB") or "/data/gridmarket.db")
 
 
 @contextmanager
@@ -176,25 +177,46 @@ def _error(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse({"error": {"code": code, "message": message}}, status_code=status)
 
 
+_ADMIN_NETS = (
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("fd00::/8"),
+)
+
+
 def _local(host: str) -> bool:
-    if host == "testclient":  # Starlette's in-process TestClient, never a network peer
-        return True
+    """Loopback or a compose-subnet peer (the bridge gateway); see api.admin_local."""
     try:
-        return ipaddress.ip_address(host).is_loopback
+        address = ipaddress.ip_address(host)
     except ValueError:
         return False
+    return address.is_loopback or any(address in net for net in _ADMIN_NETS)
 
 
 def _admin_denied(request: Request) -> JSONResponse | None:
-    key = os.getenv("GRIDMARKET_ADMIN_KEY", "")
-    given = request.headers.get("authorization", "")
-    if not key or not hmac.compare_digest(given.encode(), f"Bearer {key}".encode()):
-        return _error(401, "UNAUTHENTICATED", "Admin key required")
     if request.headers.get("cf-connecting-ip") or not _local(
         request.client.host if request.client else ""
     ):
         return _error(403, "FORBIDDEN", "Admin routes are local only")
+    key = os.getenv("GRIDMARKET_ADMIN_KEY", "")
+    given = request.headers.get("authorization", "")
+    if not key or not hmac.compare_digest(
+        given.encode("utf-8", "ignore"), f"Bearer {key}".encode()
+    ):
+        return _error(401, "UNAUTHENTICATED", "Admin key required")
     return None
+
+
+def db_writable() -> bool:
+    """A real write, rolled back: False when the DB is read-only or the disk is full."""
+    try:
+        with _db(timeout=2.0) as db:
+            db.execute("INSERT OR IGNORE INTO provider_health (provider_id) VALUES ('_probe')")
+            db.rollback()
+    except sqlite3.Error:
+        return False
+    return True
 
 
 @router.post("/v1/admin/providers/{id}/outage")

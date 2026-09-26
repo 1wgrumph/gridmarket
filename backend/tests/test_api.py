@@ -50,7 +50,7 @@ def api(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("GRIDMARKET_ADMIN_KEY", "gm_s02_admin_local")
     monkeypatch.setenv("GRIDMARKET_BOT_MASTER_SEED", "s02-api")
     monkeypatch.setenv("GRIDMARKET_BOT_SECRET", "s02-local-test-secret")
-    with TestClient(main.create_app()) as client:
+    with TestClient(main.create_app(), client=("127.0.0.1", 0)) as client:
         yield path, client
 
 

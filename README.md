@@ -24,7 +24,7 @@ Requirements: Docker with Compose 2.24 or later.
 
 ```sh
 cp .env.example .env    # fill in GRIDMARKET_BOT_SECRET at minimum
-docker compose -f deploy/compose.yaml up -d --build
+docker compose --env-file .env -f deploy/compose.yaml up -d --build
 curl http://127.0.0.1:8000/v1/market/status
 ```
 
@@ -34,13 +34,15 @@ curl http://127.0.0.1:8000/v1/market/status
   from one image, non-root (uid 10001), read-only root filesystem, SQLite in
   the project volume `gm-data`.
 - The HTTP port binds to `127.0.0.1` only (`GRIDMARKET_PORT`, default 8000).
+  `--env-file .env` makes the `GRIDMARKET_PORT` in `.env` effective; without
+  it, set `GRIDMARKET_PORT` in the shell.
   Public access goes through an outbound Cloudflare named tunnel; no inbound
   port is opened.
 - `GM_ENV_FILE` points compose at another env file (default `../.env`,
   relative to `deploy/`).
 
 Local development without Docker: `make setup`, then
-`GRIDMARKET_DB=./gridmarket.db uv run --project backend uvicorn gridmarket_server.main:app`
+`GRIDMARKET_DB=./gridmarket.db uv run --project backend --frozen uvicorn gridmarket_server.main:app`
 and `npm --prefix dashboard run dev`. Checks: `make lint`, `make test-all`,
 `make smoke SMOKE_PROJECT=<name> SMOKE_PORT=<port>`.
 
