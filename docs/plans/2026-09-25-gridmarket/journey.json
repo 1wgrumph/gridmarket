@@ -745,6 +745,14 @@
       "decision": "(1) Design and pages-v2 merge as ONE assembly step: revert-of-revert 58a7f89, merge pages-v2 bf9252f, then gate. Design alone cannot build against the S51 pages (the v2 Panel requires index). (2) The attempt-7 market failures (PRODUCT_CLOSED in 4 test_market tests) are a time-of-day flake: SPOT_HOUR = floor(now+1h) at import, so a test-all that crosses the top of the hour sees its spot product close. New slice S05-flake on lane-market2 after S54: compute the fixture hours so spot is at least 1h ahead for the whole run, keeping every assertion (DEC-GM-061 test-data rule). The same audit covers every backend test that derives hours from now().",
       "rationale": "The attempt-7 test-all started at about 09:59:50 and the spot delivery hour 10:00 began mid-run. The same tree passed at 09:30 and passes on the 10:02 revert run. Design touches no backend file.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-076",
+      "decided_at": "2026-09-26T10:10:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "The S53 write set adds dashboard/src/styles.css, limited to additive page-scoped rules using the existing tokens. The S53 packet already authorized this, but implementation.json was not updated, so the IE9 write-set contract check failed correctly.",
+      "rationale": "This is a manifest omission by the Orchestrator. S53 only adds lines to styles.css (0 deletions), so it is additive as authorized.",
+      "reversible": true
     }
   ],
   "stages": {

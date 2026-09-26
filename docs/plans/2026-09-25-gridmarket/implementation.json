@@ -5162,7 +5162,7 @@
         "assurance": "phase",
         "coverage_assist": "enabled-not-required"
       },
-      "notes": "DEC-GM-062 owner design v2; guidance in the Orchestrator's local ops/guidance/design-v2.md.",
+      "notes": "DEC-GM-062 owner design v2; guidance in the Orchestrator's local ops/guidance/design-v2.md. DEC-GM-076: additive page-scoped rules in styles.css using existing tokens.",
       "id": "S53",
       "role": "Product Implementer",
       "goal": "Restyle the Market, Predictions, Bots, Bot profile and Sandbox pages to the design v2 tokens and components after the lane-sync of the S52b exit; S50 tests stay green; visual review.",
@@ -5172,7 +5172,8 @@
       "worktree": "/home/spectre/alphazede/worktrees/base-gridmarket-pages",
       "branch_base": "lane-pages after the lane-sync of the S52b exit",
       "write_set": [
-        "dashboard/src/pages/"
+        "dashboard/src/pages/",
+        "dashboard/src/styles.css"
       ],
       "command_ids": [
         "CMD-TEST-DASH",
