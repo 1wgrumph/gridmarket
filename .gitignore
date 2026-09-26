@@ -1,0 +1,12 @@
+.env
+*.db
+*.db-shm
+*.db-wal
+node_modules/
+dashboard/dist/
+backend/.venv/
+rust/matching_core/target/
+__pycache__/
+.pytest_cache/
+backend/mutants/
+.coverage
