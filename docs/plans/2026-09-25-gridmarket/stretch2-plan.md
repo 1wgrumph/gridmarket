@@ -28,3 +28,7 @@ C7 Battery activity timeline (S73, backend + Worker + dashboard, lane esr after 
 - S71 replay page: lane replay-ui after S69. S72 earn-vs-backup: lane replay-ui after S70's estimate endpoint (contract-first).
 - S73 battery timeline: lane esr after S66.
 - All land with the stretch assembly S18 (review + Test Engineering + one repair). Phase 2 merge: each lane merges origin/main after landed/2 before its exit.
+
+## Amendments A1-A15 (DEC-GM-113, binding)
+The independent planning review's 15 findings are adopted verbatim: ops/plans/stretch2-amendments.md. Each "Exact replacement" there supersedes the matching text above (A1=R1/R7 sourcing, A2=C1 data selection, A3=R2 availability, A4=R3 time and money, A5=R4 battery equations, A6=C2 decisions and policies, A7=C3 procurement and commitments, A8=C3 ledger, A9=disruptions, A10=C4 live decisions advisory only, A11=estimate and slider maths, A12=ESR sources and history, A13=R5 determinism and API bounds, A14=R6 demo claims, A15=R7 gates and order). Where this file and the amendments differ, the amendments win.
+Scope choice (A10): live bot decisions are advisory and not executed; battery physics, dispatch and money are modelled in the replay (C3). Live execution would need a separate owner decision.
