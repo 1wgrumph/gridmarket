@@ -272,3 +272,119 @@ def test_SEIT_GM_ECON_04_restart_rebuild(tmp_path: Path, monkeypatch) -> None:
         bool(conn.execute("SELECT dormant FROM bots WHERE bot_index = 0").fetchone()[0])
         is expected_dormant
     )
+
+
+def test_phase1b_F7_dormancy_uses_available_cash(tmp_path: Path, monkeypatch) -> None:
+    """Cash 150 with 100 held for an open buy leaves 50 available: dormant."""
+    path, conn = _db(tmp_path)
+    monkeypatch.setenv("GRIDMARKET_DB", str(path))
+    _account(conn, "acct-held", 150)
+    _account(conn, "acct-filled", 150)
+    _bot(conn, "acct-held", 0, {"employed": False, "bot_type": "saver"})
+    _bot(conn, "acct-filled", 1, {"employed": False, "bot_type": "saver"})
+    conn.execute(
+        "INSERT INTO products (id, symbol, zone, delivery_hour) "
+        "VALUES ('p1', 'LZ_HOUSTON-H', 'LZ_HOUSTON', '2026-09-26T00:00:00Z')"
+    )
+    conn.execute(
+        "INSERT INTO orders (id, account_id, product_id, side, quantity, remaining_qty,"
+        " price_cents, status, created_at) VALUES ('o-hold', 'acct-held', 'p1', 'buy',"
+        " 1, 1, 100, 'open', '2026-01-01T00:00:00Z')"
+    )
+    conn.execute(
+        "INSERT INTO orders (id, account_id, product_id, side, quantity, remaining_qty,"
+        " price_cents, status, created_at) VALUES ('o-done', 'acct-filled', 'p1', 'buy',"
+        " 1, 0, 100, 'filled', '2026-01-01T00:00:00Z')"
+    )
+    conn.commit()
+    assert economy._dormant(conn, "acct-held", False) is True
+    assert economy._dormant(conn, "acct-filled", False) is False
+    economy.tick(conn, EPOCH + 1800)
+    conn.commit()
+    assert economy.stats("acct-held")["dormant"] is True
+    assert economy.stats("acct-filled")["dormant"] is False
+
+
+def test_phase1b_F8_short_marks_against_own_sells(tmp_path: Path, monkeypatch) -> None:
+    """Short 1 @ 40 marked at 80 nets 999.60 on 1000.00 cash."""
+    path, conn = _db(tmp_path)
+    monkeypatch.setenv("GRIDMARKET_DB", str(path))
+    _account(conn, "trader", 100_000)
+    _account(conn, "other-1", 0)
+    _account(conn, "other-2", 0)
+    conn.execute(
+        "INSERT INTO products (id, symbol, zone, delivery_hour) "
+        "VALUES ('p1', 'LZ_HOUSTON-H', 'LZ_HOUSTON', '2026-09-26T00:00:00Z')"
+    )
+    for order_id, account_id, side, price, created in (
+        ("o-sell", "trader", "sell", 40, "2026-01-01T00:00:00Z"),
+        ("o-buy", "other-1", "buy", 40, "2026-01-01T00:00:00Z"),
+        ("o-mark-buy", "other-2", "buy", 80, "2026-01-01T01:00:00Z"),
+        ("o-mark-sell", "other-1", "sell", 80, "2026-01-01T01:00:00Z"),
+    ):
+        conn.execute(
+            "INSERT INTO orders (id, account_id, product_id, side, quantity, remaining_qty,"
+            " price_cents, status, created_at) VALUES (?, ?, 'p1', ?, 1, 0, ?, 'filled', ?)",
+            (order_id, account_id, side, price, created),
+        )
+    conn.execute(
+        "INSERT INTO trades (id, product_id, buy_order_id, sell_order_id, quantity,"
+        " price_cents, created_at) VALUES ('t-open', 'p1', 'o-buy', 'o-sell', 1, 40,"
+        " '2026-01-01T00:00:00Z')"
+    )
+    conn.execute(
+        "INSERT INTO trades (id, product_id, buy_order_id, sell_order_id, quantity,"
+        " price_cents, created_at) VALUES ('t-mark', 'p1', 'o-mark-buy', 'o-mark-sell', 1,"
+        " 80, '2026-01-01T01:00:00Z')"
+    )
+    conn.execute(
+        "INSERT INTO positions (account_id, product_id, quantity) VALUES ('trader', 'p1', -1)"
+    )
+    conn.commit()
+    assert economy.stats("trader")["net_worth"] == pytest.approx(999.60)
+
+
+def test_phase1b_F6_balance_history_per_fill_and_deposit(tmp_path: Path, monkeypatch) -> None:
+    """stats serves cash after each fill and deposit in ledger order; balance keeps shape."""
+    path, conn = _db(tmp_path)
+    monkeypatch.setenv("GRIDMARKET_DB", str(path))
+    _account(conn, "trader", 14_060)
+    _account(conn, "other", 0)
+    conn.execute(
+        "INSERT INTO products (id, symbol, zone, delivery_hour) "
+        "VALUES ('p1', 'LZ_HOUSTON-H', 'LZ_HOUSTON', '2026-09-26T00:00:00Z')"
+    )
+    for order_id, account_id, side, quantity, price, created in (
+        ("o-buy", "trader", "buy", 2, 50, "2026-01-01T00:00:00Z"),
+        ("o-sell", "other", "sell", 2, 50, "2026-01-01T00:00:00Z"),
+        ("o-out", "trader", "sell", 1, 60, "2026-01-01T02:00:00Z"),
+        ("o-in", "other", "buy", 1, 60, "2026-01-01T02:00:00Z"),
+    ):
+        conn.execute(
+            "INSERT INTO orders (id, account_id, product_id, side, quantity, remaining_qty,"
+            " price_cents, status, created_at) VALUES (?, ?, 'p1', ?, ?, 0, ?, 'filled', ?)",
+            (order_id, account_id, side, quantity, price, created),
+        )
+    conn.execute(
+        "INSERT INTO trades (id, product_id, buy_order_id, sell_order_id, quantity,"
+        " price_cents, created_at) VALUES ('t-buy', 'p1', 'o-buy', 'o-sell', 2, 50,"
+        " '2026-01-01T00:00:00Z')"
+    )
+    conn.execute(
+        "INSERT INTO trades (id, product_id, buy_order_id, sell_order_id, quantity,"
+        " price_cents, created_at) VALUES ('t-sell', 'p1', 'o-in', 'o-out', 1, 60,"
+        " '2026-01-01T02:00:00Z')"
+    )
+    conn.execute(
+        "INSERT INTO deposits (id, account_id, amount_cents, reason, created_at)"
+        " VALUES ('dep-1', 'trader', 4000, 'pay', '2026-01-01T01:00:00Z')"
+    )
+    conn.commit()
+    report = economy.stats("trader")
+    assert report["balance_history"] == [
+        {"at": "2026-01-01T00:00:00Z", "balance": 100.0},
+        {"at": "2026-01-01T01:00:00Z", "balance": 140.0},
+        {"at": "2026-01-01T02:00:00Z", "balance": 140.6},
+    ]
+    assert report["balance"] == [100.6, 140.6]
+    assert report["balance"][-1] == pytest.approx(report["cash"])

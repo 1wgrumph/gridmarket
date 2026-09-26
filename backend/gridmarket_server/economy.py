@@ -19,7 +19,14 @@ def _dormant(conn: sqlite3.Connection, account_id: str, employed: bool) -> bool:
     if employed:
         return False
     cash = conn.execute("SELECT cash_cents FROM accounts WHERE id = ?", (account_id,)).fetchone()
-    if cash is None or cash[0] >= 100:
+    if cash is None:
+        return False
+    held = conn.execute(
+        "SELECT COALESCE(SUM(remaining_qty * price_cents), 0) FROM orders "
+        "WHERE account_id = ? AND status = 'open' AND side = 'buy'",
+        (account_id,),
+    ).fetchone()[0]
+    if cash[0] - held >= 100:
         return False
     capacity = conn.execute(
         "SELECT 1 FROM assets WHERE account_id = ? AND soc_kwh > min_reserve_kwh LIMIT 1",
@@ -96,7 +103,37 @@ def dormant_rate(conn: sqlite3.Connection) -> float:
     return dormant / total if total else 0.0
 
 
-def stats(account_id: str) -> dict[str, float | bool | int | list[float]]:
+def _balance_history(
+    conn: sqlite3.Connection, account_id: str, cash_cents: int
+) -> list[dict[str, str | float]]:
+    fills = conn.execute(
+        "SELECT t.created_at, t.id, CASE WHEN b.account_id = ? AND s.account_id = ? THEN 0 "
+        "WHEN s.account_id = ? THEN t.quantity * t.price_cents "
+        "ELSE -t.quantity * t.price_cents END FROM trades t "
+        "JOIN orders b ON b.id = t.buy_order_id JOIN orders s ON s.id = t.sell_order_id "
+        "WHERE b.account_id = ? OR s.account_id = ?",
+        (account_id, account_id, account_id, account_id, account_id),
+    ).fetchall()
+    events = [(created, ref, delta) for created, ref, delta in fills]
+    events += [
+        (created, ref, amount)
+        for created, ref, amount in conn.execute(
+            "SELECT created_at, id, amount_cents FROM deposits WHERE account_id = ?",
+            (account_id,),
+        )
+    ]
+    events.sort(key=lambda event: (event[0], event[1]))
+    running = cash_cents - sum(delta for _, _, delta in events)
+    history = []
+    for created, _, delta in events:
+        running += delta
+        history.append({"at": created, "balance": running / 100})
+    return history
+
+
+def stats(
+    account_id: str,
+) -> dict[str, float | bool | int | list[float] | list[dict[str, str | float]]]:
     with _db() as conn:
         account = conn.execute(
             "SELECT cash_cents FROM accounts WHERE id = ?", (account_id,)
@@ -131,9 +168,10 @@ def stats(account_id: str) -> dict[str, float | bool | int | list[float]]:
             ).fetchone()
             entry = conn.execute(
                 "SELECT SUM(t.quantity * t.price_cents), SUM(t.quantity) FROM trades t "
-                "JOIN orders o ON o.id = t.buy_order_id "
-                "WHERE o.account_id = ? AND t.product_id = ?",
-                (account_id, product_id),
+                "WHERE t.product_id = ? AND EXISTS (SELECT 1 FROM orders o "
+                "WHERE (o.id = t.buy_order_id OR o.id = t.sell_order_id) "
+                "AND o.account_id = ?)",
+                (product_id, account_id),
             ).fetchone()
             if mark and entry[1]:
                 unrealized += qty * (mark[0] - entry[0] / entry[1])
@@ -147,6 +185,7 @@ def stats(account_id: str) -> dict[str, float | bool | int | list[float]]:
         return {
             "cash": cash,
             "balance": [(account[0] - deposited) / 100, cash],
+            "balance_history": _balance_history(conn, account_id, account[0]),
             "trades": trade_count,
             "losses": len(losses),
             "loss_share": len(losses) / len(settled) if settled else 0.0,
