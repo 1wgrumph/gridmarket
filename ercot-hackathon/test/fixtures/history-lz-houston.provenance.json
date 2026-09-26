@@ -1,0 +1,8 @@
+{
+  "url": "<local backend>/v1/signals/history?report_id=NP3-565-CD&zone=LZ_HOUSTON&start=2026-09-26T22%3A00%3A00.000Z&end=2026-09-27T22%3A00%3A00.000Z",
+  "backend": "gridmarket/lane-esr 2bd168a (S81b), run locally with GRIDMARKET_NWS=off",
+  "retrieved_at": "2026-09-26T22:58:59.086118+00:00",
+  "sha256": "db7e628b9e20952d766a69be335d61de2bafb7eefc0c409c94b4cac027ccbc81",
+  "upstream": "ERCOT MIS NP3-565-CD public CSV cdr.00014837.0000000000000000.20260926.173000.LFMODWEATHERNP3565.csv (posted 2026-09-26 17:30 CT), served to the backend's poller in the Public API field shape; the backend rolled Coast up to LZ_HOUSTON",
+  "transformation": "None; exact response bytes."
+}

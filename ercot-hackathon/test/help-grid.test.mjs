@@ -1,25 +1,53 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { forecastHours, helpWindows, windowText, mwText, HOUR } from "../public/godseye/help-grid.js";
+import { forecastHours, historyPath, publishedText, shade, peakLabel, helpWindows, windowText, mwText, HOUR } from "../public/godseye/help-grid.js";
 
-// Existing NP3-565-CD corpus, with the backend's Coast -> Houston roll-up.
-const report = JSON.parse(readFileSync(new URL("../../backend/tests/fixtures/ercot/np3-565-cd.json", import.meta.url)));
-const coast = report.data.find(row => row[2] === "Coast");
-const signal = { report_id: "NP3-565-CD", zone: "LZ_HOUSTON", interval_start: "2026-09-26T14:00:00Z", interval_minutes: 60,
-  value: coast[3], unit: "MW", published_at: coast[4], fetched_at: coast[4], stale: false };
+// Exact /v1/signals/history response from a local lane-esr backend (see the provenance file).
+const history = JSON.parse(readFileSync(new URL("./fixtures/history-lz-houston.json", import.meta.url)));
+const clock = Date.parse(history[0].interval_start) + 58 * 60000;
 const now = Date.parse("2026-09-26T14:00:00Z");
 
-test("S81 sparse load feed never claims a 24-hour peak or fills missing hours", () => {
-  const forecast = forecastHours([signal], now);
-  assert.equal(forecast.hours.length, 24);
-  assert.equal(forecast.hours[23] - forecast.hours[0], 23 * HOUR);
-  assert.equal(forecast.zones.LZ_HOUSTON.values[0], 1001);
-  assert.equal(forecast.zones.LZ_HOUSTON.peak, null);
-  assert.equal(forecast.zones.LZ_HOUSTON.values[1], null);
-  assert.equal(mwText(forecast.zones.LZ_HOUSTON.values[1]), "Waiting for ERCOT");
-  assert.equal(forecastHours(null, now).zones.LZ_NORTH.peak, null);
-  assert.equal(forecastHours([{ ...signal, stale: true }], now).zones.LZ_HOUSTON.values[0], null);
+test("S81c full 24-hour history shades against the zone's own peak and names its hour", () => {
+  const forecast = forecastHours({ LZ_HOUSTON: history }, clock);
+  const houston = forecast.zones.LZ_HOUSTON;
+  assert.equal(forecast.hours[0], Date.parse(history[0].interval_start));
+  assert.deepEqual(houston.values, history.map(row => row.value));
+  assert.equal(houston.peak, Math.max(...history.map(row => row.value)));
+  assert.equal(houston.peakHour, Date.parse(history[houston.values.indexOf(houston.peak)].interval_start));
+  assert.equal(houston.published, "2026-09-26T17:30:00");
+  assert.equal(publishedText(houston.published), "Sep 26, 5:30 PM CT");
+  assert.equal(forecast.zones.LZ_NORTH.peak, null);
+  assert.equal(forecast.zones.LZ_NORTH.published, null);
+  assert.equal(shade(houston.peak, houston), 1);
+  assert.equal(shade(houston.low, houston), 0);
+  assert.equal(shade(null, houston), null);
+  assert.equal(shade(houston.values[0], forecast.zones.LZ_NORTH), null);
+  assert.equal(peakLabel(houston.peakHour), "Sun, 4 PM CDT");
+});
+
+test("S81c missing or stale hours never claim a 24-hour peak or fill values", () => {
+  const sparse = forecastHours({ LZ_HOUSTON: history.slice(1) }, clock).zones.LZ_HOUSTON;
+  assert.equal(sparse.values[0], null);
+  assert.equal(sparse.peak, null);
+  assert.equal(sparse.peakHour, null);
+  assert.equal(mwText(sparse.values[0]), "Waiting for ERCOT");
+  const stale = forecastHours({ LZ_HOUSTON: history.map((row, i) => i === 5 ? { ...row, stale: true } : row) }, clock).zones.LZ_HOUSTON;
+  assert.equal(stale.values[5], null);
+  assert.equal(stale.peak, null);
+  // After the hour rolls over, the old first hour drops out rather than shifting.
+  assert.equal(forecastHours({ LZ_HOUSTON: history }, clock + HOUR).zones.LZ_HOUSTON.peak, null);
+  assert.equal(forecastHours(null, clock).zones.LZ_HOUSTON.peak, null);
+  assert.equal(publishedText(null), null);
+});
+
+test("S81c history requests one 24-hour window from the current UTC hour", () => {
+  const url = new URL(historyPath("LZ_HOUSTON", clock), "http://market.test");
+  assert.equal(url.pathname, "/v1/signals/history");
+  assert.equal(url.searchParams.get("report_id"), "NP3-565-CD");
+  assert.equal(url.searchParams.get("zone"), "LZ_HOUSTON");
+  assert.equal(Date.parse(url.searchParams.get("start")), Date.parse(history[0].interval_start));
+  assert.equal(Date.parse(url.searchParams.get("end")) - Date.parse(url.searchParams.get("start")), 24 * HOUR);
 });
 
 test("S81 missing predictions produce no windows and labels use Central time", () => {
