@@ -97,7 +97,11 @@ def score_hour(
         "load-pressure": f"Load {load_mw:g} MW vs {load_mean_mw:g} MW 24-hour mean",
         "outage-pressure": f"Outage capacity {outage_mw:g} MW vs {outage_median_mw:g} MW median",
         "congestion-pressure": f"RT vs hub spread plus constraints {', '.join(f'{name} {value:g}' for name, value in shadow_prices.items()) or 'none'}",
-        "heat-stress": f"Temperature {temperature_f:g} F above 85 F threshold",
+        "heat-stress": (
+            f"Temperature {temperature_f:g} F above 85 F threshold"
+            if temperature_f > 85
+            else f"Temperature {round(temperature_f)} F at or below 85 F threshold"
+        ),
         "peak-period": "NERC 5x16 on-peak hour" if on_peak(hour) else "NERC off-peak hour",
         "weather-alert": f"{alerts} active Severe or Extreme weather alerts",
     }
@@ -155,14 +159,18 @@ def predict() -> list[Prediction]:
         predictions = []
         for product_id, zone, hour in products:
 
-            def value(report: str, at: str, default: float = 0) -> float:
-                signal = signals.latest(report, at)
-                return signal.value if signal else default
+            def value(report: str, zone: str, default: float = 0, hour: str = hour) -> float:
+                row = db.execute(
+                    "SELECT value FROM signals WHERE report_id=? AND zone=? AND interval_start=? "
+                    "ORDER BY fetched_at DESC, rowid DESC LIMIT 1",
+                    (report, zone, hour),
+                ).fetchone()
+                return row[0] if row else default
 
             shadows = {
                 name: price
                 for name, price in db.execute(
-                    "SELECT zone,value FROM signals WHERE report_id='NP6-86-CD' ORDER BY rowid DESC"
+                    "SELECT zone,value FROM signals WHERE report_id='NP6-86-CD' ORDER BY rowid ASC"
                 ).fetchall()
             }
             trade = db.execute(
