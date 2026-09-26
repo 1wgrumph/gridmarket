@@ -173,9 +173,7 @@ def observe_signals(bot: Any, signals: list[Any], now: datetime) -> dict[str, fl
     return observed
 
 
-def thresholds_from_ledger(
-    db: Any, master: str, index: int
-) -> dict[str, dict[str, float]]:
+def thresholds_from_ledger(db: Any, master: str, index: int) -> dict[str, dict[str, float]]:
     """Replay a bot's settled positions from the ledger; identical after restart."""
     row = db.execute(
         "SELECT account_id, profile_json FROM bots WHERE bot_index = ?", (index,)
@@ -185,8 +183,7 @@ def thresholds_from_ledger(
     account_id, raw = row
     rate = float(json.loads(raw).get("learning_rate", 0.0))
     states = {
-        name: {"min": low, "value": (low + high) / 2, "max": high}
-        for name, low, high in THRESHOLDS
+        name: {"min": low, "value": (low + high) / 2, "max": high} for name, low, high in THRESHOLDS
     }
     positions = db.execute(
         "SELECT pnl_cents FROM settled_positions WHERE account_id = ? ORDER BY rowid",

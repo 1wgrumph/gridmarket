@@ -147,9 +147,7 @@ def list_bots() -> list[dict[str, object]]:
 def bot_diversity() -> dict[str, object]:
     with _db() as conn:
         _ensure_seeded(conn)
-        rows = conn.execute(
-            "SELECT bot_type, profile_json FROM bots ORDER BY bot_index"
-        ).fetchall()
+        rows = conn.execute("SELECT bot_type, profile_json FROM bots ORDER BY bot_index").fetchall()
     bot_types = [row[0] for row in rows]
     traits = [json.loads(row[1])["traits"] for row in rows]
     names = list(traits[0])
@@ -159,8 +157,7 @@ def bot_diversity() -> dict[str, object]:
     total = len(bot_types)
     entropy = -sum(count / total * math.log2(count / total) for count in counts.values())
     points = [
-        {"risk_appetite": trait["risk appetite"], "patience": trait["patience"]}
-        for trait in traits
+        {"risk_appetite": trait["risk appetite"], "patience": trait["patience"]} for trait in traits
     ]
     return {"coverage": coverage, "entropy": entropy, "points": points}
 

@@ -138,9 +138,7 @@ def sample(
         others = rng.sample([name for name in DEFAULT_COUNTS if name != kind], 2)
         draws = [rng.gammavariate(6, 1), rng.gammavariate(1.5, 1), rng.gammavariate(1.5, 1)]
         total = sum(draws)
-        blend = {
-            name: weight / total for name, weight in zip([kind, *others], draws, strict=True)
-        }
+        blend = {name: weight / total for name, weight in zip([kind, *others], draws, strict=True)}
         specs.append(
             BotSpec(
                 index=index,
