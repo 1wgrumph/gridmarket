@@ -78,7 +78,7 @@ test-all:
 	$(PYTEST) backend/tests $(if $(wildcard tools/tests),tools/tests,)
 	@if [ -f mcp-server/pyproject.toml ]; then $(MAKE) test-mcp; fi
 	$(MAKE) test-dash
-	@if [ -d ercot-hackathon/test ]; then node --test ercot-hackathon/test/; fi
+	@if [ -d ercot-hackathon/test ]; then node --test "ercot-hackathon/test/*.test.mjs"; fi
 
 red-green:
 	@test -n "$(TESTS)" && test -n "$(EVIDENCE)"
