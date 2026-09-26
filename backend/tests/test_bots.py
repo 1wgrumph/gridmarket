@@ -183,7 +183,9 @@ def test_SEIT_GM_BOT_03_order_limit(server, monkeypatch) -> None:
     conn = sqlite3.connect(db_path)
     conn.executescript(SCHEMA.read_text())
     conn.execute(
-        "INSERT OR IGNORE INTO products (id, symbol, zone, delivery_hour) VALUES ('p1', 'LZ_HOUSTON-H', 'LZ_HOUSTON', '2026-09-26T01:00:00Z')"
+        "INSERT INTO products (id, symbol, zone, delivery_hour) "
+        "VALUES ('p1', 'LZ_HOUSTON-H', 'LZ_HOUSTON', '2030-01-01T01:00:00Z') "
+        "ON CONFLICT(id) DO UPDATE SET delivery_hour=excluded.delivery_hour, status='open'"
     )
     conn.execute(
         "INSERT OR IGNORE INTO accounts (id, display_name, cash_cents) VALUES ('acct-0', 'bot-0', 100000)"
@@ -193,15 +195,21 @@ def test_SEIT_GM_BOT_03_order_limit(server, monkeypatch) -> None:
         (hashlib.sha256(bot_key(0).encode()).hexdigest(),),
     )
     conn.commit()
+    assert conn.execute("SELECT delivery_hour, status FROM products WHERE id='p1'").fetchone() == (
+        "2030-01-01T01:00:00Z",
+        "open",
+    )
     conn.close()
-    with pytest.raises(httpx.HTTPStatusError) as caught:
+    from gridmarket import GridMarketError
+
+    with pytest.raises(GridMarketError) as caught:
         send(
             Client(base_url, bot_key(0)),
             {"product_id": "p1", "side": "buy", "quantity": 51, "price_cents": 10},
             "risk-too-big",
         )
-    assert caught.value.response.status_code == 422
-    assert caught.value.response.json()["error"]["code"] == "ORDER_TOO_LARGE"
+    assert caught.value.status == 422
+    assert caught.value.code == "ORDER_TOO_LARGE"
 
 
 def test_SEIT_GM_BOT_07_admin_spawn(server) -> None:
