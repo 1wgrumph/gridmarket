@@ -8,7 +8,7 @@ import '../styles.css';
 
 const nav = [
   ['#/', 'Overview', '01'], ['#/market', 'Market', '02'], ['#/predictions', 'Predictions', '03'], ['#/providers', 'Providers', '04'],
-  ['#/bots', 'Bots', '05'], ['#/sandbox', 'Judge sandbox', '06'], ['#/spec', 'Spec', '07'],
+  ['#/bots', 'Bots', '05'], ['#/sandbox', 'Judge sandbox', '06'], ['#/spec', 'Spec', '07'], ['#/replay', 'Replay', '08'],
 ] as const;
 const central = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', ...options });
 const clockFormat = central({ hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
@@ -56,7 +56,8 @@ export default function Shell({ children }: { children: ReactNode }) {
         <div id="sidebar-content" className={`sidebar-content ${menu ? 'is-open' : ''}`}>
           <p className="eyebrow nav-caption">THE EXCHANGE</p>
           <nav aria-label="Primary">{nav.map(([href, label, number]) => {
-            const current = href === '#/' ? route === '#/' : route === href || route.startsWith(`${href}/`);
+            const path = route.split('?')[0];
+            const current = href === '#/' ? path === '#/' : path === href || path.startsWith(`${href}/`);
             return <a key={href} href={href} className={current ? 'selected' : ''} aria-current={current ? 'page' : undefined}><span className="nav-number">{number}</span>{label}{current && <span className="nav-arrow"><Icon name="up-right"/></span>}</a>;
           })}</nav>
           <div className="sidebar-bottom">

@@ -8,8 +8,9 @@ import Bots from './pages/Bots';
 import BotProfile from './pages/BotProfile';
 import Sandbox from './pages/Sandbox';
 import Spec from './pages/Spec';
+import Replay from './pages/Replay';
 
-export const routes = ['#/', '#/market', '#/predictions', '#/providers', '#/bots', '#/bots/:id', '#/sandbox', '#/spec'] as const;
+export const routes = ['#/', '#/market', '#/predictions', '#/providers', '#/bots', '#/bots/:id', '#/sandbox', '#/spec', '#/replay'] as const;
 
 export default function App() {
   const [route, setRoute] = useState(window.location.hash || '#/');
@@ -18,9 +19,11 @@ export default function App() {
     window.addEventListener('hashchange', update);
     return () => window.removeEventListener('hashchange', update);
   }, []);
-  const page = route.startsWith('#/bots/') ? <BotProfile id={decodeURIComponent(route.slice('#/bots/'.length))} /> : ({
+  const path = route.split('?')[0];
+  const page = path.startsWith('#/bots/') ? <BotProfile id={decodeURIComponent(path.slice('#/bots/'.length))} /> : ({
     '#/': <Overview />, '#/market': <Market />, '#/predictions': <Predictions />,
     '#/providers': <Providers />, '#/bots': <Bots />, '#/sandbox': <Sandbox />, '#/spec': <Spec />,
-  } as Record<string, React.ReactNode>)[route] ?? <p>Page not found.</p>;
+    '#/replay': <Replay />,
+  } as Record<string, React.ReactNode>)[path] ?? <p>Page not found.</p>;
   return <Shell>{page}</Shell>;
 }

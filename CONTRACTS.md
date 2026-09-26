@@ -185,6 +185,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `#/bots/:id` BotProfile, `useBotProfile` | pages | Public profile |
 | `#/sandbox` Sandbox | pages | Judge key onboarding |
 | `#/spec` Spec | pages | Specification link |
+| `#/replay` Replay | replay-ui | Historical day replay, scoreboard, lanes |
 | `useResource` | foundation | Two-second polling, loading and error state |
 
 ## Error codes

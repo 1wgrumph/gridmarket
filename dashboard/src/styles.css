@@ -492,3 +492,49 @@ thead th{font-weight:500;letter-spacing:.02em}
 .profile-reserve .loading{min-height:584px}
 @media(max-width:1100px) and (min-width:761px){.profile-reserve .loading{min-height:1178px}}
 @media(max-width:760px){.profile-reserve .loading{min-height:1384px}}
+/* S71 replay page: mockup layout in shipped tokens; chart/lanes reserve geometry for CLS. */
+.replay-grid{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:20px;margin-bottom:20px}
+.replay-main,.replay-aside{display:flex;flex-direction:column;gap:20px;min-width:0}
+.replay-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:0 18px 10px;font-size:12px}
+.replay-head label{display:inline-flex;align-items:center;gap:6px}
+.replay-head select,.disrupt-form select,.why-pick select,.transport select{font:inherit;font-size:12px;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-2);min-height:30px;padding:2px 6px}
+.transport{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:0 18px 8px;font-size:12px}
+.transport label{display:inline-flex;align-items:center;gap:6px}
+.head-slider{flex:1 1 220px}
+.head-slider input{flex:1;min-width:120px;accent-color:var(--accent-fill)}
+.replay-lanes{display:flex;flex-direction:column;gap:12px;padding:6px 18px 4px;min-height:196px}
+.lane-row{display:flex;align-items:center;gap:12px}
+.lane-name{flex:0 0 108px;text-align:left;font-size:12px;font-weight:500;color:var(--muted);background:none;border:0;padding:4px 0}
+.lane-name[aria-pressed=true]{color:var(--text)}
+.lane-track{flex:1;display:flex;min-width:0;height:26px;border-radius:var(--r-2);background:var(--secondary);overflow:hidden}
+.lane-cell{flex:1 1 0;min-width:0;padding:0;border:0;background:transparent;border-radius:0}
+.lane-cell.is-charge{background:var(--map-border)}
+.lane-cell.is-deliver{background:var(--accent-fill)}
+.lane-cell.is-self{background:repeating-linear-gradient(45deg,var(--accent-fill) 0 3px,var(--map-border) 3px 6px)}
+.lane-cell.is-head{box-shadow:inset 0 0 0 2px var(--text)}
+.lane-cell:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.lane-soc{flex:0 0 64px;text-align:right;font-size:12px}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:var(--r-1);margin-right:6px;vertical-align:baseline}
+.swatch.is-charge{background:var(--map-border)}
+.swatch.is-deliver{background:var(--accent-fill)}
+.swatch.is-self{background:repeating-linear-gradient(45deg,var(--accent-fill) 0 3px,var(--map-border) 3px 6px)}
+.replay-board th[scope=row]{font-size:12px;font-weight:500;text-align:left}
+.why-pick{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:0 18px 10px}
+.why-pick label{display:inline-flex;align-items:center;gap:6px;font-size:12px}
+.why-action{padding:0 18px 8px;font-size:14px;font-weight:600;line-height:1.4}
+.why-inputs{max-height:260px;overflow-y:auto}
+.disrupt-form{display:flex;flex-direction:column;gap:10px;padding:0 18px 16px;font-size:12px}
+.radio-row,.window-row,.button-row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.radio-row label,.window-row label{display:inline-flex;align-items:center;gap:6px}
+.radio-row input{accent-color:var(--accent-fill)}
+@media(max-width:1100px){.replay-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:760px){.lane-row{flex-wrap:wrap}.lane-name{flex:1 1 auto}.lane-soc{flex:0 0 auto}.lane-track{flex:1 1 100%;order:3}.replay-lanes{padding-inline:14px}.replay-head{padding-inline:14px}.transport{padding-inline:14px}.why-pick{padding-inline:14px}.why-action{padding-inline:14px}.disrupt-form{padding-inline:14px}}
+/* S71-cls: replay loading skeletons reserve the loaded panels' heights (measured 1280/390/320). */
+.reserve-prices .loading{min-height:385px}
+.reserve-lanes .loading{min-height:210px}
+.reserve-score .loading{min-height:205px}
+.reserve-why .loading{min-height:465px}
+.replay-head select{min-width:112px}
+.replay-head .tag{min-width:150px;justify-content:center}
+@media(max-width:760px){.reserve-prices .loading{min-height:455px}.reserve-lanes .loading{min-height:355px}.reserve-why .loading{min-height:465px}}
+@media(max-width:360px){.reserve-prices .loading{min-height:470px}.reserve-lanes .loading{min-height:370px}.reserve-why .loading{min-height:500px}}
