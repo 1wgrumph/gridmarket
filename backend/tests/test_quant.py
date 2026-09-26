@@ -242,6 +242,7 @@ def test_SEIT_GM_QUANT_01_trades_through_sdk_own_key_under_risk_limits(
     monkeypatch.setenv("GRIDMARKET_API_KEY", STRATEGY_KEY)
     monkeypatch.setenv("GRIDMARKET_ADMIN_KEY", DECOY_KEY)
     from gridmarket import Client
+
     from gridmarket_server import quant_strategy
 
     original = Client.place_order
