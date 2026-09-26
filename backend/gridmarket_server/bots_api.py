@@ -140,23 +140,23 @@ def list_bots() -> list[dict[str, object]]:
         ]
 
 
-@router.get("/v1/bots/{bot_id}")
-def bot_profile(bot_id: str) -> JSONResponse:
+@router.get("/v1/bots/{id}")
+def bot_profile(id: str) -> JSONResponse:
     with _db() as conn:
         row = conn.execute(
             "SELECT account_id, bot_type, provider_id, profile_json FROM bots WHERE id = ?",
-            (bot_id,),
+            (id,),
         ).fetchone()
         if row is None:
-            return _error(404, "NOT_FOUND", f"unknown bot {bot_id}")
+            return _error(404, "NOT_FOUND", f"unknown bot {id}")
         account_id, bot_type, provider_id, raw = row
     profile = json.loads(raw)
     try:
         report = economy.stats(account_id)
     except KeyError:
-        return _error(404, "NOT_FOUND", f"unknown bot {bot_id}")
+        return _error(404, "NOT_FOUND", f"unknown bot {id}")
     body = {
-        "id": bot_id,
+        "id": id,
         "bot_type": bot_type,
         "blend": profile.get("blend", {bot_type: 1.0}),
         "provider_id": provider_id,
