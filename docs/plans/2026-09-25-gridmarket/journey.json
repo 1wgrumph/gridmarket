@@ -418,6 +418,18 @@
       "rationale": "Destination: Planning and Design. Trigger: the delta for this reopen. The owner approved routing layout details to Planning.",
       "source": "CONF-GM-JORDAN-DISCLAIMER",
       "recorded_at": "2026-09-26T03:53:10Z"
+    },
+    {
+      "id": "DEC-GM-037",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T03:53:36Z",
+      "source": "Owner in chat: 'an an onboarding skill or guide. Onboarding on the website should be quick and easy'",
+      "decision": "Add (a) an agent onboarding skill, for example skills/gridmarket-onboarding/SKILL.md in the repository, that a user's agent loads to go from zero to trading: get a sandbox key, read data, use the SDK, strategy template, LLM prompt kit or local MCP, monitor the algorithm, and handle limits and errors. It is paired with the DEC-GM-036 user guide. (b) Quick, easy website onboarding on the dashboard: a user gets a working sandbox key in one or two clicks, with copy-paste snippets for the SDK, the LLM prompt kit and MCP, and sees their first order live. Sandbox key issuance remains rate-limited and bounded by the risk engine.",
+      "amends": [
+        "DEC-GM-035",
+        "DEC-GM-036",
+        "CONF-GM-PAGES"
+      ]
     }
   ],
   "stages": {
