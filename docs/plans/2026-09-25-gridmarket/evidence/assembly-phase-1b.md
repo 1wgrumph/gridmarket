@@ -1034,3 +1034,141 @@ final-verification.json and final-push.log record final branch/tree state.
 Market2 blocker: **none**. Remaining phase blocker: **SPEC_WRITESET_GAP**.
 Result: **CANDIDATE_READY** for the bounded market2 handoff, with the phase
 review/assurance and owner items above still pending. Stop before S49-L.
+
+## Attempt 11: REPAIRABLE_FAILURE — router step reverted after dashboard gate failure
+
+Journey GM-2026-09-25, S49 phase 1b, Integration Engineer execution;
+P1b Coordinator repair round, LOOP 6d. Entry was clean at
+`12c322e49ae6eb32c843afcf8c92dd9a6dc00dd7` on `gridmarket/integration-1b`.
+This receipt records bounded assembly and deterministic evidence, not a second
+review, independent assurance, owner acceptance, or landing.
+Evidence root (A11): `/tmp/gm-evidence/P1b/attempt-11/`.
+
+### Assembly and rollback
+
+| Lane / operation | Exact tip / resulting SHA | Structural exit | test-all exit | A11 evidence |
+|---|---|---:|---:|---|
+| Bots merge | tip `7599c51e66f9629b90638da4e1e66a9d4740a0cb`; merge `90974fd6ed209a84ed9279b6e525d0eee792cf5c` | 0 | 0 | `bots-entry.json`, `bots-post.json`, `bots-merge.log`, `bots-results.json`, `bots-test-all.log` |
+| Router merge | tip `e3caa3a35588f26b976ee4062443527bdeb68a78`; merge `0a87ca15fba0505a98d0cb611d01074e46ac3ef8` | 0 | **2** | `router-entry.json`, `router-post.json`, `router-merge.log`, `router-results.json`, `router-test-all.log`, `router-backend.xml` |
+| Router revert (`git revert -m 1`) | `ad3ccf7ed5a8b41778b2c58635121df58cc171f0` | 0; exact bots-merge tree restored | **2** | `router-revert.log`, `router-revert-structure.json`, `router-revert-results.json`, `router-revert-test-all.log`, `router-revert-backend.xml` |
+| Views | tip `f1e6d97639d0885e918708b541586eac96a37598`; merge NOT_RUN | preflight 0 | NOT_RUN | `views-preflight.json`, `not-run.json` |
+| Pages | tip `cf71f97c49feed878513547ef98e6cc2c855da0d` (includes `e6ad606` and fixture-move follow-up); merge NOT_RUN | preflight 0 | NOT_RUN | `pages-preflight.json`, `not-run.json` |
+
+All attempted merges used `--no-ff` and had no conflict. PROC-ASSEMBLY
+checked incoming non-merge history against canonical lane unions, clean entry,
+branch, merge parents, and frozen-file identity. `write-sets.json` records the
+unions, including S50/S51/S53 for pages. No frozen file changed. The inherited
+S01 deltas remain backend/pyproject.toml (phase 1a) and dashboard/src/api.ts plus
+hooks.ts (DEC-GM-074); `frozen-baseline.json` binds the unchanged last-green
+blobs. CONTRACTS.md and backend/uv.lock remain unchanged.
+
+Canonical plan source is the main workspace's
+`docs/plans/2026-09-25-gridmarket/`, as bound by prior packets.
+`manifest-receipt.json` and A11 snapshots bind implementation.json SHA-256
+`c91cc259b6c54d4d294b21429931d909b6b972c453aaf3eda35258abba996c67`,
+seit.json `269c1903c9f0e4b27c436504d19670177a1057cdc12d80094e83effe380b5b03`,
+and journey.json `f4eba26e78ecbce018fe0ab9cf7a043c6ab8ac66d6ac8adb3307c4fd87ca57b1`.
+This session edited none of those files.
+
+### Failure and recovery gate
+
+Router test-all's backend constituent passed all **124 tests**. The dashboard
+constituent failed one of 47 tests:
+`phase1b.test.tsx::SEIT-GM-UI-03 bot profile shows traits, economy, performance, and balance history`.
+At line 131, `/\$?24(?:\.00)?\b/` matched both the intended `$24.00` and
+the live clock `11:29:24`. The log includes both matching elements. The unchanged
+dashboard passed at the bots merge; this evidence identifies a clock-dependent
+assertion collision, not a demonstrated router behavior regression. No product
+bug report or issue was filed, and no test/product edit was made.
+
+Bots gate ran 2026-09-26T16:25:29.346709Z–16:27:33.496292Z.
+Router gate ran 2026-09-26T16:27:48.057025Z–16:29:24.678413Z.
+Neither crossed an hour boundary. DEC-GM-075's documented PRODUCT_CLOSED
+hour-boundary case did not occur; no pre-revert retry was taken. The failed step
+was reverted immediately per the packet. Recovery ran 2026-09-26T16:29:52.204019Z–16:31:31.071522Z and also exited 2.
+All 123 backend tests passed. A different dashboard case failed:
+`Overview.test.tsx::zone map identifies served zones and offers a static pause state`
+at line 330. It expected `72.4` in the map aria-label but observed
+`Schematic ERCOT load zones. Awaiting scarcity predictions. Geographic boundaries are illustrative.`
+The original profile assertion passed on recovery. This second failure is
+consistent with an asynchronous initial-state assertion; no product defect is
+established or filed. The recovery tree exactly equals the prior green bots
+merge. Neither failure is the documented DEC-GM-075 hour-boundary failure;
+no further rerun or repair was performed. Full command timings/exits are in
+`router-revert-results.json`; recovery is **REPAIRABLE_FAILURE**.
+
+The final four-tip candidate was never reached. The full S49-D set
+(test-contracts, test-all, test-dash, smoke, secrets, rules), separate test-market,
+and market mutation >=70% are **NOT_RUN as the final gate**. The successful
+bots post-step test does not stand in for that gate. Stop-on-red applies before views
+and pages; no smoke stack was launched, no runtime was seeded, and no mutation
+score is claimed for Attempt 11.
+
+### ATE proof bindings and closure status
+
+- **ATE-P1b-01: OPEN / NOT_RUN.** Missing prerequisite: a green four-tip
+  final merge and its smoke gate were not reached because the router step went
+  red and was reverted. `ate-p1b-01-live.json` records this exact stop;
+  `observe-smoke.py` was prepared but never executed. No EV, market_price,
+  DA signal or trade value was observed in this attempt. The prior reviewer's
+  scale trace is retained as source evidence, not substituted for observation.
+- **ATE-P1b-02: mapping evidence CLOSED; repair validation incomplete.**
+  Canonical DEC-GM-083 already binds S52a/S52b to UI-06/UI-06-V2, S53 to
+  UI-01-PAGES/UI-03/UI-07/UI-06, S05-anom to MKT-07-ANOM/ADV-01-PERF,
+  and S54 to QUAL-MUT-MKT. `proof-row-bindings.json`, the hashed canonical
+  snapshots and `repair-proof-links.json` provide the supplemental evidence
+  links without altering the manifest. Views/pages remain unassembled and
+  final mutation remains unrun; no complete repaired-phase proof is claimed.
+- **ATE-P1b-03: S28/S29 repair green binding CLOSED (backend constituent only).**
+  `ate-p1b-03-red-source.json` preserves the original 11 red IDs and hashes;
+  `ate-p1b-03-binding.json` binds the same IDs to the recovery SHA and JUnit
+  green receipt. The old S29-green.xml has two failures and is explicitly
+  superseded for this repair claim, never relabelled as a historical pass.
+  Other historical pairs are not recreated or retrospectively certified.
+
+| Finding | Repair-tip proof link | Assembly disposition |
+|---|---|---|
+| F1 | `7599c51` / backend/tests/test_bots.py::test_phase1b_F1_admin_spawn_rejects_non_loopback_peer; BOT-07 | Retained, bots gate green |
+| F7 / F8 | `7599c51` / backend/tests/test_economy.py::test_phase1b_F7_dormancy_uses_available_cash and ::test_phase1b_F8_short_marks_against_own_sells; ECON-03 | Retained, bots gate green |
+| F6 backend | `7599c51` / backend/tests/test_economy.py::test_phase1b_F6_balance_history_per_fill_and_deposit; UI-03/API | Retained, bots gate green |
+| F2 | `e3caa3a` / backend/tests/test_router.py::test_router_matches_live_report_ids; ROUTER-01 | Backend test passed; merge reverted on aggregate gate red |
+| F3/F4/F5/F6 frontend/F9 | `cf71f97` / dashboard/src/pages/Bots.repair.test.tsx, named F3/F4/F5/F6/F9 cases; UI-01-PAGES/UI-03/UI-07 | NOT_RUN at assembly; tip includes both pages commits |
+| F10 | `f1e6d97` / ercot-hackathon/test/views.test.mjs::S26-04; EDGE-05/RULE-02-VIEWS | NOT_RUN at assembly |
+
+F6's supplied endpoints agree on `balance_history [{at: ISO string, balance:
+dollars}]`; only the backend repair is retained. This is an interface binding,
+not a claim that both repaired endpoints have passed integrated verification.
+
+### Carried items, capabilities and handoff
+
+Per this dispatch, retain **SPEC_WRITESET_GAP** (spec `8989e53` unmerged),
+**ENTROPY_PROOF_CONFLICT**, and owner **PROC-ERCOT-LIVE-CHECK**,
+**AC-GM-ACC-01**, and **MARKET_URL redeploy / VIEWS_NOT_DEPLOYED**.
+Canonical DEC-GM-083 contains planning dispositions; this bounded assembly does
+not close these carried items or perform any owner action. Prior browser and
+assurance receipts remain prior evidence; no second review was run.
+
+Frozen profile digest
+`14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`
+is preserved in `frozen-profile.json` with role routes and both capabilities.
+`capability-availability.json` resolves OpenCodeReview delegation: enabled,
+required=false, executable available, **not_run — assembly, not code review**.
+Reverify is enabled and available, **not applicable — no native compiled binary
+claim**. Ordinary gates do not substitute for either capability.
+**BRAN_UNAVAILABLE**: no native policy; ordinary Git and canonical plan evidence.
+
+Final tested recovery candidate:
+`ad3ccf7ed5a8b41778b2c58635121df58cc171f0`, identical product tree to last green
+merge `90974fd6ed209a84ed9279b6e525d0eee792cf5c`. Only bots repairs remain.
+The evidence-only commit follows this candidate; `final-verification.json`
+records its identity and clean tree. **Push NOT_RUN:** the owner authorizes
+non-force push only when green, and the recovery aggregate gate is red.
+`final-push.log` records that stop; no remote operation was performed.
+
+**Blocker:** the clock-text collision caused the router aggregate gate to fail;
+the recovery aggregate gate then failed its map initial-state assertion. Return both exact failures to the Coordinator for re-entry;
+this session cannot repair tests or continue the remaining merges. Remaining
+risks: router F2 is reverted, views F10 and pages F3/F4/F5/F6/F9 are unassembled,
+ATE-01 remains unproven, and the final gate/mutation have no Attempt-11 result.
+**S49-L NOT_RUN.** No PR, main merge, branch deletion, force push, git switch,
+spec merge, frozen-file edit, owner credential access, deployment or issue closure.
