@@ -9,7 +9,9 @@ public_boundary: private
 
 # Phase 1a assembly — S09
 
-Current outcome: **REPAIRABLE_FAILURE — BLOCKED** under DIR-P1a-11, DIR-P1a-12 and DIR-P1a-13. Both repair2 exits merged cleanly; lint, contracts, dashboard, full tests, secrets and rules exit 0 with no inherited NWS disable flag. Live-poller smoke cannot meet DIR-P1a-13 because the existing recipe unconditionally writes `GRIDMARKET_NWS=off`. No product edit is authorized in this dispatch. The previous candidate file is retained unchanged and is not a DIR-P1a-13 candidate; assurance remains on hold. See the final repair2 section. Stop before S09-L.
+Current outcome: **REPAIRABLE_FAILURE** under DIR-P1a-16 / DEC-GM-061. All three authorized repair exits merged cleanly and all functional/build/coverage/smoke/security/rules gates pass. Mutation exits 0 but scores **65.43%**, below the required 70%; a fresh generated-state diagnostic is incomplete (make exit 2), not passing evidence. No product/test edits, second review, or S09-L. The existing candidate pointer is retained; see the closure section and committed receipts below.
+
+Historical outcome before DIR-P1a-16: **REPAIRABLE_FAILURE — BLOCKED** under DIR-P1a-11, DIR-P1a-12 and DIR-P1a-13. Both repair2 exits merged cleanly; lint, contracts, dashboard, full tests, secrets and rules exit 0 with no inherited NWS disable flag. Live-poller smoke cannot meet DIR-P1a-13 because the existing recipe unconditionally writes `GRIDMARKET_NWS=off`. No product edit is authorized in this dispatch. The previous candidate file is retained unchanged and is not a DIR-P1a-13 candidate; assurance remains on hold. See the final repair2 section. Stop before S09-L.
 
 Historical outcome before DIR-P1a-13: **PASS — CANDIDATE_READY** under DIR-P1a-10 / DEC-GM-056 and DIR-P1a-09 / DIR-P1a-08 / DEC-GM-055. Authorized dashboard command glue and S09-D2 are assembled; all seven required post-step commands exit 0. Full backend tests run with NWS enabled. The unchanged smoke recipe disables NWS internally and proves status `open` only; its existing bots-healthcheck limitation remains. This is assembly evidence, not independent phase assurance or owner acceptance. Stop before S09-L.
 
@@ -386,3 +388,48 @@ Outcome: **REPAIRABLE_FAILURE / BLOCKED**. Return to the Coordinator for a bound
 The designated `ops/candidates/1a` file remains unchanged at `d7d56d7549e5f5af082f548f83c8e677c9cef252`. That historical SHA excludes both repair2 exits and must not be used for DIR-P1a-13 assurance. No replacement candidate is written until live-poller smoke and the required gate set pass. No S09-L, main PR, owner acceptance or independent assurance performed.
 
 Frozen role routes and capability selections remain unchanged; profile digest `14d07a1ceffc31954e7be348d0ec32b10140108a2351448d26e500759a8ed721`; no live profile imported or selected route switched. `review.coverage_assist`: enabled, required=false, OpenCodeReview delegation selected; `not_run`, runtime availability unassessed in this assembly session, a pending review capability gap rather than passing evidence. No code review is claimed. `deterministic_verification.reverify`: enabled, conditional Rust ELF backend selection retained; Reverify: NOT_APPLICABLE because no Rust/native binary claim is made. Source tests and JavaScript builds are not binary-analysis receipts. BRAN: unavailable (no native policy); direct Git, plan and command evidence used. Stop before S09-L.
+
+
+## DIR-P1a-16 / DEC-GM-061 — single repair-round closure
+
+Fresh Integration Engineer execution session, GM-2026-09-25 / Phase 1a / S09-merge. Initial clean HEAD `663637558681e636bea3f784ce78fb72819bfd60`. The current owner dispatch authorizes exactly three repair merges, the specified deterministic verification and receipt/push work, with no second Reviewer or Assurance Test Engineer dispatch. DIR-P1a-15 permits the unchanged NWS-off container smoke; backend verification runs with NWS enabled.
+
+| Lane | Exit SHA | Resulting merge SHA | Merge exit |
+|---|---|---|---:|
+| Market S05-repair3/3b | `4c87cdb9ad2275a46881c36c10fb4641a6530a91` | `e0aa8947241a9bf2107239d47d08249308bbccb5` | 0 |
+| Data S06-repair3/3b | `a09ab402e626a46cf521654f3688e1a2fb8ae6a5` | `9bbe7b6c2194eb8182e64a2beb614f49a7a6a2be` | 0 |
+| UI S07-repair | `b558a0e00ae3e43775683edf61da5dd8523e69d8` | `021568f83bb8c3377fb459747164998a2e4cc94c` | 0 |
+
+Merges used the exact dispatched `--no-ff` commands, in order, without conflicts. Test target: `021568f83bb8c3377fb459747164998a2e4cc94c`, tree `12d57c38effb9fc0120dc42890eb7ad4b79de2dc`. Only merged lane changes affect product/tests; this session directly changes evidence/receipts only. No dependency or frozen configuration change.
+
+| Verification | Exit | Result |
+|---|---:|---|
+| `make lint` | 0 | Ruff checks and formatting pass. |
+| `make test-contracts` | 0 | 3 passed. |
+| `make test-all` | 0 | 85 backend, 13 dashboard, 25 Worker tests; dashboard build passes. |
+| `make test-dash` | 0 | 13 tests, TypeScript and Vite build pass. |
+| `make smoke SMOKE_PROJECT=gm-smoke-repair-1a SMOKE_PORT=18020` | 0 | Complete current recipe assertions pass; project and env cleanup confirmed. |
+| `make secrets` | 0 | No leaks in 121 commits; MIT/env-example checks pass. |
+| `make rules` | 0 | All recipe assertions pass. |
+| `make coverage BASE=c6bcb39f3d31eeb28a4a7d416a1b6d0cff00f90c` | 0 | 90.47% (1016/1123 changed lines), >=80%. |
+| `make mutation MUTANTS="gridmarket_server.market.*"` — inherited state | 0 | **FAIL:** 65.43% (757 killed / 1157 scored), 385 survived, 15 timeout, <70%. |
+| Same mutation command — fresh-state diagnostic | 2 | Complete score unavailable; forced-failure self-check stopped progressing, diagnostic terminated. |
+| `uv run --project backend --frozen python -c "import gridmarket_server.main"` | 0 | Import succeeds. |
+| `GET /v1/predictions` on the merged smoke stack | 0 | HTTP 200 JSON list; DIR-P1a-05 lane-gap check passes. |
+| Receipt directory secret scan / smoke cleanup inspection | 0 / 0 | No detected secrets; no owned smoke resources remain. |
+
+NWS is enabled in backend verification by unsetting `GRIDMARKET_NWS`; the test suite's existing outbound-socket guard remains. Smoke runs exactly as written with NWS off and a fresh temporary env. No successful public NWS retrieval, live Worker ingestion, owner acceptance or deployment is inferred.
+
+### Mutation failure and disposition
+
+The completed mutation command's exit 0 is insufficient: the separately specified score threshold fails. Its CI stats report 1177 generated and 1157 scored mutants. The earlier 93.09% glue receipt is not reused for this merged tree.
+
+The diagnostic preserved inherited generated state in ignored worktree scratch and reran the same command from a fresh generated directory, without changing source/tests/configuration. Full test-map collection and the clean-test baseline passed. Output then stopped at the forced-failure self-check for 255 seconds. Stack attachment was denied. SIGINT released that self-check; SIGTERM stopped the ensuing incomplete mutation execution. Make exited 2 (mutmut 143). No valid complete diagnostic score exists and no owned mutation worker remains.
+
+A stale-cache cause, upstream defect or specific offending lane was not established. Use the dispatch's explicit **return REPAIRABLE_FAILURE** option: preserve the exact merged tree for diagnosis rather than edit product/tests or revert an unidentified lane. No lane rollback, second repair round, second independent review or issue filing. Single aggregate repair-round count: **1**; mutation invocations: **2**, the second diagnostic and incomplete.
+
+[Merge verification receipt](../receipts/phase-1a/merge-verification.md) records full command results, hashes, capability identity and limitations. [Mutation verification JSON](../receipts/phase-1a/mutation-verification.json) preserves both invocations. The original [reviewer log](../receipts/phase-1a/assurance-reviewer.log) and [tester log](../receipts/phase-1a/assurance-tester.log) are copied byte-for-byte; their failure verdicts on prior candidate `2c96695a21fe4dc7e960c9e6bab0d510b298727d` remain historical evidence.
+
+Frozen profile/role routes remain unchanged. OCR delegation selection remains enabled, required=false; its earlier execution is recorded in the reviewer log. No new review or visual-review PASS is claimed; the original browser review gap remains explicit. Reverify remains enabled, conditional Rust ELF, **NOT_APPLICABLE** for this source-only phase. BRAN is **unavailable** (no native policy).
+
+The documentation/receipt commit is a failure checkpoint, with product content identical to the tested merge. Push only `gridmarket/integration-1a` non-force. `ops/candidates/1a` remains unchanged at `2c96695a21fe4dc7e960c9e6bab0d510b298727d`; the red closure gate does not authorize candidate promotion. Phase 1a is not closed. Stop before S09-L.
