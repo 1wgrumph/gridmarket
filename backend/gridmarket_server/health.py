@@ -6,7 +6,7 @@ import logging
 import math
 import os
 import sqlite3
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -14,10 +14,19 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 # Module import, not `from .providers import enabled`: base_sim imports health back.
-from . import decision_router, ercot, providers
+from . import providers
 from .contracts import CheckResult
 
-router = APIRouter()
+
+@asynccontextmanager
+async def _lifespan(app):
+    from . import decision_router
+
+    decision_router.register("health", checks)
+    yield
+
+
+router = APIRouter(lifespan=_lifespan)
 log = logging.getLogger(__name__)
 
 OFFLINE_AFTER_S = 30
@@ -139,6 +148,8 @@ def _check(subject: str, probability: float, now: datetime) -> CheckResult:
 
 
 def checks() -> list[CheckResult]:
+    from . import ercot
+
     now = _now()
     stats = ercot.worker_stats()
     requests = max(stats.requests, 1)
@@ -159,9 +170,6 @@ def checks() -> list[CheckResult]:
         else:
             results.append(_check(provider_id, 1.0, now))
     return results
-
-
-decision_router.register("health", checks)
 
 
 def _error(status: int, code: str, message: str) -> JSONResponse:
