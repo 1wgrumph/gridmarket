@@ -453,6 +453,18 @@
         "DEC-GM-038",
         "CONF-GM-PHASE-PLACEMENT"
       ]
+    },
+    {
+      "id": "DEC-GM-040",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T04:10:37Z",
+      "source": "Owner in chat: 'make sure you merge the PRs and keep things clean when a phase is completed. get it on main ... Agy 5hr usage migh run out so be sure to use 2 agy and 2 fallbacks at a time. or just smart split'",
+      "decision": "(1) Landing hygiene: when a phase passes its assurance (review, 1 repair max, deterministic verification), the Orchestrator immediately pushes, opens the PR, and merges it to main, then deletes the merged lane branches (local and remote) and removes their worktrees. main stays demoable after every merge, and no stale branches or worktrees remain. (2) Route load split, an owner-confirmed amendment to fallback activation: for any role routed to a usage-windowed route (AGY with its 5-hour usage window, and likewise Muse or Codex if limits appear), run at most 2 concurrent sessions on the primary route and place further concurrent sessions on the ordered fallbacks, splitting proactively rather than waiting for exhaustion. On verified exhaustion, all new sessions move down the fallback order. Each placement is recorded in a route receipt.",
+      "amends": [
+        "DEC-GM-023",
+        "DEC-GM-038",
+        "profile_selection fallback activation"
+      ]
     }
   ],
   "stages": {
