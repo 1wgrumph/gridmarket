@@ -817,6 +817,14 @@
       "decision": "Answer to the P1b Coordinator's OWNER_DECISION_REQUIRED (D1/D2). Both integration flakes are test defects inside repair round 1 (DEC-GM-061 test-data rule), not new findings. D1: the pages phase1b.test.tsx '$24' query also matched wall-clock ':24'; fixed by S50-flake 0ef25fd, which scopes every value query to its panel (Orchestrator ran it 3x, 13/13 each). The design Overview zone-map aria-label was read before data loaded; fixed by S52a-flake on lane-design. D2: the Orchestrator dispatches IE13 itself from e30c917: revert ad3ccf7 (restores router), then merge views f1e6d97, pages 0ef25fd, the design tip after S52a-flake, and market2 c773c8e; full deterministic gate once plus mutation >= 70%. No second review. The final merge is the 1b candidate.",
       "rationale": "Flaky queries were exposed only by running at integration scale; fixing tests to wait and scope is not a behaviour change. The Coordinator session ended with a question, so the Orchestrator finishes the mechanical tail directly.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-085",
+      "decided_at": "2026-09-26T11:55:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "The phase gate environment exports GRIDMARKET_NWS=off, per the SEIT backend-test precondition 'no network; fixtures only'. IE15 reruns the full repair-round gate on candidate 3f5b964 under that setting. Phase 2 follow-up (foundation): set GRIDMARKET_NWS=off inside the Makefile PYTEST/test targets, so a bare make test-all never reaches the network.",
+      "rationale": "IE14's test-all stalled after 3 tests with NWS unset: the NWS poller started inside TestClient lifespans and made real HTTP calls. Earlier green gates (attempts 5-11) set NWS=off. No product defect was shown.",
+      "reversible": true
     }
   ],
   "stages": {
