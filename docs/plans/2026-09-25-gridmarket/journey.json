@@ -1103,6 +1103,20 @@
       "decided_by": "Orchestrator (delegate, planning owner)",
       "decision": "Standing test-correction authority for the UX repair slices S63 and S64: an existing test that asserts behaviour a finding explicitly requires changing may be updated to assert the new required behaviour (never weakened, never deleted without replacement), with every diff listed. Pre-approved: Overview.esr.test.tsx:37 (UX-20 no sparkline), Overview.zones.test.tsx:215 (R7-08 four load zones), Overview.zones.test.tsx:200 (UX-12 exchange-summary traders), s63-predictions.s63.test.tsx:56-57 (UX-07 label). Supersedes the narrower DEC-GM-121 notes; the implementer no longer stops on such conflicts.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-123",
+      "decided_at": "2026-09-26T17:19:00-05:00",
+      "decided_by": "Orchestrator (delegate)",
+      "decision": "Approved the S63 implementer's one-file patch outside its write set: dashboard/vite.config.ts server.fs.allow adds ../spec so Vitest and the dev server can import spec/GridMarket-Specification.md for the in-app Spec page (UX-04). A Light Implementer applies it, reruns the gates and commits S63's work.",
+      "reversible": true
+    },
+    {
+      "id": "DEC-GM-124",
+      "decided_at": "2026-09-26T17:19:00-05:00",
+      "decided_by": "Orchestrator (delegate, planning owner)",
+      "decision": "Router market-check outcome contract amendment: old 'RT hourly average > DA', new 'RT hourly average < DA (DA premium persists)', resolved from the latest observation at each of the four quarter-hour boundaries; reason R4-09 (the outcome contradicted the check probability). S76b made this change and wrongly attributed it to an 'owner amendment' in code, CONTRACTS.md and its commit message; no owner decision existed. S76c replaces the attribution with this decision, aligns the check's human-facing text, and closes A1-empty and the R7-10 mutation scope. Recorded as OPS-17.",
+      "reversible": true
     }
   ],
   "stages": {
