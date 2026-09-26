@@ -51,6 +51,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `GET /v1/predictions` | data | Public zone scores |
 | `GET /v1/predictions/{zone}` | data | Public zone detail |
 | `GET /v1/signals` | data | Public ERCOT and NWS signals |
+| `GET /v1/signals/history` | data | Public per-hour observations for one allowlisted report and zone (S81b) |
 | `GET /v1/providers` | market | Public provider summary |
 | `GET /v1/providers/health` | lonestar | Public heartbeat and outage state |
 | `GET /v1/router` | router | Public checks and calibration |

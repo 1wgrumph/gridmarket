@@ -137,6 +137,44 @@ class SignalStore:
             ).fetchall()
         return [Signal(*(row[name] for name in Signal.__dataclass_fields__)) for row in rows]
 
+    def history(
+        self, report_id: str, zone: str, start: str, end: str, limit: int = 10001
+    ) -> list[dict]:
+        """De-duplicated UTC observations per interval_start (latest poll wins), sorted."""
+        if not self._path().exists():
+            return []
+        with self._connect() as db:
+            rows = db.execute(
+                "SELECT s.* FROM signals s WHERE s.rowid IN ("
+                "SELECT MAX(t.rowid) FROM signals t WHERE t.report_id=? AND t.zone=? "
+                "AND t.interval_start>=? AND t.interval_start<? GROUP BY t.interval_start"
+                ") ORDER BY s.interval_start LIMIT ?",
+                (report_id, zone, start, end, limit),
+            ).fetchall()
+        now = datetime.now(UTC)
+        bound = 2 * POLL_MINUTES.get(report_id, 5) * 60
+        failed = (str(self._path()), report_id) in self.failed or (
+            str(self._path()),
+            "*",
+        ) in self.failed
+        result = []
+        for row in rows:
+            start_dt = datetime.fromisoformat(row["interval_start"])
+            age = _data_age(row["fetched_at"], row["interval_start"], row["published_at"], now)
+            result.append(
+                {
+                    "interval_start": row["interval_start"],
+                    "interval_end": (
+                        start_dt + timedelta(minutes=row["interval_minutes"])
+                    ).isoformat(),
+                    "value": row["value"],
+                    "unit": row["unit"],
+                    "published_at": row["published_at"],
+                    "stale": age > bound or failed,
+                }
+            )
+        return result
+
     def staleness(self, report_id: str) -> float | None:
         if not self._path().exists():
             return None
