@@ -98,6 +98,12 @@ print(client.orders(), client.portfolio())
 sends a fresh `Idempotency-Key`. A non-2xx response raises `GridMarketError`
 with `status`, `code`, and `message` from the API's error envelope.
 
+## Design
+
+See the [design system](docs/design/DESIGN.md) and the [frontend-design skill](skills/gridmarket-frontend-design/SKILL.md).
+
+See the [changelog](CHANGELOG.md) for what shipped in each release.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

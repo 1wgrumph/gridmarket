@@ -77,6 +77,17 @@ body.look-nvg #fx{background:radial-gradient(ellipse at center,transparent 55%,r
 .bar i{display:block;height:100%}
 .note{font-size:11px;color:var(--text-dim);margin-top:10px;line-height:1.45}
 
+.dash{display:inline-block;margin-top:6px;font:500 10px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);text-decoration:none}
+.dash:hover{text-decoration:underline}
+[hidden]{display:none!important}
+.market{left:24px;bottom:84px;width:300px;max-height:34vh;overflow:auto;padding:12px}
+.mf-title{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-secondary);margin:2px 0 6px}
+.mf-strip,.mf-alerts{list-style:none;margin:0 0 10px;padding:0;font-size:12px}
+.mf-strip li,.mf-alerts li{padding:5px 0;border-bottom:1px solid var(--glass-border)}
+.mf-strip li:last-child,.mf-alerts li:last-child{border-bottom:0}
+.mf-strip b{color:var(--accent);font-weight:500}
+.mf-alerts b{float:right;font-family:var(--font-mono);color:var(--bad)}
+
 .dock{left:50%;bottom:22px;transform:translateX(-50%);display:flex;gap:6px;padding:6px;max-width:calc(100vw - 32px);overflow-x:auto}
 .dock button{flex:none;font:500 11px var(--font-mono);letter-spacing:.08em;padding:9px 12px;border-radius:var(--btn-radius);border:1px solid var(--glass-border);background:transparent;color:var(--text-primary);cursor:pointer;transition:all .15s;white-space:nowrap}
 .dock button:hover{border-color:var(--accent);color:var(--accent)}
@@ -97,6 +108,7 @@ button:focus-visible{outline:2px solid var(--text-primary);outline-offset:2px}
   .intel{top:78px;right:12px;left:12px;width:auto;max-height:34vh}
   .brand{left:12px;top:12px}
   .brand h1{font-size:12px}
+  .market{left:12px;right:12px;bottom:140px;width:auto;max-height:22vh}
 }
 @media (prefers-reduced-motion:reduce){.live i{animation:none}}
 </style>
@@ -109,7 +121,7 @@ button:focus-visible{outline:2px solid var(--text-primary);outline-offset:2px}
 
 <div class="hud brand">
   <div class="logo"></div>
-  <div><h1>GOD'S EYE <span>// ERCOT</span></h1><div class="eyebrow"><span class="live" id="live"><i></i><span id="liveText">acquiring feed</span></span></div></div>
+  <div><h1>GOD'S EYE <span>// ERCOT</span></h1><div class="eyebrow"><span class="live" id="live"><i></i><span id="liveText">acquiring feed</span></span></div><a class="dash" id="dashboard" href="#" hidden>GridMarket dashboard →</a></div>
 </div>
 <div class="hud readout glass" id="readout">
   <span>LAT<b id="lat">—</b></span><span>LON<b id="lon">—</b></span><span>ALT<b id="alt">—</b></span><span>SCED<b id="sced">—</b></span><span>λ<b id="lam">—</b></span>
@@ -124,6 +136,7 @@ button:focus-visible{outline:2px solid var(--text-primary);outline-offset:2px}
 
 <div class="hud intel glass" id="intel"><div class="eyebrow">// intel feed</div><h2>Acquiring ERCOT</h2></div>
 <div class="hud dock glass" id="dock"></div>
+<div class="hud market glass" id="market" hidden aria-label="Market activity and router checks (baseline rules)"></div>
 
 <script>
 const fmt=(n,d=0)=>n==null||!isFinite(n)?'—':Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -310,6 +323,10 @@ viewer.clock.onTick.addEventListener(()=>{
 viewer.camera.setView({destination:C.Cartesian3.fromDegrees(-99,20,18000000)});
 setTimeout(()=>fly('texas',reduce?0:4.2),300);
 if(window.gsap && !reduce){ gsap.from('.hud',{opacity:0,y:-8,stagger:.08,duration:.6,delay:.8,ease:'power2.out'}); }
+</script>
+<script type="module">
+import { mountFeed } from "/market-feed.js";
+mountFeed(document.getElementById("market"), document.getElementById("dashboard"));
 </script>
 </body>
 </html>
