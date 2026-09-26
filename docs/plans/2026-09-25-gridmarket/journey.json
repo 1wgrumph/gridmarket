@@ -721,6 +721,14 @@
       "decision": "The S49 assembly adds the design lane (exit bb097f8) and then the S53 pages restyle, after S49-D pages, followed by market2 and then E spec. S53 cutoff is 13:00: if it is not green, 1b assembles without it and the pages keep the S51 styling inside the v2 shell.",
       "rationale": "This keeps 1b on its forecast while giving the restyle a fair window. A green S51 page inside the v2 shell is shippable. The S52a-fix changed only test code, tightened its assertions, and the Orchestrator ran the dashboard suite at 30/30 with make test-dash exit 0.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-073",
+      "decided_at": "2026-09-26T09:40:00-05:00",
+      "decided_by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "The P1b Coordinator is replaced by P1b-coord3, with packet P1b-r3 carrying the current state: S49 A-D green on de7fb6f, spec deferred to S12-E, exits S52b/S05-const/S05-anom, jobs S53/S54/S21-fix. Remaining order: design, then pages-v2 (S53, cutoff 13:00), then market2 (S54, cutoff 13:30, otherwise merge 941c393 and record the mutation gap), then candidate and one assurance round. The stale S49-spec-merge job from the old Coordinator was stopped before it made changes.",
+      "rationale": "The old Coordinator never read directives DIR-P1b-05 through 15, so it did not know about the design, S53 or market2 lanes and would have sent a candidate without them to review. It also started a spec re-merge that would have collided with the design step in the integration worktree.",
+      "reversible": true
     }
   ],
   "stages": {
