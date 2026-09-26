@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ERCOT Grid District</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root{
+  --bg-0:#0f1216; --bg-1:#131922; --bg-2:#171b21;
+  --ink:#e6edf3; --muted:#9aa5b1; --soft:#c4d0dd;
+  --border:rgba(39,45,53,.96); --panel:rgba(23,27,33,.84); --panel-strong:rgba(18,22,28,.94);
+  --grid:rgba(111,139,255,.065);
+  --sky:#7fd3ff; --sun:#f2c14e; --blue:#6f8bff; --heat:#ff7a45; --jev:#5fdd91; --route:#b48cff;
+  --good:#5fdd91; --warn:#f2c14e; --bad:#ff5c84;
+  --focus-accent:var(--jev);
+  --shadow:0 18px 52px rgba(0,0,0,.42);
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg-0);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+body{color-scheme:dark}
+#app{position:relative;width:100%;height:100vh;overflow:hidden;background:
+  radial-gradient(ellipse at 14% 52%, rgba(127,211,255,.20) 0%, rgba(127,211,255,.06) 24%, transparent 52%),
+  radial-gradient(ellipse at 74% 48%, rgba(95,221,145,.18) 0%, rgba(95,221,145,.06) 28%, transparent 56%),
+  radial-gradient(ellipse at 46% 60%, rgba(255,122,69,.12) 0%, transparent 40%),
+  radial-gradient(ellipse at 50% 34%,#12233a 0%,var(--bg-1) 44%,var(--bg-0) 100%)}
+#app:before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+#app:after{content:"";position:absolute;inset:18px;border:1px solid var(--border);pointer-events:none}
+#mount{position:absolute;inset:0;cursor:grab;touch-action:none}
+#mount:active{cursor:grabbing}
+.hud{position:absolute;z-index:10;user-select:none}
+.head{top:28px;left:34px;max-width:560px}
+.kicker{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;gap:10px;align-items:center}
+.live{display:inline-flex;align-items:center;gap:6px;color:var(--good)}
+.live i{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor;animation:pulse 1.8s infinite}
+.live.stale{color:var(--warn)} .live.down{color:var(--bad)}
+@keyframes pulse{50%{opacity:.35}}
+.head h1{margin:0;font-size:30px;line-height:.98;letter-spacing:-.02em}
+.sub{margin-top:10px;color:var(--soft);font-size:12px;letter-spacing:.16em;text-transform:uppercase;max-width:52ch;line-height:1.45}
+.hint{margin-top:10px;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.hint b{color:var(--focus-accent)}
+.meta{top:20px;right:14px;text-align:right;line-height:1.8}
+.meta .t{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.meta .l{font-size:11px;color:var(--soft)}
+.meta .v{font-size:11px;color:var(--muted)}
+.meta .focus{font-size:12px;color:var(--focus-accent);font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+#labels{position:absolute;inset:0;pointer-events:none;z-index:12}
+#leaders{position:absolute;inset:0;pointer-events:none;z-index:11}
+.label{position:absolute;display:flex;gap:9px;align-items:flex-start;max-width:252px;padding:8px 9px;background:rgba(10,16,26,.76);border:1px solid var(--border);backdrop-filter:blur(16px);box-shadow:var(--shadow);pointer-events:auto;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease,opacity .18s ease;font-family:inherit;text-align:left;color:var(--ink)}
+.label:hover{transform:translateY(-2px)}
+.label.focus{background:rgba(15,21,33,.94);border-color:color-mix(in srgb, var(--focus-accent) 72%, transparent)}
+.dot{width:11px;height:11px;border-radius:999px;flex:none;margin-top:2px;box-shadow:0 0 18px currentColor}
+.lname{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);font-weight:800;display:flex;gap:6px;flex-wrap:wrap;line-height:1.2}
+.badge{font-size:7px;letter-spacing:.16em;padding:2px 5px;border-radius:999px;background:var(--focus-accent);color:#08111d;font-weight:900}
+.lsub{font-size:10px;line-height:1.35;color:var(--soft);margin-top:4px;text-transform:uppercase;letter-spacing:.08em}
+.lval{font-size:12px;font-weight:800;margin-top:4px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.leader{position:absolute;height:1px;border-top:1px dashed rgba(208,224,255,.22);transform-origin:0 0;opacity:.8}
+.legend{left:34px;bottom:132px;width:280px;padding:13px 13px 12px;background:var(--panel);backdrop-filter:blur(16px);border:1px solid var(--border);box-shadow:var(--shadow)}
+.legend-title{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.legend-row{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--soft);line-height:1.35}.legend-row+.legend-row{margin-top:7px}
+.swatch{width:12px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(255,255,255,.08)}
+.detail{top:20px;right:14px;bottom:312px;width:min(470px,42vw);padding:18px 18px 16px;background:rgba(9,15,24,.82);border:1px solid var(--border);backdrop-filter:blur(18px);box-shadow:var(--shadow);overflow:auto}
+.detail .num{float:right;font-size:42px;line-height:.8;color:rgba(226,238,255,.09);font-weight:800}
+.detail .smallcap{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.detail h2{margin:0 0 8px;font-size:26px;line-height:1.02;letter-spacing:-.03em}
+.detail .subtitle{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;line-height:1.35}
+.detail p{font-size:13px;line-height:1.6;color:#d2dff1;margin:0 0 10px}
+.chips,.route,.stats-line{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.chip,.route span,.mini-stat{font-size:10px;letter-spacing:.12em;text-transform:uppercase;border:1px solid rgba(208,224,255,.12);padding:5px 7px;background:rgba(208,224,255,.05);color:#d9e4f3}
+.readouts{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px;margin:12px 0 4px}
+.ro{border:1px solid rgba(208,224,255,.12);background:rgba(208,224,255,.04);padding:8px 9px}
+.ro .k{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ro .n{font-size:18px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.ro .s{font-size:10px;color:var(--soft);margin-top:2px;letter-spacing:.04em}
+.spark{display:block;width:100%;height:30px;margin-top:6px}
+.checkrow{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;border:1px solid rgba(208,224,255,.12);padding:8px 9px;margin-top:8px}
+.checkrow .qq{font-size:12px;color:#d9e4f3;line-height:1.35}
+.checkrow .pp{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.checkrow .bar{grid-column:1/-1;height:4px;background:rgba(208,224,255,.08);position:relative}
+.checkrow .bar i{position:absolute;inset:0 auto 0 0;display:block}
+.checkrow .rt{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.worker-line{font-size:11px;color:var(--soft);margin-top:12px;letter-spacing:.12em;text-transform:uppercase;line-height:1.45}
+.impl{margin-top:14px;padding-top:12px;border-top:1px solid rgba(208,224,255,.12)}
+.impl h3{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:10px 0 6px}
+.impl ul{margin:0;padding-left:18px;color:#d3e0f2;font-size:13px;line-height:1.6}
+.impl li+li{margin-top:6px}
+.cards{right:34px;bottom:126px;width:min(520px,46vw);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;z-index:13;pointer-events:auto}
+.floor-card{appearance:none;text-align:left;font-family:inherit;min-height:122px;padding:11px 11px 10px;border:1px solid var(--border);background:var(--panel);backdrop-filter:blur(16px);box-shadow:var(--shadow);color:var(--ink);cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.floor-card:hover{transform:translateY(-2px);border-color:color-mix(in srgb, var(--focus-accent) 72%, transparent)}
+.floor-card.active{border-color:color-mix(in srgb, var(--focus-accent) 84%, transparent);background:rgba(15,21,33,.94);box-shadow:0 0 0 1px color-mix(in srgb, var(--focus-accent) 34%, transparent),var(--shadow)}
+.floor-card .ct{font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;line-height:1.25}
+.floor-card .cn{font-size:15px;font-weight:800;line-height:1.15;margin-top:5px;text-transform:uppercase}
+.floor-card .cs{font-size:12px;color:var(--soft);margin-top:4px;line-height:1.35}
+.floor-card .cw{font-size:13px;color:var(--focus-accent);margin-top:8px;font-weight:800;letter-spacing:.04em;line-height:1.3;font-variant-numeric:tabular-nums}
+.building-nav{left:34px;right:34px;bottom:24px;display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;z-index:14;padding:2px 2px 8px;scrollbar-width:thin}
+.building-tab{appearance:none;text-align:left;font-family:inherit;min-width:200px;flex:0 0 min(220px,22vw);padding:10px 11px;border:1px solid var(--border);background:var(--panel);backdrop-filter:blur(16px);box-shadow:var(--shadow);cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease;color:var(--ink)}
+.building-tab:hover{transform:translateY(-2px);border-color:color-mix(in srgb, var(--focus-accent) 72%, transparent)}
+.building-tab.active{background:rgba(15,21,33,.94);border-color:color-mix(in srgb, var(--focus-accent) 84%, transparent);box-shadow:0 0 0 1px color-mix(in srgb, var(--focus-accent) 34%, transparent),var(--shadow)}
+.building-tab .bid{font-size:10px;color:var(--muted);letter-spacing:.12em;line-height:1.2}
+.building-tab .bn{font-size:13px;font-weight:900;line-height:1.2;margin-top:4px;text-transform:uppercase}
+.building-tab .bi{font-size:12px;line-height:1.3;margin-top:4px;font-variant-numeric:tabular-nums}
+.controls{top:18px;left:50%;transform:translateX(-50%);display:flex;justify-content:center;gap:7px;flex-wrap:wrap;z-index:14;max-width:min(840px,calc(100vw - 420px))}
+.controls button{appearance:none;border:1px solid var(--border);background:var(--panel);backdrop-filter:blur(16px);box-shadow:var(--shadow);padding:8px 10px;font-family:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#d8e3f1;cursor:pointer}
+.controls button.active{border-color:rgba(95,221,145,.6);background:rgba(95,221,145,.13);color:#f1f9ea}
+.controls button:focus-visible,.building-tab:focus-visible,.floor-card:focus-visible,.label:focus-visible{outline:2px solid var(--focus-accent);outline-offset:2px}
+.footer{position:absolute;left:50%;bottom:130px;transform:translateX(-50%);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);z-index:10;white-space:nowrap}
+.cards-hidden .detail,.cards-hidden .building-nav,.cards-hidden .cards{display:none!important}
+@media (max-width:760px) and (orientation:portrait){
+  #app:after{inset:10px}
+  .head{top:14px;left:14px;right:14px;max-width:none}
+  .kicker{font-size:8px}
+  .head h1{font-size:20px;max-width:84vw}
+  .sub,.hint{font-size:9px;max-width:84vw}
+  .meta,.legend,.footer{display:none}
+  .controls{left:12px;right:12px;top:auto;bottom:10px;transform:none;max-width:none;display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+  .controls button{font-size:8px;padding:8px 4px;letter-spacing:.04em}
+  .detail{left:12px;right:12px;top:auto;bottom:56px;width:auto;max-height:30vh;padding:10px 11px}
+  .detail h2{font-size:16px}
+  .detail p,.impl ul{font-size:12px;line-height:1.45}
+  .cards{left:12px;right:12px;bottom:122px;width:auto;grid-template-columns:1fr}
+  .floor-card{min-height:0;padding:9px 10px}
+  .building-nav{left:12px;right:12px;bottom:58px;gap:6px;padding:0 0 4px}
+  .building-tab{min-width:160px;flex:0 0 160px;padding:7px 6px}
+  #leaders{display:none}
+  .label{max-width:min(86vw,320px)}
+}
+@media (prefers-reduced-motion:reduce){.live i{animation:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="mount"></div>
+  <div class="hud head">
+    <div class="kicker"><span>ERCOT · live grid district</span><span class="live" id="liveDot"><i></i><span id="liveText">connecting</span></span></div>
+    <h1>ERCOT GRID × JEV DECISION DISTRICT</h1>
+    <div class="sub">Weather drives load and renewables, dispatch sets price, and every signal lands in the Jev decision eye before the router turns it into an alert, a review, or a log line. Every number comes from the ERCOT Public API through this Worker.</div>
+    <div class="hint">Click a building or layer card · drag horizontally to orbit · drag vertically to tilt · <b>roof columns are live values</b></div>
+  </div>
+  <div class="hud controls">
+    <button id="spin" class="active">Auto rotate</button>
+    <button id="hideCards">Remove Cards</button>
+    <button id="flow" class="active">Flow</button>
+    <button id="explode">Explode</button>
+    <button id="topView">Top View</button>
+    <button id="zoomReset">Reset zoom</button>
+  </div>
+  <div class="hud meta">
+    <div class="t">ERCOT Public API · ercot-hackathon worker · refresh 5 min</div>
+    <div class="l">Last SCED run</div>
+    <div class="v" id="metaSced">—</div>
+    <div class="l">Decision engine</div>
+    <div class="v">baseline rules · Jev gateway pending</div>
+    <div class="l" style="margin-top:6px">Current Focus</div>
+    <div class="focus" id="metaFocus">05 · JEV DECISION EYE</div>
+  </div>
+  <div id="labels"></div>
+  <div id="leaders"></div>
+  <div class="hud legend">
+    <div class="legend-title">// quick legend</div>
+    <div class="legend-row"><div class="swatch" style="background:#7fd3ff"></div><span>Weather and load forecast inputs</span></div>
+    <div class="legend-row"><div class="swatch" style="background:#f2c14e"></div><span>Wind and solar output vs forecast</span></div>
+    <div class="legend-row"><div class="swatch" style="background:#6f8bff"></div><span>Demand, dispatch, and reserve headroom</span></div>
+    <div class="legend-row"><div class="swatch" style="background:#ff7a45"></div><span>Real-time and day-ahead prices ($/MWh)</span></div>
+    <div class="legend-row"><div class="swatch" style="background:#5fdd91"></div><span>Jev checks: calibrated probabilities</span></div>
+    <div class="legend-row"><div class="swatch" style="background:#b48cff"></div><span>Router: log, review, alert + paper ledger</span></div>
+  </div>
+  <div class="hud detail" id="detail"></div>
+  <div class="hud cards" id="cards"></div>
+  <div class="hud building-nav" id="buildingNav"></div>
+  <div class="footer">ercot-hackathon · live grid district · cloudflare worker surface</div>
+</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const EMBED = new URLSearchParams(location.search).get('embed') === '1';
+const fmt = (n, d=0) => n==null || !isFinite(n) ? '—' : Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const money = n => n==null ? '—' : (n<0?'−$':'$') + fmt(Math.abs(n),2);
+const signed = (n,d=0,u='') => n==null ? '—' : (n>0?'+':n<0?'−':'') + fmt(Math.abs(n),d) + u;
+const bandColor = p => p>=.8 ? '#5fdd91' : p>=.5 ? '#f2c14e' : '#9aa5b1';
+
+let SNAP = null;
+
+const BUILDINGS = [
+  { id:'01', name:'WEATHER FRONT', sub:'NP4-722 weather assumptions · NP3-565 load forecast', stream:'INPUT', role:'Temperatures by weather zone',
+    shape:'cloud', x:-12.2, z:1.2, importance:.98, accent:0x7fd3ff, color:0x0f2433,
+    body:'Weather is the first mover. ERCOT publishes the hourly temperature assumptions behind its load forecast for eight weather zones. Hot coastal and southern zones push demand up, and forecast temperature misses are one of the main reasons load surprises the market.',
+    chips:['weather zones','°F assumptions','load driver'],
+    route:['forecast temp','drive load','shift renewables','feed Jev'],
+    floors:[
+      ['Zone Temps','Hourly assumption for each of the eight ERCOT weather zones.', s=>s.weather?`${fmt(s.weather.avgF,1)}°F avg`:'—'],
+      ['Hot Spot','The hottest zone sets the pace for cooling load.', s=>{ if(!s.weather) return '—'; const z=[...s.weather.zones].sort((a,b)=>b.tempF-a.tempF)[0]; return `${z.zone} ${fmt(z.tempF,1)}°F`; }],
+      ['Spread','Gap between the hottest and coolest zones.', s=>s.weather?`${fmt(s.weather.maxF-s.weather.minF,1)}°F range`:'—']
+    ] },
+  { id:'02', name:'RENEWABLE FIELD', sub:'NP4-732 wind · NP4-737 solar · actual vs forecast', stream:'SUPPLY', role:'Wind and solar output',
+    shape:'turbine', x:-6.0, z:-2.6, importance:1.02, accent:0xf2c14e, color:0x2b2410,
+    body:'Wind and solar output against ERCOT\'s own short-term forecasts (STWPF and STPPF). The gap between actual and forecast is the error the Jev renewable-shortfall check watches. Solar drops to zero every evening, so the ramp into darkness is where errors matter most.',
+    chips:['STWPF','STPPF','forecast error'],
+    route:['forecast','generate','measure error','feed Jev'],
+    floors:[
+      ['Wind Deck','System-wide wind, latest completed hour.', s=>s.wind?`${fmt(s.wind.actualMW)} MW · HE${s.wind.actualHE}`:'—'],
+      ['Solar Deck','System-wide solar, latest completed hour.', s=>s.solar?`${fmt(s.solar.actualMW)} MW · HE${s.solar.actualHE}`:'—'],
+      ['Forecast Error','Actual minus forecast for that hour, wind + solar.', s=>(s.wind&&s.solar)?`${signed((s.wind.errorMW||0)+(s.solar.errorMW||0),0,' MW')}`:'—']
+    ] },
+  { id:'03', name:'DISPATCH CORE', sub:'NP6-235 demand · NP6-323 SCED lambda + reserves', stream:'SYSTEM', role:'Demand and dispatch',
+    shape:'gate', x:0.2, z:2.6, importance:1.04, accent:0x6f8bff, color:0x121c38,
+    body:'System-wide demand every 15 minutes and every SCED run every five. System lambda is the marginal energy price the dispatch engine is paying right now. Headroom is online capacity (HSL) minus demand, a simple proxy for how close the grid is to scarcity pricing.',
+    chips:['SCED','system lambda','online HSL'],
+    route:['measure load','dispatch','price margin','feed prices'],
+    floors:[
+      ['System Demand','Latest 15-minute interval.', s=>s.demand?`${fmt(s.demand.mw)} MW`:'—'],
+      ['System Lambda','Marginal energy price from the last SCED run.', s=>s.sced?money(s.sced.systemLambda):'—'],
+      ['Reserve Headroom','Online HSL minus demand.', s=>s.sced?`${fmt(s.sced.headroomMW)} MW · ${fmt(s.sced.headroomPct,1)}%`:'—']
+    ] },
+  { id:'04', name:'PRICE SPIRE', sub:'NP6-905 RT hub SPPs · NP4-190 DAM SPPs', stream:'MARKET', role:'Real-time and day-ahead prices',
+    shape:'spire', x:5.4, z:-2.2, importance:1.06, accent:0xff7a45, color:0x33180e,
+    body:'Fifteen-minute settlement point prices at the four trading hubs, next to the day-ahead price for the same hour. The difference (DART) is the first spread a Jev check scores, because the outcome is known within hours.',
+    chips:['HB_NORTH','HB_HOUSTON','HB_SOUTH','HB_WEST'],
+    route:['settle RT','compare DA','spread','feed Jev'],
+    floors:[
+      ['RT Hub Prices','Latest 15-minute SPP at HB_NORTH.', s=>{ const h=s.hubs?.find(x=>x.hub==='HB_NORTH'); return h?`${money(h.price)}/MWh`:'—'; }],
+      ['Day-Ahead','DAM price at HB_NORTH for the hour in progress.', s=>s.dam?`${money(s.dam.price)} · HE${s.dam.hourEnding}`:'—'],
+      ['DART Spread','Real-time minus day-ahead at HB_NORTH.', s=>s.dam?`${signed(s.dam.dart,2)} $/MWh`:'—']
+    ] },
+  { id:'05', name:'JEV DECISION EYE', sub:'Calibrated checks · jev-gateway', stream:'DECIDE', role:'Probabilities from structured data',
+    shape:'eye', x:10.8, z:1.4, importance:1.18, accent:0x5fdd91, color:0x0e2a1c,
+    body:'Every building feeds this eye. Each check asks one question with a fixed horizon and returns a probability. Right now a simple baseline rule set answers them in the Worker. Once jev-gateway is deployed, the same checks route to Jev and the scores become calibrated against real outcomes.',
+    chips:['scarcity-2h','dart-north','renew-shortfall'],
+    route:['collect features','ask check','score p','route'],
+    floors:[
+      ['Feature Intake','Inputs pulled from the other four buildings.', s=>s.checks?`${s.checks.length} checks live`:'—'],
+      ['Calibrated Checks','Highest probability right now.', s=>{ if(!s.checks?.length) return '—'; const c=[...s.checks].sort((a,b)=>b.p-a.p)[0]; return `${c.id} · p=${fmt(c.p,2)}`; }],
+      ['Confidence Bands','≥0.80 alert · 0.50–0.80 review · below logs.', s=>s.checks?s.checks.map(c=>c.route).join(' · '):'—']
+    ] },
+  { id:'06', name:'ROUTER TERRACES', sub:'Log · human review · alert + paper ledger', stream:'ACT', role:'Turns probabilities into actions',
+    shape:'pagoda', x:15.6, z:-2.4, importance:.96, accent:0xb48cff, color:0x1f1633,
+    body:'The router applies the confidence bands. Low scores are logged for calibration, mid scores wait for a person, and high scores raise an alert and write a paper trade. Real orders stay behind human approval, and executing them requires QSE registration or a broker.',
+    chips:['paper only','human gate','Brier scoring'],
+    route:['band','queue','alert','score outcome'],
+    floors:[
+      ['Log','Scores below 0.50, kept for calibration.', s=>`${(s.checks||[]).filter(c=>c.route==='log').length} checks`],
+      ['Human Review','Scores from 0.50 to 0.80.', s=>`${(s.checks||[]).filter(c=>c.route==='review').length} checks`],
+      ['Alert + Ledger','Scores at or above 0.80. Paper trades only.', s=>`${(s.checks||[]).filter(c=>c.route==='alert').length} checks`]
+    ] }
+];
+
+const LINKS = [
+  ['weather to renewables',0,1,1.9,0x7fd3ff],
+  ['weather to dispatch',0,2,1.6,0x7fd3ff],
+  ['renewables to dispatch',1,2,2.05,0xf2c14e],
+  ['dispatch to prices',2,3,1.95,0x6f8bff],
+  ['prices to jev',3,4,2.1,0xff7a45],
+  ['dispatch to jev',2,4,1.45,0x6f8bff],
+  ['jev to router',4,5,1.8,0x5fdd91]
+];
+
+const HELPERS = [
+  ['Coast sensor','Southern sensor','Zone spread'],
+  ['Wind meter','Solar meter','Error tracker'],
+  ['Load meter','SCED clock','Headroom gauge'],
+  ['Hub ticker','DAM ticker','Spread calc'],
+  ['Feature loader','Check runner','Band keeper'],
+  ['Log writer','Review queue','Ledger clerk']
+];
+
+const mount = document.getElementById('mount');
+const labels = document.getElementById('labels');
+const leaders = document.getElementById('leaders');
+const detail = document.getElementById('detail');
+const cards = document.getElementById('cards');
+const buildingNav = document.getElementById('buildingNav');
+const hideCardsBtn = document.getElementById('hideCards');
+const metaFocus = document.getElementById('metaFocus');
+
+let W = mount.clientWidth, H = mount.clientHeight;
+let selected = 4, selectedFloor = 0;
+let auto = true, flow = true, exploded = false, cardsHidden = false;
+
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(W,H);
+mount.appendChild(renderer.domElement);
+
+const baseVs = 11.2;
+const defaultZoom = 0.74, minZoom = 0.28, maxZoom = 2.7, zoomCenterFull = 1.14;
+let zoomLevel = defaultZoom, targetZoom = defaultZoom;
+const camera = new THREE.OrthographicCamera(-baseVs*(W/H),baseVs*(W/H),baseVs,-baseVs,.1,260);
+function applyZoom(){camera.zoom = zoomLevel; camera.updateProjectionMatrix();}
+applyZoom();
+let orbitYaw = -Math.PI/4, targetYaw = -Math.PI/4;
+const defaultPitch = 0.78, minPitch = 0.34, maxPitch = 1.50, topPitch = 1.48;
+let orbitPitch = defaultPitch, targetPitch = defaultPitch, topView = false;
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+function syncTopViewButton(){ const b=document.getElementById('topView'); b.classList.toggle('active',topView); b.textContent = topView ? 'Angled View' : 'Top View'; }
+function setPitch(next){ targetPitch = clamp(next,minPitch,maxPitch); if(targetPitch < topPitch-.05) topView=false; syncTopViewButton(); }
+function updateCameraOrbit(immediate=false){
+  if(immediate){ orbitYaw=targetYaw; orbitPitch=targetPitch; }
+  else { orbitYaw += (targetYaw-orbitYaw)*.08; orbitPitch += (targetPitch-orbitPitch)*.10; }
+  const radius = 30, cp = Math.cos(orbitPitch), sp = Math.sin(orbitPitch);
+  camera.position.set(Math.cos(orbitYaw)*cp*radius, 7 + sp*21, Math.sin(orbitYaw)*cp*radius);
+  camera.lookAt(0,1.15,0);
+}
+updateCameraOrbit(true);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x081018,.024);
+scene.add(new THREE.AmbientLight(0xb8d7ff,.86));
+const sun = new THREE.DirectionalLight(0xe2f0ff,1.12); sun.position.set(12,22,14); scene.add(sun);
+const rim = new THREE.DirectionalLight(0x4bb7ff,.34); rim.position.set(-12,8,-10); scene.add(rim);
+
+const root = new THREE.Group(), district = new THREE.Group();
+scene.add(root); root.add(district);
+const DISTRICT_CENTER_X = 1.7, DISTRICT_CENTER_Z = 0, SCENE_OFFSET_X = -5.2, EXPLODED_OFFSET_X = -4.0;
+root.scale.setScalar(1.0);
+root.userData.targetX = SCENE_OFFSET_X; root.userData.targetZ = 0;
+
+const clickable = [], buildingGroups = [], floorGroups = [], labelEls = [], lineEls = [], helperOrbits = [], packets = [];
+const dataColumns = []; // {mesh, cap, edge, key, building}
+const ink = 0xd8e7fb;
+
+function mix(a,b,t){return a+(b-a)*t;}
+function updateSceneFraming(){
+  const baseX = cardsHidden ? 0 : (exploded ? EXPLODED_OFFSET_X : SCENE_OFFSET_X);
+  const t = clamp((targetZoom-defaultZoom)/(zoomCenterFull-defaultZoom),0,1);
+  root.userData.targetX = mix(baseX,0,t);
+}
+function setZoom(next){ targetZoom = zoomLevel = clamp(next,minZoom,maxZoom); updateSceneFraming(); applyZoom(); }
+
+function material(color, op=.72, shine=45){ return new THREE.MeshPhongMaterial({color,transparent:true,opacity:op,shininess:shine,side:THREE.DoubleSide}); }
+function edge(geo,color=ink,op=.68){ return new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color,transparent:true,opacity:op})); }
+function hexCSS(n){return '#'+n.toString(16).padStart(6,'0');}
+function addLine(group,a,b,color=ink,op=.35){ group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]),new THREE.LineBasicMaterial({color,transparent:true,opacity:op}))); }
+
+function roundedRectShape(w,d,r){
+  const x=-w/2, z=-d/2, sh=new THREE.Shape();
+  sh.moveTo(x+r,z); sh.lineTo(x+w-r,z); sh.quadraticCurveTo(x+w,z,x+w,z+r);
+  sh.lineTo(x+w,z+d-r); sh.quadraticCurveTo(x+w,z+d,x+w-r,z+d);
+  sh.lineTo(x+r,z+d); sh.quadraticCurveTo(x,z+d,x,z+d-r);
+  sh.lineTo(x,z+r); sh.quadraticCurveTo(x,z,x+r,z);
+  return sh;
+}
+function cloudShape(w,d){
+  // four overlapping lobes, like a front on a weather map
+  const sh = new THREE.Shape(), rx=w/2, rz=d/2;
+  sh.moveTo(-rx*.92, rz*.18);
+  sh.bezierCurveTo(-rx*1.02,-rz*.62,-rx*.46,-rz*1.02,-rx*.12,-rz*.66);
+  sh.bezierCurveTo(rx*.06,-rz*1.12,rx*.64,-rz*1.06,rx*.72,-rz*.46);
+  sh.bezierCurveTo(rx*1.06,-rz*.34,rx*1.08,rz*.42,rx*.70,rz*.52);
+  sh.bezierCurveTo(rx*.56,rz*1.06,-rx*.02,rz*1.04,-rx*.16,rz*.70);
+  sh.bezierCurveTo(-rx*.52,rz*1.02,-rx*1.0,rz*.82,-rx*.92,rz*.18);
+  return sh;
+}
+function turbineShape(w,d){
+  // three-blade rotor footprint around a round hub
+  const sh = new THREE.Shape(), R = Math.min(w,d)*.52, hub = R*.34, bw = .42;
+  const pts = [];
+  for(let b=0;b<3;b++){
+    const a = b*Math.PI*2/3 - Math.PI/2;
+    const a0 = a - bw, a1 = a + bw*.35;
+    pts.push([Math.cos(a0)*hub, Math.sin(a0)*hub]);
+    pts.push([Math.cos(a-.05)*R, Math.sin(a-.05)*R]);
+    pts.push([Math.cos(a+.12)*R*.94, Math.sin(a+.12)*R*.94]);
+    pts.push([Math.cos(a1)*hub*1.05, Math.sin(a1)*hub*1.05]);
+    const mid = a + Math.PI/3;
+    pts.push([Math.cos(mid)*hub*.92, Math.sin(mid)*hub*.92]);
+  }
+  sh.moveTo(pts[0][0]*(w/d>1?w/d:1), pts[0][1]);
+  pts.slice(1).forEach(p => sh.lineTo(p[0]*(w/d>1?w/d:1), p[1]));
+  sh.closePath();
+  return sh;
+}
+function octagonShape(w,d){
+  const sh=new THREE.Shape(), c1=.22;
+  sh.moveTo(-w/2+w*c1,-d/2); sh.lineTo(w/2-w*c1,-d/2); sh.lineTo(w/2,-d/2+d*c1); sh.lineTo(w/2,d/2-d*c1);
+  sh.lineTo(w/2-w*c1,d/2); sh.lineTo(-w/2+w*c1,d/2); sh.lineTo(-w/2,d/2-d*c1); sh.lineTo(-w/2,-d/2+d*c1); sh.closePath();
+  return sh;
+}
+function spireShape(w,d){
+  // diamond with clipped points: a price tick marker
+  const sh=new THREE.Shape();
+  sh.moveTo(0,-d/2); sh.lineTo(w*.34,-d*.18); sh.lineTo(w/2,0); sh.lineTo(w*.34,d*.18);
+  sh.lineTo(0,d/2); sh.lineTo(-w*.34,d*.18); sh.lineTo(-w/2,0); sh.lineTo(-w*.34,-d*.18); sh.closePath();
+  return sh;
+}
+function gateShape(w,d){
+  const outer = roundedRectShape(w,d,Math.min(w,d)*.14);
+  const hole = roundedRectShape(w*.42,d*.40,Math.min(w,d)*.08);
+  outer.holes.push(hole);
+  return outer;
+}
+function eyeShape(w,d){
+  const sh=new THREE.Shape();
+  sh.moveTo(-w/2,0);
+  sh.bezierCurveTo(-w*.24,-d*.72,w*.24,-d*.72,w/2,0);
+  sh.bezierCurveTo(w*.24,d*.72,-w*.24,d*.72,-w/2,0);
+  const iris = new THREE.Path();
+  const r = Math.min(w,d)*.24;
+  iris.absarc(0,0,r,0,Math.PI*2,true);
+  sh.holes.push(iris);
+  return sh;
+}
+function footprint(kind,w,d){
+  switch(kind){
+    case 'cloud': return cloudShape(w,d);
+    case 'turbine': return turbineShape(w,d);
+    case 'gate': return gateShape(w,d);
+    case 'spire': return spireShape(w,d);
+    case 'eye': return eyeShape(w,d);
+    case 'pagoda': return octagonShape(w,d);
+    default: return roundedRectShape(w,d,Math.min(w,d)*.14);
+  }
+}
+function slabGeometry(kind,w,d,h){
+  const geo = new THREE.ExtrudeGeometry(footprint(kind,w,d),{depth:h,bevelEnabled:false,curveSegments:32});
+  geo.rotateX(Math.PI/2); geo.translate(0,h/2,0);
+  return geo;
+}
+
+function addRoofMicroForms(parent,kind,w,d,accent,focus,fi){
+  if(kind==='turbine' && fi===2){
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(.08,.14,1.4,12), material(0x2b2410,.7,80));
+    mast.position.y = .9; parent.add(mast);
+  } else if(kind==='gate'){
+    const bridge = new THREE.Mesh(new THREE.BoxGeometry(w*.52,.18,.24), material(focus?accent:0x162132, focus?.5:.6, 80));
+    bridge.position.set(0,.24,0); parent.add(bridge);
+    const e = edge(bridge.geometry, accent, .42); e.position.copy(bridge.position); parent.add(e);
+  } else if(kind==='pagoda'){
+    for(let i=0;i<3;i++){
+      const ring = new THREE.Mesh(new THREE.CylinderGeometry(1.28-.23*i,1.44-.23*i,.12,8), material(i===1&&focus?accent:0x162132, i===1&&focus?.45:.55, 70));
+      ring.position.y = .22 + i*.07; ring.rotation.y = Math.PI/8; parent.add(ring);
+    }
+  } else if(kind==='eye' && fi===2){
+    const pupil = new THREE.Mesh(new THREE.CylinderGeometry(.34,.5,.9,32), material(0x5fdd91,.78,140));
+    pupil.position.set(0,.55,0); parent.add(pupil);
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(1.7,.09,18,72), new THREE.MeshBasicMaterial({color:0x9dffc4,transparent:true,opacity:.5}));
+    halo.rotation.x = Math.PI/2; halo.position.y = .3; halo.scale.set(1.5,.82,1); parent.add(halo);
+  } else if(kind==='cloud' && fi===2){
+    for(let i=0;i<3;i++){
+      const puff = new THREE.Mesh(new THREE.SphereGeometry(.42-.08*i,18,12), material(0x7fd3ff,.28,60));
+      puff.position.set(-.9+i*.9,.34,(i%2?.3:-.3)); puff.scale.y=.55; parent.add(puff);
+    }
+  }
+}
+
+function makeHelperOrbit(name, si, fi, accent){
+  const bot = new THREE.Group();
+  bot.add(new THREE.Mesh(new THREE.SphereGeometry(.12,14,14), new THREE.MeshBasicMaterial({color:accent})));
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.22,.015,8,24), new THREE.MeshBasicMaterial({color:accent,transparent:true,opacity:.62}));
+  ring.rotation.x = Math.PI/2; bot.add(ring);
+  bot.userData = {name, structure:si, floor:fi, phase:(si*.21+fi*.33)%1};
+  return bot;
+}
+
+// Live data columns sit on each roof. Height is driven by the snapshot.
+const COLUMN_SPECS = [
+  { building:0, items:[['coast',0x7fd3ff],['southern',0x9fe2ff],['farWest',0x5bb8e8],['north',0xbfeaff]] },
+  { building:1, items:[['wind',0xf2c14e],['solar',0xffe08a]] },
+  { building:2, items:[['demand',0x6f8bff],['hsl',0x3b4f99]] },
+  { building:3, items:[['HB_NORTH',0xff7a45],['HB_HOUSTON',0xff9a6b],['HB_SOUTH',0xffb48f],['HB_WEST',0xe85d2a],['DAM',0x8a3a1c]] },
+  { building:4, items:[['scarcity-2h',0x5fdd91],['dart-north',0x5fdd91],['renew-shortfall',0x5fdd91]] },
+];
+function addColumns(g, si, topY){
+  const spec = COLUMN_SPECS.find(c=>c.building===si); if(!spec) return;
+  const n = spec.items.length, gap = .44;
+  spec.items.forEach(([key,color],i) => {
+    const x = (i-(n-1)/2)*gap;
+    const geo = new THREE.BoxGeometry(.26,1,.26); geo.translate(0,.5,0);
+    const mesh = new THREE.Mesh(geo, material(color,.82,90));
+    mesh.position.set(x, topY, 0); mesh.scale.y = .05;
+    const e = edge(geo, color, .9); e.position.copy(mesh.position); e.scale.y = .05;
+    g.add(mesh); g.add(e);
+    mesh.userData.structure = si; clickable.push(mesh);
+    dataColumns.push({mesh, edge:e, key, building:si, target:.05});
+  });
+}
+
+function buildStructure(s, si){
+  const g = new THREE.Group();
+  g.position.set(s.x-DISTRICT_CENTER_X,0,s.z-DISTRICT_CENTER_Z);
+  g.userData.structure = si; g.userData.baseScale = s.importance||1; g.userData.targetScale = g.userData.baseScale;
+  g.scale.setScalar(g.userData.baseScale);
+  district.add(g); buildingGroups.push(g); floorGroups[si] = [];
+
+  const big = s.shape==='eye' ? 1.25 : s.shape==='turbine' ? 1.12 : 1;
+  const fw = 4.6*big*(0.92+(s.importance||1)*.08);
+  const fd = (s.shape==='eye'?3.2:s.shape==='spire'?4.0:3.7)*(0.92+(s.importance||1)*.08) * (s.shape==='turbine'?1.1:1);
+  const baseGeo = slabGeometry(s.shape==='turbine'?'default':s.shape, fw+.85, fd+.7, .18);
+  const base = new THREE.Mesh(baseGeo, material(0x111a26,.86,56));
+  base.position.y = -.18; base.userData.structure = si; g.add(base); clickable.push(base);
+  const baseEdge = edge(baseGeo, s.accent, .76); baseEdge.position.copy(base.position); g.add(baseEdge);
+
+  const floorStep = s.shape==='spire' ? 1.32 : 1.08;
+  s.floors.forEach((floor, fi) => {
+    const fg = new THREE.Group();
+    fg.userData.home = {x:0,y:fi*floorStep+.34,z:0};
+    fg.position.set(0,fg.userData.home.y,0);
+    g.add(fg); floorGroups[si].push(fg);
+    const taper = s.shape==='spire' ? 1-fi*.16 : 1-fi*.06;
+    const geo = slabGeometry(s.shape, fw*taper, fd*(1-fi*(s.shape==='spire'?.14:.04)), s.shape==='spire'?.5:.34);
+    const slab = new THREE.Mesh(geo, material(s.color, s.shape==='eye' ? .7 : .62, s.shape==='eye' ? 115 : 80));
+    slab.userData.structure = si; slab.userData.floor = fi; fg.add(slab); clickable.push(slab);
+    fg.add(edge(geo, s.accent, .8));
+    addRoofMicroForms(fg, s.shape, fw*taper, fd*(1-fi*.04), s.accent, si===selected && fi===selectedFloor, fi);
+    if(!['pagoda','eye','turbine','cloud'].includes(s.shape)){
+      [-1.1,0,1.1].forEach(x => addLine(fg, new THREE.Vector3(x,.26,-fd/2+.45), new THREE.Vector3(x,.26,fd/2-.45), s.accent, .16));
+    }
+    const helper = makeHelperOrbit(HELPERS[si][fi], si, fi, s.accent);
+    helper.position.y = .44;
+    helper.userData.fw = Math.max(2.0, fw*taper*.62); helper.userData.fd = Math.max(1.6, fd*.52);
+    fg.add(helper); helperOrbits.push(helper);
+  });
+  const topY = (s.floors.length-1)*floorStep + .34 + (s.shape==='spire'?.5:.34);
+  if(s.shape!=='pagoda') addColumns(g, si, topY + (s.shape==='eye' ? 1.05 : .02));
+
+  if(s.shape==='eye'){
+    const beacon = new THREE.PointLight(0x9dffc4,2.0,12,2); beacon.position.set(0,3.4,0); g.add(beacon);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(1.9,28,20), new THREE.MeshBasicMaterial({color:0x5fdd91,transparent:true,opacity:.16}));
+    dome.scale.y = .55; dome.position.set(0,1.5,0); g.add(dome);
+  }
+
+  const el = document.createElement('button');
+  el.className = 'label';
+  el.innerHTML = `<div class="dot"></div><div><div class="lname"></div><div class="lsub"></div><div class="lval"></div></div>`;
+  el.onclick = () => { selectedFloor = 0; exploded = false; document.getElementById('explode').classList.remove('active'); select(si); };
+  labels.appendChild(el); labelEls.push(el);
+  const line = document.createElement('div'); line.className = 'leader'; leaders.appendChild(line); lineEls.push(line);
+}
+BUILDINGS.forEach((b,i) => buildStructure(b,i));
+
+const linksGroup = new THREE.Group(); district.add(linksGroup);
+function bridge(a,b,y,color){
+  const A = new THREE.Vector3(a.x-DISTRICT_CENTER_X,y,a.z-DISTRICT_CENTER_Z), B = new THREE.Vector3(b.x-DISTRICT_CENTER_X,y,b.z-DISTRICT_CENTER_Z);
+  const mid = A.clone().add(B).multiplyScalar(.5), len = A.distanceTo(B), rot = -Math.atan2(B.z-A.z,B.x-A.x);
+  const glow = new THREE.Mesh(new THREE.BoxGeometry(len,.32,.46), material(color,.12,26)); glow.position.copy(mid); glow.rotation.y = rot; linksGroup.add(glow);
+  const geo = new THREE.BoxGeometry(len,.14,.26); const mesh = new THREE.Mesh(geo, material(color,.54,52));
+  mesh.position.copy(mid); mesh.rotation.y = rot; linksGroup.add(mesh);
+  const e = edge(geo,color,.94); e.position.copy(mid); e.rotation.y = rot; linksGroup.add(e);
+}
+LINKS.forEach(l => bridge(BUILDINGS[l[1]], BUILDINGS[l[2]], l[3], l[4]));
+const packetGeo = new THREE.SphereGeometry(.11,16,16);
+LINKS.forEach((l,li) => { for(let k=0;k<4;k++){ const m = new THREE.Mesh(packetGeo,new THREE.MeshBasicMaterial({color:l[4]})); m.userData={off:k/4,link:li}; linksGroup.add(m); packets.push(m); } });
+
+function layoutExplode(){
+  floorGroups.forEach((list,si) => list.forEach((fg,fi) => {
+    const h = fg.userData.home; let tx=h.x, ty=h.y, tz=h.z, ts=1;
+    if(exploded && si===selected){
+      if(fi===selectedFloor){ tx=h.x-5.8; ty=h.y+.82; tz=h.z-.18; ts=1.2; }
+      else { const away = fi<selectedFloor?-1:1; tx=h.x+.4; ty=h.y+(fi-selectedFloor)*.08; tz=h.z+away*.5; ts=.95; }
+    }
+    fg.userData.target = {x:tx,y:ty,z:tz,s:ts};
+  }));
+  buildingGroups.forEach((g,k) => { g.userData.targetScale = (g.userData.baseScale||1)*(k===selected?1.06:1); });
+  targetZoom = exploded ? 1.12 : defaultZoom;
+  updateSceneFraming();
+}
+
+// ---------- live values ----------
+function headline(i){
+  const s = SNAP; if(!s) return '—';
+  switch(i){
+    case 0: return s.weather ? `${fmt(s.weather.avgF,1)}°F avg · max ${fmt(s.weather.maxF,1)}°F` : '—';
+    case 1: return s.wind&&s.solar ? `Wind ${fmt(s.wind.actualMW)} · Solar ${fmt(s.solar.actualMW)} MW` : '—';
+    case 2: return s.demand ? `${fmt(s.demand.mw)} MW · λ ${money(s.sced?.systemLambda)}` : '—';
+    case 3: { const h=s.hubs?.find(x=>x.hub==='HB_NORTH'); return h ? `HB_NORTH ${money(h.price)} · DA ${money(s.dam?.price)}` : '—'; }
+    case 4: { if(!s.checks?.length) return '—'; const c=[...s.checks].sort((a,b)=>b.p-a.p)[0]; return `${c.id} p=${fmt(c.p,2)}`; }
+    case 5: { const c=s.checks||[]; return `${c.filter(x=>x.route==='alert').length} alert · ${c.filter(x=>x.route==='review').length} review · ${c.filter(x=>x.route==='log').length} log`; }
+  }
+}
+function spark(series,color){
+  const v=(series||[]).filter(x=>x!=null&&isFinite(x)); if(v.length<2) return '';
+  const mn=Math.min(...v), mx=Math.max(...v), W2=200, H2=30;
+  const pts=v.map((y,i)=>`${(i/(v.length-1)*W2).toFixed(1)},${(H2-2-((y-mn)/((mx-mn)||1))*(H2-4)).toFixed(1)}`).join(' ');
+  const last=pts.split(' ').pop().split(',');
+  return `<svg class="spark" viewBox="0 0 ${W2} ${H2}" preserveAspectRatio="none"><polyline points="0,${H2} ${pts} ${W2},${H2}" fill="${color}" fill-opacity=".12" stroke="none"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke"/><circle cx="${last[0]}" cy="${last[1]}" r="2.6" fill="${color}"/></svg>`;
+}
+function readouts(i){
+  const s=SNAP, c=hexCSS(BUILDINGS[i].accent);
+  if(!s) return '<p>Loading live ERCOT data…</p>';
+  const ro=(k,n,sub='',sp='')=>`<div class="ro"><div class="k">${k}</div><div class="n">${n}</div>${sub?`<div class="s">${sub}</div>`:''}${sp}</div>`;
+  switch(i){
+    case 0: return s.weather ? `<div class="readouts">${s.weather.zones.map(z=>ro(z.zone,`${fmt(z.tempF,1)}°F`)).join('')}</div><div class="worker-line">Assumption for hour starting ${s.weather.hourEnding} CT</div>` : '';
+    case 1: return `<div class="readouts">
+      ${s.wind?ro('Wind actual',`${fmt(s.wind.actualMW)} MW`,`HE${s.wind.actualHE} · fcst ${fmt(s.wind.forecastAtActualMW)} · err ${signed(s.wind.errorMW)}`,spark(s.wind.series,c)):''}
+      ${s.solar?ro('Solar actual',`${fmt(s.solar.actualMW)} MW`,`HE${s.solar.actualHE} · fcst ${fmt(s.solar.forecastAtActualMW)} · err ${signed(s.solar.errorMW)}`,spark(s.solar.series,c)):''}
+      ${s.wind?ro('Wind next hour',`${fmt(s.wind.forecastNowMW)} MW`,'STWPF forecast'):''}
+      ${s.solar?ro('Solar next hour',`${fmt(s.solar.forecastNowMW)} MW`,'STPPF forecast'):''}</div>
+      <div class="worker-line">Sparklines: today by hour ending, actual where posted, forecast after</div>`;
+    case 2: return `<div class="readouts">
+      ${s.demand?ro('System demand',`${fmt(s.demand.mw)} MW`,`${s.demand.timeEnding} CT · peak ${fmt(s.demand.todayPeak)}`,spark(s.demand.series,c)):''}
+      ${s.sced?ro('System lambda',money(s.sced.systemLambda),'per MWh · last 12 SCED runs',spark(s.sced.lambdaSeries,c)):''}
+      ${s.sced?ro('Online HSL',`${fmt(s.sced.onlineHSL)} MW`,'high sustained limit'):''}
+      ${s.sced?ro('Headroom',`${fmt(s.sced.headroomPct,1)}%`,`${fmt(s.sced.headroomMW)} MW · adder ${money(s.sced.reliabilityAdder)}`):''}</div>`;
+    case 3: return `<div class="readouts">
+      ${(s.hubs||[]).map(h=>ro(h.hub,money(h.price),`HE${h.hour} int ${h.interval}`,spark(h.series,c))).join('')}
+      ${s.dam?ro('DAM HB_NORTH',money(s.dam.price),`HE${s.dam.hourEnding} · day peak ${money(s.dam.dayPeak)}`):''}
+      ${s.dam?ro('DART',`${signed(s.dam.dart,2)}`,'RT − DA, $/MWh'):''}</div>`;
+    case 4: case 5: return (s.checks||[]).map(k=>`<div class="checkrow"><div><div class="qq">${k.question}</div><div class="rt">${k.id} · route ${k.route} · ${k.engine}</div></div><div class="pp" style="color:${bandColor(k.p)}">${fmt(k.p,2)}</div><div class="bar"><i style="width:${k.p*100}%;background:${bandColor(k.p)}"></i></div></div>`).join('') + `<div class="worker-line">Baseline rules until jev-gateway is live. Not trading advice.</div>`;
+  }
+  return '';
+}
+
+function renderBuildingNav(){
+  buildingNav.innerHTML = BUILDINGS.map((b,i) => `<button class="building-tab ${i===selected?'active':''}" data-i="${i}"><div class="bid">Building ${b.id} · ${b.stream}</div><div class="bn">${b.name}</div><div class="bi" style="color:${hexCSS(b.accent)}">${headline(i)}</div></button>`).join('');
+  buildingNav.querySelectorAll('.building-tab').forEach(el => el.onclick = () => { exploded=false; document.getElementById('explode').classList.remove('active'); selectedFloor=0; select(+el.dataset.i); });
+}
+function renderCards(){
+  const s = BUILDINGS[selected];
+  cards.innerHTML = s.floors.map((f,i) => `<button class="floor-card ${i===selectedFloor?'active':''}" data-i="${i}"><div class="ct">${s.stream} · Layer ${s.id}.${String(i+1).padStart(2,'0')}</div><div class="cn">${f[0]}</div><div class="cs">${f[1]}</div><div class="cw">${SNAP ? f[2](SNAP) : '…'}</div></button>`).join('');
+  cards.querySelectorAll('.floor-card').forEach(el => el.onclick = () => { selectedFloor=+el.dataset.i; exploded=true; document.getElementById('explode').classList.add('active'); select(selected); });
+}
+function renderDetail(){
+  const s = BUILDINGS[selected], floor = s.floors[selectedFloor] || s.floors[0], a = hexCSS(s.accent);
+  detail.style.borderColor = a+'66';
+  detail.innerHTML = `
+    <div class="num">${s.id}</div>
+    <div class="smallcap">// building breakdown · live</div>
+    <h2 style="color:${a}">${floor[0]}</h2>
+    <div class="subtitle">${s.name} · ${s.sub}</div>
+    <p>${s.body}</p>
+    <div class="chips"><span class="chip" style="border-color:${a}66;color:${a}">${s.stream}</span>${s.chips.map(c=>`<span class="chip" style="border-color:${a}44;color:${a}">${c}</span>`).join('')}</div>
+    ${readouts(selected)}
+    <div class="impl">
+      <h3>Layers</h3>
+      <ul>${s.floors.map(f=>`<li>${f[0]}: ${f[1]} <b style="color:${a}">${SNAP?f[2](SNAP):''}</b></li>`).join('')}</ul>
+      <h3>Flow</h3>
+      <div class="route">${s.route.map(x=>`<span style="border-color:${a}33">${x}</span>`).join('')}</div>
+    </div>`;
+}
+function renderLabels(){
+  labelEls.forEach((el,idx) => {
+    const b = BUILDINGS[idx], a = hexCSS(b.accent);
+    el.classList.toggle('focus', idx===selected);
+    el.querySelector('.dot').style.background = a; el.querySelector('.dot').style.color = a;
+    el.querySelector('.lname').innerHTML = `${b.name}${idx===selected?`<span class="badge">${b.stream}</span>`:''}`;
+    el.querySelector('.lsub').textContent = b.role;
+    const v = el.querySelector('.lval'); v.textContent = headline(idx); v.style.color = a;
+  });
+}
+function select(i){
+  selected = i;
+  const s = BUILDINGS[i];
+  document.documentElement.style.setProperty('--focus-accent', hexCSS(s.accent));
+  metaFocus.textContent = `${s.id} · ${s.name}`;
+  renderDetail(); renderLabels(); layoutExplode(); renderBuildingNav(); renderCards();
+}
+select(selected);
+
+function applySnapshotToColumns(){
+  const s = SNAP; if(!s) return;
+  const val = (key) => {
+    if(s.weather){ const z = {coast:'Coast',southern:'Southern',farWest:'Far West',north:'North'}[key]; if(z){ const t=s.weather.zones.find(q=>q.zone===z)?.tempF; return t!=null ? clamp((t-40)/70,0,1)*3.2 : null; } }
+    if(key==='wind') return s.wind?.actualMW!=null ? s.wind.actualMW/30000*3.4 : null;
+    if(key==='solar') return s.solar?.actualMW!=null ? s.solar.actualMW/30000*3.4 : null;
+    if(key==='demand') return s.demand ? s.demand.mw/90000*3.4 : null;
+    if(key==='hsl') return s.sced ? s.sced.onlineHSL/90000*3.4 : null;
+    if(key==='DAM') return s.dam?.price!=null ? clamp(s.dam.price/200,0,1)*3.4+.08 : null;
+    const hub = s.hubs?.find(h=>h.hub===key); if(hub) return hub.price!=null ? clamp(hub.price/200,0,1)*3.4+.08 : null;
+    const chk = s.checks?.find(c=>c.id===key); if(chk) return chk.p*2.6+.08;
+    return null;
+  };
+  dataColumns.forEach(c => {
+    const v = val(c.key); c.target = v==null ? .05 : Math.max(.05,v);
+    if(c.building===4){ const chk=s.checks?.find(k=>k.id===c.key); if(chk){ const col=new THREE.Color(bandColor(chk.p)); c.mesh.material.color=col; c.edge.material.color=col; } }
+  });
+}
+
+const liveDot = document.getElementById('liveDot'), liveText = document.getElementById('liveText'), metaSced = document.getElementById('metaSced');
+async function load(){
+  try{
+    const r = await fetch('/api/snapshot'); if(!r.ok) throw new Error(r.status);
+    SNAP = await r.json();
+    const age = (Date.now()-new Date(SNAP.asOf).getTime())/60000;
+    liveDot.className = 'live' + (age>10?' stale':'');
+    liveText.textContent = `live · ${SNAP.ct?.date} ${String(SNAP.ct?.hour).padStart(2,'0')}:${String(SNAP.ct?.minute).padStart(2,'0')} CT`;
+    metaSced.textContent = SNAP.sced ? `${SNAP.sced.timestamp.replace('T',' ')} CT · λ ${money(SNAP.sced.systemLambda)}` : 'unavailable';
+    applySnapshotToColumns(); select(selected);
+  }catch(e){ liveDot.className='live down'; liveText.textContent='data unavailable'; }
+}
+load(); setInterval(load, 5*60*1000);
+
+function project(world){ const p = world.clone().project(camera); return {x:(p.x+1)/2*W,y:(-p.y+1)/2*H,z:p.z}; }
+function syncLabels(){
+  const detailRect = detail.getBoundingClientRect();
+  const items = labelEls.map((el,idx) => {
+    const wp = new THREE.Vector3(); buildingGroups[idx].getWorldPosition(wp); wp.y += idx===selected ? 2.6 : 2.2;
+    const pp = project(wp); return {el, idx, pp, left: pp.x < W*0.48, y: clamp(pp.y-26, 24, H-90), h: el.offsetHeight||64};
+  });
+  // push labels apart on each side so they never stack on top of each other
+  [true,false].forEach(side => {
+    const col = items.filter(i=>i.left===side).sort((a,b)=>a.y-b.y);
+    for(let k=1;k<col.length;k++){ const prev=col[k-1]; if(col[k].y < prev.y+prev.h+8) col[k].y = prev.y+prev.h+8; }
+  });
+  items.forEach(({el,idx,pp,left,y}) => {
+    let labelX = left ? 14 : W-262;
+    if(!cardsHidden && labelX+252 > detailRect.left-14) labelX = Math.max(18, detailRect.left-266);
+    el.style.left = `${labelX}px`; el.style.top = `${y}px`; el.style.opacity = pp.z<1 ? '.98' : '0';
+    const lx = left ? labelX+252 : labelX, ly = y+26, dx = pp.x-lx, dy = pp.y-ly;
+    const line = lineEls[idx];
+    line.style.width = `${Math.hypot(dx,dy)}px`; line.style.left = `${lx}px`; line.style.top = `${ly}px`;
+    line.style.transform = `rotate(${Math.atan2(dy,dx)}rad)`; line.style.opacity = pp.z<1 ? '.8' : '0';
+    line.style.borderTopColor = idx===selected ? hexCSS(BUILDINGS[idx].accent)+'bb' : 'rgba(208,224,255,.22)';
+  });
+}
+
+const raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2();
+let downX=0, downY=0;
+renderer.domElement.addEventListener('pointerdown',e=>{downX=e.clientX;downY=e.clientY;});
+renderer.domElement.addEventListener('click',e => {
+  if(Math.hypot(e.clientX-downX,e.clientY-downY)>5) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX-r.left)/r.width)*2-1; mouse.y = -((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+  const hit = raycaster.intersectObjects(clickable,false)[0];
+  if(hit){ const next = hit.object.userData.structure; if(next!==selected){ selectedFloor=0; exploded=false; document.getElementById('explode').classList.remove('active'); } select(next); }
+});
+
+let isDrag=false, prevX=0, prevY=0, t=0;
+const activePointers = new Map(); let pinchStartDist=0, pinchStartZoom=1;
+const pointerDistance = () => { const p=[...activePointers.values()]; return p.length<2?0:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y); };
+mount.addEventListener('wheel',e => { e.preventDefault(); setZoom(zoomLevel*Math.exp(-e.deltaY*.0012)); },{passive:false});
+mount.addEventListener('pointerdown',e => {
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY}); mount.setPointerCapture(e.pointerId);
+  if(activePointers.size===2){ isDrag=false; pinchStartDist=pointerDistance(); pinchStartZoom=zoomLevel; } else { isDrag=true; prevX=e.clientX; prevY=e.clientY; }
+});
+mount.addEventListener('pointermove',e => {
+  if(!activePointers.has(e.pointerId)) return;
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(activePointers.size>=2){ const d=pointerDistance(); if(pinchStartDist>0) setZoom(pinchStartZoom*(d/pinchStartDist)); return; }
+  if(!isDrag) return;
+  const dx=e.clientX-prevX, dy=e.clientY-prevY;
+  if(Math.abs(dx)>1||Math.abs(dy)>1){ auto=false; document.getElementById('spin').classList.remove('active'); }
+  targetYaw += dx*.004; setPitch(targetPitch - dy*.0035); prevX=e.clientX; prevY=e.clientY;
+});
+function endPointer(e){ activePointers.delete(e.pointerId); pinchStartDist=0; if(activePointers.size===1){ const p=[...activePointers.values()][0]; isDrag=true; prevX=p.x; prevY=p.y; } else isDrag=false; }
+mount.addEventListener('pointerup',endPointer); mount.addEventListener('pointercancel',endPointer);
+
+document.getElementById('spin').onclick = e => { auto=!auto; e.currentTarget.classList.toggle('active',auto); };
+document.getElementById('flow').onclick = e => { flow=!flow; e.currentTarget.classList.toggle('active',flow); linksGroup.visible = flow; };
+document.getElementById('explode').onclick = e => { exploded=!exploded; e.currentTarget.classList.toggle('active',exploded); layoutExplode(); renderCards(); };
+document.getElementById('topView').onclick = () => { topView=!topView; if(topView){ setPitch(topPitch); topView=true; auto=false; document.getElementById('spin').classList.remove('active'); } else setPitch(defaultPitch); syncTopViewButton(); };
+document.getElementById('zoomReset').onclick = () => { setZoom(defaultZoom); if(!topView) setPitch(defaultPitch); };
+function syncCardsToggle(){ document.body.classList.toggle('cards-hidden',cardsHidden); hideCardsBtn.textContent = cardsHidden?'Show Cards':'Remove Cards'; hideCardsBtn.classList.toggle('active',cardsHidden); updateSceneFraming(); }
+hideCardsBtn.onclick = () => { cardsHidden=!cardsHidden; syncCardsToggle(); };
+if(EMBED){ cardsHidden=true; document.querySelectorAll('.head,.meta,.legend,.detail,.cards,.building-nav,.footer,#labels,#leaders,.controls').forEach(el=>el.style.display='none'); }
+syncCardsToggle();
+if(new URLSearchParams(location.search).get('view')==='top'){ topView=true; setPitch(topPitch); topView=true; auto=false; document.getElementById('spin').classList.remove('active'); syncTopViewButton(); }
+
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(window.gsap && !reduceMotion){
+  gsap.from('.head > *',{y:18,opacity:0,stagger:.07,duration:.7,ease:'power3.out'});
+  gsap.from('.controls button, .legend, .meta',{y:-10,opacity:0,stagger:.03,duration:.5,delay:.2,ease:'power2.out'});
+  gsap.from('.building-nav',{y:30,opacity:0,duration:.6,delay:.35,ease:'power3.out'});
+}
+if(reduceMotion){ auto=false; document.getElementById('spin').classList.remove('active'); }
+
+function animate(){
+  requestAnimationFrame(animate);
+  t += .008;
+  if(auto && !isDrag) targetYaw += .0011;
+  updateCameraOrbit();
+  root.position.x += (root.userData.targetX-root.position.x)*.075;
+  root.position.z += (root.userData.targetZ-root.position.z)*.075;
+  zoomLevel += (targetZoom-zoomLevel)*.075; applyZoom();
+  floorGroups.forEach(list => list.forEach(fg => { const q=fg.userData.target; if(q){ fg.position.x+=(q.x-fg.position.x)*.115; fg.position.y+=(q.y-fg.position.y)*.115; fg.position.z+=(q.z-fg.position.z)*.115; fg.scale.setScalar(fg.scale.x+(q.s-fg.scale.x)*.115); } }));
+  buildingGroups.forEach(g => { const ts=g.userData.targetScale||1; g.scale.setScalar(g.scale.x+(ts-g.scale.x)*.09); });
+  dataColumns.forEach(c => { const y = c.mesh.scale.y + (c.target-c.mesh.scale.y)*.06; c.mesh.scale.y = y; c.edge.scale.y = y; });
+  helperOrbits.forEach(bot => {
+    const lane=(t*.48+bot.userData.phase)%1, fw=bot.userData.fw||2.8, fd=bot.userData.fd||2.2, side=Math.floor(lane*4), u=(lane*4)%1;
+    let x,z; if(side===0){x=-fw/2+u*fw;z=-fd/2+.25;} else if(side===1){x=fw/2-.25;z=-fd/2+u*fd;} else if(side===2){x=fw/2-u*fw;z=fd/2-.25;} else {x=-fw/2+.25;z=fd/2-u*fd;}
+    bot.position.x+=(x-bot.position.x)*.18; bot.position.z+=(z-bot.position.z)*.18; bot.rotation.y += flow?.08:.01; bot.visible = flow||exploded;
+  });
+  packets.forEach(p => {
+    p.visible = flow;
+    const l=LINKS[p.userData.link], a=BUILDINGS[l[1]], b=BUILDINGS[l[2]], q=(t*.22+p.userData.off)%1;
+    p.position.set(a.x-DISTRICT_CENTER_X+(b.x-a.x)*q, l[3]+Math.sin((q+t)*Math.PI*2)*.08, a.z-DISTRICT_CENTER_Z+(b.z-a.z)*q);
+  });
+  syncLabels();
+  renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener('resize',() => {
+  W = mount.clientWidth; H = mount.clientHeight; renderer.setSize(W,H);
+  camera.left=-baseVs*(W/H); camera.right=baseVs*(W/H); camera.top=baseVs; camera.bottom=-baseVs;
+  updateSceneFraming(); applyZoom();
+});
+</script>
+</body>
+</html>

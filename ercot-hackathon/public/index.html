@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ERCOT Hackathon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  :root { --bg:#0b0f14; --panel:#121821; --line:#223040; --ink:#e6edf3; --dim:#8b98a8; --hot:#ff8a3d; --cool:#3dd6c6; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,system-ui,sans-serif; }
+  header { padding:48px 16px 24px; max-width:1040px; margin:0 auto; }
+  .tag { font-family:"JetBrains Mono",monospace; color:var(--cool); font-size:13px; letter-spacing:.08em; }
+  h1 { font-size:clamp(32px,6vw,56px); margin:8px 0 12px; font-weight:800; line-height:1.05; }
+  h1 span { color:var(--hot); }
+  p.lead { color:var(--dim); max-width:620px; margin:0; }
+  main { max-width:1040px; margin:0 auto; padding:0 16px 64px; display:grid; gap:16px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; }
+  .row { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
+  label { font-size:12px; color:var(--dim); display:grid; gap:6px; font-family:"JetBrains Mono",monospace; }
+  input, select, button { background:#0e141c; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font:inherit; }
+  button { background:var(--hot); color:#111; font-weight:600; border:none; cursor:pointer; }
+  button:hover { filter:brightness(1.08); }
+  .status { font-family:"JetBrains Mono",monospace; font-size:13px; display:flex; gap:16px; flex-wrap:wrap; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; background:var(--dim); }
+  .ok .dot { background:var(--cool); } .bad .dot { background:#ff5c5c; }
+  svg { width:100%; height:auto; display:block; }
+  .axis { stroke:var(--line); } .lbl { fill:var(--dim); font:11px "JetBrains Mono",monospace; }
+  pre { font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--dim); white-space:pre-wrap; max-height:260px; overflow:auto; margin:0; }
+  .meta { color:var(--dim); font-size:13px; margin-top:10px; font-family:"JetBrains Mono",monospace; }
+</style>
+</head>
+<body>
+<header>
+  <div class="tag">// ORGANIZED AI × ERCOT PUBLIC DATA</div>
+  <h1>ERCOT <span>Hackathon</span></h1>
+  <p class="lead">2-Day Aggregate Energy Demand Curves (NP3-907-EX), pulled live through a Cloudflare Worker with token caching in KV.</p>
+</header>
+<main>
+  <section class="card" id="statusCard">
+    <div class="status" id="status">Checking worker…</div>
+  </section>
+
+  <section class="card">
+    <div class="row">
+      <label>Delivery date<input type="date" id="date" /></label>
+      <label>Hour ending<select id="he"></select></label>
+      <button id="load">Load demand curve</button>
+    </div>
+    <div class="meta" id="meta"></div>
+  </section>
+
+  <section class="card">
+    <svg id="chart" viewBox="0 0 900 380" role="img" aria-label="Demand curve: price vs MW"></svg>
+  </section>
+
+  <section class="card">
+    <pre id="raw">Raw response appears here.</pre>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+gsap.from("header > *", { y: 24, opacity: 0, stagger: 0.08, duration: 0.7, ease: "power3.out" });
+gsap.from(".card", { y: 30, opacity: 0, stagger: 0.1, duration: 0.6, delay: 0.25, ease: "power3.out" });
+
+for (let h = 1; h <= 24; h++) $("he").insertAdjacentHTML("beforeend", `<option ${h===17?"selected":""}>${h}</option>`);
+const d = new Date(); d.setDate(d.getDate() - 3);
+$("date").value = d.toISOString().slice(0, 10);
+
+async function health() {
+  const r = await fetch("/api/health").then(r => r.json()).catch(() => null);
+  const s = $("status");
+  if (!r) { s.innerHTML = `<span class="bad"><span class="dot"></span>Worker unreachable</span>`; return; }
+  s.innerHTML = `
+    <span class="${r.ok ? "ok" : "bad"}"><span class="dot"></span>Secrets ${r.ok ? "configured" : "missing: " + r.secretsMissing.join(", ")}</span>
+    <span class="${r.tokenCached ? "ok" : ""}"><span class="dot"></span>Token ${r.tokenCached ? "cached" : "not cached yet"}</span>`;
+}
+
+function rows(res) {
+  const fields = (res.fields || []).map(f => f.name);
+  return (res.data || []).map(row => Array.isArray(row) ? Object.fromEntries(fields.map((f, i) => [f, row[i]])) : row);
+}
+
+function draw(points) {
+  const svg = $("chart"); const W = 900, H = 380, P = 48;
+  svg.innerHTML = "";
+  if (!points.length) { svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" class="lbl">No data for this selection</text>`; return; }
+  const mwKey = Object.keys(points[0]).find(k => /mw/i.test(k));
+  const pKey = Object.keys(points[0]).find(k => /price/i.test(k));
+  const pts = points.map(p => [+p[mwKey], +p[pKey]]).filter(p => isFinite(p[0]) && isFinite(p[1])).sort((a,b)=>a[0]-b[0]);
+  const [x0,x1] = [Math.min(...pts.map(p=>p[0])), Math.max(...pts.map(p=>p[0]))];
+  const [y0,y1] = [Math.min(...pts.map(p=>p[1])), Math.max(...pts.map(p=>p[1]))];
+  const sx = v => P + (v - x0) / ((x1 - x0) || 1) * (W - 2*P);
+  const sy = v => H - P - (v - y0) / ((y1 - y0) || 1) * (H - 2*P);
+  const path = pts.map((p,i) => `${i?"L":"M"}${sx(p[0]).toFixed(1)},${sy(p[1]).toFixed(1)}`).join(" ");
+  svg.innerHTML = `
+    <line class="axis" x1="${P}" y1="${H-P}" x2="${W-P}" y2="${H-P}"/>
+    <line class="axis" x1="${P}" y1="${P}" x2="${P}" y2="${H-P}"/>
+    <text class="lbl" x="${W-P}" y="${H-P+30}" text-anchor="end">MW →  ${x0.toFixed(0)} – ${x1.toFixed(0)}</text>
+    <text class="lbl" x="${P}" y="${P-16}">$/MWh  ${y0.toFixed(2)} – ${y1.toFixed(2)}</text>
+    <path id="curve" d="${path}" fill="none" stroke="var(--hot)" stroke-width="2.5"/>`;
+  const c = $("curve"); const len = c.getTotalLength();
+  gsap.fromTo(c, { strokeDasharray: len, strokeDashoffset: len }, { strokeDashoffset: 0, duration: 1.4, ease: "power2.inOut" });
+}
+
+$("load").onclick = async () => {
+  const date = $("date").value, he = $("he").value;
+  $("meta").textContent = "Loading…";
+  const q = new URLSearchParams({ deliveryDateFrom: date, deliveryDateTo: date, hourEndingFrom: he, hourEndingTo: he, size: "10000" });
+  const res = await fetch("/api/edc?" + q).then(r => r.json()).catch(e => ({ error: e.message }));
+  $("raw").textContent = JSON.stringify(res, null, 2).slice(0, 6000);
+  if (res.error) { $("meta").textContent = "Error: " + res.error; draw([]); return; }
+  const pts = rows(res);
+  $("meta").textContent = `${res._meta?.totalRecords ?? pts.length} records · ${date} HE${he}`;
+  draw(pts); health();
+};
+
+health();
+</script>
+</body>
+</html>

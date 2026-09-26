@@ -1,0 +1,3 @@
+{
+  "properties": {"forecastHourly": "__BASE_URL__/gridpoints/TEST/1,1/forecast/hourly"}
+}
