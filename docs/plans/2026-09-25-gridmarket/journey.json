@@ -625,6 +625,14 @@
       "source": "Orchestrator as owner delegate (DEC-GM-043)",
       "decision": "S28 test correction (S28-fix, by the Test Implementer): in test_economy.py, set acct-capacity employed=False and acct-employed employed=True, matching the dormancy rule in design.md 600-603. S29 then continues from its uncommitted work.",
       "why": "S29 correctly returned CONTRACT_FAILURE: the frozen test asserted that an unemployed, zero-cash, no-capacity account is not dormant. Under tdd, the Product Implementer may not change tests, so the Test Implementer corrects them."
+    },
+    {
+      "id": "DEC-GM-061",
+      "status": "confirmed",
+      "decided_at": "2026-09-26T12:44:14Z",
+      "source": "Orchestrator as owner delegate (DEC-GM-043)",
+      "decision": "Phase 1a single repair round on candidate 2c96695. The Reviewer returned REPAIR_REQUIRED with F1-F6; the Test Engineer returned REPAIRABLE_FAILURE with TE-1 to TE-4. Repairs run in parallel by owning lane: market (F1 settlement report-id case, P1; F5 activity fields), data (F2 heat wording, F3 newest shadow price, F4 per-hour signal, TE-3 missing shown as 0), ui (F6 bots 404 panel, F5 rendering), and Integration Engineer glue (TE-1 mutation collection, TE-2 smoke assertions and healthcheck). Repair Implementers may add regression tests and correct defect-encoding test data, and may not weaken assertions. Deterministic verification closes the round, with no re-review.",
+      "why": "This follows DEC-GM-038: 1 review and at most 1 repair per phase. F1 is a P1 money-path defect: filled trades never settled, because the test encoded the same wrong-case id."
     }
   ],
   "stages": {
