@@ -2162,6 +2162,13 @@
       "rationale": "The viewer froze during capture. The owner needs to transcribe it or confirm it adds no rules.",
       "source": "reference/hackathon-brief.md Sources",
       "recorded_at": "2026-09-26T01:10:55Z"
+    },
+    {
+      "id": "CELL-GM-PUBLIC-SCRUB",
+      "status": "OPEN",
+      "decision": "Before the repository goes public: scrub workspace and company references from planning artifacts. That covers the specialists/*-prompt.md logs, which reference the private workspace, and git history (commits 409324c and b081a10 held visual-review tooling details). History rewrite or a fresh public repo is the owner's call (destructive git or publication).",
+      "source": "Owner in chat: 'remove this some of this is company information'",
+      "recorded_at": "2026-09-26T11:17:43Z"
     }
   ],
   "planning_receipts": [
