@@ -1,0 +1,22 @@
+class: F8
+title: Poll cycle
+max_width: 2000
+max_height: 2000
+lanes:
+  - id: poller
+    label: Poller
+    states:
+      - {at: 0, value: idle}
+      - {at: 60, value: fetch}
+      - {at: 65, value: idle}
+  - id: market
+    label: Market
+    states:
+      - {at: 0, value: open}
+      - {at: 62, value: repricing}
+      - {at: 66, value: open}
+  - id: dashboard
+    label: Dashboard
+    states:
+      - {at: 0, value: stale}
+      - {at: 67, value: fresh}

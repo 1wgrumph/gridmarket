@@ -1,0 +1,52 @@
+class: F1
+title: GridMarket system context
+max_width: 1400
+max_height: 900
+direction: TB
+nodes:
+  - id: judge
+    label: Judge or trader (browser, SDK, own agent)
+  - id: owner
+    label: Owner (admin key, loopback)
+  - id: tunnel
+    label: Cloudflare named tunnel
+  - id: market
+    label: GridMarket app (API, market, dashboard)
+  - id: bots
+    label: Bot population container
+  - id: worker
+    label: Owner ERCOT Worker (Cloudflare)
+  - id: ercot
+    label: ERCOT Public API
+  - id: nws
+    label: NWS api.weather.gov
+  - id: jev
+    label: Hosted Jev service (flag, off by default)
+edges:
+  - from: judge
+    to: tunnel
+    label: HTTPS REST and dashboard
+  - from: tunnel
+    to: market
+    label: outbound tunnel to 127.0.0.1
+  - from: owner
+    to: market
+    label: admin requests
+  - from: bots
+    to: market
+    label: public REST with own keys
+  - from: market
+    to: worker
+    label: snapshot and allowlisted reports
+  - from: worker
+    to: ercot
+    label: ERCOT calls within 25 per 60 s
+  - from: market
+    to: nws
+    label: forecast and alerts
+  - from: market
+    to: jev
+    label: check probability (GRIDMARKET_JEV=on)
+  - from: worker
+    to: market
+    label: views read activity and router

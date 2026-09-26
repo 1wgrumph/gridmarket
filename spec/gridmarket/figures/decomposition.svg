@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1067.5" height="350" viewBox="0 0 1067.5 350" font-family="Helvetica, Arial, sans-serif" font-size="12">
+  <title>GridMarket app decomposition</title>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" />
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1067.5" height="350" fill="white" />
+  <g class="line" data-id="edge-1">
+    <polyline points="583.39,49.39 545.19,54.92 500.51,62.93 461,74 437.94,80.46 413.19,90.1 392.66,98.89 383.25,102.98" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="479.5" y="79.5" text-anchor="middle">mounts</text>
+  </g>
+  <g class="line" data-id="edge-2">
+    <polyline points="658.96,56.1 649.27,68.27 637.49,85.5 632,103 612.82,164.07 605.71,187.37 629,247 634.94,262.211 646.38,275.984 657.62,286.823 665.29,293.84" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="631" y="175" text-anchor="middle">poller</text>
+  </g>
+  <g class="line" data-id="edge-3">
+    <polyline points="759.17,56 786.22,65.5 813.81,80.22 832,103 874.21,155.84 873.19,240.811 869.36,283.967 868.35,293.993" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="882" y="175" text-anchor="middle">poller</text>
+  </g>
+  <g class="line" data-id="edge-4">
+    <polyline points="686.3,56.18 694.3,67.35 704.87,82.1 713.82,94.62 719.72,102.85" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="728" y="79.5" text-anchor="middle">60 s tick</text>
+  </g>
+  <g class="line" data-id="edge-5">
+    <polyline points="764.65,48.43 801.1,53.75 843.13,61.86 880,74 898.41,80.06 917.72,89.36 933.8,98.01 942.85,103" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="927.5" y="79.5" text-anchor="middle">10 s loop</text>
+  </g>
+  <g class="line" data-id="edge-6">
+    <polyline points="588.27,56.02 576.11,60.65 564.27,66.53 554,74 528,92.91 508.77,124.97 497.52,147.69 493.19,156.79" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="575" y="79.5" text-anchor="middle">60 s tick</text>
+  </g>
+  <g class="line" data-id="edge-7">
+    <polyline points="345.24,139.07 344.73,144.77 344.25,151.15 344,157 343.32,172.99 343.32,177.01 344,193 344.11,195.56 344.26,198.22 344.45,200.88 345.24,210.93" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="359.5" y="175" text-anchor="middle">orders</text>
+  </g>
+  <g class="line" data-id="edge-8">
+    <polyline points="310.85,139.03 271.93,157.37 209.93,186.58 167.67,206.49 158.43,210.84" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="288.5" y="175" text-anchor="middle">includes</text>
+  </g>
+  <g class="line" data-id="edge-9">
+    <polyline points="309.76,247.166 303.07,251.971 296.97,257.877 293,265 289.91,270.542 288.64,277.074 288.36,283.447 288.68,293.822" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="334" y="270.5" text-anchor="middle">reserve capacity</text>
+  </g>
+  <g class="line" data-id="edge-10">
+    <polyline points="363.26,247.343 372.74,256.722 385.29,267.991 398,276 406.12,281.115 415.11,285.757 424.12,289.867 433.48,293.955" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="436" y="270.5" text-anchor="middle">one transaction</text>
+  </g>
+  <g class="line" data-id="edge-11">
+    <polyline points="727.4,247.178 720.57,258.239 711.57,272.821 703.89,285.254 698.59,293.847" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="733.5" y="270.5" text-anchor="middle">signals</text>
+  </g>
+  <g class="line" data-id="edge-12">
+    <polyline points="765.15,247.178 784.15,259.206 809.74,275.396 830.38,288.461 838.89,293.847" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="827.5" y="270.5" text-anchor="middle">signals</text>
+  </g>
+  <g class="line" data-id="edge-13">
+    <polyline points="732.96,139.03 733.9,155.62 735.35,181.12 736.45,200.57 737.02,210.66" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="749.5" y="175" text-anchor="middle">score</text>
+  </g>
+  <g class="line" data-id="edge-14">
+    <polyline points="485.62,193.1 485.11,215.9 484.21,256.521 483.61,283.614 483.39,293.615" fill="none" stroke="black" marker-end="url(#arrow)" />
+    <text x="507" y="229" text-anchor="middle">deposits</text>
+  </g>
+  <g id="main">
+    <rect x="583.5" y="20" width="181.001" height="36" fill="white" stroke="black" />
+    <text x="674" y="42" text-anchor="middle">main.py composition root</text>
+  </g>
+  <g id="api">
+    <rect x="257.5" y="103" width="178.999" height="36" fill="white" stroke="black" />
+    <text x="347" y="125" text-anchor="middle">api.py routes, auth, limits</text>
+  </g>
+  <g id="market">
+    <rect x="242.499" y="211" width="209.002" height="36" fill="white" stroke="black" />
+    <text x="347" y="233" text-anchor="middle">market.py engine, risk, ledger</text>
+  </g>
+  <g id="providers">
+    <rect x="225.501" y="294" width="132.998" height="36" fill="white" stroke="black" />
+    <text x="292" y="316" text-anchor="middle">providers registry</text>
+  </g>
+  <g id="ercot">
+    <rect x="607.5" y="294" width="160.999" height="36" fill="white" stroke="black" />
+    <text x="688" y="316" text-anchor="middle">ercot.py Worker client</text>
+  </g>
+  <g id="nws">
+    <rect x="786.501" y="294" width="158.998" height="36" fill="white" stroke="black" />
+    <text x="866" y="316" text-anchor="middle">nws.py weather client</text>
+  </g>
+  <g id="scoring">
+    <rect x="638.5" y="211" width="199.001" height="36" fill="white" stroke="black" />
+    <text x="738" y="233" text-anchor="middle">scoring.py opportunity score</text>
+  </g>
+  <g id="router">
+    <rect x="640.999" y="103" width="182.002" height="36" fill="white" stroke="black" />
+    <text x="732" y="125" text-anchor="middle">decision_router.py checks</text>
+  </g>
+  <g id="health">
+    <rect x="894.5" y="103" width="153" height="36" fill="white" stroke="black" />
+    <text x="971" y="125" text-anchor="middle">health.py heartbeats</text>
+  </g>
+  <g id="economy">
+    <rect x="384.502" y="157" width="202.997" height="36" fill="white" stroke="black" />
+    <text x="486" y="179" text-anchor="middle">economy.py payroll, statistics</text>
+  </g>
+  <g id="botsapi">
+    <rect x="20.0012" y="211" width="203.998" height="36" fill="white" stroke="black" />
+    <text x="122" y="233" text-anchor="middle">bots_api.py population routes</text>
+  </g>
+  <g id="db">
+    <rect x="377.498" y="294" width="211.003" height="36" fill="white" stroke="black" />
+    <text x="483" y="316" text-anchor="middle">SQLite (WAL) system of record</text>
+  </g>
+</svg>

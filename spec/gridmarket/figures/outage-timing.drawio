@@ -1,0 +1,55 @@
+<mxfile host="azdiagram">
+  <diagram id="outage-timing" name="ERCOT Worker outage and recovery (minutes)">
+    <mxGraphModel pageWidth="770" pageHeight="230">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="worker" value="ERCOT Worker" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="20" y="20" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="worker-s1" value="up" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="150" y="20" width="109.091" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="worker-s2" value="failing (5xx)" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="259.091" y="20" width="254.545" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="worker-s3" value="up" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="513.636" y="20" width="236.364" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="client" value="Market client" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="20" y="70" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="client-s1" value="poll 5 min" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="150" y="70" width="109.091" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="client-s2" value="backoff 5 s to 300 s" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="259.091" y="70" width="254.545" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="client-s3" value="poll 5 min" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="513.636" y="70" width="236.364" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="served" value="Served values" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="20" y="120" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="served-s1" value="fresh" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="150" y="120" width="181.818" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="served-s2" value="stale with age_s" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="331.818" y="120" width="227.273" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="served-s3" value="fresh" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="559.091" y="120" width="190.909" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="API endpoints" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="20" y="170" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="api-s1" value="answering" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="150" y="170" width="545.455" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="api-s2" value="answering" vertex="1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;">
+          <mxGeometry x="695.455" y="170" width="54.5455" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
