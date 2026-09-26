@@ -986,6 +986,14 @@
       "decision": "The owner-commissioned dashboard UX review (build 78d005c; 19 findings UX-01..UX-19: $NaN leaderboard, stretched activity/sandbox row, overlapping chart ticks, broken Spec link, primary-button contrast 3.52:1, Show book result off screen, Predictions count and card wall, 320 px overflow, map accessible name, ERCOT status honesty, missing exchange summaries, Providers state, clickability, home arrangement, Market filters, Bots/profile legend, sandbox continuation, orders rows) is fixed in one repair round on lane ux: S63-T (Test Implementer: --no-ff merge of lane onboarding, red tests per finding), S63 (Product Implementer: --no-ff merge of main after phase 2 lands, UX-01..UX-13), S64 (Product Implementer: UX-14..UX-19). No finding is deferred to an issue. Lands with the stretch assembly S18, whose review and visual review rerun the review's flow matrix.",
       "evidence": "review text kept outside the repository",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-107",
+      "decided_at": "2026-09-26T15:31:00-05:00",
+      "decided_by": "Owner (in chat) + Orchestrator (delegate)",
+      "decision": "New slice S65 on lane public (from origin/main e08cf55, Light Implementer): remove docs/plans/ (114 files; 46 contain private workstation paths and internal tool or company names) from main's tree, drop its .dockerignore line, and add a make check-public gate (inside make lint) that fails on private markers. Planning records stay only on the private branch gridmarket/lifecycle-setup, which no longer merges into main. 'Jev' product references are out of scope (separate open owner decision). History still contains the records: a history-clean public export (for example git filter-repo on a fresh clone, preserving every author including Jordan Hill) is an owner-only publication step.",
+      "owner_quote": "that need to be a slice",
+      "reversible": true
     }
   ],
   "stages": {
