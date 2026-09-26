@@ -73,7 +73,9 @@ Python 3.10 or later is all you need.
 
 2. Run the example trader (`examples/python-trader/trade.py`, under 30 lines).
    It prints a LZ_HOUSTON prediction and buys 2 Flex Credits of
-   `FLEX-LZ_HOUSTON-18`:
+   `FLEX-LZ_HOUSTON-18`: the next listed hour beginning at 18:00 in
+   America/Chicago (6–7 p.m. Central), not 18:00 UTC. Run it when that hour
+   is listed in the 3–24-hour futures window.
 
    ```sh
    export GRIDMARKET_URL=http://127.0.0.1:8000 GRIDMARKET_API_KEY=gm_...

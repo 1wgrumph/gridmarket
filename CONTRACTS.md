@@ -83,7 +83,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | --- | --- | --- |
 | `POST /v1/orders`: `product_id`, `side`, `quantity`, `price_cents` | market | Order input; `side` is `buy` or `sell` |
 | Order response: `id`, `account_id`, `product_id`, `side`, `quantity`, `remaining_qty`, `price_cents`, `status`, `created_at` | market | Caller-scoped order |
-| Market product: `id`, `symbol`, `zone`, `delivery_hour`, `status` | market | Public product |
+| Market product: `id`, `symbol`, `zone`, `delivery_hour`, `status` | market | Public product; hour-beginning America/Chicago symbols `FLEX-<zone>-<YYYY-MM-DD>-<HH>` / `SPOT-<zone>-<YYYY-MM-DD>-<HH>`; `delivery_hour` is the UTC start instant. On fall-back, the second occurrence (standard time, UTC-06:00) appends `R`, e.g. `FLEX-LZ_HOUSTON-2026-11-01-01R`; the first keeps the plain symbol. `FLEX-<zone>-<HH>` selects the earliest open matching Central hour by UTC instant, advancing to the repeated hour after the first closes. |
 | Trade: `id`, `product_id`, `buy_order_id`, `sell_order_id`, `quantity`, `price_cents`, `created_at` | market | Append-only fill |
 | Asset: `id`, `account_id`, `provider_id`, `zone`, `capacity_kwh`, `soc_kwh`, `min_reserve_kwh`, `charge_kw`, `discharge_kw` | market | Battery |
 | Prediction response: `zone`, `delivery_hour`, `score`, `level`, `confidence`, `expected_value`, `market_price`, `drivers`, `disclaimer`, `generated_at` | data | `drivers` entries have `factor`, `contribution`, `detail` |

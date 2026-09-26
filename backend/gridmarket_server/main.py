@@ -46,10 +46,15 @@ def create_app() -> FastAPI:
             if delay_first:
                 await asyncio.sleep(seconds)
             while True:
-                if inspect.iscoroutinefunction(fn):
-                    await fn()
-                else:
-                    await asyncio.to_thread(fn)
+                try:
+                    if inspect.iscoroutinefunction(fn):
+                        await fn()
+                    else:
+                        await asyncio.to_thread(fn)
+                except Exception:
+                    import logging
+
+                    logging.getLogger(__name__).exception("Scheduled tick failed: %s", fn.__name__)
                 await asyncio.sleep(seconds)
 
         jobs = [
