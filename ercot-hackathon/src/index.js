@@ -31,6 +31,18 @@ const ALLOWED_REPORTS = new Set([
 // Query params the EDC view sends; nothing else is forwarded to ERCOT.
 const EDC_PARAMS = ["deliveryDateFrom", "deliveryDateTo", "hourEndingFrom", "hourEndingTo", "size"];
 
+// Keyless /api/node draws on its own pools, never the market's "ercot" key. Each upstream
+// call costs NODE_CLIENT_COST units of the client's pool, so one client gets about one
+// full four-point lookup (8 calls) per budget window; all clients share the "node" pool.
+// ponytail: reuses the ERCOT_BUDGET binding's limit; a dedicated binding if tuning is needed.
+const NODE_CLIENT_COST = 3;
+async function nodeBudget(limiter, ip) {
+  for (let i = 0; i < NODE_CLIENT_COST; i++) {
+    if (!(await limiter.limit({ key: `node:${ip}` })).success) return { success: false };
+  }
+  return limiter.limit({ key: "node" });
+}
+
 // Coalesce concurrent snapshot builds per isolate.
 let snapshotInflight = null;
 
@@ -204,8 +216,11 @@ export default {
         const key = "node:v1:" + sps.join(",");
         const hit = await env.CACHE.get(key);
         if (hit) return json(JSON.parse(hit), 200, { "x-cache": "HIT" });
-        const out = await buildNodes((path, params) => ercotJSON(env, path, params, env.ERCOT_BUDGET), sps);
-        await env.CACHE.put(key, JSON.stringify(out), { expirationTtl: 300 });
+        const ip = request.headers.get("cf-connecting-ip") || "unknown";
+        const budget = env.ERCOT_BUDGET && { limit: () => nodeBudget(env.ERCOT_BUDGET, ip) };
+        const out = await buildNodes((path, params) => ercotJSON(env, path, params, budget), sps);
+        // Never cache a failure: a budget or upstream error must not poison the point for 5 minutes.
+        if (!Object.keys(out.errors).length) await env.CACHE.put(key, JSON.stringify(out), { expirationTtl: 300 });
         return json(out, 200, { "x-cache": "MISS" });
       }
 

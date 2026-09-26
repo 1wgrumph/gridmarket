@@ -14,7 +14,8 @@ const RT = report("np6-905-cd");
 const DA = report("np4-190-cd");
 const NOW = new Date("2026-09-26T14:05:00Z");
 
-function fixture(t, { budget = Infinity } = {}) {
+// Mirrors the ERCOT_BUDGET binding in wrangler.jsonc: 25 units per key per window.
+function fixture(t, { budget = 25 } = {}) {
   t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: NOW });
   const values = new Map([["ercot:id_token", "test-token"]]);
   const puts = [], calls = [], budgetKeys = [], clientKeys = [];
@@ -33,7 +34,7 @@ function fixture(t, { budget = Infinity } = {}) {
       },
     },
     RATE_LIMITER: { async limit({ key }) { clientKeys.push(key); return { success: true }; } },
-    ERCOT_BUDGET: { async limit({ key }) { budgetKeys.push(key); return { success: budgetKeys.length <= budget }; } },
+    ERCOT_BUDGET: { async limit({ key }) { budgetKeys.push(key); return { success: budgetKeys.filter((k) => k === key).length <= budget }; } },
   };
   t.mock.method(globalThis, "fetch", async (input) => {
     const url = new URL(input);
@@ -46,8 +47,8 @@ function fixture(t, { budget = Infinity } = {}) {
     return Response.json(rt ? RT : DA);
   });
   // No market key: this is the browser's public route.
-  const request = (sp) => worker.fetch(new Request(`https://worker.invalid/api/node${sp === undefined ? "" : `?sp=${encodeURIComponent(sp)}`}`, {
-    headers: { "cf-connecting-ip": "192.0.2.1" },
+  const request = (sp, ip = "192.0.2.1") => worker.fetch(new Request(`https://worker.invalid/api/node${sp === undefined ? "" : `?sp=${encodeURIComponent(sp)}`}`, {
+    headers: { "cf-connecting-ip": ip },
   }), env);
   return { env, values, puts, calls, budgetKeys, clientKeys, request };
 }
@@ -92,14 +93,15 @@ test("S60 keyless cache normalizes case, duplicates and order for five minutes",
   assert.deepEqual(body.nodes[0].rt.series, [48.5, 47.25]);
   assert.deepEqual(body.nodes[0].da, { price: 60.75, he: 10, dayMax: 60.75 });
   assert.equal(calls.length, 4);
-  assert.deepEqual(budgetKeys, Array(4).fill("ercot"));
+  // Per upstream call: three units of the client's pool, one of the shared node pool; never the market's key.
+  assert.deepEqual(budgetKeys, Array(4).fill(["node:192.0.2.1", "node:192.0.2.1", "node:192.0.2.1", "node"]).flat());
   assert.equal(puts.at(-1).opts.expirationTtl, 300);
   t.mock.timers.tick(299_999);
   const second = await request(` ${points[0].toLowerCase()},${points[1]},${points[0]} `);
   assert.equal(second.headers.get("x-cache"), "HIT");
   assert.deepEqual(await second.json(), body);
   assert.equal(calls.length, 4);
-  assert.equal(budgetKeys.length, 4);
+  assert.equal(budgetKeys.length, 16);
   assert.deepEqual(clientKeys, ["192.0.2.1", "192.0.2.1"]);
   t.mock.timers.tick(1);
   assert.equal((await request(points.slice(0, 2).join(","))).headers.get("x-cache"), "MISS");
@@ -119,6 +121,34 @@ test("S60 exhausted upstream budget preserves per-point errors without ERCOT or 
       [`${points[0]}:da`]: "Upstream ERCOT budget exceeded",
     },
   });
-  assert.deepEqual(budgetKeys, ["ercot", "ercot"]);
+  assert.deepEqual(budgetKeys, ["node:192.0.2.1", "node:192.0.2.1"]);
   assert.equal(calls.length, 0);
+});
+
+test("S62r failed node lookups are not cached", async (t) => {
+  const { request, calls, puts } = fixture(t, { budget: 0 });
+  const first = await request(points[0]);
+  assert.equal(first.headers.get("x-cache"), "MISS");
+  assert.notDeepEqual((await first.json()).errors, {});
+  assert.equal(puts.length, 0);
+  const second = await request(points[0]);
+  assert.equal(second.headers.get("x-cache"), "MISS");
+  assert.equal(calls.length, 0);
+});
+
+test("S62r one keyless client cannot exhaust the node budget or the market's ERCOT key", async (t) => {
+  const { request, calls, budgetKeys } = fixture(t);
+  const first = await request(points.slice(0, 4).join(","));
+  assert.deepEqual((await first.json()).errors, {});
+  assert.equal(calls.length, 8);
+  // Same client, new points: its pool is spent, so ERCOT is not called and nothing is cached.
+  const again = await (await request(points.slice(4, 8).join(","))).json();
+  assert.ok(again.nodes.every((node) => node.rt === null && node.da === null));
+  assert.equal(again.errors[`${points[4]}:rt`], "Upstream ERCOT budget exceeded");
+  assert.equal(calls.length, 8);
+  // Another client is still served.
+  const other = await (await request(points.slice(4, 6).join(","), "198.51.100.7")).json();
+  assert.deepEqual(other.errors, {});
+  assert.equal(calls.length, 12);
+  assert.ok(!budgetKeys.includes("ercot"));
 });
