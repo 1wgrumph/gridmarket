@@ -126,6 +126,24 @@ test("X4 demand actuals read MW rows and ignore prices", () => {
   assert.equal(demand.peak, null);
 });
 
+// DEC-GM-152: exact bytes from the real route (see the provenance file).
+const recorded = JSON.parse(readFileSync(new URL("./fixtures/history-snapshot-recorded.json", import.meta.url)));
+const recordedClock = Date.parse("2026-09-26T22:00:00Z"); // window end
+
+test("X4 recorded snapshot history parses through past hours", () => {
+  assert.equal(recorded.length, 288);
+  const past = pastHours({ HB_NORTH: recorded }, recordedClock, "$/MWh");
+  const north = past.zones.HB_NORTH;
+  assert.equal(past.hours.length, PAST_HOURS);
+  assert.ok(north.values.every(Number.isFinite)); // full 24 h feed: no gaps
+  assert.deepEqual(north.values, recorded.filter((_, i) => i % 12 === 11).map(row => row.value));
+  assert.equal(north.values[0], 26.1);
+  assert.equal(north.values[23], 53.7);
+  assert.equal(north.peak, 53.7);
+  assert.equal(north.low, 26.1);
+  assert.equal(north.published, "2026-09-26T21:55:00+00:00");
+});
+
 test("X4 scrubber spans 48 hours with now at slot 24 and Actual/Forecast labels", () => {
   const scrub = scrubHours(pastClock);
   assert.equal(scrub.hours.length, SCRUB_HOURS);
