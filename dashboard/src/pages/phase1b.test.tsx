@@ -32,9 +32,11 @@ describe('phase 1b dashboard pages', () => {
   it('SEIT-GM-UI-01-PAGES Market shows products, book depth, and recent trades', async () => {
     visit('#/market');
     expect(await screen.findByText('NORTH-20260926-14')).toBeTruthy();
-    expect(screen.getByText(/bid/i)).toBeTruthy();
-    expect(screen.getByText(/ask/i)).toBeTruthy();
-    expect(screen.getByText(/recent trades/i)).toBeTruthy();
+    const book = within(await screen.findByRole('region', { name: 'Book depth' }));
+    expect(await book.findByText('3 @ $41.00')).toBeTruthy();
+    expect(book.getByRole('heading', { name: 'Bids' })).toBeTruthy();
+    expect(book.getByRole('heading', { name: 'Asks' })).toBeTruthy();
+    expect(book.getByText('2 @ $43.00')).toBeTruthy();
     expect(await within(await screen.findByRole('region', { name: 'Recent trades' })).findByText('1 @ $42.00')).toBeTruthy();
   });
 
