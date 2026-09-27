@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="description" content="GridMarket: Texas home batteries, paid to help when the grid is tight. A simulated flexibility exchange on real ERCOT data. Base x AITX Talent Hackathon."><title>GridMarket &mdash; Base &#215; AITX Talent Hackathon</title>
-<link rel="icon" href="/hack/assets/nsrs.svg">
+<link rel="icon" href="/assets/nsrs.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -168,7 +168,7 @@ footer a{color:var(--muted);text-decoration:none}footer a:hover{color:var(--yell
 .floor-label{font-family:var(--mono);font-size:11px;color:#d4d2c8;background:rgba(14,13,9,.85);padding:2px 6px;border-radius:3px;white-space:nowrap}
 </style></head><body>
 <div class="topbar">
-  <a class="topbar-logo" href="/hack/"><span class="initials">GM</span><span class="slash">/</span><span>GridMarket</span></a>
+  <a class="topbar-logo" href="/"><span class="initials">GM</span><span class="slash">/</span><span>GridMarket</span></a>
   <div class="topbar-links"><a href="#watch">Demo</a><a href="#building">Building</a><a href="#problem">Problem</a><a href="#pipeline">Loop</a><a href="#stack">Stack</a><a href="#docs">Docs</a><a href="#judging">Submission</a><a href="https://github.com/1wgrumph/gridmarket" style="margin-left:8px;color:var(--teal)">GitHub</a><a href="https://organizedai.vip" style="color:var(--muted)">organizedai.vip</a></div>
 </div>
 <div class="body-wrap"><main style="max-width:900px;margin:0 auto">
@@ -181,10 +181,10 @@ footer a{color:var(--muted);text-decoration:none}footer a:hover{color:var(--yell
     <div class="pill"><strong>$780.46</strong> Houston, 26 Aug 10:15 PM</div><div class="pill"><strong>1,023</strong> EIA-860 plants</div><div class="pill"><strong>1,000</strong> simulated batteries</div><div class="pill"><strong>60</strong> bots</div><div class="pill">Cloudflare Worker Assets</div>
   </div>
   <div class="hbtns">
-    <a class="hbtn p" href="/godseye/#start">&#9654; Replay 26 Aug</a>
+    <a class="hbtn p" href="https://ercot-hackathon.jordan-691.workers.dev/godseye/#start">&#9654; Replay 26 Aug</a>
     <a class="hbtn" href="#watch">Watch Demo</a>
     <a class="hbtn" href="https://guide.organizedai.vip/gridmarket/">Open Guide</a>
-    <a class="hbtn" href="/godseye/">Live God&#39;s Eye</a>
+    <a class="hbtn" href="https://ercot-hackathon.jordan-691.workers.dev/godseye/">Live God&#39;s Eye</a>
   </div>
 </div>
 
@@ -194,8 +194,8 @@ footer a{color:var(--muted);text-decoration:none}footer a:hover{color:var(--yell
   <p class="lead">A walk through God&#39;s Eye: 1,023 real plants on a 3D globe, a click into any plant for its live ERCOT node price, the help-the-grid layer by zone, and the 26 August replay that stops on Houston&#39;s $780.46 spike.</p>
   <div class="videowrap">
     <video controls preload="metadata" playsinline style="width:100%;height:100%">
-      <source src="/hack/assets/walkthrough.mp4" type="video/mp4">
-      Your browser can&#39;t play embedded video &mdash; <a href="/hack/assets/walkthrough.mp4">download the MP4</a>.
+      <source src="/assets/walkthrough.mp4" type="video/mp4">
+      Your browser can&#39;t play embedded video &mdash; <a href="/assets/walkthrough.mp4">download the MP4</a>.
     </video>
   </div>
 </div>
@@ -203,7 +203,7 @@ footer a{color:var(--muted);text-decoration:none}footer a:hover{color:var(--yell
 <div class="section" id="demo">
   <div class="section-comment">// GRID DIAGRAM</div>
   <h1>ERCOT as a planet. Every plant where it really is, live.</h1>
-  <p class="lead">Texas drawn from its real outline, with all 643 ERCOT plants of 10 MW and up placed from EIA-860 and coloured by fuel. Hub prices, zone help windows, weather, wind and solar all come live from the ERCOT Public API, and the sun sits where it is over Texas right now. Drag to spin, click a plant, or open it full-screen at <a href="/planet/">/planet</a>.</p>
+  <p class="lead">Texas drawn from its real outline, with all 643 ERCOT plants of 10 MW and up placed from EIA-860 and coloured by fuel. Hub prices, zone help windows, weather, wind and solar all come live from the ERCOT Public API, and the sun sits where it is over Texas right now. Drag to spin, click a plant, or open it full-screen at <a href="https://ercot-hackathon.jordan-691.workers.dev/planet/">/planet</a>.</p>
   <div class="dstage">
     <aside class="dkey">
       <div class="dkey-h">// LAYERS &middot; tap to expand</div>
@@ -213,9 +213,9 @@ footer a{color:var(--muted);text-decoration:none}footer a:hover{color:var(--yell
       <div class="dk"><span class="dot" style="background:#8fd0ea"></span><div class="dkb"><div class="dn">Weather and renewables <span class="chev">&#9656;</span></div><div class="dr">Eight weather zones, live wind and solar</div><div class="dm">Clouds sit over ERCOT&#39;s eight weather zones, tinted by temperature. The big turbines spin with live wind output and solar tiles glow with live solar output.</div></div></div>
       <div class="dk"><span class="dot" style="background:#7f77dd"></span><div class="dkb"><div class="dn">Jev lighthouse <span class="chev">&#9656;</span></div><div class="dr">Calibrated checks in the Gulf</div><div class="dm">The beam takes the colour of the strongest check, and the router flags beside it rise with how many checks are logged, in review or alerting.</div></div></div>
     </aside>
-    <div class="diagram-embed"><iframe src="/planet/?embed" title="Grid Planet: ERCOT on real data" loading="lazy"></iframe></div>
+    <div class="diagram-embed"><iframe src="https://ercot-hackathon.jordan-691.workers.dev/planet/?embed" title="Grid Planet: ERCOT on real data" loading="lazy"></iframe></div>
   </div>
-  <p style="margin-top:10px;color:var(--dim);font-size:11px;font-family:var(--mono)">interactive &middot; drag to spin &middot; click a plant &middot; <a href="/planet/">open full &#8594;</a> &middot; <a href="/diagram/">district view &#8594;</a></p>
+  <p style="margin-top:10px;color:var(--dim);font-size:11px;font-family:var(--mono)">interactive &middot; drag to spin &middot; click a plant &middot; <a href="https://ercot-hackathon.jordan-691.workers.dev/planet/">open full &#8594;</a> &middot; <a href="https://ercot-hackathon.jordan-691.workers.dev/diagram/">district view &#8594;</a></p>
 </div>
 
 <div class="section" id="building">
@@ -259,7 +259,7 @@ footer a{color:var(--muted);text-decoration:none}footer a:hover{color:var(--yell
     <div class="card"><h3>03 &middot; the data is public, the market isn&#39;t</h3><p>Trading ERCOT takes QSE registration and credit. GridMarket lets anyone test strategies on real conditions with nothing real at stake.</p></div>
     <div class="card"><h3>04 &middot; people and bots need one rulebook</h3><p>Every order goes through the same boundary and the same checks, whether a person or a bot places it.</p></div>
   </div>
-  <div class="reportshot" style="margin-top:20px"><img src="/hack/assets/spike.jpg" alt="God&#39;s Eye stopped on the 26 August Houston spike at 10:15 PM" loading="lazy"></div>
+  <div class="reportshot" style="margin-top:20px"><img src="/assets/spike.jpg" alt="God&#39;s Eye stopped on the 26 August Houston spike at 10:15 PM" loading="lazy"></div>
 </div>
 
 <div class="section" id="pipeline">
@@ -296,15 +296,15 @@ footer a{color:var(--muted);text-decoration:none}footer a:hover{color:var(--yell
   <p class="lead">Everything a judge needs, one click from here.</p>
   <div class="nav-cards">
     <a class="nav-card" href="https://guide.organizedai.vip/gridmarket/"><div class="nav-card-title">G &middot; Field Guide</div><div class="nav-card-sub">Seven chapters: the evening hours, the order boundary, the data, the score, the replay, the bot, God&#39;s Eye.</div><div class="nav-card-tags"><span class="tag">guide</span><span class="tag">beginners</span></div></a>
-    <a class="nav-card" href="/godseye/#start"><div class="nav-card-title">E &middot; God&#39;s Eye</div><div class="nav-card-sub">1,023 plants on a 3D globe, live node prices, help-the-grid layer, 26 Aug replay.</div><div class="nav-card-tags"><span class="tag">interactive</span><span class="tag">live</span></div></a>
-    <a class="nav-card" href="/planet/"><div class="nav-card-title">P &middot; Grid Planet</div><div class="nav-card-sub">ERCOT on a toon planet: 643 real plants, live hub prices, help windows and weather. Also the district view at /diagram.</div><div class="nav-card-tags"><span class="tag">3d</span></div></a>
+    <a class="nav-card" href="https://ercot-hackathon.jordan-691.workers.dev/godseye/#start"><div class="nav-card-title">E &middot; God&#39;s Eye</div><div class="nav-card-sub">1,023 plants on a 3D globe, live node prices, help-the-grid layer, 26 Aug replay.</div><div class="nav-card-tags"><span class="tag">interactive</span><span class="tag">live</span></div></a>
+    <a class="nav-card" href="https://ercot-hackathon.jordan-691.workers.dev/planet/"><div class="nav-card-title">P &middot; Grid Planet</div><div class="nav-card-sub">ERCOT on a toon planet: 643 real plants, live hub prices, help windows and weather. Also the district view at /diagram.</div><div class="nav-card-tags"><span class="tag">3d</span></div></a>
     <a class="nav-card" href="https://github.com/1wgrumph/gridmarket"><div class="nav-card-title">R &middot; Repository</div><div class="nav-card-sub">Exchange, Worker, God&#39;s Eye, tests, provenance, and the Jev decision map as markdown.</div><div class="nav-card-tags"><span class="tag">source</span></div></a>
   </div>
   <div class="tbl-wrap"><table><thead><tr><th>Endpoint</th><th>What it returns</th></tr></thead><tbody>
-    <tr><td><a href="/api/snapshot"><code>/api/snapshot</code></a></td><td>Demand, hub prices, day-ahead and DART, SCED lambda and headroom, wind, solar, weather, baseline checks</td></tr>
-    <tr><td><a href="/api/help"><code>/api/help</code></a></td><td>Help score for each ERCOT zone for the next 24 hours, with help windows</td></tr>
+    <tr><td><a href="https://ercot-hackathon.jordan-691.workers.dev/api/snapshot"><code>/api/snapshot</code></a></td><td>Demand, hub prices, day-ahead and DART, SCED lambda and headroom, wind, solar, weather, baseline checks</td></tr>
+    <tr><td><a href="https://ercot-hackathon.jordan-691.workers.dev/api/help"><code>/api/help</code></a></td><td>Help score for each ERCOT zone for the next 24 hours, with help windows</td></tr>
     <tr><td><code>/api/node?sp=HB_HOUSTON</code></td><td>Live real-time and day-ahead price at up to four settlement points</td></tr>
-    <tr><td><a href="/api/health"><code>/api/health</code></a></td><td>Token and API status</td></tr>
+    <tr><td><a href="https://ercot-hackathon.jordan-691.workers.dev/api/health"><code>/api/health</code></a></td><td>Token and API status</td></tr>
   </tbody></table></div>
 </div>
 
@@ -323,7 +323,7 @@ footer a{color:var(--muted);text-decoration:none}footer a:hover{color:var(--yell
 
 <div class="section" id="mascot">
   <div class="section-comment">// MEET NSRS</div>
-  <div class="mascot"><img src="/hack/assets/nsrs.svg" alt="NSRS, a cartoon night-shift dinosaur with a flashing battery belly"><div><h1>NSRS wakes up when the sun goes down.</h1><p class="lead">Named for ERCOT&#39;s Non-Spinning Reserve Service, the capacity that has to be ready within 30 minutes. NSRS keeps his battery three-quarters full for the evening, because that&#39;s when Texas needs him.</p></div></div>
+  <div class="mascot"><img src="/assets/nsrs.svg" alt="NSRS, a cartoon night-shift dinosaur with a flashing battery belly"><div><h1>NSRS wakes up when the sun goes down.</h1><p class="lead">Named for ERCOT&#39;s Non-Spinning Reserve Service, the capacity that has to be ready within 30 minutes. NSRS keeps his battery three-quarters full for the evening, because that&#39;s when Texas needs him.</p></div></div>
 </div>
 
 <div class="section" id="builtby">
@@ -411,5 +411,5 @@ gsap.utils.toArray('.section').forEach(function(el){gsap.from(el,{opacity:0,y:24
   window.addEventListener('resize',resize);
   (function loop(){requestAnimationFrame(loop); controls.update(); rnd.render(scene,cam); lr.render(scene,cam);})();
 })();
-</script><script>document.querySelectorAll('.dkey .dk').forEach(function(c){c.addEventListener('click',function(){var o=c.classList.contains('open');document.querySelectorAll('.dkey .dk').forEach(function(x){x.classList.remove('open')});if(!o)c.classList.add('open');});});</script><footer>GridMarket &middot; Base &#215; AITX Talent Hackathon &middot; <a href="https://organizedai.vip">Organized AI</a> &middot; Austin, TX &middot; <a href="https://guide.organizedai.vip/gridmarket/">guide</a> &middot; <a href="/godseye/">god&#39;s eye</a> &middot; <a href="/diagram/">diagram</a> &middot; <a href="https://github.com/1wgrumph/gridmarket">github</a></footer>
+</script><script>document.querySelectorAll('.dkey .dk').forEach(function(c){c.addEventListener('click',function(){var o=c.classList.contains('open');document.querySelectorAll('.dkey .dk').forEach(function(x){x.classList.remove('open')});if(!o)c.classList.add('open');});});</script><footer>GridMarket &middot; Base &#215; AITX Talent Hackathon &middot; <a href="https://organizedai.vip">Organized AI</a> &middot; Austin, TX &middot; <a href="https://guide.organizedai.vip/gridmarket/">guide</a> &middot; <a href="https://ercot-hackathon.jordan-691.workers.dev/godseye/">god&#39;s eye</a> &middot; <a href="https://ercot-hackathon.jordan-691.workers.dev/diagram/">diagram</a> &middot; <a href="https://github.com/1wgrumph/gridmarket">github</a></footer>
 </body></html>
