@@ -45,11 +45,11 @@
     <div id="helpBatteries" hidden aria-live="polite"></div>
     <div id="helpWindows" hidden aria-live="polite"></div>
     <div id="helpForecast" hidden>
-      <label for="helpHour">Forecast hour · Central Time</label>
-      <input id="helpHour" type="range" min="0" max="23" value="0" step="1" />
-      <output id="helpHourLabel" for="helpHour"></output>
-      <div class="note">Load relative to each zone’s own 24-hour peak; map shading runs from each zone’s 24-hour low to its peak. Weather-to-load-zone mapping is approximate; map areas are schematic.</div>
-      <ul id="helpZones" aria-label="Forecast load by zone"></ul>
+      <label for="helpHour">Hour · Central Time</label>
+      <input id="helpHour" type="range" min="0" max="47" value="24" step="1" />
+      <div class="row2"><output id="helpHourLabel" for="helpHour"></output><button class="pill" id="helpNow" type="button" title="Reset to the current hour">Now</button></div>
+      <div class="note">Past hours show actual hub prices; future hours show forecast load relative to each zone’s own 24-hour peak. Map shading runs from each zone’s low to its peak within its own range. Weather-to-load-zone mapping is approximate; map areas are schematic.</div>
+      <ul id="helpZones" aria-label="Zone values for the selected hour"></ul>
       <div class="note" id="helpPublished"></div>
     </div>
   </section>
@@ -88,7 +88,7 @@
 </main>
 
 <script type="module">
-import { forecastHours, historyPath, publishedText, shade, peakLabel, helpWindows, windowText, mwText, waiting, LOAD_ZONES } from "./help-grid.js";
+import { forecastHours, pastHours, historyPath, actualPath, scrubHours, hourKind, hourOffset, publishedText, shade, peakLabel, helpWindows, windowText, mwText, hourText, waiting, noData, LOAD_ZONES, NOW_INDEX, HUB_FOR_ZONE, ACTUAL_HUBS, HUB_REPORT, DEMAND_REPORT, DEMAND_ZONE } from "./help-grid.js";
 import { fetchMarket } from "/market-feed.js";
 import { countyToZone, tradeLink, leadPrediction, isBattery, latestESR, formatESR, zoneName, sectorName, ctTime, intervalText, checkName, checkQuestion, routeName, activityText } from "./geo.js";
 
@@ -385,18 +385,21 @@ async function refreshMarket(){
     const link=tradeLink(cfg.MARKET_URL,'LZ_NORTH');
     const url=link?link.split('#')[0].replace(/\/+$/,''):'';
     const now=Date.now();
-    const [forecast,signals,feed,history]=url?await Promise.all([
+    const [forecast,signals,feed,history,actualHubs,actualDemand]=url?await Promise.all([
       marketGet(url,'/v1/predictions').catch(()=>null),
       marketGet(url,'/v1/signals').catch(()=>null),
       fetchMarket(url),
-      Promise.all(LOAD_ZONES.map(zone=>marketGet(url,historyPath(zone,now)).catch(()=>null)))
-    ]):[null,null,null,[]];
+      Promise.all(LOAD_ZONES.map(zone=>marketGet(url,historyPath(zone,now)).catch(()=>null))),
+      Promise.all(ACTUAL_HUBS.map(hub=>marketGet(url,actualPath(HUB_REPORT,hub,now)).catch(()=>null))),
+      marketGet(url,actualPath(DEMAND_REPORT,DEMAND_ZONE,now)).catch(()=>null)
+    ]):[null,null,null,[],[],null];
     // A slower, older refresh must not overwrite a newer one.
     if(my!==marketReq) return;
     marketUrl=url;
     predictions=Array.isArray(forecast)?forecast:null;
     esr=latestESR(signals);
     helpHistory=Object.fromEntries(LOAD_ZONES.map((zone,i)=>[zone,history[i]])); helpPredictions=predictions;
+    helpActual=Object.fromEntries(ACTUAL_HUBS.map((hub,i)=>[hub,actualHubs[i]])); helpDemandHist={ERCOT:actualDemand};
     const dashboard=document.getElementById('dashboard');
     dashboard.hidden=!marketUrl;
     if(marketUrl) dashboard.href=marketUrl;
@@ -408,7 +411,7 @@ async function refreshMarket(){
       marketStale=true;
       if(!marketUrl){trades=[];marketFeed=null;}
     }
-  }catch{if(my!==marketReq) return; predictions=null;helpHistory=null;helpPredictions=null;marketStale=true;}
+  }catch{if(my!==marketReq) return; predictions=null;helpHistory=null;helpPredictions=null;helpActual=null;helpDemandHist=null;marketStale=true;}
   renderMarket(); renderStatus(); renderTicker(); renderHelp();
   const box=document.getElementById('zoneMarket');
   if(box&&selected) box.innerHTML=zoneHTML(selected);
@@ -419,8 +422,8 @@ async function refreshMarket(){
 
 /* ---------- Help the grid: independent public feeds and controls ---------- */
 const help={demand:false,batteries:false,windows:false};
-let helpHistory=null, helpPredictions=null, batteryDashboard=null, batteryStale=false;
-const helpHour=document.getElementById('helpHour');
+let helpHistory=null, helpPredictions=null, helpActual=null, helpDemandHist=null, batteryDashboard=null, batteryStale=false;
+const helpHour=document.getElementById('helpHour'), helpNow=document.getElementById('helpNow');
 // Representative areas, not electrical boundaries; same approximation as the backend roll-up.
 const loadAreas={LZ_NORTH:[-97.3,33.0,160000],LZ_HOUSTON:[-95.2,29.3,95000],LZ_SOUTH:[-98.2,27.8,130000],LZ_WEST:[-102,31.8,200000]};
 const helpAreas={}, narrow=matchMedia('(max-width:900px)'); // Phones: the list names each peak hour.
@@ -430,13 +433,21 @@ for(const [zone,[lon,lat,radius]] of Object.entries(loadAreas)){
     label:{text:zoneName(zone),font:'500 12px Inter, sans-serif',fillColor:MAP_TEXT,showBackground:true,backgroundColor:INK.withAlpha(.88),pixelOffset:new C.Cartesian2(0,34),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
 }
 function renderHelp(){
-  const now=Date.now(), forecast=forecastHours(helpHistory,now), index=Number(helpHour.value);
+  const now=Date.now(), scrub=scrubHours(now), forecast=forecastHours(helpHistory,now),
+    actual=pastHours(helpActual,now,'$/MWh'), demandHist=pastHours(helpDemandHist,now,'MW'),
+    index=Number(helpHour.value), kind=hourKind(index), hourISO=new Date(scrub.hours[index]).toISOString();
   for(const [name,id] of [['demand','helpDemand'],['batteries','helpBatteries'],['windows','helpWindows']]) document.getElementById(id).hidden=!help[name];
   document.getElementById('helpForecast').hidden=!(help.demand||help.windows);
   G.help.show=help.demand||help.windows;
-  const demand=SNAP?.demand?.mw, capacity=SNAP?.sced?.onlineHSL;
-  document.getElementById('helpDemand').innerHTML=`<b>ERCOT-wide demand</b><div>${mwText(demand)} / ${mwText(capacity)} available capacity</div>
-    <div class="note">${Number.isFinite(demand)&&Number.isFinite(capacity)&&capacity>0?`${fmt(demand/capacity*100,1)}% of available capacity`:waiting}${snapshotStale?' · Stale · last known':''}</div>`;
+  if(index<NOW_INDEX){
+    const dv=demandHist.zones[DEMAND_ZONE]?.values[index], dp=demandHist.zones[DEMAND_ZONE]?.publishedByHour[index];
+    document.getElementById('helpDemand').innerHTML=`<b>ERCOT-wide demand</b><div>${esc(hourText(dv,'MW'))} · Actual</div>
+      <div class="note">${dv==null?noData:`Published ${esc(publishedText(dp)??noData)}`} · ${esc(ctTime(hourISO))}</div>`;
+  }else{
+    const demand=SNAP?.demand?.mw, capacity=SNAP?.sced?.onlineHSL;
+    document.getElementById('helpDemand').innerHTML=`<b>ERCOT-wide demand</b><div>${mwText(demand)} / ${mwText(capacity)} available capacity</div>
+      <div class="note">${Number.isFinite(demand)&&Number.isFinite(capacity)&&capacity>0?`${fmt(demand/capacity*100,1)}% of available capacity`:waiting}${snapshotStale?' · Stale · last known':''}</div>`;
+  }
   const b=batteryDashboard;
   const stale=batteryStale||(b&&now-Date.parse(b.timestamp)>10*60*1000);
   document.getElementById('helpBatteries').innerHTML=b?`<b>Texas grid batteries</b>
@@ -448,22 +459,32 @@ function renderHelp(){
   const available=Array.isArray(helpPredictions)&&helpPredictions.some(p=>p.level!=='UNAVAILABLE'&&Number.isFinite(p.score)&&Date.parse(p.delivery_hour)>=now&&Date.parse(p.delivery_hour)<now+24*3600000);
   document.getElementById('helpWindows').innerHTML='<b>Next help windows</b><div class="note">Simulation estimate, not an ERCOT alert</div><div class="help-chips">'+
     (windows.length?windows.map(w=>`<span class="badge">${esc(windowText(w))}</span>`).join(''):`<span>${available?'No HIGH-or-above windows in supplied predictions':waiting}</span>`)+ '</div>';
-  const hour=ctTime(new Date(forecast.hours[index]).toISOString());
-  document.getElementById('helpHourLabel').textContent=hour;
-  helpHour.setAttribute('aria-valuetext',hour);
+  const label=`${ctTime(hourISO)} · ${kind} · ${hourOffset(index)}`;
+  document.getElementById('helpHourLabel').textContent=label;
+  helpHour.setAttribute('aria-valuetext',label);
+  helpNow.disabled=index===NOW_INDEX;
   document.getElementById('helpZones').innerHTML=Object.entries(forecast.zones).map(([zone,data])=>{
-    const value=data.values[index], ratio=Number.isFinite(value)&&data.peak>0?value/data.peak:null;
-    const peak=data.peakHour===null?null:ctTime(new Date(data.peakHour).toISOString()), atPeak=data.peakHour===forecast.hours[index];
-    const text=`${zoneName(zone)}: ${mwText(value)} · ${ratio===null?'24-hour peak: '+waiting:fmt(ratio*100)+'% of own peak · peak '+peak}`;
     const area=helpAreas[zone];
+    if(index<NOW_INDEX){
+      const azone=actual.zones[HUB_FOR_ZONE[zone]], value=azone?.values[index]??null, pub=azone?.publishedByHour[index]??null;
+      const text=value==null?`${zoneName(zone)}: ${noData} · Actual`:`${zoneName(zone)}: ${hourText(value,'$/MWh')} · Actual · published ${publishedText(pub)??noData}`;
+      const t=azone?shade(value,azone):null;
+      if(area){area.ellipse.material=t===null?ACC.withAlpha(0):C.Color.lerp(C.Color.fromCssColorString('#b8dbd9'),C.Color.fromCssColorString('#04724d'),t,new C.Color()).withAlpha(.15+t*.45);
+        area.ellipse.outlineColor=ACC.withAlpha(.6);
+        area.label.text=zoneName(zone)+' · '+(value==null?noData:hourText(value,'$/MWh'));}
+      return `<li>${esc(text)}</li>`;
+    }
+    const fi=index-NOW_INDEX, value=data.values[fi], pub=data.publishedByHour[fi], ratio=Number.isFinite(value)&&data.peak>0?value/data.peak:null;
+    const peak=data.peakHour===null?null:ctTime(new Date(data.peakHour).toISOString()), atPeak=data.peakHour===forecast.hours[fi];
+    const text=value==null?`${zoneName(zone)}: ${noData} · Forecast`:`${zoneName(zone)}: ${hourText(value,'MW')} · Forecast · ${ratio===null?'24-hour peak: '+noData:fmt(ratio*100)+'% of own peak · peak '+peak} · published ${publishedText(pub)??noData}`;
     const t=shade(value,data);
     if(area){area.ellipse.material=t===null?ACC.withAlpha(0):C.Color.lerp(C.Color.fromCssColorString('#b8dbd9'),C.Color.fromCssColorString('#04724d'),t,new C.Color()).withAlpha(.15+t*.45);
       area.ellipse.outlineColor=atPeak?C.Color.fromCssColorString('#f4f4f9'):ACC.withAlpha(.6);
-      area.label.text=zoneName(zone)+' · '+(ratio===null?waiting:(atPeak?'Peak hour · ':'')+fmt(ratio*100)+'% of peak'+(narrow.matches?'':'\nPeak '+peakLabel(data.peakHour)));}
+      area.label.text=zoneName(zone)+' · '+(ratio===null?noData:(atPeak?'Peak hour · ':'')+fmt(ratio*100)+'% of peak'+(narrow.matches?'':'\nPeak '+peakLabel(data.peakHour)));}
     return `<li>${esc(text)}${atPeak?' <span class="badge">Peak hour</span>':''}</li>`;
   }).join('');
-  const published=publishedText(Object.values(forecast.zones).map(z=>z.published).filter(Boolean).sort().pop());
-  document.getElementById('helpPublished').textContent='Forecast published '+(published??waiting);
+  const published=publishedText(Object.values((kind==='Actual'?actual:forecast).zones).map(z=>z.published).filter(Boolean).sort().pop());
+  document.getElementById('helpPublished').textContent=(kind==='Actual'?'Actuals published ':'Forecast published ')+(published??noData);
 }
 function highlightBatteries(){
   for(const p of PLANTS){const e=plantEnt.get(p.code);e.billboard.scale=help.batteries&&isBattery(p)?1.3:1;
@@ -473,6 +494,7 @@ document.querySelectorAll('#helpToggles button').forEach(button=>button.onclick=
   const key=button.dataset.help; help[key]=!help[key];button.setAttribute('aria-pressed',String(help[key]));button.classList.toggle('on',help[key]);renderHelp();highlightBatteries();
 });
 helpHour.oninput=renderHelp;
+helpNow.onclick=()=>{helpHour.value=NOW_INDEX;renderHelp();};
 async function refreshBatteries(){
   try{const r=await fetch(API+'/api/esr-dashboard',{signal:AbortSignal.timeout(20000)});if(!r.ok)throw new Error(waiting);
     const b=await r.json();if(![b.charging_mw,b.discharging_mw,b.net_mw].every(Number.isFinite)||!Number.isFinite(Date.parse(b.timestamp)))throw new Error(waiting);
