@@ -1260,6 +1260,13 @@
       "decided_by": "Orchestrator (delegate, coordinating S18)",
       "decision": "The replay merge's App.tsx resolution (f45644d) added hidden stale text only to keep S80-10 passing (test-gaming). Authorized correction on integration-stretch: remove the hidden element; S80-10 asserts the real Replay page at #/replay, with the placeholder covered only where it remains reachable (or removed with its assertion if dead). Then merge docs2, run the full gate (smoke on a named project and port) and write the stretch candidate.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-146",
+      "decided_at": "2026-09-26T21:17:00-05:00",
+      "decided_by": "Orchestrator (delegate, coordinating S18)",
+      "decision": "All lanes merged (df81a1a). The final gate failed one timing-dependent dashboard test (phase1b.test.tsx page-wide /bid/i query matching 'No bids' before the book loads; 190/190 at 8d71d0f). Test-only repair on integration-stretch by the Test Implementer route (Claude Opus 5.5 medium): scope the queries to the book panel and await load, 10 consecutive passes, then the full gate and the stretch candidate. Assurance launches when the candidate exists.",
+      "reversible": true
     }
   ],
   "stages": {
