@@ -56,7 +56,8 @@ def exchange(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("GRIDMARKET_DB", str(path))
     app = main.create_app()
     app.state.providers = enabled()
-    with TestClient(app) as client:
+    # DEC-GM-141: supply loopback client address so admin routes are reachable
+    with TestClient(app, client=("127.0.0.1", 50000)) as client:
         yield path, client
 
 

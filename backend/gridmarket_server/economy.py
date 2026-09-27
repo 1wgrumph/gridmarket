@@ -207,43 +207,47 @@ def stats(
             "WHERE b.account_id = ? OR s.account_id = ?",
             (account_id, account_id),
         ).fetchone()[0]
-        # Net worth revalues open futures only; spot inventory adds nothing
-        # because cash moved at the fill. Marks follow the account endpoint:
-        # last trade, else book mid, else the prediction's expected value.
+        # Net worth = cash + unsettled flat futures P&L (owed, paid once at expiry)
+        # + open futures marked to reference + no spot inventory revaluation.
+        # Marks follow the account endpoint: last trade, else book mid, else
+        # the prediction's expected value.
         unrealized = 0
         for product_id, qty, zone, hour in conn.execute(
             "SELECT p.product_id, p.quantity, x.zone, x.delivery_hour FROM positions p "
-            "JOIN products x ON x.id = p.product_id WHERE p.account_id = ? AND p.quantity != 0 "
-            "AND x.symbol NOT LIKE 'SPOT-%'",
+            "JOIN products x ON x.id = p.product_id WHERE p.account_id = ? "
+            "AND x.status != 'settled' AND x.symbol NOT LIKE 'SPOT-%'",
             (account_id,),
         ):
-            mark = conn.execute(
-                "SELECT price_cents FROM trades WHERE product_id = ? ORDER BY rowid DESC LIMIT 1",
-                (product_id,),
-            ).fetchone()
-            if mark:
-                price = mark[0]
+            if qty == 0:
+                price = 0
             else:
-                book = conn.execute(
-                    "SELECT MAX(CASE WHEN side = 'buy' THEN price_cents END),"
-                    "MIN(CASE WHEN side = 'sell' THEN price_cents END) FROM orders "
-                    "WHERE product_id = ? AND status = 'open'",
+                mark = conn.execute(
+                    "SELECT price_cents FROM trades WHERE product_id = ? ORDER BY rowid DESC LIMIT 1",
                     (product_id,),
                 ).fetchone()
-                if all(value is not None for value in book):
-                    price = sum(book) / 2
+                if mark:
+                    price = mark[0]
                 else:
-                    prediction = next(
-                        (
-                            item
-                            for item in _predictions()
-                            if item.zone == zone and item.delivery_hour == hour
-                        ),
-                        None,
-                    )
-                    if prediction is None:
-                        continue
-                    price = prediction.expected_value * 100
+                    book = conn.execute(
+                        "SELECT MAX(CASE WHEN side = 'buy' THEN price_cents END),"
+                        "MIN(CASE WHEN side = 'sell' THEN price_cents END) FROM orders "
+                        "WHERE product_id = ? AND status = 'open'",
+                        (product_id,),
+                    ).fetchone()
+                    if all(value is not None for value in book):
+                        price = sum(book) / 2
+                    else:
+                        prediction = next(
+                            (
+                                item
+                                for item in _predictions()
+                                if item.zone == zone and item.delivery_hour == hour
+                            ),
+                            None,
+                        )
+                        if prediction is None:
+                            continue
+                        price = prediction.expected_value * 100
             unrealized += round(market.trade_value(conn, account_id, product_id) + qty * price)
         deposited = conn.execute(
             "SELECT COALESCE(SUM(amount_cents), 0) FROM deposits WHERE account_id = ?",

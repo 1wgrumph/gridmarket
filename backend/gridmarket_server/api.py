@@ -54,14 +54,22 @@ def address(request: Request) -> str:
     return str(ip)
 
 
-# Loopback plus the subnets compose gateways come from. Explicit ranges, not
-# is_private: that also matches TEST-NET documentation addresses.
-ADMIN_NETS = (
-    ipaddress.ip_network("10.0.0.0/8"),
-    ipaddress.ip_network("172.16.0.0/12"),
-    ipaddress.ip_network("192.168.0.0/16"),
-    ipaddress.ip_network("fd00::/8"),
-)
+def _parse_admin_nets(
+    raw: str | None = None,
+) -> tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]:
+    text = os.getenv("GRIDMARKET_ADMIN_NETS", "") if raw is None else raw
+    if not text.strip():
+        return ()
+    nets = []
+    for part in text.split(","):
+        part = part.strip()
+        if part:
+            nets.append(ipaddress.ip_network(part, strict=False))
+    return tuple(nets)
+
+
+# Loopback only by default; compose deployment configures GRIDMARKET_ADMIN_NETS.
+ADMIN_NETS: tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...] = ()
 
 
 def admin_local(host: str | None) -> bool:
@@ -76,7 +84,10 @@ def admin_local(host: str | None) -> bool:
         address = ipaddress.ip_address(host)
     except ValueError:
         return False
-    return address.is_loopback or any(address in net for net in ADMIN_NETS)
+    if address in (ipaddress.ip_address("127.0.0.1"), ipaddress.ip_address("::1")):
+        return True
+    trusted = _parse_admin_nets() or ADMIN_NETS
+    return any(address in net for net in trusted)
 
 
 def admin_guard(request: Request) -> None:
@@ -326,35 +337,38 @@ def account(request: Request) -> dict:
         result["unrealized_pnl_cents"] = 0
         for position in market.rows(
             db,
-            "SELECT p.*,x.zone,x.delivery_hour FROM positions p JOIN products x ON x.id=p.product_id WHERE p.account_id=? AND x.status!='settled' AND x.symbol LIKE 'FLEX-%'",
+            "SELECT p.*,x.zone,x.delivery_hour FROM positions p JOIN products x ON x.id=p.product_id WHERE p.account_id=? AND x.status!='settled' AND x.symbol NOT LIKE 'SPOT-%'",
             (account_id,),
         ):
-            last = db.execute(
-                "SELECT price_cents FROM trades WHERE product_id=? ORDER BY rowid DESC LIMIT 1",
-                (position["product_id"],),
-            ).fetchone()
-            if last:
-                mark = last[0]
+            if position["quantity"] == 0:
+                mark = 0
             else:
-                book = db.execute(
-                    "SELECT MAX(CASE WHEN side='buy' THEN price_cents END),MIN(CASE WHEN side='sell' THEN price_cents END) FROM orders WHERE product_id=? AND status='open'",
+                last = db.execute(
+                    "SELECT price_cents FROM trades WHERE product_id=? ORDER BY rowid DESC LIMIT 1",
                     (position["product_id"],),
                 ).fetchone()
-                if all(price is not None for price in book):
-                    mark = sum(book) / 2
+                if last:
+                    mark = last[0]
                 else:
-                    prediction = next(
-                        (
-                            p
-                            for p in scoring.predict()
-                            if p.zone == position["zone"]
-                            and p.delivery_hour == position["delivery_hour"]
-                        ),
-                        None,
-                    )
-                    if prediction is None:
-                        continue
-                    mark = prediction.expected_value * 100
+                    book = db.execute(
+                        "SELECT MAX(CASE WHEN side='buy' THEN price_cents END),MIN(CASE WHEN side='sell' THEN price_cents END) FROM orders WHERE product_id=? AND status='open'",
+                        (position["product_id"],),
+                    ).fetchone()
+                    if all(price is not None for price in book):
+                        mark = sum(book) / 2
+                    else:
+                        prediction = next(
+                            (
+                                p
+                                for p in scoring.predict()
+                                if p.zone == position["zone"]
+                                and p.delivery_hour == position["delivery_hour"]
+                            ),
+                            None,
+                        )
+                        if prediction is None:
+                            continue
+                        mark = prediction.expected_value * 100
             prior = db.execute(
                 "SELECT COALESCE(SUM(pnl_cents),0) FROM settled_positions WHERE account_id=? AND product_id=?",
                 (account_id, position["product_id"]),

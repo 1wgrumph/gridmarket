@@ -47,6 +47,8 @@ def app_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("GRIDMARKET_BOT_SECRET", SECRET)
     monkeypatch.setenv("GRIDMARKET_BOT_MASTER_SEED", MASTER)
     monkeypatch.setenv("GRIDMARKET_ADMIN_KEY", ADMIN)
+    # DEC-GM-141: compose stack sets GRIDMARKET_ADMIN_NETS to trust its bridge network
+    monkeypatch.setenv("GRIDMARKET_ADMIN_NETS", "172.23.0.0/16")
     monkeypatch.delenv("GRIDMARKET_WORKER_URL", raising=False)
     return db_path
 
@@ -116,6 +118,53 @@ def test_s77_admin_denies_tunnel_public_and_testclient(app_env, path: str) -> No
         assert remote.post(path, json=body, headers=key).status_code == 403
     with TestClient(main.create_app()) as default:  # peer "testclient" is not allowlisted
         assert default.post(path, json=body, headers=key).status_code == 403
+
+
+# DEC-GM-141: admin peers are loopback only by default; compose trusts GRIDMARKET_ADMIN_NETS.
+def test_dec_gm_141_admin_nets_default_deny_and_parsing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    db_path = tmp_path / "dec141-admin.db"
+    monkeypatch.setenv("GRIDMARKET_DB", str(db_path))
+    monkeypatch.setenv("GRIDMARKET_NWS", "off")
+    monkeypatch.setenv("GRIDMARKET_BOT_SECRET", SECRET)
+    monkeypatch.setenv("GRIDMARKET_ADMIN_KEY", ADMIN)
+    monkeypatch.delenv("GRIDMARKET_ADMIN_NETS", raising=False)
+
+    key = {"Authorization": f"Bearer {ADMIN}"}
+    body = {"active": True}
+    path = "/v1/admin/providers/base_sim/outage"
+
+    # Default: loopback allowed with key; private LAN peer rejected 403 before key check.
+    with TestClient(main.create_app(), client=("127.0.0.1", 50000)) as loopback_client:
+        assert loopback_client.post(path, json=body, headers=key).status_code == 200
+        assert (
+            loopback_client.post(
+                path, json=body, headers={"Authorization": "Bearer wrong"}
+            ).status_code
+            == 401
+        )
+    with TestClient(main.create_app(), client=("192.168.1.50", 50000)) as lan_client:
+        assert lan_client.post(path, json=body, headers=key).status_code == 403
+    with TestClient(main.create_app(), client=GATEWAY) as gw_client:
+        assert gw_client.post(path, json=body, headers=key).status_code == 403
+
+    # With GRIDMARKET_ADMIN_NETS configured: trusted subnet allowed; outside subnet rejected 403.
+    monkeypatch.setenv("GRIDMARKET_ADMIN_NETS", "172.23.0.0/16, 10.10.0.0/24")
+    with TestClient(main.create_app(), client=GATEWAY) as gw_client:
+        assert gw_client.post(path, json=body, headers=key).status_code == 200
+    with TestClient(main.create_app(), client=("10.10.0.42", 50000)) as extra_client:
+        assert extra_client.post(path, json=body, headers=key).status_code == 200
+    with TestClient(main.create_app(), client=("192.168.1.50", 50000)) as lan_client:
+        assert lan_client.post(path, json=body, headers=key).status_code == 403
+    # Tunnel traffic stays 403 even from trusted subnet.
+    with TestClient(main.create_app(), client=GATEWAY) as gw_client:
+        assert (
+            gw_client.post(
+                path, json=body, headers=key | {"CF-Connecting-IP": "203.0.113.5"}
+            ).status_code
+            == 403
+        )
 
 
 # R5-03/R4-11: spawn refuses without GRIDMARKET_BOT_SECRET; no public keys.

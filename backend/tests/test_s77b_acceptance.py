@@ -5,6 +5,7 @@ A7 dormancy). Red first: each test fails on the S77 exit."""
 import hashlib
 import json
 import sqlite3
+import time
 from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -273,6 +274,8 @@ def test_s77b_net_worth_matches_account_on_mixed_ledger(
     db_path = tmp_path / "s77b-worth.db"
     monkeypatch.setenv("GRIDMARKET_DB", str(db_path))
     monkeypatch.setenv("GRIDMARKET_NWS", "off")
+    # DEC-GM-141: inject fixed clock base so background economy.tick does not race payroll deposit.
+    monkeypatch.setattr(time, "time", lambda: float(EPOCH))
     conn = _db(db_path)
     for account in ("trader", "seller", "other"):
         conn.execute(
@@ -446,3 +449,83 @@ def test_s77b_dormancy_uses_canonical_cash_and_capacity(
     assert economy.stats("d-ok")["dormant"] is False
     assert economy.stats("e-cash")["dormant"] is False
     online.close()
+
+
+def test_dec_gm_141_net_worth_includes_unsettled_flat_futures(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """DEC-GM-141: net worth = cash + unsettled flat futures P&L (owed, paid once at expiry)
+    + open futures marked to reference + no spot inventory revaluation."""
+    db_path = tmp_path / "dec141-flat.db"
+    monkeypatch.setenv("GRIDMARKET_DB", str(db_path))
+    monkeypatch.setenv("GRIDMARKET_NWS", "off")
+    monkeypatch.setattr(time, "time", lambda: float(EPOCH))
+    conn = _db(db_path)
+    for account in ("flat_trader", "counterparty"):
+        conn.execute(
+            "INSERT INTO accounts (id, display_name, cash_cents) VALUES (?, ?, 100000)",
+            (account, account),
+        )
+    conn.execute(
+        "INSERT INTO api_keys (id, account_id, key_hash, label) VALUES ('k-flat', 'flat_trader', ?, 'bot')",
+        (hashlib.sha256(b"key-flat").hexdigest(),),
+    )
+    spec = population.sample(MASTER, 0, 1)[0]
+    conn.execute(
+        "INSERT INTO bots (id, account_id, bot_index, bot_type, provider_id, profile_json)"
+        " VALUES ('bot-flat', 'flat_trader', 0, ?, 'base_sim', ?)",
+        (spec.bot_type, json.dumps(asdict(spec))),
+    )
+    delivery = datetime.now(UTC).replace(minute=0, second=0, microsecond=0) + timedelta(hours=3)
+    symbol = f"FLEX-LZ_HOUSTON-{delivery.strftime('%Y%m%d%H')}"
+    conn.execute(
+        "INSERT INTO products (id, symbol, zone, delivery_hour) VALUES (?, ?, 'LZ_HOUSTON', ?)",
+        (symbol, symbol, delivery.isoformat()),
+    )
+    conn.commit()
+
+    # Buy 2 @ 50, then sell 2 @ 70 -> position is flat (quantity 0), unsettled P&L is +40 cents.
+    with market.connection(write=True) as tx:
+        market.place_order(
+            tx,
+            "counterparty",
+            {"product_id": symbol, "side": "sell", "quantity": 2, "price_cents": 50},
+        )
+        market.place_order(
+            tx,
+            "flat_trader",
+            {"product_id": symbol, "side": "buy", "quantity": 2, "price_cents": 50},
+        )
+        market.place_order(
+            tx,
+            "counterparty",
+            {"product_id": symbol, "side": "buy", "quantity": 2, "price_cents": 70},
+        )
+        market.place_order(
+            tx,
+            "flat_trader",
+            {"product_id": symbol, "side": "sell", "quantity": 2, "price_cents": 70},
+        )
+    conn.close()
+
+    # Verify positions table has quantity 0
+    with sqlite3.connect(db_path) as check:
+        row = check.execute(
+            "SELECT quantity FROM positions WHERE account_id='flat_trader' AND product_id=?",
+            (symbol,),
+        ).fetchone()
+        assert row is not None and row[0] == 0
+
+    with TestClient(server_main.create_app()) as client:
+        account_res = client.get("/v1/account", headers={"Authorization": "Bearer key-flat"})
+        assert account_res.status_code == 200
+        body = account_res.json()
+        profile_res = client.get("/v1/bots/bot-flat")
+        assert profile_res.status_code == 200
+        profile = profile_res.json()
+
+    assert body["unrealized_pnl_cents"] == 40
+    assert profile["net_worth"] == pytest.approx(1000.0 + 0.40)
+    assert profile["net_worth"] == pytest.approx(
+        body["cash_cents"] / 100 + body["unrealized_pnl_cents"] / 100
+    )

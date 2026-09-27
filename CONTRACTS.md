@@ -128,7 +128,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `BotSpec.employed`, `pay`, `pay_offset_s`, `start_cash`, `learning_rate`, `provider_id` | bots | Economy and provider selection |
 | `population.sample(master, start_index, n, seed=None)` | bots | Default 60: market maker 4, score follower 12, DART trader 8, heat seller 14, saver 12, alert reactor 6, noise trader 4; $1,000 and 13.5 kWh battery in S01 |
 | `population.digest(specs)` | bots | SHA-256 hex |
-| `economy.tick(tx, now)`, `economy.stats(account_id)` | bots | Stats: `losses`, `loss_share`, `worst_loss`, `pnl`, `net_worth`, `dormant` |
+| `economy.tick(tx, now)`, `economy.stats(account_id)` | bots | Stats: `losses`, `loss_share`, `worst_loss`, `pnl`, `net_worth`, `dormant`. Net worth rule: `net worth = cash + unsettled flat futures P&L (owed, paid once at expiry) + open futures marked to reference + no spot inventory revaluation`. |
 
 ## Check and router fields and schema
 
@@ -197,7 +197,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `ORDER_TOO_LARGE`, `POSITION_LIMIT`, `INSUFFICIENT_FUNDS`, `INSUFFICIENT_CAPACITY` | market | Risk and balance rejection |
 | `UNKNOWN_PRODUCT`, `PRODUCT_CLOSED` | market | Product rejection |
 | `PROVIDER_OFFLINE` | lonestar | Offline sell rejection |
-| `FORBIDDEN` | market | 403 admin guard |
+| `FORBIDDEN` | market | 403 admin guard; peers are loopback only by default (127.0.0.1, ::1); compose deployment trusts exactly its own bridge network declared via `GRIDMARKET_ADMIN_NETS` (comma-separated CIDRs); tunnel traffic (`CF-Connecting-IP`) is always 403. |
 | `NOT_FOUND`, `BAD_REQUEST`, `INTERNAL_ERROR` | market | General HTTP errors |
 | `VALIDATION_ERROR`, `SANDBOX_CAP` | market | 422 / 503 sandbox rejection |
 | `BOT_CAP` | bots | 200-bot cap |

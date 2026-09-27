@@ -18,6 +18,8 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
+    environment:
+      GRIDMARKET_ADMIN_NETS: "172.23.0.0/16"
     ports:
       - "127.0.0.1:${GRIDMARKET_PORT:-8000}:8000"
     volumes:
@@ -61,3 +63,9 @@ services:
 
 volumes:
   gm-data:
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16
