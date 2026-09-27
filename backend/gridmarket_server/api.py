@@ -40,6 +40,13 @@ def within(path: str, prefixes: tuple[str, ...]) -> bool:
     return any(path == prefix or path.startswith(prefix + "/") for prefix in prefixes)
 
 
+API_DOC_PREFIXES = ("/docs", "/openapi.json", "/redoc")
+
+
+def is_api_path(path: str) -> bool:
+    return path == "/v1" or path.startswith("/v1/") or within(path, API_DOC_PREFIXES)
+
+
 def address(request: Request) -> str:
     host = request.headers.get(
         "CF-Connecting-IP", request.client.host if request.client else "unknown"
@@ -178,33 +185,39 @@ class Boundary:
         cors = public and bool(origin) and origin == os.getenv("GRIDMARKET_CORS_ORIGIN")
         headers = {}
         try:
-            # Check before any credential lookup. Valid account keys refund this
-            # token and use their own bucket; anonymous traffic shares the IP cap.
-            ip_identity = "ip:" + address(request)
-            rate, burst = (30, 60) if public else (10, 20)
-            self.limit(ip_identity, rate, burst, headers)
-            if path.startswith("/v1/admin/"):
-                admin_guard(request)
-            elif within(path, PRIVATE):
-                authorization = request.headers.get("Authorization", "")
-                if not authorization.startswith("Bearer "):
-                    market.reject("UNAUTHENTICATED", 401)
-                digest = hashlib.sha256(authorization[7:].encode()).hexdigest()
-                with market.connection() as db:
-                    key = db.execute(
-                        "SELECT account_id FROM api_keys WHERE key_hash=?", (digest,)
-                    ).fetchone()
-                    if key is None:
+            if not is_api_path(path):
+                # Static page and asset requests use an independent per-IP bucket
+                # (DEC-GM-152) so cold dashboard loads never exhaust API rate limits.
+                static_identity = "static:" + address(request)
+                self.limit(static_identity, 60, 200, headers)
+            else:
+                # Check before any credential lookup. Valid account keys refund this
+                # token and use their own bucket; anonymous traffic shares the IP cap.
+                ip_identity = "ip:" + address(request)
+                rate, burst = (30, 60) if public else (10, 20)
+                self.limit(ip_identity, rate, burst, headers)
+                if path.startswith("/v1/admin/"):
+                    admin_guard(request)
+                elif within(path, PRIVATE):
+                    authorization = request.headers.get("Authorization", "")
+                    if not authorization.startswith("Bearer "):
                         market.reject("UNAUTHENTICATED", 401)
-                    account_id = key[0]
-                    sandbox = db.execute(
-                        "SELECT 1 FROM sandbox_issuance WHERE account_id=?", (account_id,)
-                    ).fetchone()
-                request.state.account_id = account_id
-                rate, burst = (5, 10) if sandbox else (20, 40)
-                tokens, prior = self.buckets[ip_identity]
-                self.buckets[ip_identity] = (tokens + 1, prior)
-                self.limit("key:" + digest, rate, burst, headers)
+                    digest = hashlib.sha256(authorization[7:].encode()).hexdigest()
+                    with market.connection() as db:
+                        key = db.execute(
+                            "SELECT account_id FROM api_keys WHERE key_hash=?", (digest,)
+                        ).fetchone()
+                        if key is None:
+                            market.reject("UNAUTHENTICATED", 401)
+                        account_id = key[0]
+                        sandbox = db.execute(
+                            "SELECT 1 FROM sandbox_issuance WHERE account_id=?", (account_id,)
+                        ).fetchone()
+                    request.state.account_id = account_id
+                    rate, burst = (5, 10) if sandbox else (20, 40)
+                    tokens, prior = self.buckets[ip_identity]
+                    self.buckets[ip_identity] = (tokens + 1, prior)
+                    self.limit("key:" + digest, rate, burst, headers)
         except HTTPException as exc:
             response = await http_error(request, exc)
             response.headers.update(headers)
