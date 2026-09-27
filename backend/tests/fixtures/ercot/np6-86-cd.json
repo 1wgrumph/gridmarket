@@ -1,5 +1,23 @@
 {
-  "fields": ["scedTimestamp", "constraintName", "shadowPrice", "publishTime"],
-  "data": [["2026-09-26T14:00:00Z", "HOUSTON_NORTH_345KV", 125.5, "2026-09-26T14:04:00Z"]],
-  "_meta": {"totalRecords": 1}
+  "fields": [
+    {"name": "SCEDTimestamp", "label": "SCED Timestamp", "dataType": "DATETIME"},
+    {"name": "repeatedHourFlag", "label": "Repeated Hour Flag", "dataType": "BOOLEAN"},
+    {"name": "constraintID", "label": "Constraint ID", "dataType": "INTEGER"},
+    {"name": "constraintName", "label": "Constraint Name", "dataType": "VARCHAR"},
+    {"name": "contingencyName", "label": "Contingency Name", "dataType": "VARCHAR"},
+    {"name": "shadowPrice", "label": "Shadow Price", "dataType": "DOUBLE"},
+    {"name": "maxShadowPrice", "label": "Max Shadow Price", "dataType": "DOUBLE"},
+    {"name": "limit", "label": "Limit", "dataType": "DOUBLE"},
+    {"name": "value", "label": "Value", "dataType": "DOUBLE"},
+    {"name": "violatedMW", "label": "Violated MW", "dataType": "DOUBLE"},
+    {"name": "fromStation", "label": "From Station", "dataType": "VARCHAR"},
+    {"name": "toStation", "label": "To Station", "dataType": "VARCHAR"},
+    {"name": "fromStationkV", "label": "From Station kV", "dataType": "DOUBLE"},
+    {"name": "toStationkV", "label": "To Station kV", "dataType": "DOUBLE"},
+    {"name": "CCTStatus", "label": "CCT Status", "dataType": "VARCHAR"}
+  ],
+  "data": [
+    ["2026-09-26T09:05:13", false, 1, "HOUSTON_NORTH_345KV", "BASE CASE", 125.5, 5251.0, 900, 900, 0, "A", "B", 345, 345, "COMP"]
+  ],
+  "_meta": {"totalRecords": 1, "pageSize": 1, "totalPages": 1, "currentPage": 1}
 }

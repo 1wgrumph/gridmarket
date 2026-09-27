@@ -50,7 +50,7 @@ def band(probability: float) -> str:
 
 
 def market_checks() -> list[CheckResult]:
-    """DART spread check per zone and delivery hour in the 24 clock hours after now's hour."""
+    """DA premium persists (RT hourly average < DA) per zone and delivery hour in the 24 clock hours after now's hour."""
     t = now().astimezone(UTC)
     start = t.replace(minute=0, second=0, microsecond=0)
     results = []
@@ -102,15 +102,34 @@ def _connect() -> closing[sqlite3.Connection]:
     return closing(sqlite3.connect(os.getenv("GRIDMARKET_DB", "/data/gridmarket.db")))
 
 
+def _instant(stamp: str) -> datetime:
+    moment = datetime.fromisoformat(stamp)
+    return moment if moment.tzinfo else moment.replace(tzinfo=UTC)
+
+
 def _market_outcome(subject: str) -> bool | None:
-    """RT hourly average > DA for the delivery hour; None until a full hour of RT exists."""
+    """DA premium persists: RT hourly average < DA for the delivery hour.
+
+    Uses the latest observation at each of the four quarter-hour boundaries;
+    None until all four exist. Contract amendment DEC-GM-124 (2026-09-26, Orchestrator).
+    """
     zone, start = subject.split(":", 1)
-    end = (datetime.fromisoformat(start) + HOUR).isoformat()
+    hour = datetime.fromisoformat(start)
+    end = (hour + HOUR).isoformat()
     da = ercot.signals.series(DA_REPORT, zone, start, end)
-    rt = ercot.signals.series(RT_REPORT, zone, start, end)
-    if not da or sum(s.interval_minutes for s in rt) < 60:
+    if not da:
         return None
-    return sum(s.value for s in rt) / len(rt) > da[0].value
+    rt = ercot.signals.series(RT_REPORT, zone, start, end)
+    prices = []
+    for offset in range(4):
+        want = hour + timedelta(minutes=15 * offset)
+        candidates = [
+            row for row in rt if row.interval_minutes == 15 and _instant(row.interval_start) == want
+        ]
+        if not candidates:
+            return None
+        prices.append(max(candidates, key=lambda row: row.fetched_at).value)
+    return sum(prices) / 4 < da[0].value
 
 
 def resolve(db: sqlite3.Connection, t: datetime) -> None:
@@ -130,30 +149,33 @@ def resolve(db: sqlite3.Connection, t: datetime) -> None:
             )
 
 
+def publish(db: sqlite3.Connection, results: list[CheckResult]) -> None:
+    """Store checks; one alert event per episode (band entry), not per tick.
+
+    The event omits created_at so it uses the CURRENT_TIMESTAMP default, the
+    same format as every other activity row.
+    """
+    last = dict(db.execute("SELECT check_id, band FROM router_results ORDER BY rowid").fetchall())
+    for c in results:
+        db.execute(
+            f"INSERT INTO router_results (id, {COLUMNS}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (uuid.uuid4().hex, *dataclasses.astuple(c)),
+        )
+        if c.band == "alert" and last.get(c.check_id) != "alert":
+            db.execute(
+                "INSERT INTO events (id, entry_type, subject_id, payload_json) "
+                "VALUES (?, 'alert', ?, ?)",
+                (uuid.uuid4().hex, c.check_id, json.dumps(dataclasses.asdict(c))),
+            )
+        last[c.check_id] = c.band
+
+
 def tick() -> None:
     t = now().astimezone(UTC)
     results = evaluate()
     with _connect() as db, db:
         resolve(db, t)
-        for c in results:
-            db.execute(
-                f"INSERT INTO router_results (id, {COLUMNS}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                (uuid.uuid4().hex, *dataclasses.astuple(c)),
-            )
-            if c.band == "alert":
-                # One alert event per check, not one per tick.
-                db.execute(
-                    "INSERT INTO events (id, entry_type, subject_id, payload_json, created_at) "
-                    "SELECT ?, 'alert', ?, ?, ? WHERE NOT EXISTS "
-                    "(SELECT 1 FROM events WHERE entry_type = 'alert' AND subject_id = ?)",
-                    (
-                        uuid.uuid4().hex,
-                        c.check_id,
-                        json.dumps(dataclasses.asdict(c)),
-                        t.isoformat(),
-                        c.check_id,
-                    ),
-                )
+        publish(db, results)
 
 
 @router.get("/v1/router")
@@ -167,6 +189,7 @@ def get_router(request: Request, response: Response) -> dict:
         rows = db.execute(f"SELECT {COLUMNS} FROM router_results ORDER BY created_at").fetchall()
     latest: dict[str, dict] = {}
     errors: dict[str, list[float]] = {}
+    events: dict[str, float] = {}
     for row in rows:
         item = dict(zip(COLUMNS.split(", "), row, strict=True))
         item["baseline"] = bool(item["baseline"])
@@ -175,9 +198,13 @@ def get_router(request: Request, response: Response) -> dict:
             errors.setdefault(item["check_id"], []).append(
                 (item["probability"] - item["outcome"]) ** 2
             )
+            # Rows arrive oldest first, so the last forecast per event wins.
+            events[item["subject"]] = (item["probability"] - item["outcome"]) ** 2
         latest[item["check_id"]] = item
     return {
         "checks": list(latest.values()),
         "brier": {check_id: sum(e) / len(e) for check_id, e in errors.items()},
+        "brier_events": events,
+        "brier_mean": sum(events.values()) / len(events) if events else None,
         "jev_enabled": jev.enabled(),
     }

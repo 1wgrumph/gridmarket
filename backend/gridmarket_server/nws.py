@@ -6,9 +6,11 @@ from datetime import UTC, datetime
 
 import httpx
 
-from .ercot import RequestBudget, _store, backoff_seconds, signals
+from .ercot import FAIL_FAST, RequestBudget, _acquire, _store, backoff_seconds, signals
 
 logger = logging.getLogger(__name__)
+
+FORECAST_HOURS = 48  # Store the next 48 hourly periods so delivery hours can join.
 
 BASE_URL = "https://api.weather.gov"
 USER_AGENT = "gridmarket-hackathon (github.com/1wgrumph/gridmarket)"
@@ -24,12 +26,15 @@ _next_zone = 0
 
 async def _get(client: httpx.AsyncClient, url: str, budget: RequestBudget) -> dict:
     for attempt in range(7):
-        while not budget.try_acquire():
-            await asyncio.sleep(1)
+        _acquire(budget)
         try:
             response = await client.get(url)
             response.raise_for_status()
             return response.json()
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code in FAIL_FAST or attempt == 6:
+                raise
+            await asyncio.sleep(backoff_seconds(attempt))
         except (httpx.HTTPError, ValueError):
             if attempt == 6:
                 raise
@@ -65,7 +70,6 @@ async def _poll() -> None:
                 hourly = await _get(client, _forecasts[zone], budget)
                 alerts = await _get(client, f"/alerts/active?point={lat},{lon}", budget)
                 props = hourly.get("properties", {})
-                forecast = props["periods"][0]
                 updated = (
                     hourly.get("updated")
                     or props.get("updated")
@@ -73,26 +77,39 @@ async def _poll() -> None:
                     or props.get("generatedAt")
                     or datetime.now(UTC).isoformat()
                 )
-                _store(
-                    "NWS-TEMP",
-                    zone,
-                    forecast["startTime"],
-                    60,
-                    forecast["temperature"],
-                    forecast["temperatureUnit"],
-                    updated,
-                )
+                for forecast in (props.get("periods") or [])[:FORECAST_HOURS]:
+                    if forecast.get("startTime") is None or forecast.get("temperature") is None:
+                        continue
+                    start = (
+                        datetime.fromisoformat(forecast["startTime"]).astimezone(UTC).isoformat()
+                    )
+                    _store(
+                        "NWS-TEMP",
+                        zone,
+                        start,
+                        60,
+                        forecast["temperature"],
+                        forecast["temperatureUnit"],
+                        updated,
+                    )
+                features = alerts.get("features") or []
                 count = sum(
-                    feature["properties"].get("severity") in {"Severe", "Extreme"}
-                    for feature in alerts["features"]
+                    feature.get("properties", {}).get("severity") in {"Severe", "Extreme"}
+                    for feature in features
                 )
-                published = max(
-                    (feature["properties"].get("updated", "") for feature in alerts["features"]),
-                    default=datetime.now(UTC).isoformat(),
+                sents = [
+                    sent
+                    for feature in features
+                    if (sent := feature.get("properties", {}).get("sent"))
+                ]
+                published = (
+                    max(sents) if sents else alerts.get("updated") or datetime.now(UTC).isoformat()
                 )
                 _store(
                     "NWS-ALERTS", zone, datetime.now(UTC).isoformat(), 5, count, "count", published
                 )
+                signals.clear_failed("NWS-TEMP")
+                signals.clear_failed("NWS-ALERTS")
             except Exception:
                 logger.warning("nws poll for zone %s failed", zone, exc_info=True)
                 continue

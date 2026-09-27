@@ -74,7 +74,7 @@ def test_s55_esr_fixture_parses_to_latest_signal(
     assert signal is not None
     assert (signal.report_id, signal.zone, signal.unit) == ("ESR", "ERCOT", "MW")
     assert signal.value == -120.75  # Latest interval; negative = discharging.
-    assert signal.interval_start == "2026-09-26T14:00:08Z"
+    assert signal.interval_start == "2026-09-26T14:00:08+00:00"
     assert signal.published_at and signal.fetched_at
     series = ercot.signals.series("ESR", "ERCOT", "2020-01-01", "2030-01-01")
     assert len(series) == 1  # Latest interval only, not one row per 4-second sample.
@@ -87,7 +87,10 @@ def test_s55_esr_parses_object_rows_by_field_name(
     ercot.parse_report(
         "ESR",
         {
-            "fields": ["scedTimestamp", "chargingMW"],
+            "fields": [
+                {"name": "scedTimestamp", "label": "SCED Timestamp", "dataType": "DATETIME"},
+                {"name": "chargingMW", "label": "Charging MW", "dataType": "DOUBLE"},
+            ],
             "data": [
                 {"scedTimestamp": "2026-09-26T14:00:00Z", "chargingMW": 500},
                 {"scedTimestamp": "2026-09-26T14:00:04Z", "chargingMW": 510.5},
@@ -97,7 +100,7 @@ def test_s55_esr_parses_object_rows_by_field_name(
     )
     signal = ercot.signals.latest("ESR", "ERCOT")
     assert signal is not None and signal.value == 510.5
-    assert signal.interval_start == "2026-09-26T14:00:04Z"
+    assert signal.interval_start == "2026-09-26T14:00:04+00:00"
 
 
 def test_s55_esr_poll_failure_marks_failed_without_crashing(

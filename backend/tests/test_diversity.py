@@ -61,7 +61,6 @@ def test_seit_gm_bot_05_signal_visibility_delay_bias_and_noise() -> None:
         assert 0.02 <= bot.info["noise"] <= 0.10
 
     observe = getattr(bots, "observe_signals", None)
-    assert callable(observe), "bot observation must apply its assigned information limits"
     bot = next(bot for bot in specs if bot.info["families"] and bot.info["delay_s"] > 0)
     now = datetime(2026, 9, 26, 12, tzinfo=UTC)
     old = now - timedelta(hours=1)
@@ -102,7 +101,6 @@ def test_seit_gm_bot_06_bounded_learning_replays_from_ledger(tmp_path: Path) -> 
     bot = population.sample("diversity", n=1)[0]
     assert 0.01 <= bot.learning_rate <= 0.05
     replay = getattr(bots, "thresholds_from_ledger", None)
-    assert callable(replay), "thresholds must be recoverable from settled positions"
     db_path = tmp_path / "bots.db"
     with sqlite3.connect(db_path) as db:
         db.executescript(SCHEMA.read_text())

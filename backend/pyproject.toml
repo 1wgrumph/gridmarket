@@ -23,7 +23,7 @@ packages = ["gridmarket_server"]
 
 [tool.mutmut]
 source_paths = ["gridmarket_server/"]
-only_mutate = ["gridmarket_server/market.py", "gridmarket_server/economy.py", "gridmarket_server/decision_router.py", "gridmarket_server/health.py", "gridmarket_server/adversary.py"]
+only_mutate = ["gridmarket_server/market.py", "gridmarket_server/economy.py", "gridmarket_server/decision_router.py", "gridmarket_server/health.py", "gridmarket_server/adversary.py", "gridmarket_server/ercot.py", "gridmarket_server/scoring.py"]
 # The mutation target links the original tests inside mutants/ so node IDs and
 # repository-relative fixture paths both resolve during collection and execution.
 pytest_add_cli_args_test_selection = ["source-tests/"]

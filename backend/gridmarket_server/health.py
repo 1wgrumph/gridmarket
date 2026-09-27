@@ -113,9 +113,12 @@ def is_online(provider_id: str) -> bool:
 
 def tick() -> None:
     """Every 10 s: each enabled adapter heartbeats unless in a simulated outage."""
+    from . import decision_router
+
     for provider_id, adapter in providers.enabled().items():
         try:
             state = _state(provider_id)
+            was = None if state is None else bool(state[0])
             until = state[2] if state else None
             if until and _parse(until) <= _now():
                 with _db() as db:
@@ -128,7 +131,11 @@ def tick() -> None:
             if not until:
                 adapter().heartbeat()
                 heartbeat(provider_id)
-            is_online(provider_id)
+            now_online = is_online(provider_id)
+            if was is not None and was != now_online:
+                # State transition: refresh the stored checks now so /v1/router
+                # reflects it within one 10 s tick, inside the 60 s deadline (A8).
+                decision_router.tick()
         except Exception:
             log.exception("heartbeat failed for %s", provider_id)
 
@@ -161,13 +168,20 @@ def checks() -> list[CheckResult]:
     requests = max(stats.requests, 1)
     latencies = sorted(stats.latencies_ms)
     p95 = latencies[math.ceil(0.95 * len(latencies)) - 1] if latencies else 0.0
-    worker = [
+    terms = [
         stats.errors / requests,
         stats.http_429 / requests,
         p95 / TIMEOUT_MS,
-        (stats.snapshot_age_s or 0.0) / (2 * SNAPSHOT_POLL_S),
     ]
-    results = [_check("worker", _risk(worker), now)]
+    age = stats.snapshot_age_s
+    if age is None:
+        # No snapshot ever parsed: total data loss once polling has started.
+        worker_p = 1.0 if stats.requests > 0 else _risk([*terms, 0.0])
+    elif age > 2 * SNAPSHOT_POLL_S:
+        worker_p = 1.0
+    else:
+        worker_p = _risk([*terms, age / (2 * SNAPSHOT_POLL_S)])
+    results = [_check("worker", worker_p, now)]
     for provider_id in providers.enabled():
         if is_online(provider_id):
             state = _state(provider_id)

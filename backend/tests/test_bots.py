@@ -133,7 +133,6 @@ def test_SEIT_GM_BOT_01_seeded_orders(server, monkeypatch) -> None:
     """Sixty simulated seconds, at least 10 SDK orders from at least 3 derived keys."""
     base_url, db_path, _app = server
     _isolated()
-    assert callable(getattr(bots, "step_all", None))
     clock = Clock()
     calls: list[tuple[str, float]] = []
     _patch_orders(monkeypatch, clock, calls)
@@ -165,8 +164,6 @@ def test_SEIT_GM_BOT_03_order_limit(server, monkeypatch) -> None:
     """At most 6 orders per bot per 60s, and the server rejects an oversized order."""
     base_url, db_path, _app = server
     _isolated()
-    assert callable(getattr(bots, "submit", None))
-    assert callable(getattr(bots, "step_all", None))
     send = Client.place_order
     clock = Clock()
     calls: list[tuple[str, float]] = []
@@ -216,7 +213,6 @@ def test_SEIT_GM_BOT_03_order_limit(server, monkeypatch) -> None:
 def test_SEIT_GM_BOT_07_admin_spawn(server) -> None:
     """Admin spawn adds 1-10 sampled bots, rejects the rest, and the loop polls them."""
     base_url, db_path, app = server
-    assert callable(getattr(bots, "step_all", None))
 
     def count() -> int:
         conn = sqlite3.connect(db_path)

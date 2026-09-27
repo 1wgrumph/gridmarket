@@ -11,6 +11,7 @@ import os
 import re
 import time
 from contextlib import asynccontextmanager, suppress
+from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Request
@@ -433,6 +434,41 @@ def asset(request: Request, id: str) -> dict:
     if found is None:
         market.reject("NOT_FOUND", 404)
     return found
+
+
+@router.get("/v1/signals/history")
+def signals_history(report_id: str, zone: str, start: str, end: str) -> list[dict]:
+    from . import ercot
+
+    if report_id not in ercot.POLL_MINUTES:
+        market.reject("VALIDATION_ERROR", 422, f"report_id: unknown report {report_id!r}")
+    if not zone:
+        market.reject("VALIDATION_ERROR", 422, "zone: zone is required")
+    try:
+        since = datetime.fromisoformat(start)
+    except ValueError:
+        market.reject("VALIDATION_ERROR", 422, "start: invalid timestamp")
+        raise
+    try:
+        until = datetime.fromisoformat(end)
+    except ValueError:
+        market.reject("VALIDATION_ERROR", 422, "end: invalid timestamp")
+        raise
+    for field, stamp in (("start", since), ("end", until)):
+        if stamp.tzinfo is None:
+            market.reject("VALIDATION_ERROR", 422, f"{field}: timestamp requires a UTC offset")
+    if until <= since:
+        market.reject("VALIDATION_ERROR", 422, "end: end must be after start")
+    if until - since > timedelta(hours=48):
+        market.reject("VALIDATION_ERROR", 422, "end: window exceeds 48 hours")
+    rows = ercot.signals.history(
+        report_id, zone, since.astimezone(UTC).isoformat(), until.astimezone(UTC).isoformat()
+    )
+    if len(rows) > 10000:
+        market.reject(
+            "VALIDATION_ERROR", 422, "end: window holds more than 10000 rows; narrow start/end"
+        )
+    return rows
 
 
 @router.get("/v1/providers")

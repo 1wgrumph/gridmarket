@@ -51,6 +51,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `GET /v1/predictions` | data | Public zone scores |
 | `GET /v1/predictions/{zone}` | data | Public zone detail |
 | `GET /v1/signals` | data | Public ERCOT and NWS signals |
+| `GET /v1/signals/history` | data | Public per-hour observations for one allowlisted report and zone (S81b) |
 | `GET /v1/providers` | market | Public provider summary |
 | `GET /v1/providers/health` | lonestar | Public heartbeat and outage state |
 | `GET /v1/router` | router | Public checks and calibration |
@@ -86,8 +87,8 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | Market product: `id`, `symbol`, `zone`, `delivery_hour`, `status` | market | Public product; hour-beginning America/Chicago symbols `FLEX-<zone>-<YYYY-MM-DD>-<HH>` / `SPOT-<zone>-<YYYY-MM-DD>-<HH>`; `delivery_hour` is the UTC start instant. On fall-back, the second occurrence (standard time, UTC-06:00) appends `R`, e.g. `FLEX-LZ_HOUSTON-2026-11-01-01R`; the first keeps the plain symbol. `FLEX-<zone>-<HH>` selects the earliest open matching Central hour by UTC instant, advancing to the repeated hour after the first closes. |
 | Trade: `id`, `product_id`, `buy_order_id`, `sell_order_id`, `quantity`, `price_cents`, `created_at` | market | Append-only fill |
 | Asset: `id`, `account_id`, `provider_id`, `zone`, `capacity_kwh`, `soc_kwh`, `min_reserve_kwh`, `charge_kw`, `discharge_kw` | market | Battery |
-| Prediction response: `zone`, `delivery_hour`, `score`, `level`, `confidence`, `expected_value`, `market_price`, `drivers`, `disclaimer`, `generated_at` | data | `drivers` entries have `factor`, `contribution`, `detail` |
-| Router response: `checks`, `brier`, `jev_enabled` | router | Latest results, per-check calibration, Jev flag |
+| Prediction response: `zone`, `delivery_hour`, `score`, `level`, `confidence`, `expected_value`, `market_price`, `drivers`, `disclaimer`, `generated_at` | data | `drivers` entries have `factor`, `contribution`, `detail`; `level` is `LOW`/`MEDIUM`/`HIGH`, or `UNAVAILABLE` when a core ERCOT input is missing (S76: missing drivers contribute 0 with an "unavailable" detail, `expected_value` is 0.0 without a DA price) |
+| Router response: `checks`, `brier`, `jev_enabled` | router | Latest results, per-check calibration, Jev flag (S76b: plus `brier_events` per-subject scores using the last forecast per event and `brier_mean` over resolved events, `null` when none) |
 | Bot response: `id`, `bot_type`, `blend`, `provider_id`, `cash`, `net_worth`, `pnl`, `trades`, `losses`, `dormant` | bots | Public bot profile |
 | Sandbox key request: `label` | market | `^[A-Za-z0-9 _-]{1,24}$` |
 | Sandbox key response: `account_id`, `api_key`, `label` | market | Key shown once |
@@ -136,9 +137,9 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | --- | --- | --- |
 | `CheckResult.check_id`, `family`, `subject`, `horizon_s` | router | `family` is `market` or `health` |
 | `CheckResult.probability`, `band`, `baseline`, `jev_probability` | router | `band` is `log`, `review`, or `alert`; optional Jev probability |
-| `CheckResult.created_at`, `resolves_at`, `outcome` | router | UTC timing and eventual Boolean outcome |
-| `decision_router.register(family, fn)`, `decision_router.tick()` | router | Registry and 60 s evaluation |
-| `health.heartbeat(provider_id)`, `health.is_online(provider_id)` | lonestar | 10 s heartbeat loop, 30 s offline rule |
+| `CheckResult.created_at`, `resolves_at`, `outcome` | router | UTC timing and eventual Boolean outcome (Contract amendment DEC-GM-124 (2026-09-26, Orchestrator): CheckResult market outcome, old: RT hourly average > DA; new: RT hourly average < DA (DA premium persists), resolved from the latest observation at each of the four quarter-hour boundaries; reason: R4-09, the outcome contradicted the check probability; affected lanes: router, dashboard Predictions/router views) |
+| `decision_router.register(family, fn)`, `decision_router.tick()` | router | Registry and 60 s evaluation (S76b: one `alert` event per episode on band entry, in CURRENT_TIMESTAMP format like all activity rows) |
+| `health.heartbeat(provider_id)`, `health.is_online(provider_id)` | lonestar | 10 s heartbeat loop, 30 s offline rule (S76b: `health:worker` is alert when no snapshot ever parsed after polling started or the snapshot is older than two poll windows; a provider transition refreshes `/v1/router` within one 10 s tick) |
 | `jev.enabled()`, `jev.probability(check)` | jev | Off by default |
 | `adversary.halted(tx, account_id)`, `adversary.observe(event)` | adversary | Order halt and observer seams |
 
@@ -164,13 +165,14 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 
 | Name | Owning lane | Contract |
 | --- | --- | --- |
-| `GET /api/snapshot`: `asOf`, `ct`, `heNow`, `errors`, `demand`, `hubs`, `dam`, `sced`, `wind`, `solar`, `weather`, `checks` | worker | Five-minute cached JSON snapshot |
+| `GET /api/snapshot`: `asOf`, `ct`, `heNow`, `errors`, `demand`, `hubs`, `dam`, `sced`, `wind`, `solar`, `weather`, `checks` | worker | Five-minute cached JSON snapshot; `demand.mw`, `hubs[{hub,price}]`, `dam{hub,price}`, `sced.systemLambda`, `errors` is an object; an all-errors body is HTTP 502 cached 30 s (S76) |
 | `GET /api/report/np6-905-cd/spp_node_zone_hub` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/np4-190-cd/dam_stlmnt_pnt_prices` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/np3-565-cd/lf_by_model_weather_zone` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/np3-233-cd/hourly_res_outage_cap` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/np6-86-cd/shdw_prices_bnd_trns_const` | worker | ERCOT `{fields, data, _meta}` |
 | `GET /api/report/esr/charging_mw` | worker | ERCOT `{fields, data, _meta}` |
+| ERCOT report columns and filters | data | Filter-parameter names from the published Public API spec; fixtures are spec-derived with provenance in `backend/tests/fixtures/*/PROVENANCE.md` (S76, rule 7) |
 | `GRIDMARKET_WORKER_URL`, `GRIDMARKET_WORKER_KEY` | data | Market Worker client settings |
 | `GRIDMARKET_DB` | foundation | SQLite path; default `/data/gridmarket.db` |
 

@@ -76,6 +76,33 @@ async function getToken(env, force = false) {
   return data.id_token;
 }
 
+// One global token per real ERCOT call, so snapshot builds and report polls
+// share the 25/60 s budget fairly (spec T3).
+async function takeBudget(env) {
+  if (!env.ERCOT_BUDGET) return true;
+  return (await env.ERCOT_BUDGET.limit({ key: "ercot" })).success;
+}
+
+// Keyless routes (only /api/edc can spend budget with attacker-chosen cache
+// keys) get at most 5 ERCOT-spending calls per client per 60 s, so one
+// anonymous client cannot starve the market's keyed report polls.
+const KEYLESS_EDC_MAX = 5;
+async function takeKeylessQuota(env, ip) {
+  const key = `keyless-edc:${ip || "unknown"}`;
+  const now = Date.now();
+  let rec = null;
+  try {
+    rec = JSON.parse(await env.CACHE.get(key));
+  } catch {
+    rec = null;
+  }
+  if (!rec || now - rec.start >= 60_000) rec = { start: now, count: 0 };
+  if (rec.count >= KEYLESS_EDC_MAX) return false;
+  rec.count += 1;
+  await env.CACHE.put(key, JSON.stringify(rec), { expirationTtl: 60 });
+  return true;
+}
+
 async function ercotGet(env, path, search, opts = {}) {
   const base = opts.base || API_BASE;
   const url = `${base}${path}${search || ""}`;
@@ -83,22 +110,25 @@ async function ercotGet(env, path, search, opts = {}) {
   const hit = await env.CACHE.get(cacheKey);
   if (hit) return json(JSON.parse(hit), 200, { "x-cache": "HIT" });
 
-  if (env.ERCOT_BUDGET) {
-    const budget = await env.ERCOT_BUDGET.limit({ key: "ercot" });
-    if (!budget.success) return json({ error: "Upstream ERCOT budget exceeded" }, 429);
+  if (opts.keyless && !(await takeKeylessQuota(env, opts.clientIp))) {
+    return json({ error: "Keyless ERCOT quota exceeded" }, 429);
   }
 
-  const call = async (token) =>
-    fetch(url, {
+  const call = async (token) => {
+    if (!(await takeBudget(env))) return null;
+    return fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Ocp-Apim-Subscription-Key": opts.subKey || env.ERCOT_SUBSCRIPTION_KEY,
         Accept: "application/json",
       },
     });
+  };
 
   let res = await call(await getToken(env));
+  if (res === null) return json({ error: "Upstream ERCOT budget exceeded" }, 429);
   if (res.status === 401) res = await call(await getToken(env, true)); // stale token
+  if (res === null) return json({ error: "Upstream ERCOT budget exceeded" }, 429);
   const text = await res.text();
   let body;
   try {
@@ -116,8 +146,10 @@ async function ercotGet(env, path, search, opts = {}) {
 async function ercotJSON(env, path, params = {}) {
   const qs = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]));
   const url = `${API_BASE}${path}?${qs}`;
-  const call = async (token) =>
-    fetch(url, { headers: { Authorization: `Bearer ${token}`, "Ocp-Apim-Subscription-Key": env.ERCOT_SUBSCRIPTION_KEY, Accept: "application/json" } });
+  const call = async (token) => {
+    if (!(await takeBudget(env))) throw new Error("Upstream ERCOT budget exceeded");
+    return fetch(url, { headers: { Authorization: `Bearer ${token}`, "Ocp-Apim-Subscription-Key": env.ERCOT_SUBSCRIPTION_KEY, Accept: "application/json" } });
+  };
   let res = await call(await getToken(env));
   if (res.status === 401) res = await call(await getToken(env, true));
   for (let attempt = 1; res.status === 429 && attempt <= 4; attempt++) {
@@ -162,6 +194,7 @@ export default {
 
       if (p === "/api/health") {
         const missing = missingSecrets(env);
+        if (!env.MARKET_KEY) missing.push("MARKET_KEY"); // report only; never gates keyless routes
         return json({
           ok: missing.length === 0,
           worker: "ercot-hackathon",
@@ -191,24 +224,39 @@ export default {
       // One cached call for the 3D grid diagram
       if (p === "/api/snapshot") {
         const cached = url.searchParams.has("fresh") ? null : await env.CACHE.get("snapshot:v1");
-        if (cached) return json(JSON.parse(cached), 200, { "x-cache": "HIT" });
-        if (env.ERCOT_BUDGET && !snapshotInflight) {
-          const budget = await env.ERCOT_BUDGET.limit({ key: "ercot" });
-          if (!budget.success) return json({ error: "Upstream ERCOT budget exceeded" }, 429);
+        if (cached) {
+          try {
+            const wrap = JSON.parse(cached);
+            if (wrap && typeof wrap === "object" && "snap" in wrap) {
+              return json(wrap.snap, wrap.status ?? 200, { "x-cache": "HIT" });
+            }
+            return json(wrap, 200, { "x-cache": "HIT" }); // legacy raw body
+          } catch {
+            // Corrupt entry: rebuild below.
+          }
         }
         if (!snapshotInflight) {
           snapshotInflight = (async () => {
             try {
               const snap = await buildSnapshot((path, params) => ercotJSON(env, path, params));
-              await env.CACHE.put("snapshot:v1", JSON.stringify(snap), { expirationTtl: 300 });
-              return snap;
+              const errored = Object.keys(snap.errors ?? {}).length > 0;
+              const hasData = ["demand", "hubs", "dam", "sced", "wind", "solar", "weather"].some(
+                (k) => snap[k] != null
+              );
+              // An all-errors snapshot is a 502, not a fresh 200; error
+              // snapshots cache briefly so recovery is quick but rebuilds
+              // cannot storm ERCOT (each build charges per real call).
+              const status = errored && !hasData ? 502 : 200;
+              const ttl = errored ? 30 : 300;
+              await env.CACHE.put("snapshot:v1", JSON.stringify({ status, snap }), { expirationTtl: ttl });
+              return { status, snap };
             } finally {
               snapshotInflight = null;
             }
           })();
         }
-        const snap = await snapshotInflight;
-        return json(snap, 200, { "x-cache": "MISS" });
+        const { status, snap } = await snapshotInflight;
+        return json(snap, status, { "x-cache": "MISS" });
       }
 
       // 2-Day Aggregate Energy Demand Curves (NP3-907-EX)
@@ -219,7 +267,11 @@ export default {
           if (v !== null) fwd.set(k, v);
         }
         const qs = fwd.toString();
-        return await ercotGet(env, "/np3-907-ex/2d_agg_edc", qs ? `?${qs}` : "");
+        const ip = request.headers.get("cf-connecting-ip") || "unknown";
+        return await ercotGet(env, "/np3-907-ex/2d_agg_edc", qs ? `?${qs}` : "", {
+          keyless: true,
+          clientIp: ip,
+        });
       }
 
       // List all EMIL products
