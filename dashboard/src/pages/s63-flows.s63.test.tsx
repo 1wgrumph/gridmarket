@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Providers from './Providers';
 import Sandbox from './Sandbox';
 import Spec from './Spec';
+import * as specDoc from './SpecDoc';
+vi.mock('./SpecDoc', async importOriginal => await importOriginal());
 
 type Stub = { status: number; headers?: Record<string, string>; body: unknown };
 let responses: Record<string, unknown>;
@@ -44,11 +46,20 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
 describe('S63-T UX-04 Spec honesty', () => {
+  it('UX-04 renders the build-time specification and its headings inside the app', () => {
+    render(<Spec />);
+    const doc = screen.getByRole('article', { name: /gridmarket specification/i });
+    expect(within(doc).getByRole('heading', { name: 'GridMarket Architecture Specification' })).toBeTruthy();
+    expect(within(doc).getByRole('heading', { name: 'Revision History' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: /github/i })).toBeNull();
+  });
   it('UX-04 shows an honest pre-release state with in-app links, never a dead outbound link', async () => {
+    vi.spyOn(specDoc, 'specification', 'get').mockReturnValue(undefined);
     render(<Spec />);
     expect(screen.queryByRole('link', { name: /github/i })).toBeNull();
     expect(screen.getByText(/published with the final release/i)).toBeTruthy();
@@ -64,7 +75,8 @@ describe('S63-T UX-13 Providers content', () => {
     ];
     render(<Providers />);
     expect(await screen.findByText('Base Simulation')).toBeTruthy();
-    expect(screen.getByText(/3|online|participants/i)).toBeTruthy();
+    const provider = (await screen.findByText('Base Simulation')).closest('article')!;
+    expect(within(provider).getByText('3')).toBeTruthy();
   });
 
   it('UX-13 unconnected health gets an intentional setup state with a next action', async () => {
@@ -72,7 +84,7 @@ describe('S63-T UX-13 Providers content', () => {
     render(<Providers />);
     await screen.findByText('Base Simulation');
     expect(screen.getByText(/setup|not connected|coming soon/i)).toBeTruthy();
-    expect(screen.queryByRole('link') ?? screen.queryByRole('button')).not.toBeNull();
+    expect(screen.getByRole('link', { name: /API documentation/i }).getAttribute('href')).toBe('/docs');
   });
 });
 

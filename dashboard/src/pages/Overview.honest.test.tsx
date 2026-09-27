@@ -97,16 +97,16 @@ it('S58FIX-03 system load sums the latest load zones without double counting', a
 it('S58FIX-03b system load without load signals waits for ERCOT', async () => {
   responses['/v1/signals'] = [];
   await overview();
-  const load = await stat('System load');
-  await waitFor(() => expect(load.querySelector('strong')?.textContent).toBe('—'));
-  expect(load.textContent).toContain('Waiting for ERCOT');
+  const strip = await screen.findByRole('region', { name: 'Market key numbers' });
+  expect(within(strip).queryByText('System load')).toBeNull();
+  expect(await screen.findByText('Grid feed pending · ERCOT price inputs not yet received')).toBeTruthy();
 });
 
 it('S58FIX-04 open products counts open rows with honest loading and error states', async () => {
   await overview();
   const products = await stat('Open products');
   await waitFor(() => expect(products.querySelector('strong')?.textContent).toBe('3'));
-  expect(screen.queryByText('Open interest')).toBeNull();
+  expect((await stat('Open interest')).querySelector('strong')?.textContent).toBe('—');
   expect(products.textContent?.toLowerCase()).not.toContain('unavailable');
 });
 
@@ -137,7 +137,7 @@ it('S58FIX-05b price legend without day-ahead signals waits for ERCOT', async ()
   responses['/v1/signals'] = [];
   await overview();
   const panel = await screen.findByRole('region', { name: /the price of flexibility/i });
-  expect(await within(panel).findByText('Day-ahead: waiting for ERCOT')).toBeTruthy();
+  expect(await within(panel).findByText('Day-ahead: no observations')).toBeTruthy();
   expect(panel.textContent?.toLowerCase()).not.toContain('unavailable');
 });
 

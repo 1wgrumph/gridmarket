@@ -9,10 +9,12 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 // @ts-ignore TS2732: Vitest loads JSON; the frozen tsconfig omits resolveJsonModule.
 import fixture from '../fixtures/zones.json';
 import Overview from './Overview';
+// @ts-ignore Vitest loads the captured HTTP corpus.
+import exchange from '../fixtures/s63-exchange.json';
 
 let responses: Record<string, unknown>;
 let botsState: 'loaded' | 'loading' | 'error';
-const zones = ['North', 'West', 'Houston', 'South', 'LCRA', 'RAYBN', 'AEN', 'CPS'];
+const zones = ['North', 'West', 'Houston', 'South'];
 const lead = fixture['/v1/predictions'][1];
 
 beforeEach(() => {
@@ -60,7 +62,7 @@ async function openHouston() {
   return screen.findByRole('region', { name: /Houston zone details/i });
 }
 
-it('S58-A01 all eight map zones are named, focusable controls and open details by click', async () => {
+it('S58-A01 all four market zones are named, focusable controls and open details by click', async () => {
   const hero = await overview();
   for (const zone of zones) {
     const control = await within(hero).findByRole('button', { name: new RegExp(`^${zone} zone details$`, 'i') });
@@ -73,7 +75,7 @@ it('S58-A01 all eight map zones are named, focusable controls and open details b
     fireEvent.click(await within(detail).findByRole('button', { name: /close/i }));
     await waitFor(() => expect(detail.isConnected).toBe(false));
     expect(document.activeElement).toBe(control);
-    expect(window.location.hash).toBe('#/');
+    expect(window.location.hash).toBe('#/?hour=2026-09-26T18%3A00%3A00Z');
   }
 });
 
@@ -92,7 +94,7 @@ it.each(['Enter', ' '])('S58-A02 keyboard %j opens a zone; Escape closes and ret
   fireEvent.keyDown(document.activeElement!, { key: 'Escape', code: 'Escape' });
   await waitFor(() => expect(detail.isConnected).toBe(false));
   expect(document.activeElement).toBe(control);
-  expect(window.location.hash).toBe('#/');
+  expect(window.location.hash).toBe('#/?hour=2026-09-26T18%3A00%3A00Z');
 });
 
 it('S58-A03 scored detail uses the lead hour and exposes score, level, confidence and every driver', async () => {
@@ -138,45 +140,41 @@ it('S58-A05 detail lists only open FLEX products for its zone with delivery and 
       expect(row.textContent).toContain(hour);
     } else expect(within(detail).queryByText(product.symbol)).toBeNull();
   }
-  expect((await within(detail).findByRole('link', { name: 'Open in Market' })).getAttribute('href')).toBe('#/market');
+  expect((await within(detail).findByRole('link', { name: 'Open in Market' })).getAttribute('href')).toBe('#/market?zone=LZ_HOUSTON&hour=2026-09-26T18%3A00%3A00Z');
 });
 
-it('S58-A06 unscored LCRA explains coverage, retains signals and marks missing reports', async () => {
+it('S58-A06 non-market zones do not masquerade as selectable market zones (UX-10)', async () => {
   const hero = await overview();
-  fireEvent.click(await within(hero).findByRole('button', { name: /LCRA zone details/i }));
-  const detail = await screen.findByRole('region', { name: /LCRA zone details/i });
-  expect(await within(detail).findByText('Not scored: the model covers the four largest load zones')).toBeTruthy();
-  expect(await within(detail).findByText(/51\.25/)).toBeTruthy();
-  expect(detail.textContent).toMatch(/\$\s*\/\s*MWh/);
-  expect(await within(detail).findAllByText(/not reported/i)).toHaveLength(4);
-  expect(detail.textContent).not.toMatch(/72\.4\s*%|91\s*%/);
+  for (const name of ['LCRA', 'RAYBN', 'AEN', 'CPS']) {
+    expect(within(hero).queryByRole('button', { name: new RegExp(`${name} zone details`, 'i') })).toBeNull();
+  }
+  expect(within(hero).getAllByRole('radio')).toHaveLength(4);
 });
 
 it.each(['empty', 'non-price'])('S58-B01 %s signals hide baseline map scores until price data arrives', async (state) => {
   responses['/v1/signals'] = state === 'empty' ? [] : fixture['/v1/signals'].filter(s => s.report_id !== 'NP6-905-CD' || !s.zone.startsWith('LZ_'));
   const hero = await overview();
-  expect(await within(hero).findByText('Waiting for live ERCOT data')).toBeTruthy();
+  expect(await within(hero).findByText('Grid feed pending · ERCOT price inputs not yet received')).toBeTruthy();
   for (const zone of zones) {
     const control = await within(hero).findByRole('button', { name: new RegExp(`${zone} zone details`, 'i') });
     expect(control.tabIndex).toBeGreaterThanOrEqual(0);
   }
-  const map = (await within(hero).findByText(/^NORTH$/i)).closest('svg')!;
+  const map = hero.querySelector('svg.zone-map')!;
   expect(map).not.toBeNull();
-  expect(map.textContent?.match(/—/g)).toHaveLength(8);
+  expect(map.textContent?.match(/—/g)).toHaveLength(4);
   expect(map.textContent).not.toMatch(/\d+(?:\.\d+)?\s*%/);
   responses['/v1/signals'] = fixture['/v1/signals'];
   await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
-  await waitFor(() => expect(within(hero).queryByText('Waiting for live ERCOT data')).toBeNull());
+  await waitFor(() => expect(within(hero).queryByText('Grid feed pending · ERCOT price inputs not yet received')).toBeNull());
   await waitFor(() => expect(map.textContent).toMatch(/\d+(?:\.\d+)?\s*%/));
 });
 
 it('S58-B02 Highest scarcity and hero hide percentages when ERCOT prices are absent', async () => {
   responses['/v1/signals'] = [];
   const hero = await overview();
-  const highest = await stat('Highest scarcity');
-  expect(highest.textContent).toContain('—');
-  expect(highest.textContent).not.toMatch(/\d+(?:\.\d+)?\s*%/);
-  expect(hero.textContent).not.toMatch(/\d+(?:\.\d+)?\s*%/);
+  expect(within(hero).getByText('predicted scarcity').parentElement?.textContent).toContain('—');
+  expect(within(hero).getByText('predicted scarcity').parentElement?.textContent).not.toMatch(/\d+(?:\.\d+)?\s*%/);
+  expect(await within(hero).findByText('Grid feed pending · ERCOT price inputs not yet received')).toBeTruthy();
 });
 
 it('S58-C01 participants show each provider count, including zero', async () => {
@@ -197,24 +195,25 @@ it('S58-C02 loaded providers without participants show names without invented co
   expect(providers.textContent).not.toMatch(/unavailable|\d/i);
 });
 
-it.each(['loaded', 'loading', 'error'] as const)('S58-C03 Active traders %s state uses the non-dormant count or honest placeholder', async (state) => {
+it.each(['loaded', 'loading', 'error'] as const)('S58-C03 Active traders %s state does not alter the exchange active-trader count (UX-12)', async (state) => {
   botsState = state;
+  responses['/v1/market/status'] = exchange['/v1/market/status'];
   await overview();
   const botPanel = await screen.findByRole('region', { name: 'Bots setting the pace' });
   if (state === 'loaded') await within(botPanel).findByRole('link', { name: /bot-0/ });
   if (state === 'error') await within(botPanel).findByText('Bots not yet available');
   const traders = await stat('Active traders');
-  await waitFor(() => expect(traders.querySelector('strong')?.textContent).toBe(state === 'loaded' ? '2' : state === 'loading' ? '…' : '—'));
+  await waitFor(() => expect(traders.querySelector('strong')?.textContent).toBe(String(exchange['/v1/market/status'].active_traders)));
 });
 
 it('S58-D01 load-zone table excludes ERCOT ESR and hub rows', async () => {
   await overview();
   const panel = await screen.findByRole('region', { name: 'Across the load zones' });
-  await within(panel).findByRole('row', { name: /LCRA/i });
+  await within(panel).findByRole('row', { name: /Houston/i });
   const names = (await within(panel).findAllByRole('rowheader')).map(row => row.textContent?.trim());
-  expect(names).toEqual(expect.arrayContaining(['Houston', 'North', 'LCRA']));
-  expect(names).toHaveLength(3);
-  expect(names.join(' ')).not.toMatch(/ERCOT|hub/i);
+  expect(names).toEqual(expect.arrayContaining(['Houston', 'North']));
+  expect(names).toHaveLength(2);
+  expect(names.join(' ')).not.toMatch(/ERCOT|hub|LCRA/i);
   const esr = await screen.findByRole('region', { name: 'Texas batteries charging now' });
   expect(await within(esr).findByText(/812\.5/)).toBeTruthy();
 });

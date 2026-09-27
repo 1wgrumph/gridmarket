@@ -16,10 +16,10 @@ import fixture from "../fixtures/overview.json";
 import Overview from "./Overview";
 const styles = readFileSync("src/styles.css", "utf8");
 
-const VIEWS_URL = "https://views.example.test";
+const VIEWS_URL = "https://views.example.test/godseye/";
 
 type Signal = { report_id: string; zone: string; value: number; published_at: string; stale: boolean };
-type Prediction = { zone: string; score: number; level: string };
+type Prediction = { delivery_hour: string; zone: string; score: number; level: string };
 type Activity = { id: string; type: string; label: string; symbol: string; side: string; quantity: number; price_cents: number; reason?: string; created_at: string };
 type Provider = { id: string; display_name: string };
 
@@ -87,7 +87,7 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
 
   it("[SEIT-GM-UI-01] stats cards show market status", async () => {
     render(<Overview />);
-    expect(await screen.findByText(new RegExp(`^Market ${marketStatus.status}$`, "i"), { selector: ".market-status" })).toBeTruthy();
+    expect(await screen.findByText(new RegExp(`^Simulation ${marketStatus.status === "open" ? "running" : marketStatus.status}$`, "i"), { selector: ".market-status" })).toBeTruthy();
   });
 
   it("[SEIT-GM-UI-01] renders activity feed with judge-labelled order", async () => {
@@ -113,11 +113,11 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
     expect(screen.queryByText(/^\d+ bots$/)).toBeNull();
   });
 
-  it("[SEIT-GM-UI-01] links to Godseye from VITE_VIEWS_URL", async () => {
-    vi.stubEnv("VITE_VIEWS_URL", VIEWS_URL);
+  it("[SEIT-GM-UI-01] links to Godseye from VITE_GODSEYE_URL", async () => {
+    vi.stubEnv("VITE_GODSEYE_URL", VIEWS_URL);
     render(<Overview />);
-    const link = (await screen.findByRole("link", { name: /(?:3d views|explore in 3d)/i })) as HTMLAnchorElement;
-    expect(link.getAttribute("href")).toBe(`${VIEWS_URL}/godseye/`);
+    const link = (await screen.findByRole("link", { name: /god's eye/i })) as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe(VIEWS_URL);
   });
 
   it("[SEIT-GM-UI-01] shell navigates to every frozen page route without login", async () => {
@@ -135,7 +135,7 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
       ["#/spec", /spec/i],
     ];
     for (const [href, name] of nav) {
-      const link = (await screen.findByRole("link", { name })) as HTMLAnchorElement;
+      const link = (await within(screen.getByRole("navigation", { name: "Primary" })).findByRole("link", { name })) as HTMLAnchorElement;
       expect(link.getAttribute("href")).toBe(href);
     }
     expect(screen.queryByText(/log in|sign in|password/i)).toBeNull();
@@ -154,7 +154,7 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
         window.location.hash = hash;
         window.dispatchEvent(new Event("hashchange"));
       });
-      expect(screen.getByRole("heading", { name: heading })).toBeTruthy();
+      expect(screen.getByRole("heading", { name: heading, level: 1 })).toBeTruthy();
     }
   });
 
@@ -230,9 +230,8 @@ describe("S52a design v2 Overview and rail", () => {
   it("key-number strip shows served load and product counts with honest fallbacks", async () => {
     render(<Overview />);
     const strip = await screen.findByRole("region", { name: /market key numbers/i });
-    const load = within(strip).getByText("System load").parentElement;
-    await waitFor(() => expect(load?.querySelector("strong")?.textContent).toBe("—"));
-    expect(load?.textContent).toContain("Waiting for ERCOT");
+    expect(within(strip).queryByText("System load")).toBeNull();
+    expect(await screen.findByText(/Grid feed connected.*pending inputs/i)).toBeTruthy();
     const products = within(strip).getByText("Open products").parentElement;
     await waitFor(() => expect(products?.querySelector("strong")?.textContent).toBe("1"));
     const traders = within(strip).getByText("Active traders").parentElement;
@@ -240,7 +239,7 @@ describe("S52a design v2 Overview and rail", () => {
     const participants = within(strip).getByText("Participants by provider").parentElement;
     for (const provider of providers) await within(participants!).findByText(provider.display_name);
     expect(strip.textContent?.toLowerCase()).not.toContain("unavailable");
-    await waitFor(() => expect(strip.textContent).toContain(String(predictions[0].score)));
+    expect(within(strip).getByText("Open interest")).toBeTruthy();
   });
 
   it("disclosure is one expandable line with the complete AC-GM-UI-02 text", async () => {
@@ -276,7 +275,9 @@ describe("S52a design v2 Overview and rail", () => {
       expect(rows).toHaveLength(zones.size + 1); // one heading row, one data row per served zone
       for (const item of predictions) {
         const row = rows.find((candidate) => candidate.textContent?.toLowerCase().includes(item.zone.replace(/^LZ_|^HB_/, "").toLowerCase()));
-        expect(row?.textContent).toContain(`${item.score}%`);
+        const selectedWindow = predictions.map(p => p.delivery_hour).sort()[0];
+        if (item.delivery_hour === selectedWindow) expect(row?.textContent).toContain(`${item.score}%`);
+        else expect(row?.textContent).not.toContain(`${item.score}%`);
       }
     });
   });
@@ -365,16 +366,16 @@ describe("S52a design v2 Overview and rail", () => {
     expect(within(control).getByText(/^light$/i)).toBeTruthy();
   });
 
-  it("Explore in 3D link appears only with VITE_VIEWS_URL", async () => {
-    vi.stubEnv("VITE_VIEWS_URL", "");
+  it("God's Eye link appears only with VITE_GODSEYE_URL", async () => {
+    vi.stubEnv("VITE_GODSEYE_URL", "");
     const view = render(<Overview />);
     expect(await screen.findByText(new RegExp(predictions[0].zone))).toBeTruthy();
-    expect(screen.queryByRole("link", { name: /explore in 3d/i })).toBeNull();
-    vi.stubEnv("VITE_VIEWS_URL", VIEWS_URL);
+    expect(screen.queryByRole("link", { name: /god's eye/i })).toBeNull();
+    vi.stubEnv("VITE_GODSEYE_URL", VIEWS_URL);
     view.unmount();
     render(<Overview />);
-    const link = await screen.findByRole("link", { name: /explore in 3d/i });
-    expect(link.getAttribute("href")).toBe(`${VIEWS_URL}/godseye/`);
+    const link = await screen.findByRole("link", { name: /god's eye/i });
+    expect(link.getAttribute("href")).toBe(VIEWS_URL);
   });
 
   it("fixture badge appears only with VITE_FIXTURES=1", async () => {

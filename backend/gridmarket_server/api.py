@@ -440,14 +440,15 @@ def providers() -> list[dict]:
     from . import health
 
     with market.connection() as db:
-        counts = dict(
-            db.execute("SELECT provider_id, COUNT(*) FROM bots GROUP BY provider_id").fetchall()
-        )
+        participants = market.rows(db, "SELECT provider_id, account_id FROM bots")
     return [
         {
             "id": name,
             "display_name": cls.display_name,
-            "participants": counts.get(name, 0),
+            "participants": len(
+                {p["account_id"] for p in participants if p["provider_id"] == name}
+                | {customer["id"] for customer in cls().list_customers()}
+            ),
             "online": health.is_online(name),
         }
         for name, cls in enabled().items()

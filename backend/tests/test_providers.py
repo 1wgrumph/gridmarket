@@ -126,7 +126,10 @@ def test_seit_gm_prov_02_lonestar_population_and_public_counts(market) -> None:
     response = client.get("/v1/providers")
     assert response.status_code == 200
     assert "lonestar" in response.text and "base_sim" in response.text
-    assert str(seeded["lonestar"]) in response.text
+    # UX-12 includes the non-bot seller who owns a provider asset.
+    summary = {row["id"]: row["participants"] for row in response.json()}
+    assert summary["lonestar"] == seeded["lonestar"] + 1
+    assert summary["base_sim"] == seeded["base_sim"] + 1
 
 
 def test_seit_gm_prov_02_cross_provider_fill(market) -> None:

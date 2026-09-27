@@ -186,6 +186,10 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `#/bots/:id` BotProfile, `useBotProfile` | pages | Public profile |
 | `#/sandbox` Sandbox | pages | Judge key onboarding |
 | `#/spec` Spec | pages | Specification link |
+| `#/tour` First-run checklist redirect | ui | Opens the first-run checklist and replaces the hash with `#/?start=1` on Overview |
+| `#/replay` Replay deep link | ui | Real-day replay; honest pending page until stretch assembly; carries `?day=`, `?zone=`, `?hour=` |
+| `?zone=`, `?hour=`, `?day=` view context | ui | Carried across Overview/Market/Predictions/Replay links; closing a zone keeps the carried hour |
+| `VITE_GODSEYE_URL` (renames `VITE_VIEWS_URL`) | ui | Complete God's Eye Worker URL; the link is hidden when unset |
 | `useResource` | foundation | Two-second polling, loading and error state |
 
 ## Error codes

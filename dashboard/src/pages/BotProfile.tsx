@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { centralTime, contextLink, query } from '../components/navigation';
 import Panel from '../components/Panel';
 import { useBotProfile } from '../hooks';
-import { usd, centralTime } from '../format';
+import { usd } from '../format';
 import type { Bot } from '../api';
 import { FeedBody, PageHeading, Stale } from './Market';
 
@@ -11,7 +12,7 @@ type Profile = Bot & Partial<{
   blend: Record<string, number>; trades: number; loss_share: number; worst_loss: number;
   traits: { 'risk appetite'?: number; risk_appetite?: number; patience?: number };
   household: { batteries: number[]; zone: string; reserve_pct: number; schedule: number[] };
-  employed: boolean; pay: number; balance: number[];
+  employed: boolean; pay: number; balance: number[]; deposits: number;
   balance_history: { at: string; balance: number }[];
 }>;
 
@@ -32,9 +33,10 @@ export default function BotProfile({ id }: { id: string }) {
   const meta = <><Stale feed={profile}/><span>SIMULATED</span></>;
 
   return <>
-    <PageHeading eyebrow="05 / BOT POPULATION" title={`Bot profile · ${id}`}>
+    <PageHeading eyebrow="08 / BOT POPULATION" title={`Bot profile · ${id}`}>
       <a className="back-link" href="#/bots">All bots</a>
     </PageHeading>
+    {query().get('at') && <p className="panel-copy">Selected event: {centralTime(query().get('at')!)}. Performance below is the latest simulation snapshot.</p>}
     {!b ? <div className="page-grid"><Panel title="Profile" index="01" className="span-all profile-reserve" busy={profile.loading}>
       <FeedBody feed={profile} unavailable="Bot profile not yet available" reserve="reserve-profile"><div className="empty">No profile.</div></FeedBody>
     </Panel></div> : <>
@@ -48,8 +50,8 @@ export default function BotProfile({ id }: { id: string }) {
           <Facts rows={[
             ['Employment', b.employed === undefined ? 'Unavailable' : b.employed ? 'Employed' : 'Not employed'],
             ['Pay per period', usd(b.pay)],
-            ['Deposits', usd(b.balance?.length === 2 ? b.balance[1] - b.balance[0] : undefined)],
-            ['Provider', b.provider_id],
+            ['Deposits', usd(b.deposits ?? (b.balance?.length === 2 ? b.balance[1] - b.balance[0] : undefined))],
+            ['Provider', <a key="provider" href={contextLink('#/providers', { provider: b.provider_id })}>{b.provider_id}</a>],
           ]}/>
         </Panel>
         <Panel title="Household" index="03" meta={meta}>
@@ -62,8 +64,8 @@ export default function BotProfile({ id }: { id: string }) {
           <div className="schedule" aria-label={`Hourly load schedule: ${(b.household?.schedule ?? []).map((load, hour) => `${hour}:00 load ${load}`).join('; ')}`} role="img">
             {(b.household?.schedule ?? []).map((load, hour) => <span key={hour} title={`${hour}:00 · load ${load}`} style={{ opacity: 0.25 + 0.75 * load / Math.max(1, ...(b.household?.schedule ?? [])) }}/>)}
           </div>
-          <div className="schedule-hours" aria-hidden="true">{[0, 6, 12, 18, 23].map(hour => <span key={hour}>{hour}</span>)}</div>
-          <p className="panel-copy">Hours 0–23 · low to high load: pale to solid green. Relative hourly weights.</p>
+          <div className="schedule-hours">{[0, 6, 12, 18, 23].map(hour => <span key={hour}>{hour}</span>)}</div>
+          <p className="panel-copy">Hours 0–23 · Load weight legend: low (pale) to high (solid green). Hours in CT.</p>
         </Panel>
       </div>
       <div className="page-grid thirds">
@@ -94,5 +96,6 @@ export default function BotProfile({ id }: { id: string }) {
         </Panel>
       </div>
     </>}
+    <p className="context-actions"><a href={contextLink('#/market', { zone: b?.household?.zone })}>View this household’s market</a> · <a href="#/bots">Compare bots</a></p>
   </>;
 }
