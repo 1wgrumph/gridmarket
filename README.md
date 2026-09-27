@@ -16,15 +16,17 @@ when live data is configured.
 
 ## Try it in 3 minutes
 
-Start the app below, then follow [Your first 3 minutes](docs/judges.md).
+Start the app below, then follow [Your first 3 minutes](docs/judges.md) to monitor conditions, replay a real day, and place a simulated trade.
 
 1. **Monitor:** open [Overview](http://127.0.0.1:8000/#/) and inspect the
    Texas zones, data freshness and simulated exchange tape.
-2. **Forecast:** open [Predictions](http://127.0.0.1:8000/#/predictions),
+2. **Replay:** open [Replay](http://127.0.0.1:8000/#/replay) to simulate battery
+   dispatch on real ERCOT conditions, inspect decisions, and test disruptions.
+3. **Forecast:** open [Predictions](http://127.0.0.1:8000/#/predictions),
    choose a zone and read the drivers behind its score.
-3. **Respond:** open [Judge sandbox](http://127.0.0.1:8000/#/sandbox), get a
+4. **Respond:** open [Judge sandbox](http://127.0.0.1:8000/#/sandbox), get a
    key and use the SDK example below to buy one Flex Credit.
-4. **Report:** read your order status and portfolio; open
+5. **Report:** read your order status and portfolio; open
    [Market](http://127.0.0.1:8000/#/market) to inspect the book and fills.
    An accepted order can rest unfilled until a seller matches its price.
 

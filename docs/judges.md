@@ -10,16 +10,22 @@ Start with the [local setup](../README.md#run-it-locally), then open
    exchange tape. The population is simulated; the tape records API activity.
    Check observation timestamps: missing ERCOT data on a keyless local run
    is expected, not a measurement of an idle grid.
-2. **0:40 — Forecast.** Open **Predictions**. Choose a zone and inspect the
+2. **0:30 — Replay.** Open **Replay**, pick a day, and click **Play** to watch
+   the battery fleet respond to real ERCOT prices. Click a decision for its why
+   card (**Why this decision**) to view recorded inputs and rationale. In
+   **Your turn: move the backup slider** or take a provider offline (**Provider
+   offline** under **Disruptions**) and rerun, then read the scoreboard
+   (**Scoreboard · baseline**).
+3. **1:15 — Forecast.** Open **Predictions**. Choose a zone and inspect the
    drivers behind its scarcity score. The score is a simulation estimate;
    real weather and ERCOT observations inform it when configured. It is
    neither guaranteed profit nor a blackout prediction.
-3. **1:15 — Respond.** Open **Judge sandbox** and click **Get a sandbox key**.
+4. **1:50 — Respond.** Open **Judge sandbox** and click **Get a sandbox key**.
    You receive $1,000 in simulated funds. Keep the page open, copy your key
    privately, then run the [SDK example](../README.md#build-a-trading-bot-or-agent)
    in a terminal. Enter the key at its prompt. It selects a currently open
    product and submits one buy order at 10 simulated cents.
-4. **2:15 — Report.** Return to **Your orders** on the sandbox page. Notice
+5. **2:30 — Report.** Return to **Your orders** on the sandbox page. Notice
    the order status; acceptance does not guarantee a fill. Open **Market**
    to inspect the book and activity. The SDK also prints your portfolio.
    Open **Bots** to compare simulated participants and their P&L.
