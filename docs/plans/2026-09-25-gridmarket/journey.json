@@ -1311,6 +1311,17 @@
         "evidence/stretch/mutation-rp4.selection",
         "exits/REL-0.4.0"
       ]
+    },
+    {
+      "id": "DEC-GM-151",
+      "at": "2026-09-27T08:03:54Z",
+      "by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "Stretch repair round closed deterministically: mutation 84.26% (2639/3132; ercot 83.3%, market 85.4%, scoring 84.8%; poll-loop mutants excluded as a typed gap) on the backend of candidate f8f3df9, plus the full gate from RP-merge. PR #18 merged to main as ea7dd0d; release notes PR #19 merged as 374ef6b; v0.4.0 tagged on ea7dd0d (v0.3.0 precedent: tag on the phase merge) and released on the private repository. Remaining typed gaps: quiet-machine burst timing (final gate), God's Eye phone screenshot and Cloudflare runtime evidence, owner Worker redeploy with a new MARKET_KEY.",
+      "refs": [
+        "landed/stretch",
+        "evidence/stretch/assembly-stretch.md",
+        "evidence/stretch/mutation-rp4.log"
+      ]
     }
   ],
   "stages": {
