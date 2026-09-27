@@ -18,7 +18,7 @@
       "url": "https://www.ercot.com/misapp/servlets/IceDocListJsonWS?reportTypeId=13052"
     }
   ],
-  "selection_reason": "2026-08-31 is the most recent operating day in 2026 whose public archives are complete across all required series (Hourly Load Data Archives, DAM SPP, RTM SPP). Peak HB_HOUSTON RT is 0.14/MWh, with evening spread 0.14 - 9.99 = 0.15/MWh.",
+  "selection_reason": "2026-08-31 is the most recent operating day in 2026 whose public archives are complete across all required series (Hourly Load Data Archives, DAM SPP, RTM SPP). Peak HB_HOUSTON RT is 90.14/MWh, with evening spread 90.14 - 19.99 = 70.15/MWh.",
   "sources": {
     "da_prices": {
       "archive_published_at": "2026-09-20T13:03:03Z",

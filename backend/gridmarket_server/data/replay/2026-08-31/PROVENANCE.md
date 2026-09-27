@@ -1,6 +1,6 @@
 # ERCOT replay provenance: 2026-08-31
 
-2026-08-31 is the most recent operating day in 2026 whose public archives are complete across all required series (Hourly Load Data Archives, DAM SPP, RTM SPP). Peak HB_HOUSTON RT is 0.14/MWh, with evening spread 0.14 - 9.99 = 0.15/MWh.
+2026-08-31 is the most recent operating day in 2026 whose public archives are complete across all required series (Hourly Load Data Archives, DAM SPP, RTM SPP). Peak HB_HOUSTON RT is 90.14/MWh, with evening spread 90.14 - 19.99 = 70.15/MWh.
 
 Historical ERCOT observations; simulated households, batteries, procurement and outcomes.
 All required series are settlement/display-only: original publication/availability and revision history are unknown.
@@ -43,7 +43,7 @@ Script SHA-256: `a35f7aee9dfe4b673370e6f99c2739b8a19ae3b098e55fd1994fee08cd6094a
 Parse the actual ZIP/XLSX shared-string and worksheet bytes; select D and the eight named points, retaining HU/LZ and excluding LZEW.
 Convert hour-ending/quarter labels to UTC. Keep hourly load at hourly resolution. No filling, interpolation or price clipping.
 Canonical JSON is sorted by UTC start and point; numeric source values are converted to JSON numbers without price rounding.
-Normalized output hashes are in meta.json; meta.json SHA-256: `46e2a4254cc4f3e13a28a6179a757a53eee36a592c6fd38787b62135d2423678`.
+Normalized output hashes are in meta.json; meta.json SHA-256: `add6185cd0f2829d20cdb73ebc0d1149a29ac2cfcc5bf7132cbc266fdb736dae`.
 
 ## Reproduction and fixture provenance
 

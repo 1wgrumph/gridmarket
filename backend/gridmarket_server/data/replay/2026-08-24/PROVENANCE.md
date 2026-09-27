@@ -1,6 +1,6 @@
 # ERCOT replay provenance: 2026-08-24
 
-2026-08-24 is selected as a representative weekday operating day approximately one week prior to the end of the public load archive (2026-08-31). Peak HB_HOUSTON RT is 20.54/MWh, with evening spread 20.54 - 5.70 = 04.84/MWh.
+2026-08-24 is selected as a representative weekday operating day approximately one week prior to the end of the public load archive (2026-08-31). Peak HB_HOUSTON RT is 120.54/MWh, with evening spread 120.54 - 15.70 = 104.84/MWh.
 
 Historical ERCOT observations; simulated households, batteries, procurement and outcomes.
 All required series are settlement/display-only: original publication/availability and revision history are unknown.
@@ -43,7 +43,7 @@ Script SHA-256: `a35f7aee9dfe4b673370e6f99c2739b8a19ae3b098e55fd1994fee08cd6094a
 Parse the actual ZIP/XLSX shared-string and worksheet bytes; select D and the eight named points, retaining HU/LZ and excluding LZEW.
 Convert hour-ending/quarter labels to UTC. Keep hourly load at hourly resolution. No filling, interpolation or price clipping.
 Canonical JSON is sorted by UTC start and point; numeric source values are converted to JSON numbers without price rounding.
-Normalized output hashes are in meta.json; meta.json SHA-256: `49f5c1de003b7d8c7ba8c6a07848221f433e64c4edeb9c5653cc748972ee13ad`.
+Normalized output hashes are in meta.json; meta.json SHA-256: `808af316231493f7ccf612ade1e1a488f5bb66bd47a9169d5ef7def05ed1e6c2`.
 
 ## Reproduction and fixture provenance
 

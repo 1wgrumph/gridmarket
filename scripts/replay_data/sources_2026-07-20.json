@@ -18,7 +18,7 @@
       "url": "https://www.ercot.com/misapp/servlets/IceDocListJsonWS?reportTypeId=13052"
     }
   ],
-  "selection_reason": "2026-07-20 has complete required data and the largest HB_HOUSTON evening (17:00-21:00 Central) maximum minus daily minimum in July 2026: 22.87 - 8.93 = 03.94/MWh, with peak RT price of 22.87/MWh. This provides cross-month summer representation under complete archive coverage.",
+  "selection_reason": "2026-07-20 has complete required data and the largest HB_HOUSTON evening (17:00-21:00 Central) maximum minus daily minimum in July 2026: 222.87 - 18.93 = 203.94/MWh, with peak RT price of 222.87/MWh. This provides cross-month summer representation under complete archive coverage.",
   "sources": {
     "da_prices": {
       "archive_published_at": "2026-09-20T13:03:03Z",

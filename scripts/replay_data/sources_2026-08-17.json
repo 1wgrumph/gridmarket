@@ -18,7 +18,7 @@
       "url": "https://www.ercot.com/misapp/servlets/IceDocListJsonWS?reportTypeId=13052"
     }
   ],
-  "selection_reason": "2026-08-17 has complete required data and the third largest HB_HOUSTON evening (17:00-21:00 Central) maximum minus daily minimum among August 2026 days inspected: 51.81 - 6.40 = 35.41/MWh, with evening peak matching the daily peak RT price of 51.81/MWh. This is a price-spread selection, not a declaration of an ERCOT scarcity event.",
+  "selection_reason": "2026-08-17 has complete required data and the third largest HB_HOUSTON evening (17:00-21:00 Central) maximum minus daily minimum among August 2026 days inspected: 351.81 - 16.40 = 335.41/MWh, with evening peak matching the daily peak RT price of 351.81/MWh. This is a price-spread selection, not a declaration of an ERCOT scarcity event.",
   "sources": {
     "da_prices": {
       "archive_published_at": "2026-09-20T13:03:03Z",
