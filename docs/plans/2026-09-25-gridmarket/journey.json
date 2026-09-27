@@ -1322,6 +1322,18 @@
         "evidence/stretch/assembly-stretch.md",
         "evidence/stretch/mutation-rp4.log"
       ]
+    },
+    {
+      "id": "DEC-GM-152",
+      "at": "2026-09-27T08:44:14Z",
+      "by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "Extras candidate 9f3a6ba assurance: review REPAIR_REQUIRED (4: live-grid series keys, snapshot history allowlist, X2a audit text digits, track-record Brier scope), UX critique REPAIR_REQUIRED (11 findings, 5 failing flow checks: Replay hash leak, God's Eye actuals, first-order step, cold-load 429, day-ahead line, colours, empty states, landmark, range URL, CSV convention, Replay title), Orchestrator ORC-6..9 (judge guide lacks replay, check_public lacks the organisation pattern, load-sensitive RPB-F1d, history allowlist). No separate Test Engineer this phase (owner's Codex usage constraint; the reviewer covered test quality). One repair round in three parallel slices from 9f3a6ba with a shared history contract: XR-A backend and data (Muse max, gate-heavy per DEC-GM-150), XR-B dashboard (Claude Opus high, the implementer chain's last route, for the largest judgement slice), XR-C docs and public boundary (light, AGY). Then IE merge, deterministic gates, PR, v0.5.0.",
+      "refs": [
+        "candidates/extras-assurance/*",
+        "packets/X/XR-A.md",
+        "packets/X/XR-B.md",
+        "packets/X/XR-C.md"
+      ]
     }
   ],
   "stages": {
