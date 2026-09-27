@@ -52,6 +52,13 @@ not a skill claim. Real skill is unknown until the live run below.
 3. Replace the fixture table above with the live Spearman pair and
    importances, and flip the status line off FIXTURE-ONLY.
 
+## Fixture provenance (rule 7; DEC-GM-147 RP-C)
+
+Per-fixture records live in `backend/tests/fixtures/ml/PROVENANCE.md`:
+LODES WAC/RAC, the ERCOT budget-test report body, and the training rows are
+all labelled SYNTHETIC with digests and the real captures that would replace
+them. Nothing in the "Fixture results" table transfers to live skill.
+
 ## Risks
 
 - Fixture target equals temperature, so fixture skill does not transfer.

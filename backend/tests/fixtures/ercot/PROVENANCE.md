@@ -22,11 +22,18 @@
 - `_meta` shape follows the spec's `ResultMetadata`
   (`totalRecords`, `pageSize`, `totalPages`, `currentPage`).
 
-## esr-4-sec-charging-mw.json, ../esr_charging.json
+## esr-4-sec-charging-mw.json, ../esr_charging.json — SYNTHETIC (legacy, owner capture pending; G2)
 
+- Fixture sha256: `fce1aeb6…4a1ae90b60` (`ercot/esr-4-sec-charging-mw.json`),
+  `078ba1b1…b809fd2121c38c72` (`esr_charging.json`). Worker-side mirror
+  `ercot-hackathon/test/fixtures/esr.json`
+  (`06934dd8…b99863bdbb6f5e6533d`, see its `esr.provenance.json` sidecar).
 - Predate rule 7; the ESR endpoint is absent from the published spec, so no
-  filter vocabulary can be sourced for it. Still awaiting a captured real
-  response (owner step).
+  filter vocabulary can be sourced for it. Shapes are invented/legacy and
+  qualify only the adapter contract (route wiring, credential headers, 300 s
+  cache, latest-row parsing), never the external format.
+- What would replace them: an owner market-key capture of the upstream
+  response (bytes, retrieval UTC, sha256) via `scripts/capture_ercot.py`.
 
 ## captured/ (ORC-5, DEC-GM-148)
 
