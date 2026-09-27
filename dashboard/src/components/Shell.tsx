@@ -68,7 +68,7 @@ export default function Shell({ children }: { children: ReactNode }) {
           </nav>
           <div className="sidebar-bottom">
             <div className="market-clock"><p className="eyebrow">MARKET CLOCK · TEXAS</p><time className="num">{clockFormat.format(now)}<small> CT</small></time><span>{dayFormat.format(now)}</span></div>
-            <div className="freshness"><span className={`status-dot ${signals.error || stale || !latest ? 'warning' : ''}`}/><div><strong>ERCOT data</strong><p>{freshness}</p><span className="tiny">Polling every 2 seconds</span></div></div>
+            <div className="freshness"><span className={`status-dot ${signals.error || stale || !latest ? 'warning' : ''}`}/><div><strong>ERCOT data</strong><p>{freshness}{!latest && !signals.error && <> · Live data needs the Worker (GRIDMARKET_WORKER_URL). <a href="#/spec">Setup docs</a></>}</p><span className="tiny">Polling every 2 seconds</span></div></div>
             <a className="judge-cta" href="#/sandbox"><span>YOUR TURN TO TRADE</span><strong>Get API key <Icon name="up-right"/></strong><small>$1,000 simulated cash to start</small></a>
             <p className="sidebar-foot">BASE / AITX HACKATHON<span>FINAL EDITION · 2026</span></p>
           </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Button, CodeBlock } from '@astryxdesign/core';
 import { completeFirstStep, StepBanner } from '../components/FirstSteps';
-import { contextLink } from '../components/navigation';
+import { contextLink, query } from '../components/navigation';
 import { centralTime as time, parseTime } from '../format';
 import { useMarket, useResource } from '../hooks';
 import Panel from '../components/Panel';
@@ -27,12 +27,26 @@ const nextFuture = (products: MarketProduct[]) => products
   .filter(p => p.symbol.startsWith('FLEX-') && p.status === 'open' && parseTime(p.delivery_hour) > Date.now())
   .sort((a, b) => a.delivery_hour.localeCompare(b.delivery_hour))[0];
 
+/** First-order target: the carried symbol, else the carried zone+hour (FLEX first), else the next future. */
+const pickFirstOrder = (products: MarketProduct[]) => {
+  const params = query();
+  const symbol = params.get('symbol');
+  const zone = params.get('zone');
+  const hour = params.get('hour');
+  if (symbol === null && zone === null && hour === null) return nextFuture(products);
+  const open = products.filter(p => p.status === 'open' && parseTime(p.delivery_hour) > Date.now());
+  return open.find(p => symbol !== null && p.symbol === symbol)
+    ?? open.filter(p => (zone === null || p.zone === zone) && (hour === null || p.delivery_hour === hour))
+      .sort((a, b) => Number(b.symbol.startsWith('FLEX-')) - Number(a.symbol.startsWith('FLEX-')) || a.delivery_hour.localeCompare(b.delivery_hour))[0]
+    ?? nextFuture(products);
+};
+
 const snippet = (origin: string) => `# GridMarket Python SDK (sdk/python, stdlib only)
 import os, uuid
 from gridmarket import Client
 
 gm = Client(base_url="${origin}", api_key=os.environ["GRIDMARKET_API_KEY"])
-product = gm.market()[0]
+product = next(p for p in gm.market() if p["status"] == "open" and p["symbol"].startswith("FLEX-"))
 order = {"product_id": product["id"], "side": "buy", "quantity": 1, "price_cents": 10}
 print(gm.place_order(order, str(uuid.uuid4())))
 print(gm.orders())`;
@@ -96,6 +110,8 @@ export default function Sandbox() {
   const [placed, setPlaced] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
   const [kit, setKit] = useState<Record<string, string>>({});
+  const market = useMarket();
+  const target = market.data ? pickFirstOrder(market.data) : undefined;
 
   useEffect(() => {
     let active = true;
@@ -124,7 +140,7 @@ export default function Sandbox() {
     setPlacing(true);
     setError(null);
     try {
-      const product = nextFuture(await get<MarketProduct[]>('/v1/market'));
+      const product = pickFirstOrder(await get<MarketProduct[]>('/v1/market'));
       if (!product) throw new Error('No future product is open right now; try again at the next hour.');
       await send<Order>('POST', '/v1/orders', { product_id: product.id, side: 'buy', quantity: 1, price_cents: 10 }, key.api_key, crypto.randomUUID());
       setPlaced(`Placed: buy 1 ${product.symbol} @ $0.10.`);
@@ -155,7 +171,7 @@ export default function Sandbox() {
         <div className="form-row" style={tall}>
           <Button label="Place a first order" variant="secondary" isDisabled={!key} isLoading={placing} onClick={placeFirstOrder}/>
         </div>
-        <p className={`form-result ${error ? 'warning-text' : 'muted'}`} role={error ? 'alert' : undefined} aria-live="polite" style={twoLines}>{error ?? placed ?? 'Buys 1 credit of the next future product at $0.10.'}</p>
+        <p className={`form-result ${error ? 'warning-text' : 'muted'}`} role={error ? 'alert' : undefined} aria-live="polite" style={twoLines}>{error ?? placed ?? (target ? `Buys 1 of ${target.symbol} at $0.10.` : market.loading ? 'Finding the next future product…' : 'Buys 1 credit of the next future product at $0.10.')}</p>
         {key && <p className="context-actions">Key ready. Place your first order above or <a href="/docs">explore the API</a>.</p>}
       </Panel>
       <Panel title="SDK snippet" index="02" meta={<span>PYTHON 3</span>}>

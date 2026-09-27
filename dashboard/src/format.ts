@@ -10,3 +10,7 @@ export const centralTime = (value: string) => Number.isFinite(parseTime(value))
 export const usd = (value?: number | null) => typeof value === 'number' && Number.isFinite(value)
   ? `${value < 0 ? '−' : ''}${Math.abs(value).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`
   : 'Unavailable';
+/** One-decimal display rounding for scarcity scores (48.2796…% → 48.3%); integers stay bare. */
+export const round1 = (value: number) => Math.round(value * 10) / 10;
+/** One rule for unavailable forecasts: no score beside UNAVAILABLE on any page. */
+export const forecastAvailable = (level: string) => level.toUpperCase() !== 'UNAVAILABLE';

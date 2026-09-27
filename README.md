@@ -92,7 +92,9 @@ real-time settlement prices, day-ahead prices, load forecasts, outages and
 transmission constraints. Set `GRIDMARKET_WORKER_URL` to its origin and
 `GRIDMARKET_WORKER_KEY` to the shared `MARKET_KEY` used for report access.
 NWS forecasts and alerts are fetched directly, need no key, and are enabled
-unless `GRIDMARKET_NWS=off`.
+unless `GRIDMARKET_NWS=off`. Build the dashboard with
+`VITE_GODSEYE_URL=<worker origin>/godseye/` to show its God's Eye link
+(hidden when unset).
 
 The Worker needs `ERCOT_USERNAME`, `ERCOT_PASSWORD`,
 `ERCOT_SUBSCRIPTION_KEY` and `MARKET_KEY`; see the
