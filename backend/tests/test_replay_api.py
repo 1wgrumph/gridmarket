@@ -235,9 +235,12 @@ def test_C3_rate_limit_is_429(tmp_path, monkeypatch):
 
 
 def test_C3_evicts_after_20_runs(tmp_path, monkeypatch):
-    # Assumption: the replay limiter reads time.monotonic. Advance it so 21 posts are
-    # not also a 429, and retention can be seen without sleeping.
-    import time
+    # Assumption: the replay limiter reads time.monotonic. Advance only its clock so 21
+    # posts are not also a 429 and retention shows without sleeping; patching the
+    # global time.monotonic also races asyncio's executor-shutdown timeout.
+    from types import SimpleNamespace
+
+    from gridmarket_server.replay import routes
 
     clock = {"now": 0.0}
 
@@ -247,7 +250,7 @@ def test_C3_evicts_after_20_runs(tmp_path, monkeypatch):
 
     day = "2026-06-15"
     with catalog(tmp_path, monkeypatch, **{day: {}}) as api:
-        monkeypatch.setattr(time, "monotonic", monotonic)
+        monkeypatch.setattr(routes, "time", SimpleNamespace(monotonic=monotonic))
         ids = []
         for seed in range(21):
             response = syn.post(api, syn.body(day, ["price_based"], [syn.asset()], seed=seed))
