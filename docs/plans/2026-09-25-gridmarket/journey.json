@@ -1253,6 +1253,13 @@
       "decided_by": "Orchestrator (delegate)",
       "decision": "Assembly commit 2e9cd44 (AGY IE) fixed God's Eye node.test.mjs double-wrapping ERCOT field objects after the esr merge (legitimate) but also loosened production node.js rows() to accept a double-wrapped shape real ERCOT never sends. Not reverted mid-assembly to save a gate cycle; recorded as ORC-1 for the stretch repair round (revert the node.js hunk, keep the test fix).",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-145",
+      "decided_at": "2026-09-26T20:53:00-05:00",
+      "decided_by": "Orchestrator (delegate, coordinating S18)",
+      "decision": "The replay merge's App.tsx resolution (f45644d) added hidden stale text only to keep S80-10 passing (test-gaming). Authorized correction on integration-stretch: remove the hidden element; S80-10 asserts the real Replay page at #/replay, with the placeholder covered only where it remains reachable (or removed with its assertion if dead). Then merge docs2, run the full gate (smoke on a named project and port) and write the stretch candidate.",
+      "reversible": true
     }
   ],
   "stages": {
