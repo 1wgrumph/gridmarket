@@ -91,11 +91,14 @@ def test_a16_distinct_policies(tmp_path, monkeypatch):
     decisions = syn.flat(body, "decisions")
     at = {r["strategy"]: r for r in decisions if r["decision_time"] == zulu(DAY, 11, 45)}
     assert D(at["fixed_schedule"]["kw"]) == 8
-    # DEC-GM-127 (a): no offers outside procurement; both self-supply 0.1 kW
+    # DEC-GM-136: no offers outside procurement; price self-supplies 0.1 kW
     # from 00:30 (first eligible RT) through 11:30: 45 * 0.025 = 1.125 kWh.
-    # SoC 1.875, unreserved 0.875: price offers 3.5 kW, Battery-aware half.
+    # SoC 1.875, unreserved 0.875: price offers 3.5 kW. Battery-aware holds
+    # its 2 kWh above reserve against the 16 kWh remaining budget (16 quarters
+    # x 1.0 kWh share of the 16 kW rating): no self-supply, no 11:45 offer.
     assert D(at["price_based"]["kw"]) == D("3.5")
-    assert D(at["esr_informed"]["kw"]) == D("1.75")
+    assert at["esr_informed"]["action"] == "hold"
+    assert D(at["esr_informed"]["kw"]) == D(0)
     assert "fallback" in at["esr_informed"]["reason"].lower()
     assert body["strategy_rules"]["esr_informed"]["display_name"] == "Battery-aware"
 
@@ -107,11 +110,12 @@ def test_a16_battery_aware_q50_actions(tmp_path, monkeypatch):
         body = post(api, [syn.asset()], load_kw="0.1").json()
     assert body["procurement_hours"] == [zulu(DAY, h) for h in (18, 19, 20, 21)]
     decisions = syn.flat(body, "decisions")
-    # RT 40 meets Q50 but not Q75; current-hour DAM 30 exceeds Q25.
+    # DEC-GM-136: RT 40 is below Q75 50, so no self-supply; overnight median
+    # charging already filled the 10 kWh battery, so charge is infeasible too.
     at = {r["strategy"]: r for r in decisions if r["decision_time"] == zulu(DAY, 10, 0)}
     assert at["price_based"]["action"] == "hold"
-    assert at["esr_informed"]["action"] == "self_supply"
-    assert D(at["esr_informed"]["kw"]) == D("0.1")
+    assert at["esr_informed"]["action"] == "hold"
+    assert D(at["esr_informed"]["kw"]) == D(0)
     # RT 20 meets neither self trigger; current-hour DAM 30 meets only Q50.
     # Headroom 30 kWh keeps the 4 kW charge feasible after overnight charging.
     big = syn.asset(capacity_kwh="30", max_charge_kw="4", max_discharge_kw="4")

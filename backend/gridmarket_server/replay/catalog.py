@@ -12,8 +12,8 @@ from zoneinfo import ZoneInfo
 from ..flex.information import Observation
 
 CHI = ZoneInfo("America/Chicago")
-ENGINE_VERSION = "C3/DEC-GM-127-A16"
-POLICY_VERSION = "C2/DEC-GM-127-A16"
+ENGINE_VERSION = "C3/DEC-GM-136"
+POLICY_VERSION = "C2/DEC-GM-136"
 POINTS = (
     "LZ_HOUSTON",
     "LZ_NORTH",

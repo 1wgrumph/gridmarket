@@ -509,7 +509,7 @@ def test_C3_feed_interrupt_does_not_block_fixed_schedule_dispatch(tmp_path, monk
 def test_C3_feed_interrupt_esr_records_battery_aware_fallback(tmp_path, monkeypatch):
     day = "2026-07-01"
     root = tmp_path / "catalog"
-    # DEC-GM-127 A16: ESR is contextual; the half-energy policy remains fixed.
+    # DEC-GM-136: ESR is contextual; the budget-guarded policy is unchanged by the gap.
     # The spike [16:15,16:30) is eligible at 16:45; no synthetic future leak.
     write_day(
         root,
@@ -538,7 +538,7 @@ def test_C3_feed_interrupt_esr_records_battery_aware_fallback(tmp_path, monkeypa
         plain = syn.score(run(api, syn.body(day, ["esr_informed"], [asset])), "esr_informed")
         lost_body = run(api, syn.body(day, ["esr_informed"], [asset], disruptions=[interrupt]))
         lost = syn.score(lost_body, "esr_informed")
-    # DEC-GM-127 A16 replaces ESR-trend offers with a fixed half-energy rule.
+    # DEC-GM-136 keeps the budget guard fixed with or without ESR.
     # Missing ESR affects the explanation, not physical availability or pricing.
     assert plain == lost
     when = zulu(day, 16, 45)

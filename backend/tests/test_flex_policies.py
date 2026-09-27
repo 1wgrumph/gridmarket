@@ -301,7 +301,8 @@ def test_C2_battery_aware_q50_triggers_differ_from_price_based():
     assert aware.action == "charge" and aware.kw == Decimal(4)
     assert named(aware, "dam_q50").value == Decimal(50)
     assert "fallback" in aware.reason.lower()
-    # RT 60 meets Q50 but not Q75: Battery-aware serves load, PriceBased holds.
+    # DEC-GM-136: RT 60 meets Q50 but not Q75 100, so neither serves load;
+    # Battery-aware charges instead (current DAM 50 meets the median trigger).
     start = when - timedelta(minutes=15)
     rt = obs(
         series="rt_spp",
@@ -316,12 +317,68 @@ def test_C2_battery_aware_q50_triggers_differ_from_price_based():
     price = decide(PriceBased(), when, loaded, load=Decimal(2))
     aware = decide(EsrInformed(), when, loaded, load=Decimal(2))
     assert price.action == "hold" and price.kw == Decimal(0)
-    assert aware.action == "self_supply" and aware.kw == Decimal(2)
+    assert aware.action == "charge" and aware.kw == Decimal(4)
     # Overlapping quantiles still hold for both policies.
     flat = [Decimal(40)] * 24
     for cls in (PriceBased, EsrInformed):
         held = decide(cls(), z(2026, 6, 15, 18, 0), dam(flat))
         assert held.action == "hold" and held.kw == Decimal(0)
+
+
+def test_S69c_budget_blocks_self_supply_starving_procurement():
+    # DEC-GM-136 (1)(2): PRICES procurement hours are 6, 20, 21, 22. At 07:00
+    # the remaining 12 quarters × 0.25 kWh share = 3.0 kWh budget; SoC 2 with
+    # reserve 1 leaves no surplus, so RT 150 (> Q75 100) must still hold.
+    when = z(2026, 6, 15, 7, 0)
+    rows = [*dam(), *_esr(Decimal(-80), Decimal(-20), 6), _rt(Decimal(150), hour=6)]
+    bat = battery(soc_kwh=Decimal(2))
+    decision = decide(EsrInformed(), when, rows, bat=bat, load=Decimal(2))
+    assert decision.action == "hold" and decision.kw == Decimal(0)
+    assert "fallback" not in decision.reason.lower()  # Eligible ESR and RT present.
+    assert decision.config["remaining_procurement_quarters"] == 12
+    assert decision.config["procurement_budget_dc_kwh"] == Decimal("3.0")
+
+
+def test_S69c_surplus_self_supply_at_rt_above_q75():
+    # DEC-GM-136 (2): same quarter with SoC 10: surplus 10-1-3 = 6 kWh DC,
+    # so self_supply serves the 2 kW load. Missing ESR records the fallback.
+    when = z(2026, 6, 15, 7, 0)
+    rows = [*dam(), _rt(Decimal(150), hour=6)]
+    decision = decide(EsrInformed(), when, rows, load=Decimal(2))
+    assert decision.action == "self_supply" and decision.kw == Decimal(2)
+    assert "fallback" in decision.reason.lower()
+
+
+def test_S69c_no_self_supply_between_q50_and_q75():
+    # DEC-GM-136 (2): RT 60 meets Q50 but not Q75 100; current DAM 50 meets
+    # the median charge trigger instead. PriceBased holds on both triggers.
+    when = z(2026, 6, 15, 7, 0)
+    rows = [*dam(), _rt(Decimal(60), hour=6)]
+    aware = decide(EsrInformed(), when, rows, load=Decimal(2))
+    assert aware.action == "charge" and aware.kw == Decimal(4)
+    price = decide(PriceBased(), when, rows, load=Decimal(2))
+    assert price.action == "hold" and price.kw == Decimal(0)
+
+
+def test_S69c_full_feasible_offer_in_procurement_quarters():
+    # DEC-GM-136 (4): at 22:30 no procurement quarter remains after the 22:45
+    # target, so the offer is the full feasible 4 kW, not half of 1.5 kWh.
+    when = z(2026, 6, 15, 22, 30)
+    bat = battery(soc_kwh=Decimal("2.5"))
+    decision = decide(EsrInformed(), when, dam(), bat=bat)
+    assert decision.action == "offer_flex" and decision.kw == Decimal(4)
+    assert decision.config["remaining_procurement_quarters"] == 1
+    assert decision.config["procurement_budget_dc_kwh"] == Decimal("0.25")
+
+
+def test_S69c_scarce_battery_still_charges_at_median():
+    # DEC-GM-136 (3): the budget never blocks charging; SoC 2 at DAM 50 = Q50
+    # charges 4 kW even with RT 60 present (below Q75, so no self-supply).
+    when = z(2026, 6, 15, 7, 0)
+    rows = [*dam(), _rt(Decimal(60), hour=6)]
+    bat = battery(soc_kwh=Decimal(2))
+    decision = decide(EsrInformed(), when, rows, bat=bat, load=Decimal(2))
+    assert decision.action == "charge" and decision.kw == Decimal(4)
 
 
 def _esr(previous: Decimal, latest: Decimal, hour: int = 16) -> list[Observation]:
