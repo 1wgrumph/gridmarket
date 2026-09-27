@@ -1344,6 +1344,17 @@
         "packets/FW/S46-burst.md",
         "PR #20"
       ]
+    },
+    {
+      "id": "DEC-GM-154",
+      "at": "2026-09-27T10:22:34Z",
+      "by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "v0.5.0 released on 6514580 (notes PR #21, 176de65). S46 final: burst test on the limiter clock (5c11552), v1.0.0 notes (4e3486a); final deterministic gate on 4e3486a all exit 0 (lint, test-all, contracts, spec, spec-lint, check-public, secrets, Worker 80, captured ERCOT plus adversary 7, compose smoke gm-smoke-final); PR #22 merged as 0c5956b; v1.0.0 tagged and released on the private repository at 05:22 CDT, before the 07:00 freeze. Owner-only remaining: Worker redeploy with a new MARKET_KEY (deployed Worker predates the key check), tunnel and MARKET_URL, repository visibility, Loom and submission.",
+      "refs": [
+        "landed/final",
+        "evidence/final-gate.log",
+        "PR #22"
+      ]
     }
   ],
   "stages": {
