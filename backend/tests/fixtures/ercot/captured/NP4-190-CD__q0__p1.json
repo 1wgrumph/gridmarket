@@ -1,0 +1,417 @@
+{
+  "_meta": {
+    "totalRecords": 48,
+    "pageSize": 1000,
+    "totalPages": 1,
+    "currentPage": 1,
+    "query": {
+      "parameterCount": 3,
+      "parameters": {
+        "deliveryDateFrom": "2026-09-26",
+        "deliveryDateTo": "2026-09-27",
+        "settlementPoint": "LZ_HOUSTON"
+      },
+      "sortedBy": "deliveryDate: ASC"
+    }
+  },
+  "report": {
+    "reportName": "dam_stlmnt_pnt_prices",
+    "reportDisplayName": "DAM Settlement Point Prices",
+    "reportId": "12331",
+    "reportEMIL": "NP4-190-CD",
+    "downloadLimit": 2000000
+  },
+  "fields": [
+    {
+      "name": "deliveryDate",
+      "label": "Delivery Date",
+      "cardinality": 1,
+      "dataType": "DATE",
+      "searchable": true,
+      "sortable": true,
+      "hasRange": true
+    },
+    {
+      "name": "hourEnding",
+      "label": "Hour Ending",
+      "cardinality": 2,
+      "dataType": "VARCHAR",
+      "searchable": true,
+      "sortable": true,
+      "hasRange": false
+    },
+    {
+      "name": "settlementPoint",
+      "label": "Settlement Point",
+      "cardinality": 3,
+      "dataType": "VARCHAR",
+      "searchable": true,
+      "sortable": true,
+      "hasRange": false
+    },
+    {
+      "name": "settlementPointPrice",
+      "label": "Settlement Point Price",
+      "cardinality": 4,
+      "dataType": "DOUBLE",
+      "searchable": true,
+      "sortable": true,
+      "hasRange": true
+    },
+    {
+      "name": "DSTFlag",
+      "label": "DST Flag",
+      "cardinality": 5,
+      "dataType": "BOOLEAN",
+      "searchable": true,
+      "sortable": true,
+      "hasRange": false
+    }
+  ],
+  "data": [
+    [
+      "2026-09-26",
+      "24:00",
+      "LZ_HOUSTON",
+      32.82,
+      false
+    ],
+    [
+      "2026-09-26",
+      "23:00",
+      "LZ_HOUSTON",
+      37.61,
+      false
+    ],
+    [
+      "2026-09-26",
+      "22:00",
+      "LZ_HOUSTON",
+      44.4,
+      false
+    ],
+    [
+      "2026-09-26",
+      "21:00",
+      "LZ_HOUSTON",
+      52.35,
+      false
+    ],
+    [
+      "2026-09-26",
+      "20:00",
+      "LZ_HOUSTON",
+      61.12,
+      false
+    ],
+    [
+      "2026-09-26",
+      "19:00",
+      "LZ_HOUSTON",
+      61.77,
+      false
+    ],
+    [
+      "2026-09-26",
+      "18:00",
+      "LZ_HOUSTON",
+      48.65,
+      false
+    ],
+    [
+      "2026-09-26",
+      "17:00",
+      "LZ_HOUSTON",
+      41.48,
+      false
+    ],
+    [
+      "2026-09-26",
+      "16:00",
+      "LZ_HOUSTON",
+      40,
+      false
+    ],
+    [
+      "2026-09-26",
+      "15:00",
+      "LZ_HOUSTON",
+      36.66,
+      false
+    ],
+    [
+      "2026-09-26",
+      "14:00",
+      "LZ_HOUSTON",
+      34.94,
+      false
+    ],
+    [
+      "2026-09-26",
+      "13:00",
+      "LZ_HOUSTON",
+      29.79,
+      false
+    ],
+    [
+      "2026-09-26",
+      "12:00",
+      "LZ_HOUSTON",
+      25.78,
+      false
+    ],
+    [
+      "2026-09-26",
+      "11:00",
+      "LZ_HOUSTON",
+      20.95,
+      false
+    ],
+    [
+      "2026-09-26",
+      "10:00",
+      "LZ_HOUSTON",
+      20.7,
+      false
+    ],
+    [
+      "2026-09-26",
+      "09:00",
+      "LZ_HOUSTON",
+      22.93,
+      false
+    ],
+    [
+      "2026-09-26",
+      "08:00",
+      "LZ_HOUSTON",
+      27.99,
+      false
+    ],
+    [
+      "2026-09-26",
+      "07:00",
+      "LZ_HOUSTON",
+      27.11,
+      false
+    ],
+    [
+      "2026-09-26",
+      "06:00",
+      "LZ_HOUSTON",
+      25.55,
+      false
+    ],
+    [
+      "2026-09-26",
+      "05:00",
+      "LZ_HOUSTON",
+      24.47,
+      false
+    ],
+    [
+      "2026-09-26",
+      "04:00",
+      "LZ_HOUSTON",
+      25.07,
+      false
+    ],
+    [
+      "2026-09-26",
+      "03:00",
+      "LZ_HOUSTON",
+      25.98,
+      false
+    ],
+    [
+      "2026-09-26",
+      "02:00",
+      "LZ_HOUSTON",
+      27.93,
+      false
+    ],
+    [
+      "2026-09-26",
+      "01:00",
+      "LZ_HOUSTON",
+      31.25,
+      false
+    ],
+    [
+      "2026-09-27",
+      "24:00",
+      "LZ_HOUSTON",
+      36.83,
+      false
+    ],
+    [
+      "2026-09-27",
+      "23:00",
+      "LZ_HOUSTON",
+      53.46,
+      false
+    ],
+    [
+      "2026-09-27",
+      "22:00",
+      "LZ_HOUSTON",
+      88.44,
+      false
+    ],
+    [
+      "2026-09-27",
+      "21:00",
+      "LZ_HOUSTON",
+      92.48,
+      false
+    ],
+    [
+      "2026-09-27",
+      "20:00",
+      "LZ_HOUSTON",
+      96.61,
+      false
+    ],
+    [
+      "2026-09-27",
+      "19:00",
+      "LZ_HOUSTON",
+      96.67,
+      false
+    ],
+    [
+      "2026-09-27",
+      "18:00",
+      "LZ_HOUSTON",
+      65.12,
+      false
+    ],
+    [
+      "2026-09-27",
+      "17:00",
+      "LZ_HOUSTON",
+      49.85,
+      false
+    ],
+    [
+      "2026-09-27",
+      "16:00",
+      "LZ_HOUSTON",
+      46.15,
+      false
+    ],
+    [
+      "2026-09-27",
+      "15:00",
+      "LZ_HOUSTON",
+      40.66,
+      false
+    ],
+    [
+      "2026-09-27",
+      "14:00",
+      "LZ_HOUSTON",
+      35.79,
+      false
+    ],
+    [
+      "2026-09-27",
+      "13:00",
+      "LZ_HOUSTON",
+      31.48,
+      false
+    ],
+    [
+      "2026-09-27",
+      "12:00",
+      "LZ_HOUSTON",
+      24.09,
+      false
+    ],
+    [
+      "2026-09-27",
+      "11:00",
+      "LZ_HOUSTON",
+      21.45,
+      false
+    ],
+    [
+      "2026-09-27",
+      "10:00",
+      "LZ_HOUSTON",
+      19.11,
+      false
+    ],
+    [
+      "2026-09-27",
+      "09:00",
+      "LZ_HOUSTON",
+      21.76,
+      false
+    ],
+    [
+      "2026-09-27",
+      "08:00",
+      "LZ_HOUSTON",
+      29.47,
+      false
+    ],
+    [
+      "2026-09-27",
+      "07:00",
+      "LZ_HOUSTON",
+      28.09,
+      false
+    ],
+    [
+      "2026-09-27",
+      "06:00",
+      "LZ_HOUSTON",
+      25.58,
+      false
+    ],
+    [
+      "2026-09-27",
+      "05:00",
+      "LZ_HOUSTON",
+      25.06,
+      false
+    ],
+    [
+      "2026-09-27",
+      "04:00",
+      "LZ_HOUSTON",
+      24.79,
+      false
+    ],
+    [
+      "2026-09-27",
+      "03:00",
+      "LZ_HOUSTON",
+      27.85,
+      false
+    ],
+    [
+      "2026-09-27",
+      "02:00",
+      "LZ_HOUSTON",
+      29.63,
+      false
+    ],
+    [
+      "2026-09-27",
+      "01:00",
+      "LZ_HOUSTON",
+      31.72,
+      false
+    ]
+  ],
+  "_links": {
+    "self": {
+      "href": "https://api.ercot.com/api/public-reports/np4-190-cd/dam_stlmnt_pnt_prices"
+    },
+    "parent": {
+      "href": "https://api.ercot.com/api/public-reports/np4-190-cd"
+    }
+  }
+}

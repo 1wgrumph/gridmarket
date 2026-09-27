@@ -27,3 +27,17 @@
 - Predate rule 7; the ESR endpoint is absent from the published spec, so no
   filter vocabulary can be sourced for it. Still awaiting a captured real
   response (owner step).
+
+## captured/ (ORC-5, DEC-GM-148)
+
+- Source Worker URL: `https://ercot-hackathon.jordan-691.workers.dev` (retrieved without a key)
+- Retrieval time UTC: 2026-09-27T03:56:02Z
+- Capture tool: `scripts/capture_ercot.py --first-page-only` (pacing 2.5s, 429 retry backoff, User-Agent `gridmarket-capture/1.0`)
+- What was kept: `snapshot.json` and the first page of each query for all five standard reports:
+  - `NP3-233-CD__q0__p1.json`
+  - `NP3-565-CD__q0__p1.json`
+  - `NP4-190-CD__q0..4__p1.json` (5 queries)
+  - `NP6-86-CD__q0__p1.json`
+  - `NP6-905-CD__q0..4__p1.json` (5 queries)
+  Each accompanied by its JSON provenance sidecar matching the body SHA-256. Total size is ~692 KB.
+

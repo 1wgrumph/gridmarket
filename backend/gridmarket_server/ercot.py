@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import os
+import re
 import sqlite3
 import time
 from collections import deque
@@ -96,18 +97,23 @@ class SignalStore:
         return db
 
     def add(self, signal: Signal) -> None:
-        self.failed.discard((str(self._path()), signal.report_id))
+        self.add_many([signal])
+
+    def add_many(self, items: list[Signal]) -> None:
+        if not items:
+            return
+        for signal in items:
+            self.failed.discard((str(self._path()), signal.report_id))
         with self._connect() as db:
-            # Upsert: re-polling an interval replaces its row instead of
-            # duplicating it (no schema change; the schema is frozen).
-            db.execute(
-                "DELETE FROM signals WHERE report_id=? AND zone=? AND interval_start=?",
-                (signal.report_id, signal.zone, signal.interval_start),
-            )
-            db.execute(
-                "INSERT INTO signals VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (str(uuid4()), *vars(signal).values()),
-            )
+            for signal in items:
+                db.execute(
+                    "DELETE FROM signals WHERE report_id=? AND zone=? AND interval_start=?",
+                    (signal.report_id, signal.zone, signal.interval_start),
+                )
+                db.execute(
+                    "INSERT INTO signals VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (str(uuid4()), *vars(signal).values()),
+                )
 
     def latest(self, report_id: str, zone: str) -> Signal | None:
         if not self._path().exists():
@@ -274,20 +280,51 @@ def _sced_time(stamp: str, repeated: bool = False) -> str:
     return when.astimezone(UTC).isoformat()
 
 
+_HOUR_ENDING_RE = re.compile(r"^([0-9]{1,2}):[0-9]{2}$")
+
+
+def parse_hour_ending(value: object) -> int:
+    """Parse ERCOT hourEnding / deliveryHour.
+
+    Accepts int, 'H:MM' and 'HH:MM'. Rejects anything else with a clear ValueError.
+    """
+    if isinstance(value, bool):
+        raise TypeError(f"Invalid hourEnding (boolean not allowed): {value!r}")
+    if isinstance(value, int):
+        if not (1 <= value <= 25):
+            raise ValueError(f"Invalid hourEnding value out of range (1..25): {value}")
+        return value
+    if isinstance(value, str):
+        m = _HOUR_ENDING_RE.match(value.strip())
+        if m:
+            hour = int(m.group(1))
+            if 1 <= hour <= 25:
+                return hour
+            raise ValueError(f"Invalid hour in hourEnding out of range (1..25): {value!r}")
+        raise ValueError(f"Invalid hourEnding format (expected int, 'H:MM' or 'HH:MM'): {value!r}")
+    raise TypeError(
+        f"Invalid hourEnding type {type(value).__name__} (expected int or str): {value!r}"
+    )
+
+
 def _store(
     report: str, zone: str, interval: str, minutes: int, value: float, unit: str, published: str
 ) -> None:
-    signals.add(
-        Signal(
-            report,
-            zone,
-            interval,
-            minutes,
-            float(value),
-            unit,
-            published,
-            datetime.now(UTC).isoformat(),
-        )
+    signals.add(_make_signal(report, zone, interval, minutes, value, unit, published))
+
+
+def _make_signal(
+    report: str, zone: str, interval: str, minutes: int, value: float, unit: str, published: str
+) -> Signal:
+    return Signal(
+        report,
+        zone,
+        interval,
+        minutes,
+        float(value),
+        unit,
+        published,
+        datetime.now(UTC).isoformat(),
     )
 
 
@@ -419,30 +456,39 @@ def parse_report(report: str, payload: dict) -> int:
     records = [dict(zip(fields, row, strict=True)) for row in payload.get("data") or []]
     loads: dict[str, dict[str, float]] = {}
     roll_published: dict[str, str] = {}
+    batch: list[Signal] = []
     for row in records:
         if report == "NP6-86-CD":
             start = _sced_time(row["SCEDTimestamp"], row.get("repeatedHourFlag", False))
             end = (datetime.fromisoformat(start) + timedelta(minutes=5)).isoformat()
-            _store(report, row["constraintName"], start, 5, row["shadowPrice"], "$/MWh", end)
+            batch.append(
+                _make_signal(
+                    report, row["constraintName"], start, 5, row["shadowPrice"], "$/MWh", end
+                )
+            )
         elif report == "NP3-233-CD":
-            start = _hour(row["operatingDate"], int(row["hourEnding"]))
+            start = _hour(row["operatingDate"], parse_hour_ending(row["hourEnding"]))
             published = row.get("postedDatetime") or ""
             for column, zone in _ZONES_233.items():
                 if row.get(column) is not None:
-                    _store(report, zone, start, 60, row[column], "MW", published)
+                    batch.append(
+                        _make_signal(report, zone, start, 60, row[column], "MW", published)
+                    )
         elif report == "NP3-565-CD":
             if "inUseFlag" in row and not row["inUseFlag"]:
                 continue
             start = _hour(
                 row["deliveryDate"],
-                int(str(row["hourEnding"])[:2]),
+                parse_hour_ending(row["hourEnding"]),
                 dst=row.get("DSTFlag", False),
             )
             published = row.get("postedDatetime") or ""
             bucket = loads.setdefault(start, {})
             for column, zone in _ZONES_565.items():
                 if row.get(column) is not None:
-                    _store(report, zone, start, 60, row[column], "MW", published)
+                    batch.append(
+                        _make_signal(report, zone, start, 60, row[column], "MW", published)
+                    )
                     bucket[zone] = float(row[column])
             roll_published[start] = published
         else:  # NP6-905-CD, NP4-190-CD: no publish-time column, so use the interval end.
@@ -451,25 +497,28 @@ def parse_report(report: str, payload: dict) -> int:
             minutes = 15 if report == "NP6-905-CD" else 60
             start = _hour(
                 row["deliveryDate"],
-                int(str(ending)[:2]),
+                parse_hour_ending(ending),
                 int(quarter or 1),
                 dst=row.get("DSTFlag", False),
             )
             end = (datetime.fromisoformat(start) + timedelta(minutes=minutes)).isoformat()
-            _store(
-                report,
-                row["settlementPoint"],
-                start,
-                minutes,
-                row["settlementPointPrice"],
-                "$/MWh",
-                end,
+            batch.append(
+                _make_signal(
+                    report,
+                    row["settlementPoint"],
+                    start,
+                    minutes,
+                    row["settlementPointPrice"],
+                    "$/MWh",
+                    end,
+                )
             )
     for start, bucket in loads.items():
         if not bucket:  # All eight zones null: nothing measured, nothing rolled up.
             continue
         for zone, value in map_weather_zone_load(bucket).items():
-            _store(report, zone, start, 60, value, "MW", roll_published[start])
+            batch.append(_make_signal(report, zone, start, 60, value, "MW", roll_published[start]))
+    signals.add_many(batch)
     return max(1, int((payload.get("_meta") or {}).get("totalPages") or 1))
 
 

@@ -1,0 +1,6 @@
+{
+  "source": "/api/report/np3-233-cd/hourly_res_outage_cap?operatingDateFrom=2026-09-26&operatingDateTo=2026-09-28&size=1000&sort=operatingDate&page=1",
+  "retrieved_at_utc": "2026-09-27T03:56:02.190271+00:00",
+  "sha256": "02d0172a2dc5213de8031abc4b1a9a2452311247eee7045ac2c2e7517e2ac696",
+  "note": "Real Worker response. Retrieved without a market key."
+}

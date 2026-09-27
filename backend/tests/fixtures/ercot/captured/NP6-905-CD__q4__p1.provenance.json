@@ -1,0 +1,6 @@
+{
+  "source": "/api/report/np6-905-cd/spp_node_zone_hub?deliveryDateFrom=2026-09-26&deliveryDateTo=2026-09-27&settlementPoint=HB_HUBAVG&size=1000&sort=deliveryDate&page=1",
+  "retrieved_at_utc": "2026-09-27T03:55:34.740955+00:00",
+  "sha256": "5ec19c94a49150b0051c8ff48f20a109e6db8a9a5788a513567f69058f6f2124",
+  "note": "Real Worker response. Retrieved without a market key."
+}
