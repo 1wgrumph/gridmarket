@@ -1,6 +1,5 @@
 """Admin kill-switch routes (stretch): halt and resume by scope."""
 
-import hmac
 import json
 import os
 import sqlite3
@@ -9,9 +8,9 @@ from contextlib import contextmanager
 
 from fastapi import APIRouter, HTTPException, Request
 
-router = APIRouter()
+from . import api
 
-LOOPBACK = frozenset({"127.0.0.1", "::1", "testclient"})
+router = APIRouter()
 
 
 def _reject(code: str, status: int) -> None:
@@ -19,15 +18,7 @@ def _reject(code: str, status: int) -> None:
 
 
 def _guard(request: Request) -> None:
-    configured = os.getenv("GRIDMARKET_ADMIN_KEY", "")
-    if not configured or not hmac.compare_digest(
-        request.headers.get("Authorization", ""), "Bearer " + configured
-    ):
-        _reject("UNAUTHENTICATED", 401)
-    if "CF-Connecting-IP" in request.headers:
-        _reject("FORBIDDEN", 403)
-    if request.client and request.client.host not in LOOPBACK:
-        _reject("FORBIDDEN", 403)
+    api.admin_guard(request)
 
 
 @contextmanager

@@ -213,12 +213,12 @@ def test_seit_gm_adv_02_admin_halt_resume(market, scope: str) -> None:
     for path in ("halt", "resume"):
         denied = client.post(f"/v1/admin/{path}", json=body, headers=user)
         assert denied.status_code in (401, 403)
-    assert rows(db_path, "SELECT entry_type FROM events") == []
+    assert rows(db_path, "SELECT entry_type FROM events WHERE entry_type IN ('halt', 'lift')") == []
     remote = client.post(
         "/v1/admin/halt", json=body, headers={**admin, "CF-Connecting-IP": "203.0.113.1"}
     )
     assert remote.status_code == 403
-    assert rows(db_path, "SELECT entry_type FROM events") == []
+    assert rows(db_path, "SELECT entry_type FROM events WHERE entry_type IN ('halt', 'lift')") == []
 
     halt = client.post("/v1/admin/halt", json=body, headers=admin)
     assert halt.status_code in (200, 201, 204)

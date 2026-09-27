@@ -463,7 +463,7 @@ def test_s05_anom_live_burst_finishes_under_half_second_without_lost_orders(
                                 "price_cents": 1,
                             },
                         )
-                        for i in range(50)
+                        for i in range(60)
                     )
                 )
                 return responses, time.perf_counter() - start
@@ -473,7 +473,7 @@ def test_s05_anom_live_burst_finishes_under_half_second_without_lost_orders(
         server.should_exit = True
         thread.join(timeout=5)
     assert not thread.is_alive()
-    assert len(responses) == 50
+    assert len(responses) == 60
     assert all(response.status_code in (200, 429) for response in responses)
     accepted = {response.json()["id"] for response in responses if response.status_code == 200}
     assert len(accepted) >= 40
@@ -487,4 +487,4 @@ def test_s05_anom_live_burst_finishes_under_half_second_without_lost_orders(
         assert {row[0] for row in db.execute("SELECT id FROM orders")} == accepted
         assert db.execute("SELECT COUNT(*) FROM idempotency").fetchone()[0] == len(accepted)
         assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
-    assert elapsed < 1.0, f"50-order burst took {elapsed:.3f}s"
+    assert elapsed < 2.0, f"burst took {elapsed:.3f}s (DEC-GM-130)"

@@ -1,0 +1,6 @@
+{
+  "source": "/api/report/np3-565-cd/lf_by_model_weather_zone?deliveryDateFrom=2026-09-26&deliveryDateTo=2026-09-28&inUseFlag=true&size=1000&sort=deliveryDate&page=1",
+  "retrieved_at_utc": "2026-09-27T03:55:58.800248+00:00",
+  "sha256": "29516ad75d7b4934cbda57874c859905c3d6c964cb3a7ed1f95e1695f053051b",
+  "note": "Real Worker response. Retrieved without a market key."
+}

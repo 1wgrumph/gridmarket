@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, Request, Response
 
-from ..api import error_response
+from ..api import address, error_response
 from ..flex import Battery
 from . import engine
 from .catalog import CHI, POINTS, SOURCES, load_catalog
@@ -87,6 +87,7 @@ def _validated(payload: Any, catalog) -> dict:
     if (
         not isinstance(strategies, list)
         or not (1 <= len(strategies) <= 3)
+        or not all(isinstance(name, str) for name in strategies)
         or len(set(strategies)) != len(strategies)
         or any(name not in engine.POLICIES for name in strategies)
     ):
@@ -109,7 +110,11 @@ def _validated(payload: Any, catalog) -> dict:
         if not isinstance(raw, dict):
             raise Invalid("Asset must be an object")
         asset_id, provider_id = raw.get("asset_id"), raw.get("provider_id")
-        if not asset_id or not provider_id or asset_id in seen:
+        if not isinstance(asset_id, str) or not asset_id.strip():
+            raise Invalid("asset_id must be a non-empty string")
+        if not isinstance(provider_id, str) or not provider_id.strip():
+            raise Invalid("provider_id must be a non-empty string")
+        if asset_id in seen:
             raise Invalid("Assets need distinct non-empty ids")
         seen.add(asset_id)
         try:
@@ -153,8 +158,11 @@ def _validated(payload: Any, catalog) -> dict:
         }
     if not isinstance(load, dict) or load.get("unit", "kW") != "kW":
         raise Invalid("household_load must use kW")
+    raw_intervals = load.get("intervals")
+    if not isinstance(raw_intervals, list):
+        raise Invalid("household_load.intervals must be a list")
     intervals = []
-    for raw in load.get("intervals", []):
+    for raw in raw_intervals:
         if not isinstance(raw, dict):
             raise Invalid("load interval must be an object")
         start, end = _moment(raw.get("interval_start")), _moment(raw.get("interval_end"))
@@ -263,7 +271,7 @@ async def create_replay(request: Request):
         stored = _runs(request).get(run_id)
     if stored is not None:
         return Response(stored[0], media_type="application/json")
-    client = request.client.host if request.client else "unknown"
+    client = address(request)
     now = time.monotonic()
     with _lock(request):
         hits = _hits(request)

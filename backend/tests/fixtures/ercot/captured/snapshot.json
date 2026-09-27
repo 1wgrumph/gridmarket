@@ -1,0 +1,290 @@
+{
+  "asOf": "2026-09-27T03:53:40.756Z",
+  "ct": {
+    "date": "2026-09-26",
+    "hour": 22,
+    "minute": 53
+  },
+  "heNow": 23,
+  "errors": {},
+  "demand": {
+    "mw": 66285,
+    "timeEnding": "22:00",
+    "todayPeak": 78666,
+    "series": [
+      76715,
+      76125,
+      75413,
+      74499,
+      73678,
+      72871,
+      72566,
+      71990,
+      71205,
+      70477,
+      69981,
+      69247,
+      68586,
+      67791,
+      67148,
+      66285
+    ]
+  },
+  "hubs": [
+    {
+      "hub": "HB_NORTH",
+      "price": 32.75,
+      "hour": 23,
+      "interval": 3,
+      "series": [
+        30.04,
+        30.57,
+        30.37,
+        30.85,
+        31.65,
+        33.81,
+        32.93,
+        30.48,
+        30.91,
+        30.46,
+        31.79,
+        32.75
+      ]
+    },
+    {
+      "hub": "HB_HOUSTON",
+      "price": 33.42,
+      "hour": 23,
+      "interval": 3,
+      "series": [
+        33.58,
+        33.73,
+        32.03,
+        32.42,
+        32.25,
+        33.9,
+        33.07,
+        30.6,
+        31.09,
+        30.98,
+        32.38,
+        33.42
+      ]
+    },
+    {
+      "hub": "HB_SOUTH",
+      "price": 33.5,
+      "hour": 23,
+      "interval": 3,
+      "series": [
+        37.49,
+        37.56,
+        34.02,
+        33.93,
+        32.74,
+        33.97,
+        33.19,
+        30.61,
+        31.05,
+        31,
+        32.41,
+        33.5
+      ]
+    },
+    {
+      "hub": "HB_WEST",
+      "price": 33.32,
+      "hour": 23,
+      "interval": 3,
+      "series": [
+        52.8,
+        54.43,
+        43.05,
+        41.14,
+        35.39,
+        34.83,
+        34.31,
+        30.88,
+        31.02,
+        30.69,
+        32.1,
+        33.32
+      ]
+    }
+  ],
+  "dam": {
+    "hub": "HB_NORTH",
+    "hourEnding": 23,
+    "price": 37.18,
+    "dart": -4.43,
+    "dayPeak": 63.87
+  },
+  "sced": {
+    "timestamp": "2026-09-26T22:50:18",
+    "systemLambda": 33.21,
+    "reliabilityAdder": 0,
+    "onlineHSL": 83357,
+    "onlineLSL": 8964,
+    "lambdaSeries": [
+      30.78,
+      30.67,
+      30.88,
+      30.96,
+      31.93,
+      32.27,
+      32.58,
+      33.86,
+      33.12,
+      33.01,
+      35.37,
+      33.21
+    ],
+    "headroomMW": 17072,
+    "headroomPct": 25.8
+  },
+  "wind": {
+    "source": "wind",
+    "actualMW": 11311,
+    "actualHE": 21,
+    "forecastAtActualMW": 11767,
+    "errorMW": -455,
+    "forecastNowMW": 11251,
+    "capacityMW": 11588,
+    "series": [
+      13239,
+      13459,
+      13861,
+      14277,
+      14901,
+      13967,
+      13595,
+      12060,
+      10208,
+      8443,
+      9801,
+      11018,
+      9756,
+      7735,
+      6516,
+      6367,
+      6586,
+      8105,
+      8879,
+      10438,
+      11311,
+      11555,
+      11251,
+      11195
+    ]
+  },
+  "solar": {
+    "source": "solar",
+    "actualMW": 0,
+    "actualHE": 21,
+    "forecastAtActualMW": 0,
+    "errorMW": 0,
+    "forecastNowMW": 0,
+    "capacityMW": 1,
+    "series": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      630,
+      9918,
+      22755,
+      27324,
+      27907,
+      28097,
+      28500,
+      27451,
+      25000,
+      24746,
+      20442,
+      8358,
+      501,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "weather": {
+    "hourEnding": "22:00",
+    "zones": [
+      {
+        "zone": "Coast",
+        "tempF": 81.5
+      },
+      {
+        "zone": "East",
+        "tempF": 78.5
+      },
+      {
+        "zone": "Far West",
+        "tempF": 83
+      },
+      {
+        "zone": "North",
+        "tempF": 80.5
+      },
+      {
+        "zone": "North Central",
+        "tempF": 85
+      },
+      {
+        "zone": "South Central",
+        "tempF": 85.5
+      },
+      {
+        "zone": "Southern",
+        "tempF": 85.2
+      },
+      {
+        "zone": "West",
+        "tempF": 82.6
+      }
+    ],
+    "avgF": 82.7,
+    "maxF": 85.5,
+    "minF": 78.5
+  },
+  "checks": [
+    {
+      "id": "scarcity-2h",
+      "question": "P(HB_NORTH RT > $150 within 2h)",
+      "p": 0.02,
+      "inputs": {
+        "headroomPct": 25.8,
+        "reliabilityAdder": 0
+      },
+      "route": "log",
+      "engine": "baseline"
+    },
+    {
+      "id": "dart-north",
+      "question": "P(RT > DA at HB_NORTH, HE23)",
+      "p": 0.36,
+      "inputs": {
+        "dart": -4.43,
+        "daPrice": 37.18
+      },
+      "route": "log",
+      "engine": "baseline"
+    },
+    {
+      "id": "renew-shortfall",
+      "question": "P(renewables under-deliver next hour > 1 GW)",
+      "p": 0.64,
+      "inputs": {
+        "windErrorMW": -455,
+        "solarErrorMW": 0
+      },
+      "route": "review",
+      "engine": "baseline"
+    }
+  ]
+}

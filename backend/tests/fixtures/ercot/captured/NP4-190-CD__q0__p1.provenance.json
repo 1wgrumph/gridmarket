@@ -1,0 +1,6 @@
+{
+  "source": "/api/report/np4-190-cd/dam_stlmnt_pnt_prices?deliveryDateFrom=2026-09-26&deliveryDateTo=2026-09-27&settlementPoint=LZ_HOUSTON&size=1000&sort=deliveryDate&page=1",
+  "retrieved_at_utc": "2026-09-27T03:55:37.785419+00:00",
+  "sha256": "fbc36685e635a84b96eb51da25dab182b6712577757e616b4817293191a5c933",
+  "note": "Real Worker response. Retrieved without a market key."
+}

@@ -16,6 +16,8 @@ import sys
 import urllib.request
 from datetime import date, datetime, timedelta
 
+from .ercot import parse_hour_ending
+
 ROUTES = (
     "/api/report/np4-190-cd/dam_stlmnt_pnt_prices",
     "/api/report/np6-905-cd/spp_node_zone_hub",
@@ -105,19 +107,23 @@ def score_reports(reports: dict[str, list[dict]], days: int, end: str) -> dict |
     """Score history hours; None when fewer than `days` distinct dates score."""
     rt: dict[tuple[str, int, str], list[float]] = {}
     for row in reports["/api/report/np6-905-cd/spp_node_zone_hub"]:
-        key = (row["deliveryDate"], int(row["deliveryHour"]), row["settlementPoint"])
+        key = (
+            row["deliveryDate"],
+            parse_hour_ending(row.get("deliveryHour", row.get("hourEnding"))),
+            row["settlementPoint"],
+        )
         rt.setdefault(key, []).append(float(row["settlementPointPrice"]))
     means = {key: sum(vals) / len(vals) for key, vals in rt.items() if len(vals) == 4}
     dam = {
         (
             row["deliveryDate"],
-            int(str(row["hourEnding"]).split(":")[0]),
+            parse_hour_ending(row["hourEnding"]),
             row["settlementPoint"],
         ): float(row["settlementPointPrice"])
         for row in reports["/api/report/np4-190-cd/dam_stlmnt_pnt_prices"]
     }
     load = {
-        (row["deliveryDate"], int(str(row["hourEnding"]).split(":")[0]), name): float(row[name])
+        (row["deliveryDate"], parse_hour_ending(row["hourEnding"]), name): float(row[name])
         for row in reports["/api/report/np3-565-cd/lf_by_model_weather_zone"]
         if row.get("inUseFlag", True)
         for names in WEATHER.values()
@@ -125,7 +131,7 @@ def score_reports(reports: dict[str, list[dict]], days: int, end: str) -> dict |
         if row.get(name) is not None
     }
     outage = {
-        (row["operatingDate"], int(row["hourEnding"]), zone): float(row[column])
+        (row["operatingDate"], parse_hour_ending(row["hourEnding"]), zone): float(row[column])
         for row in reports["/api/report/np3-233-cd/hourly_res_outage_cap"]
         for zone, column in OUTAGE.items()
         if row.get(column) is not None
