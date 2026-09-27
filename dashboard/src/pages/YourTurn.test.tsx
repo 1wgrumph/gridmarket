@@ -117,7 +117,7 @@ describe("S72 Your turn (fixture: replay.json)", () => {
     render(<Replay />);
     await screen.findByRole("region", { name: /scoreboard · baseline/i });
     const why = await screen.findByRole("region", { name: /why this decision/i });
-    const home = within(why).getByRole("combobox", { name: /home/i }) as HTMLSelectElement;
+    const home = within(why).getByRole("combobox", { name: /^home/i }) as HTMLSelectElement;
     fireEvent.change(home, { target: { value: "home-7" } });
     await waitFor(() => expect(fetchMock.mock.calls.some(([path]) =>
       String(path).includes("/decisions") && String(path).includes("asset=home-7"))).toBe(true));
