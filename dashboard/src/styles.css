@@ -516,6 +516,9 @@ thead th{font-weight:500;letter-spacing:.02em}
 .empty.loading.reserve-market-trades{min-height:220px}
 .empty.loading.reserve-predictions-zones{min-height:600px}
 .empty.loading.reserve-predictions-checks{min-height:200px}
+.empty.loading.reserve-predictions-track{min-height:160px}
+.cal-bar{display:inline-block;width:120px;max-width:30vw;height:8px;border-radius:var(--r-1);background:var(--page);margin-right:8px;vertical-align:baseline}
+.cal-bar i{display:block;height:100%;border-radius:var(--r-1);background:var(--up)}
 .empty.loading.reserve-bots{min-height:300px}
 .market-trades{height:220px;overflow:auto}
 .empty.loading.reserve-profile{min-height:100vh}
