@@ -506,7 +506,7 @@
       "decided_at": "2026-09-26T05:18:24Z",
       "source": "Owner in chat",
       "owner_statement": "yes i just read the plan its approved",
-      "decision": "The owner read the plan package (manifest digest cea7bcbd…) and approved it directly. This confirms DEC-GM-044 and the integrated approval gate."
+      "decision": "The owner read the plan package (manifest digest cea7bcbd\u2026) and approved it directly. This confirms DEC-GM-044 and the integrated approval gate."
     },
     {
       "id": "DEC-GM-046",
@@ -838,7 +838,7 @@
       "id": "DEC-GM-087",
       "decided_at": "2026-09-26T12:21:00-05:00",
       "decided_by": "Orchestrator (delegate, DEC-GM-043)",
-      "decision": "Phase 1b LANDED: PR #9 merged to main as d6cfdc3 at 12:21 CDT (plan target 16:00). Candidate 3f5b964 (plus the docs-only main merge 36549fe); main's tree equals the gated tree. Assurance: one review (F1–F10) and one TE round (ATE-P1b-01..03), all repaired in round 1. The final deterministic gate (attempt 14, NWS off) had all 14 commands exit 0, with mutation at 80.28%. Merged lanes bots, router, views, pages, design, market2 and integration-1b were deleted (DEC-GM-040). Spec moves to phase 2 S12-E. Visual review was a typed gap here and is required in phase 2.",
+      "decision": "Phase 1b LANDED: PR #9 merged to main as d6cfdc3 at 12:21 CDT (plan target 16:00). Candidate 3f5b964 (plus the docs-only main merge 36549fe); main's tree equals the gated tree. Assurance: one review (F1\u2013F10) and one TE round (ATE-P1b-01..03), all repaired in round 1. The final deterministic gate (attempt 14, NWS off) had all 14 commands exit 0, with mutation at 80.28%. Merged lanes bots, router, views, pages, design, market2 and integration-1b were deleted (DEC-GM-040). Spec moves to phase 2 S12-E. Visual review was a typed gap here and is required in phase 2.",
       "rationale": "Deterministic verification decided after the single repair round; no second review (policy).",
       "reversible": true
     },
@@ -975,7 +975,7 @@
       "id": "DEC-GM-105",
       "decided_at": "2026-09-26T15:19:00-05:00",
       "decided_by": "Owner (in chat) + Orchestrator (delegate)",
-      "decision": "S62 scope adds the ticker: Jordan's God's Eye top bar becomes a continuous right-to-left ticker of hub prices, system lambda, plants/GW and latest GridMarket trades from data the page already loads, about 50 px/s with duration computed from content width, pause on hover/focus, static under prefers-reduced-motion, unloaded values omitted (never '—'), camera LAT/LON/ALT moved out of the ticker. Evidence: measured px/s (target 40-60).",
+      "decision": "S62 scope adds the ticker: Jordan's God's Eye top bar becomes a continuous right-to-left ticker of hub prices, system lambda, plants/GW and latest GridMarket trades from data the page already loads, about 50 px/s with duration computed from content width, pause on hover/focus, static under prefers-reduced-motion, unloaded values omitted (never '\u2014'), camera LAT/LON/ALT moved out of the ticker. Evidence: measured px/s (target 40-60).",
       "owner_quote": "I think Jordan was trying to make a ticker on his web page lets fix it so that it moves also at a good rate",
       "reversible": true
     },
@@ -1267,6 +1267,18 @@
       "decided_by": "Orchestrator (delegate, coordinating S18)",
       "decision": "All lanes merged (df81a1a). The final gate failed one timing-dependent dashboard test (phase1b.test.tsx page-wide /bid/i query matching 'No bids' before the book loads; 190/190 at 8d71d0f). Test-only repair on integration-stretch by the Test Implementer route (Claude Opus 5.5 medium): scope the queries to the book panel and await load, 10 consecutive passes, then the full gate and the stretch candidate. Assurance launches when the candidate exists.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-147",
+      "at": "2026-09-27T02:52:00Z",
+      "by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "Stretch assurance on candidate 5276d7f (review REPAIR_REQUIRED 4, Test Engineer REPAIRABLE_FAILURE 5 findings + 8 gaps, UX critique REPAIR_REQUIRED 12 findings, ORC-1) gets its one repair round as three parallel slices from 5276d7f: RP-A backend/worker/gates (review 1,2,4/ORC-1; TE F2,F3,F4; UX F4), RP-B dashboard (review 3; TE F1; UX F1-F3,F5-F12), RP-C fixture provenance (TE F5). Then IE merge, deterministic gates, PR to main, v0.4.0. No second review unless scope changes. TE gaps G1-G8 carried as typed gaps.",
+      "refs": [
+        "candidates/stretch-assurance/*",
+        "packets/RP/RP-A.md",
+        "packets/RP/RP-B.md",
+        "packets/RP/RP-C.md"
+      ]
     }
   ],
   "stages": {
