@@ -35,7 +35,7 @@ STRATEGY_RULES = {
     },
     "esr_informed": {
         "display_name": "Battery-aware",
-        "rules": "PriceBased offer rule (procurement only, DAM >= Q75) with offers capped at half unreserved energy above reserve, also capped by discharge power; self_supply at RT >= DAM Q50 and charge at current DAM <= Q50; overlap (Q25 >= Q75, as PriceBased) holds. Missing ESR/RT records PriceBased fallback; half-energy cap remains. ESR trend does not add offers under A16.",
+        "rules": "PriceBased offer rule (procurement only, delivery-hour DAM >= Q75) with the full feasible offer each procurement quarter, capped by discharge power; offers and self-supply never leave less than reserve plus the remaining-procurement budget (the home's 25%-of-rated share per remaining quarter, from D-1 DAM). Self_supply only from surplus above reserve plus budget at latest eligible RT >= DAM Q75; charge at current-hour DAM <= median (Q50). Overlap (Q25 >= Q75, as PriceBased) holds. Missing ESR/RT records PriceBased fallback. ESR trend does not add offers.",
     },
 }
 

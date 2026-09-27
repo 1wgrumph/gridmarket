@@ -236,20 +236,26 @@ not ERCOT clearing or a live order executor.
   pending. `hold` and `preserve_backup` neither dispatch nor cancel commitments.
   Returned config includes a complete `state_snapshot` (including zero load and
   reservations); decision inputs carry all DAM observations used by thresholds.
-- FixedSchedule charges 00:00–06:00 Central and offers for next-quarter delivery
-  17:00–21:00. PriceBased requires a complete eligible local-day hourly DAM
-  vector (23/24/25 hours), uses nearest-rank Q25/Q75, prioritizes offers over
-  charging, and holds for overlapping quantiles or unavailable DAM. EsrInformed
-  additionally offers on eligible RT >= Q75 and decreasing absolute charging
-  across the latest two contiguous complete 15-minute ERCOT ESR bins. Missing
-  RT/ESR explicitly falls back to PriceBased. This is a simulated heuristic,
-  not an ERCOT scarcity declaration. Offers cannot cross the local day boundary.
+- FixedSchedule charges 00:00–06:00 Central, offers for next-quarter delivery
+  into the DAM procurement schedule, and self-supplies 17:00–21:00 when not
+  delivering. PriceBased requires a complete eligible local-day hourly DAM
+  vector (23/24/25 hours), uses nearest-rank Q25/Q75, offers only into
+  procurement quarters at delivery-hour DAM >= Q75, self-supplies at latest
+  eligible RT >= Q75, charges at current-hour DAM <= Q25, and holds for
+  overlapping quantiles or unavailable DAM. EsrInformed (Battery-aware, A16 as
+  amended by DEC-GM-136) keeps the PriceBased offer rule with full feasible
+  offers, never offers or self-supplies below reserve plus the
+  remaining-procurement budget (the home's 25%-of-rated share per remaining
+  quarter, from D-1 DAM), self-supplies only surplus at RT >= Q75, and charges
+  at current-hour DAM <= median. Missing RT/ESR explicitly records a PriceBased
+  fallback. This is a simulated heuristic, not an ERCOT scarcity declaration.
+  Offers cannot cross the local day boundary.
 
 S69 owns procurement, accepted commitments, settlement, breach counting, and the
 Decimal day-component ledger with HALF_EVEN posting. C2 does not implement those
 APIs or claim independent review, real-source qualification, or replay acceptance.
 
-## Replay engine and API (C3, DEC-GM-113; A16 DEC-GM-127)
+## Replay engine and API (C3, DEC-GM-113; A16 DEC-GM-127, amended DEC-GM-136)
 
 `gridmarket_server.replay` runs a labelled simulated peak-flex procurement
 programme on captured ERCOT observations; it is not ERCOT clearing. One
@@ -285,15 +291,16 @@ A16 policies use the same parameters on every day, with no future RT inputs:
   offer never blocks self-supply. When no offer is made, self-supply at
   latest eligible RT >= Q75, otherwise charge at current-hour DAM <= Q25.
   Offer has precedence over self-supply and charge.
-- `esr_informed`, displayed as **Battery-aware**: the PriceBased offer rule
-  (procurement quarters only, delivery-hour DAM >= Q75), with offers
-  capped at half the unreserved AC energy above reserve in each procurement
-  quarter, also capped by rated power; self-supply at latest eligible
-  RT >= DAM median (Q50, nearest rank) and charge at current-hour
-  DAM <= Q50. Q25 >= Q75 overlap holds, as PriceBased. ESR trends no
-  longer add offers. Missing eligible ESR/RT records a PriceBased
-  fallback; the half-energy cap remains active. Each run returns these
-  rules under `strategy_rules`.
+- `esr_informed`, displayed as **Battery-aware** (A16 as amended by DEC-GM-136):
+  the PriceBased offer rule (procurement quarters only, delivery-hour
+  DAM >= Q75) with the full feasible offer each procurement quarter, capped by
+  rated power; offers and self-supply never leave less than reserve plus the
+  remaining-procurement budget (the home's 25%-of-rated share per remaining
+  quarter, from D-1 DAM). Self-supply only from surplus above reserve plus
+  budget at latest eligible RT >= DAM Q75; charge at current-hour DAM <= DAM
+  median (Q50, nearest rank). Q25 >= Q75 overlap holds, as PriceBased. ESR
+  trends do not add offers. Missing eligible ESR/RT records a PriceBased
+  fallback. Each run returns these rules under `strategy_rules`.
 
 `self_supply` serves at most the current home's simulated AC load and never
 exports. Current commitments settle first and block self-supply and charging

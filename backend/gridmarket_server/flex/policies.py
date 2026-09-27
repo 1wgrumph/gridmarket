@@ -1,4 +1,4 @@
-"""DEC-GM-127 A16: fixed, price-based and battery-aware simulated policies."""
+"""DEC-GM-136 (amends A16): fixed, price-based and budget-guarded battery-aware policies."""
 
 from copy import deepcopy
 from dataclasses import dataclass
@@ -93,6 +93,11 @@ def procurement_hours(view, zone, now):
     )
 
 
+def remaining_procurement_quarters(procurement, now):
+    """DEC-GM-136: procurement quarter starts strictly after the decision time."""
+    return sum(1 for hour in procurement for step in range(4) if hour + step * QUARTER > now)
+
+
 def price_request(view, zone, now, *, procurement, charge_p, offer_p, self_p):
     """DEC-GM-127 (a)(b): offers only into procurement; per-policy quantiles."""
     start, end = day_bounds(now)
@@ -156,6 +161,10 @@ class FixedSchedule:
         )
         return any(hour <= now + QUARTER < hour + timedelta(hours=1) for hour in hours)
 
+    def procurement_budget(self, battery, view, zone, now):
+        """Remaining procurement quarters and per-quarter DC kWh share, or None."""
+        return
+
     def request(self, view, zone, now):
         if self.procuring(view, zone, now):
             return "offer_flex", "Next-quarter delivery is in the DAM procurement schedule.", []
@@ -182,22 +191,31 @@ class FixedSchedule:
             view = information
         else:
             view = information.at(now, feed_interrupts=feed_interrupts)
-        settings["procurement_hours"] = [
-            hour.isoformat()
-            for hour in (
-                self.procurement
-                if self.procurement is not None
-                else procurement_hours(view, settings["zone"], now)
-            )
-        ]
+        proc_hours = (
+            self.procurement
+            if self.procurement is not None
+            else procurement_hours(view, settings["zone"], now)
+        )
+        settings["procurement_hours"] = [hour.isoformat() for hour in proc_hours]
         settings["offer_energy_fraction"] = self.offer_fraction
         action, reason, inputs = self.request(view, settings["zone"], now)
         start = now + QUARTER if action == "offer_flex" else now
+        held_offer = held_self = ZERO
+        budget = self.procurement_budget(battery, view, settings["zone"], now)
+        if budget is not None:
+            count, per_quarter = budget
+            held_self = count * per_quarter
+            # The offer itself is the target quarter's budgeted delivery.
+            target = any(hour <= start < hour + timedelta(hours=1) for hour in proc_hours)
+            held_offer = (count - bool(target)) * per_quarter
+            settings["remaining_procurement_quarters"] = count
+            settings["procurement_budget_dc_kwh"] = held_self
         attempted = False
         kw = ZERO
         if action == "offer_flex":
             available = max(
-                battery.soc_kwh - battery.min_reserve_kwh - battery.reserved_dc_kwh, ZERO
+                battery.soc_kwh - battery.min_reserve_kwh - battery.reserved_dc_kwh - held_offer,
+                ZERO,
             )
             kw = min(
                 battery.feasible_discharge_kw(HOURS),
@@ -214,7 +232,15 @@ class FixedSchedule:
                 action = "preserve_backup" if attempted else "hold"
                 reason += " Reserve, reservations or discharge power prevent a new offer."
         elif action == "self_supply":
-            kw = min(load, battery.feasible_discharge_kw(HOURS)) if not commitment else ZERO
+            surplus = max(
+                battery.soc_kwh - battery.min_reserve_kwh - battery.reserved_dc_kwh - held_self,
+                ZERO,
+            )
+            kw = (
+                min(load, battery.feasible_discharge_kw(HOURS), surplus * battery.eta_d / HOURS)
+                if not commitment
+                else ZERO
+            )
             if not kw:
                 action, reason = (
                     "hold",
@@ -304,9 +330,23 @@ class PriceBased(FixedSchedule):
 
 
 class EsrInformed(PriceBased):
-    policy_version = "EsrInformed/DEC-GM-127-A16"
-    charge_p, offer_p, self_p = 50, 75, 50
-    offer_fraction = Decimal("0.5")
+    policy_version = "EsrInformed/DEC-GM-136"
+    charge_p, offer_p, self_p = 50, 75, 75
+    offer_fraction = Decimal(1)
+
+    def procurement_budget(self, battery, view, zone, now):
+        """DEC-GM-136: hold the home's share of remaining procurement demand.
+
+        Programme demand per quarter is 25% of fleet rated kW (engine), so the
+        home's expected delivery is 25% of its own rated kW per remaining
+        procurement quarter, in DC kWh. Procurement hours come from D's DAM
+        vector, published D-1; no future RT is used.
+        """
+        hours = (
+            self.procurement if self.procurement is not None else procurement_hours(view, zone, now)
+        )
+        per_quarter = battery.max_discharge_kw * HOURS * Decimal("0.25") / battery.eta_d
+        return remaining_procurement_quarters(hours, now), per_quarter
 
     def request(self, view, zone, now):
         action, reason, inputs = super().request(view, zone, now)
@@ -332,4 +372,4 @@ class EsrInformed(PriceBased):
             reason = "PriceBased fallback: missing eligible ESR or RT inputs. " + reason
         else:
             inputs += [source_input(esr[0], "esr_previous"), source_input(esr[1], "esr_latest")]
-        return action, "Battery-aware: offer at most half available energy. " + reason, inputs
+        return action, "Battery-aware: reserve-plus-budget guard. " + reason, inputs
