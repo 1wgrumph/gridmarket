@@ -87,8 +87,9 @@ describe('X3 forecast track record', () => {
     responses['/v1/router/history'] = richHistory();
     responses['/v1/router'] = richRouter();
     const panel = await trackPanel();
-    expect(await within(panel).findByText(/aggregate brier 0\.20/i)).toBeTruthy();
-    expect(within(panel).getByText(/20 resolved events/i)).toBeTruthy();
+    // XR-B (DEC-GM-152): the headline is the mean of the 20 listed events (4.2 / 20), not /v1/router brier_mean.
+    expect(await within(panel).findByText(/aggregate brier 0\.21/i)).toBeTruthy();
+    expect(within(panel).getByText(/the 20 resolved events listed/i)).toBeTruthy();
   });
 
   it('shows calibration bins with observed frequency and event-level predicted vs happened', async () => {

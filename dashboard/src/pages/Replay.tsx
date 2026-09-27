@@ -54,6 +54,7 @@ const fmtInput = (value: string | number): string => {
   return text.length > 80 ? `${text.slice(0, 80)}…` : text;
 };
 const hashParams = () => new URLSearchParams(window.location.hash.split('?')[1] ?? '');
+const onReplay = () => (window.location.hash || '#/replay').split('?')[0] === '#/replay';
 const hashDay = () => hashParams().get('day') || DEFAULT_DAY;
 const hashInt = (key: string, fallback: number, min: number, max: number) => {
   const value = Number(hashParams().get(key));
@@ -61,6 +62,8 @@ const hashInt = (key: string, fallback: number, min: number, max: number) => {
 };
 /** Silent URL sync (no hashchange): slider state stays shareable and survives Back. */
 const writeHash = (mutate: (p: URLSearchParams) => void) => {
+  // Replay state belongs to Replay: never write it onto the page being navigated to.
+  if (!onReplay()) return;
   const path = (window.location.hash || '#/replay').split('?')[0];
   const params = hashParams();
   mutate(params);
@@ -208,7 +211,7 @@ export default function Replay() {
     get<{ days: DayInfo[] }>('/v1/replay/days')
       .then(body => setDays(body.days))
       .catch(reason => setDaysError(messageOf(reason)));
-    const sync = () => { const d = hashDay(); if (d) setDay(d); };
+    const sync = () => { if (onReplay()) setDay(hashDay()); };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
   }, []);

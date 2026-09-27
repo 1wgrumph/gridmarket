@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { contextLink, setViewQuery, useViewQuery } from '../components/navigation';
 import Panel from '../components/Panel';
+import { WorkerHint } from '../components/LiveGridPanel';
 import { missingInputs } from '../components/predictionInputs';
 import { forecastAvailable, round1 } from '../format';
 import { usePredictions, useResource } from '../hooks';
@@ -77,13 +78,14 @@ function Calibration({ events }: { events: HistoryEvent[] }) {
   </table></div>;
 }
 
-function TrackRecord({ history, mean }: { history: History; mean: number | null | undefined }) {
+function TrackRecord({ history }: { history: History }) {
   const events = history.events;
   if (events.length < MIN_RESOLVED)
-    return <div className="empty">Not enough resolved forecasts yet: {events.length} of {MIN_RESOLVED}.</div>;
-  const aggregate = mean ?? events.reduce((sum, e) => sum + e.brier, 0) / events.length;
+    return <div className="empty"><span>Not enough resolved forecasts yet: {events.length} of {MIN_RESOLVED}. Forecasts resolve against ERCOT prices once the feed is connected<WorkerHint/></span></div>;
+  // The page is the newest `limit` events; the headline covers exactly the rows listed.
+  const aggregate = events.reduce((sum, e) => sum + e.brier, 0) / events.length;
   return <>
-    <p className="panel-copy">Aggregate Brier {aggregate.toFixed(2)} across {events.length} resolved events · lower is better, 0 is perfect.</p>
+    <p className="panel-copy">Aggregate Brier {aggregate.toFixed(2)} across the {events.length} resolved events listed · lower is better, 0 is perfect.</p>
     <Calibration events={events}/>
     <div className="table-scroll"><table className="data-table" aria-label="Resolved events">
       <thead><tr><th scope="col">Event</th><th scope="col" className="end">Predicted</th><th scope="col">Happened</th><th scope="col" className="end">Brier</th><th scope="col">Resolved</th></tr></thead>
@@ -161,7 +163,7 @@ export default function Predictions() {
       <Panel title="Forecast track record" index="03" className="span-all" busy={history.loading}
         meta={<><Stale feed={history}/><span>{history.data ? `${history.data.events.length} RESOLVED` : 'TRACK RECORD'}</span></>}>
         <FeedBody feed={history} reserve="reserve-predictions-track">
-          {history.data && <TrackRecord history={history.data} mean={router.data?.brier_mean}/>}
+          {history.data && <TrackRecord history={history.data}/>}
         </FeedBody>
       </Panel>
     </div>

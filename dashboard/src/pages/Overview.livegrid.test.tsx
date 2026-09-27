@@ -4,69 +4,34 @@
  * Verifies real ERCOT signals plotted as live charts with history from
  * GET /v1/signals/history (bounded 48 h):
  * 1. Panel header says 'Real ERCOT data' with source, last published time, 24 h / 48 h picker.
- * 2. Real-time prices for HB_HOUSTON, HB_NORTH, HB_SOUTH, HB_WEST, system lambda, and day-ahead dashed line.
- * 3. ERCOT-total demand against today's peak as a small second chart.
+ * 2. Real-time prices for HB_HOUSTON, HB_NORTH, HB_SOUTH, HB_WEST (SNAPSHOT-HUBS), system lambda
+ *    (SNAPSHOT-SCED), and the HB_HUBAVG day-ahead dashed line (NP4-190-CD). XR-B, DEC-GM-152.
+ * 3. ERCOT actual demand (SNAPSHOT-DEMAND:ERCOT) against today's peak as a small second chart.
  * 4. Clicking hub line or legend item opens Market filtered to that zone (FLOW-027).
  * 5. 'Download CSV' button exports exactly plotted series with header row.
  */
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // @ts-ignore TS2732: Vitest loads JSON; frozen tsconfig omits resolveJsonModule.
 import fixture from '../fixtures/overview.json';
+// @ts-ignore TS2732: Vitest loads JSON; frozen tsconfig omits resolveJsonModule.
+import livegrid from '../fixtures/livegrid.json';
 import Overview from './Overview';
 
-type HistoryRow = {
-  interval_start: string;
-  interval_end: string;
-  value: number;
-  unit: string;
-  published_at: string;
-  stale: boolean;
-};
-
-const BASE_TIME = '2026-09-26T14:00:00Z';
-const PUBLISHED_TIME = '2026-09-26T14:04:10Z';
-
-function makeHourRows(count: number, baseValue: number, unit = '$/MWh', stepMinutes = 60): HistoryRow[] {
-  const base = Date.parse(BASE_TIME);
-  const rows: HistoryRow[] = [];
-  for (let i = count; i >= 1; i--) {
-    const startMs = base - i * stepMinutes * 60_000;
-    const endMs = startMs + stepMinutes * 60_000;
-    rows.push({
-      interval_start: new Date(startMs).toISOString(),
-      interval_end: new Date(endMs).toISOString(),
-      value: baseValue + (count - i) * 1.5,
-      unit,
-      published_at: PUBLISHED_TIME,
-      stale: false,
-    });
-  }
-  return rows;
-}
-
-const mockHistoryData: Record<string, HistoryRow[]> = {
-  'NP6-905-CD:HB_HOUSTON': makeHourRows(24, 45.0),
-  'NP6-905-CD:HB_NORTH': makeHourRows(24, 48.0),
-  'NP6-905-CD:HB_SOUTH': makeHourRows(24, 42.0),
-  'NP6-905-CD:HB_WEST': makeHourRows(24, 52.0),
-  'NP6-905-CD:lambda': makeHourRows(24, 38.0),
-  'NP4-190-CD:HB_HOUSTON': makeHourRows(24, 44.0),
-  'NP4-190-CD:HB_NORTH': makeHourRows(24, 47.0),
-  // NP3-565-CD stores per-LZ rollups; the panel sums them to the ERCOT total.
-  'NP3-565-CD:LZ_HOUSTON': makeHourRows(24, 17000.0, 'MW'),
-  'NP3-565-CD:LZ_NORTH': makeHourRows(24, 20000.0, 'MW'),
-  'NP3-565-CD:LZ_SOUTH': makeHourRows(24, 18000.0, 'MW'),
-  'NP3-565-CD:LZ_WEST': makeHourRows(24, 13000.0, 'MW'),
-};
+// XR-B (DEC-GM-152): rows for the keys the backend stores, from real Worker captures
+// run through the backend parsers (fixtures/livegrid.PROVENANCE.md).
+const mockHistoryData = (livegrid as { series: Record<string, unknown[]> }).series;
+const CAPTURE = Date.parse('2026-09-27T03:55:00Z');
+const settle = () => act(() => vi.advanceTimersByTimeAsync(10_000));
 
 let requestedUrls: string[] = [];
-let failFirstLzNorth = true;
+let failFirstDemand = true;
 
 beforeEach(() => {
   window.location.hash = '#/';
   requestedUrls = [];
-  failFirstLzNorth = true;
+  failFirstDemand = true;
+  vi.useFakeTimers({ now: CAPTURE, shouldAdvanceTime: true });
   vi.stubGlobal('ResizeObserver', class {
     observe() {}
     unobserve() {}
@@ -84,8 +49,8 @@ beforeEach(() => {
       const zone = parsed.searchParams.get('zone') ?? '';
       const key = `${reportId}:${zone}`;
       // The Overview burst can 429; the panel retries once (Retry-After 0).
-      if (key === 'NP3-565-CD:LZ_NORTH' && failFirstLzNorth) {
-        failFirstLzNorth = false;
+      if (key === 'SNAPSHOT-DEMAND:ERCOT' && failFirstDemand) {
+        failFirstDemand = false;
         return {
           ok: false,
           status: 429,
@@ -112,6 +77,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   window.location.hash = '';
 });
@@ -119,6 +85,7 @@ afterEach(() => {
 describe('Live grid panel (X1 extras wave, DEC-GM-142)', () => {
   it('1. renders panel header with "Real ERCOT data", source, last published time in Central Time, and 24 h picker default', async () => {
     render(<Overview />);
+    await settle();
     const panel = await screen.findByRole('region', { name: /live grid/i });
     expect(panel).toBeDefined();
 
@@ -126,7 +93,8 @@ describe('Live grid panel (X1 extras wave, DEC-GM-142)', () => {
     expect(await panelScope.findByText(/Real ERCOT data/i)).toBeDefined();
     expect((await panelScope.findAllByText(/ERCOT/i)).length).toBeGreaterThan(0);
     // Central time formatting on published time
-    expect(await panelScope.findByText(/CT/i)).toBeDefined();
+    // Latest snapshot publication (2026-09-27T03:53:40Z) in Central Time.
+    expect(await panelScope.findByText('Sep 26, 10:53 PM CT')).toBeDefined();
 
     // Range picker defaults to 24 h
     const btn24 = await panelScope.findByRole('button', { name: /24\s*h/i });
@@ -138,6 +106,7 @@ describe('Live grid panel (X1 extras wave, DEC-GM-142)', () => {
 
   it('2. fetches and plots real-time prices for hubs and system lambda plus day-ahead dashed line', async () => {
     render(<Overview />);
+    await settle();
     const panel = await screen.findByRole('region', { name: /live grid/i });
     const panelScope = within(panel);
 
@@ -156,20 +125,22 @@ describe('Live grid panel (X1 extras wave, DEC-GM-142)', () => {
     });
   });
 
-  it('3. renders ERCOT-total demand against today\'s peak as a small second chart', async () => {
+  it('3. renders ERCOT actual demand against today\'s peak as a small second chart', async () => {
     render(<Overview />);
+    await settle();
     const panel = await screen.findByRole('region', { name: /live grid/i });
     const panelScope = within(panel);
 
-    expect(await panelScope.findByText(/ERCOT Total Demand|Demand/i)).toBeDefined();
+    expect(await panelScope.findByRole('heading', { name: /ERCOT actual demand/i })).toBeDefined();
     expect(await panelScope.findByText(/today's peak|peak/i)).toBeDefined();
     expect((await panelScope.findAllByText(/MW/i)).length).toBeGreaterThan(0);
-    // Peak is the max of the summed LZ rollups: 68000 + 4 * 23 * 1.5 = 68138.
-    expect(await panelScope.findByText(/68,138\s*MW/i)).toBeDefined();
+    // Peak of the captured SNAPSHOT-DEMAND series on the capture's Central day.
+    expect(await panelScope.findByText(/76,715\s*MW/i)).toBeDefined();
   });
 
   it('4. clicking a hub line or legend item opens Market filtered to that zone (FLOW-027)', async () => {
     render(<Overview />);
+    await settle();
     const panel = await screen.findByRole('region', { name: /live grid/i });
     const panelScope = within(panel);
 
@@ -182,41 +153,32 @@ describe('Live grid panel (X1 extras wave, DEC-GM-142)', () => {
   });
 
   it('5. "Download CSV" button exports exactly the plotted series with the required header row', async () => {
-    const createObjectURL = vi.fn().mockReturnValue('blob:mock-csv');
-    const revokeObjectURL = vi.fn();
-    (globalThis as any).URL.createObjectURL = createObjectURL;
-    (globalThis as any).URL.revokeObjectURL = revokeObjectURL;
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const blobs: string[] = [];
+    vi.stubGlobal('URL', Object.assign(class extends URL {}, {
+      createObjectURL: (blob: { parts?: string[] }) => { blobs.push(String(blob.parts?.join(''))); return 'blob:mock-csv'; },
+      revokeObjectURL: () => {},
+    }));
+    const RealBlob = Blob;
+    vi.stubGlobal('Blob', class extends RealBlob { parts: string[]; constructor(parts: string[], o?: BlobPropertyBag) { super(parts, o); this.parts = parts; } });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
 
     render(<Overview />);
+    await settle();
     const panel = await screen.findByRole('region', { name: /live grid/i });
     const panelScope = within(panel);
-
-    const downloadBtn = await panelScope.findByRole('button', { name: /download csv/i });
-    expect(downloadBtn).toBeDefined();
     // Await loaded data (rule 3): the CSV must cover the plotted series.
-    await panelScope.findByText(/68,138\s*MW/i);
+    await panelScope.findByText(/76,715\s*MW/i);
+    fireEvent.click(panelScope.getByRole('button', { name: /download csv/i }));
+    await panelScope.findByText(/^Downloaded gridmarket-live-grid-24h-/);
 
-    let capturedBlob: Blob | null = null;
-    vi.spyOn(globalThis, 'Blob').mockImplementation(function (content: any, options: any) {
-      capturedBlob = { content, options } as any;
-      return capturedBlob as any;
-    });
-
-    fireEvent.click(downloadBtn);
-
-    expect(createObjectURL).toHaveBeenCalled();
-    expect(capturedBlob).not.toBeNull();
-    const csvText = (capturedBlob as any).content.join('');
-    const lines = csvText.trim().split('\n');
-    expect(lines[0].trim()).toBe('timestamp_utc,timestamp_ct,series,value,unit,published_at');
-    expect(lines.length).toBeGreaterThan(1);
-    // Data rows contain expected units and series
-    expect(csvText).toContain('HB_HOUSTON');
-    expect(csvText).toContain('$/MWh');
-    // Demand rows carry the summed ERCOT total (last interval: 68138 MW).
-    expect(csvText).toContain('ERCOT Total Demand');
-    expect(csvText).toContain('68138');
+    const lines = blobs[0].trim().split('\r\n');
+    expect(lines[0]).toBe('interval_start_utc,interval_start_central,series,report_id,subject,value,unit,published_at_utc,source');
+    // Every stored row of every plotted series, one CSV row each.
+    const total = Object.values(mockHistoryData).reduce((n, rows) => n + rows.length, 0);
+    expect(lines.length - 1).toBe(total);
+    for (const label of ['HB_HOUSTON', 'HB_NORTH', 'HB_SOUTH', 'HB_WEST', 'system lambda', 'HB_HUBAVG day-ahead', 'ERCOT actual demand'])
+      expect(lines.some(l => l.split(',')[2] === label)).toBe(true);
+    expect(blobs[0]).toContain(',ERCOT actual demand,SNAPSHOT-DEMAND,ERCOT,66285,MW,');
   });
 
   it('6. fetches history series one at a time so the Overview burst stays under the per-IP bucket', async () => {
@@ -243,9 +205,10 @@ describe('Live grid panel (X1 extras wave, DEC-GM-142)', () => {
       return { ok: true, status: 200, json: async () => body };
     }));
     render(<Overview />);
-    // Loaded: the demand peak needs all four LZ rollups summed.
-    await screen.findByText(/68,138\s*MW/i, {}, { timeout: 5000 });
-    expect(historyCalls).toBe(13);
+    await settle();
+    // Loaded: the demand peak is the last series read.
+    await screen.findByText(/76,715\s*MW/i);
+    expect(historyCalls).toBe(7);
     expect(maxInFlight).toBe(1);
   });
 });

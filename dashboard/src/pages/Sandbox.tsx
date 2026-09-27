@@ -150,6 +150,7 @@ export default function Sandbox() {
       if (!product) throw new Error('No future product is open right now; try again at the next hour.');
       await send<Order>('POST', '/v1/orders', { product_id: product.id, side: 'buy', quantity: 1, price_cents: 10 }, key.api_key, crypto.randomUUID());
       setPlaced(`Placed: buy 1 ${product.symbol} @ $0.10.`);
+      completeFirstStep(3);
       setRefresh(n => n + 1);
     } catch (e) { setError(reason(e)); }
     finally { setPlacing(false); }

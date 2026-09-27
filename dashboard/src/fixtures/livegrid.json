@@ -1,0 +1,814 @@
+{
+ "window": {
+  "start": "2026-09-26T03:53:40.756000Z",
+  "end": "2026-09-27T03:54:40.756000Z"
+ },
+ "series": {
+  "SNAPSHOT-HUBS:HB_HOUSTON": [
+   {
+    "interval_start": "2026-09-27T02:58:40.756000Z",
+    "interval_end": "2026-09-27T03:03:40.756000+00:00",
+    "value": 33.58,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T02:58:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:03:40.756000Z",
+    "interval_end": "2026-09-27T03:08:40.756000+00:00",
+    "value": 33.73,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:03:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:08:40.756000Z",
+    "interval_end": "2026-09-27T03:13:40.756000+00:00",
+    "value": 32.03,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:08:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:13:40.756000Z",
+    "interval_end": "2026-09-27T03:18:40.756000+00:00",
+    "value": 32.42,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:13:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:18:40.756000Z",
+    "interval_end": "2026-09-27T03:23:40.756000+00:00",
+    "value": 32.25,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:18:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:23:40.756000Z",
+    "interval_end": "2026-09-27T03:28:40.756000+00:00",
+    "value": 33.9,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:23:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:28:40.756000Z",
+    "interval_end": "2026-09-27T03:33:40.756000+00:00",
+    "value": 33.07,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:28:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:33:40.756000Z",
+    "interval_end": "2026-09-27T03:38:40.756000+00:00",
+    "value": 30.6,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:33:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:38:40.756000Z",
+    "interval_end": "2026-09-27T03:43:40.756000+00:00",
+    "value": 31.09,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:38:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:43:40.756000Z",
+    "interval_end": "2026-09-27T03:48:40.756000+00:00",
+    "value": 30.98,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:43:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:48:40.756000Z",
+    "interval_end": "2026-09-27T03:53:40.756000+00:00",
+    "value": 32.38,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:48:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:53:40.756000Z",
+    "interval_end": "2026-09-27T03:58:40.756000+00:00",
+    "value": 33.42,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:53:40.756000Z",
+    "stale": false
+   }
+  ],
+  "SNAPSHOT-HUBS:HB_NORTH": [
+   {
+    "interval_start": "2026-09-27T02:58:40.756000Z",
+    "interval_end": "2026-09-27T03:03:40.756000+00:00",
+    "value": 30.04,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T02:58:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:03:40.756000Z",
+    "interval_end": "2026-09-27T03:08:40.756000+00:00",
+    "value": 30.57,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:03:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:08:40.756000Z",
+    "interval_end": "2026-09-27T03:13:40.756000+00:00",
+    "value": 30.37,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:08:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:13:40.756000Z",
+    "interval_end": "2026-09-27T03:18:40.756000+00:00",
+    "value": 30.85,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:13:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:18:40.756000Z",
+    "interval_end": "2026-09-27T03:23:40.756000+00:00",
+    "value": 31.65,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:18:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:23:40.756000Z",
+    "interval_end": "2026-09-27T03:28:40.756000+00:00",
+    "value": 33.81,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:23:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:28:40.756000Z",
+    "interval_end": "2026-09-27T03:33:40.756000+00:00",
+    "value": 32.93,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:28:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:33:40.756000Z",
+    "interval_end": "2026-09-27T03:38:40.756000+00:00",
+    "value": 30.48,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:33:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:38:40.756000Z",
+    "interval_end": "2026-09-27T03:43:40.756000+00:00",
+    "value": 30.91,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:38:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:43:40.756000Z",
+    "interval_end": "2026-09-27T03:48:40.756000+00:00",
+    "value": 30.46,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:43:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:48:40.756000Z",
+    "interval_end": "2026-09-27T03:53:40.756000+00:00",
+    "value": 31.79,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:48:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:53:40.756000Z",
+    "interval_end": "2026-09-27T03:58:40.756000+00:00",
+    "value": 32.75,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:53:40.756000Z",
+    "stale": false
+   }
+  ],
+  "SNAPSHOT-HUBS:HB_SOUTH": [
+   {
+    "interval_start": "2026-09-27T02:58:40.756000Z",
+    "interval_end": "2026-09-27T03:03:40.756000+00:00",
+    "value": 37.49,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T02:58:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:03:40.756000Z",
+    "interval_end": "2026-09-27T03:08:40.756000+00:00",
+    "value": 37.56,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:03:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:08:40.756000Z",
+    "interval_end": "2026-09-27T03:13:40.756000+00:00",
+    "value": 34.02,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:08:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:13:40.756000Z",
+    "interval_end": "2026-09-27T03:18:40.756000+00:00",
+    "value": 33.93,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:13:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:18:40.756000Z",
+    "interval_end": "2026-09-27T03:23:40.756000+00:00",
+    "value": 32.74,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:18:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:23:40.756000Z",
+    "interval_end": "2026-09-27T03:28:40.756000+00:00",
+    "value": 33.97,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:23:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:28:40.756000Z",
+    "interval_end": "2026-09-27T03:33:40.756000+00:00",
+    "value": 33.19,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:28:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:33:40.756000Z",
+    "interval_end": "2026-09-27T03:38:40.756000+00:00",
+    "value": 30.61,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:33:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:38:40.756000Z",
+    "interval_end": "2026-09-27T03:43:40.756000+00:00",
+    "value": 31.05,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:38:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:43:40.756000Z",
+    "interval_end": "2026-09-27T03:48:40.756000+00:00",
+    "value": 31.0,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:43:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:48:40.756000Z",
+    "interval_end": "2026-09-27T03:53:40.756000+00:00",
+    "value": 32.41,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:48:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:53:40.756000Z",
+    "interval_end": "2026-09-27T03:58:40.756000+00:00",
+    "value": 33.5,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:53:40.756000Z",
+    "stale": false
+   }
+  ],
+  "SNAPSHOT-HUBS:HB_WEST": [
+   {
+    "interval_start": "2026-09-27T02:58:40.756000Z",
+    "interval_end": "2026-09-27T03:03:40.756000+00:00",
+    "value": 52.8,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T02:58:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:03:40.756000Z",
+    "interval_end": "2026-09-27T03:08:40.756000+00:00",
+    "value": 54.43,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:03:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:08:40.756000Z",
+    "interval_end": "2026-09-27T03:13:40.756000+00:00",
+    "value": 43.05,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:08:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:13:40.756000Z",
+    "interval_end": "2026-09-27T03:18:40.756000+00:00",
+    "value": 41.14,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:13:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:18:40.756000Z",
+    "interval_end": "2026-09-27T03:23:40.756000+00:00",
+    "value": 35.39,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:18:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:23:40.756000Z",
+    "interval_end": "2026-09-27T03:28:40.756000+00:00",
+    "value": 34.83,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:23:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:28:40.756000Z",
+    "interval_end": "2026-09-27T03:33:40.756000+00:00",
+    "value": 34.31,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:28:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:33:40.756000Z",
+    "interval_end": "2026-09-27T03:38:40.756000+00:00",
+    "value": 30.88,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:33:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:38:40.756000Z",
+    "interval_end": "2026-09-27T03:43:40.756000+00:00",
+    "value": 31.02,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:38:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:43:40.756000Z",
+    "interval_end": "2026-09-27T03:48:40.756000+00:00",
+    "value": 30.69,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:43:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:48:40.756000Z",
+    "interval_end": "2026-09-27T03:53:40.756000+00:00",
+    "value": 32.1,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:48:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:53:40.756000Z",
+    "interval_end": "2026-09-27T03:58:40.756000+00:00",
+    "value": 33.32,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:53:40.756000Z",
+    "stale": false
+   }
+  ],
+  "SNAPSHOT-SCED:lambda": [
+   {
+    "interval_start": "2026-09-27T02:58:40.756000Z",
+    "interval_end": "2026-09-27T03:03:40.756000+00:00",
+    "value": 30.78,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T02:58:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:03:40.756000Z",
+    "interval_end": "2026-09-27T03:08:40.756000+00:00",
+    "value": 30.67,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:03:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:08:40.756000Z",
+    "interval_end": "2026-09-27T03:13:40.756000+00:00",
+    "value": 30.88,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:08:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:13:40.756000Z",
+    "interval_end": "2026-09-27T03:18:40.756000+00:00",
+    "value": 30.96,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:13:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:18:40.756000Z",
+    "interval_end": "2026-09-27T03:23:40.756000+00:00",
+    "value": 31.93,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:18:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:23:40.756000Z",
+    "interval_end": "2026-09-27T03:28:40.756000+00:00",
+    "value": 32.27,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:23:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:28:40.756000Z",
+    "interval_end": "2026-09-27T03:33:40.756000+00:00",
+    "value": 32.58,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:28:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:33:40.756000Z",
+    "interval_end": "2026-09-27T03:38:40.756000+00:00",
+    "value": 33.86,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:33:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:38:40.756000Z",
+    "interval_end": "2026-09-27T03:43:40.756000+00:00",
+    "value": 33.12,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:38:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:43:40.756000Z",
+    "interval_end": "2026-09-27T03:48:40.756000+00:00",
+    "value": 33.01,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:43:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:48:40.756000Z",
+    "interval_end": "2026-09-27T03:53:40.756000+00:00",
+    "value": 35.37,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:48:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:53:40.756000Z",
+    "interval_end": "2026-09-27T03:58:40.756000+00:00",
+    "value": 33.21,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:53:40.756000Z",
+    "stale": false
+   }
+  ],
+  "NP4-190-CD:HB_HUBAVG": [
+   {
+    "interval_start": "2026-09-26T05:00:00+00:00",
+    "interval_end": "2026-09-26T06:00:00+00:00",
+    "value": 31.51,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T06:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T06:00:00+00:00",
+    "interval_end": "2026-09-26T07:00:00+00:00",
+    "value": 28.41,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T07:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T07:00:00+00:00",
+    "interval_end": "2026-09-26T08:00:00+00:00",
+    "value": 26.61,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T08:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T08:00:00+00:00",
+    "interval_end": "2026-09-26T09:00:00+00:00",
+    "value": 25.85,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T09:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T09:00:00+00:00",
+    "interval_end": "2026-09-26T10:00:00+00:00",
+    "value": 25.37,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T10:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T10:00:00+00:00",
+    "interval_end": "2026-09-26T11:00:00+00:00",
+    "value": 26.54,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T11:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T11:00:00+00:00",
+    "interval_end": "2026-09-26T12:00:00+00:00",
+    "value": 28.11,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T12:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T12:00:00+00:00",
+    "interval_end": "2026-09-26T13:00:00+00:00",
+    "value": 28.52,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T13:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T13:00:00+00:00",
+    "interval_end": "2026-09-26T14:00:00+00:00",
+    "value": 23.28,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T14:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T14:00:00+00:00",
+    "interval_end": "2026-09-26T15:00:00+00:00",
+    "value": 20.64,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T15:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T15:00:00+00:00",
+    "interval_end": "2026-09-26T16:00:00+00:00",
+    "value": 19.13,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T16:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T16:00:00+00:00",
+    "interval_end": "2026-09-26T17:00:00+00:00",
+    "value": 21.32,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T17:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T17:00:00+00:00",
+    "interval_end": "2026-09-26T18:00:00+00:00",
+    "value": 24.57,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T18:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T18:00:00+00:00",
+    "interval_end": "2026-09-26T19:00:00+00:00",
+    "value": 29.5,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T19:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T19:00:00+00:00",
+    "interval_end": "2026-09-26T20:00:00+00:00",
+    "value": 31.7,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T20:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T20:00:00+00:00",
+    "interval_end": "2026-09-26T21:00:00+00:00",
+    "value": 35.52,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T21:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T21:00:00+00:00",
+    "interval_end": "2026-09-26T22:00:00+00:00",
+    "value": 37.97,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T22:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T22:00:00+00:00",
+    "interval_end": "2026-09-26T23:00:00+00:00",
+    "value": 46.85,
+    "unit": "$/MWh",
+    "published_at": "2026-09-26T23:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T23:00:00+00:00",
+    "interval_end": "2026-09-27T00:00:00+00:00",
+    "value": 62.49,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T00:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T00:00:00+00:00",
+    "interval_end": "2026-09-27T01:00:00+00:00",
+    "value": 62.48,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T01:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T01:00:00+00:00",
+    "interval_end": "2026-09-27T02:00:00+00:00",
+    "value": 52.88,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T02:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T02:00:00+00:00",
+    "interval_end": "2026-09-27T03:00:00+00:00",
+    "value": 44.74,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T03:00:00+00:00",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:00:00+00:00",
+    "interval_end": "2026-09-27T04:00:00+00:00",
+    "value": 37.85,
+    "unit": "$/MWh",
+    "published_at": "2026-09-27T04:00:00+00:00",
+    "stale": false
+   }
+  ],
+  "SNAPSHOT-DEMAND:ERCOT": [
+   {
+    "interval_start": "2026-09-26T12:53:40.756000Z",
+    "interval_end": "2026-09-26T12:58:40.756000+00:00",
+    "value": 76715.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T12:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T13:53:40.756000Z",
+    "interval_end": "2026-09-26T13:58:40.756000+00:00",
+    "value": 76125.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T13:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T14:53:40.756000Z",
+    "interval_end": "2026-09-26T14:58:40.756000+00:00",
+    "value": 75413.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T14:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T15:53:40.756000Z",
+    "interval_end": "2026-09-26T15:58:40.756000+00:00",
+    "value": 74499.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T15:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T16:53:40.756000Z",
+    "interval_end": "2026-09-26T16:58:40.756000+00:00",
+    "value": 73678.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T16:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T17:53:40.756000Z",
+    "interval_end": "2026-09-26T17:58:40.756000+00:00",
+    "value": 72871.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T17:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T18:53:40.756000Z",
+    "interval_end": "2026-09-26T18:58:40.756000+00:00",
+    "value": 72566.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T18:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T19:53:40.756000Z",
+    "interval_end": "2026-09-26T19:58:40.756000+00:00",
+    "value": 71990.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T19:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T20:53:40.756000Z",
+    "interval_end": "2026-09-26T20:58:40.756000+00:00",
+    "value": 71205.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T20:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T21:53:40.756000Z",
+    "interval_end": "2026-09-26T21:58:40.756000+00:00",
+    "value": 70477.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T21:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T22:53:40.756000Z",
+    "interval_end": "2026-09-26T22:58:40.756000+00:00",
+    "value": 69981.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T22:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-26T23:53:40.756000Z",
+    "interval_end": "2026-09-26T23:58:40.756000+00:00",
+    "value": 69247.0,
+    "unit": "MW",
+    "published_at": "2026-09-26T23:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T00:53:40.756000Z",
+    "interval_end": "2026-09-27T00:58:40.756000+00:00",
+    "value": 68586.0,
+    "unit": "MW",
+    "published_at": "2026-09-27T00:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T01:53:40.756000Z",
+    "interval_end": "2026-09-27T01:58:40.756000+00:00",
+    "value": 67791.0,
+    "unit": "MW",
+    "published_at": "2026-09-27T01:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T02:53:40.756000Z",
+    "interval_end": "2026-09-27T02:58:40.756000+00:00",
+    "value": 67148.0,
+    "unit": "MW",
+    "published_at": "2026-09-27T02:53:40.756000Z",
+    "stale": false
+   },
+   {
+    "interval_start": "2026-09-27T03:53:40.756000Z",
+    "interval_end": "2026-09-27T03:58:40.756000+00:00",
+    "value": 66285.0,
+    "unit": "MW",
+    "published_at": "2026-09-27T03:53:40.756000Z",
+    "stale": false
+   }
+  ]
+ }
+}
