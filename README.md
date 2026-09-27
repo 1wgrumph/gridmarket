@@ -30,6 +30,14 @@ Start the app below, then follow [Your first 3 minutes](docs/judges.md) to monit
    [Market](http://127.0.0.1:8000/#/market) to inspect the book and fills.
    An accepted order can rest unfilled until a seller matches its price.
 
+## Live links
+
+- **God's Eye, 3D Texas grid on live ERCOT data:** <https://ercot-hackathon.jordan-691.workers.dev/godseye/>
+- **The real day, one click:** <https://ercot-hackathon.jordan-691.workers.dev/godseye/#start> replays 26 Aug 2026 and stops on Houston's $780.46/MWh spike.
+- This deployment runs the standalone God's Eye build on the [`jordaaan` branch](https://github.com/1wgrumph/gridmarket/tree/jordaaan/ercot-hackathon) (26 Aug replay, help windows, simulated batteries). The version on `main` adds backend integration and tests, and deploys with the same [Worker setup](ercot-hackathon/README.md#setup).
+- **ERCOT data edge (Worker API):** <https://ercot-hackathon.jordan-691.workers.dev/api/snapshot>
+- **Market, dashboard, replay and sandbox:** run locally with Docker Compose (below); the 3-minute path starts at <http://127.0.0.1:8000/>.
+
 ## Run it locally
 
 ### Docker Compose
@@ -160,6 +168,21 @@ SDK methods include `market`, `predictions`, `account`, `portfolio`, `orders`,
 - **Experience:** the React dashboard, Python SDK and MCP server expose
   market conditions and caller-scoped orders and portfolios.
 
+### Architecture
+
+```mermaid
+flowchart LR
+  ERCOT["ERCOT Public API<br/>prices, load, wind, solar,<br/>outages, day-ahead"] -->|B2C token, call budget, KV cache| W["Cloudflare Worker<br/>ercot-hackathon"]
+  EIA["EIA-860<br/>power plants"] --> W
+  NWS["NWS weather"] --> B
+  W -->|/api/snapshot, reports| B["FastAPI + SQLite<br/>exchange, settlement,<br/>predictions, replay"]
+  Bots["60 simulated traders"] --> B
+  SDK["Python SDK · MCP server<br/>(people and AI agents)"] --> B
+  B --> D["React dashboard<br/>Overview · Replay · Predictions ·<br/>Market · Judge sandbox"]
+  W --> G["God's Eye<br/>CesiumJS 3D globe"]
+  B -. market feed .-> G
+```
+
 ## What is real and what is simulated
 
 | Real | Simulated |
@@ -176,6 +199,37 @@ prices or prevent blackouts. Zone scores are informational, not advice.
 Router decisions labelled **baseline rules** use fixed repository rules.
 The optional hosted probability integration is off by default and makes no
 call unless explicitly enabled.
+
+## What the data shows
+
+GridMarket is built on one pattern in ERCOT's public data. Checking every 15-minute Houston hub price from 1 June to 26 September 2026:
+
+| Day | Houston hub peak | Time (CT) |
+| --- | --- | --- |
+| 26 Aug | $780.46/MWh | 10:15 PM |
+| 23 Aug | $562.40/MWh | 9:00 PM |
+| 2 Sep | $452.68/MWh | 8:00 PM |
+| 16 Sep | $407.54/MWh | 8:00 PM |
+| 17 Aug | $351.81/MWh | 8:15 PM |
+
+Every big spike landed between 8 and 11 PM, after sunset, not at peak demand. On 26 August demand peaked at 90.5 GW at 4:30 PM, while prices stayed low. The $780.46 spike came at 10:15 PM with demand at 73.5 GW: solar had fallen from 16.9 GW at 6–7 PM to nothing by 9 PM, wind was 7.7 GW, and ERCOT's dispatch price reached $914.50. Day-ahead had priced that hour at $98.54. The hours that need help are the evening net-load ramp, and that's when a home battery's stored midday solar is worth most. Sources: ERCOT NP6-905-CD, NP4-190-CD, NP6-235-CD, NP6-323-CD, NP4-732-CD, NP4-737-CD.
+
+## Known limitations and next steps
+
+**Limitations**
+
+- Households, batteries, providers (Base Sim, LoneStar Storage), orders and money are simulated. Flex Credits are not a registered ERCOT product; settling them for real would need a Qualified Scheduling Entity or a provider acting as one.
+- ERCOT's Public API rate-limits bursts and publishes some reports with delay (real-time prices every 5–15 minutes; bid and offer disclosures after 2 or 60 days). The Worker budgets and caches calls, and the app shows "unavailable" instead of guessing when data is missing.
+- The scarcity score is a scaled blend of observed signals, not a calibrated probability, a blackout prediction or a profit guarantee.
+- God's Eye shows live settlement-point prices for 155 of 934 ERCOT plants: those whose EIA-860 node designation, or ERCOT naming convention, matches an ERCOT settlement point. Weather-zone placement uses approximate zone centers.
+- Scoring 26 August after the fact uses that day's actual load, wind and solar, not the forecasts available beforehand.
+
+**Next steps**
+
+- Calibrate the scarcity score against realised prices (Brier score and reliability tracking) and route decisions on calibrated probabilities.
+- Connect a real provider API (for example, a battery fleet's dispatch interface) behind the existing provider adapter contract.
+- Price Flex Credits from the full settlement-point history, and add congestion-aware zones.
+- Work out the settlement path with a QSE partner, with human approval on any real order.
 
 ## Tests and quality gates
 
@@ -218,6 +272,13 @@ no inbound public port is opened.
 See the [design system](docs/design/DESIGN.md) and
 [frontend design guide](skills/gridmarket-frontend-design/SKILL.md).
 See the [changelog](CHANGELOG.md) for shipped changes.
+
+## Team
+
+| Name | Role | Contact |
+| --- | --- | --- |
+| William Rumph | Exchange backend, settlement, predictions, replay, trading bots, SDK and MCP, React dashboard | GitHub [@1wgrumph](https://github.com/1wgrumph) |
+| Jordan Hill | ERCOT data Worker, God's Eye 3D globe, EIA-860 power-plant layer, 26 Aug replay and grid-data analysis | GitHub [@jhillbht](https://github.com/jhillbht) |
 
 ## License
 
