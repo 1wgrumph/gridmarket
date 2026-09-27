@@ -78,3 +78,12 @@ or upstream failures return 502 without caching. The page refreshes every
 minute and labels retained or older-than-ten-minute readings stale. These
 are system-wide grid batteries, never household or individual-plant output.
 The existing battery-only filter and market ESR reading remain available.
+
+## Replay page (`/replay/`)
+
+A second God's Eye view, built for the demo: `/replay/#start` replays 26 Aug 2026 from 9 PM and stops on the Houston hub's $780.46/MWh spike at 10:15 PM.
+
+- `public/replay/index.html` and `public/replay/gridmarket.js`: the globe, a 26 Aug replay mode with a timeline and spike card, a "help the grid" zone layer, and 1,000 simulated batteries (13.5 kWh / 5 kW, 20% reserve).
+- `public/data/aug26.json`: ERCOT data for 26 Aug (96 real-time intervals for hubs and LZ_HOUSTON, hourly day-ahead, wind, solar, load, temperature), pulled from the Public API.
+- The help layer calls `/api/help`. This Worker doesn't serve that route yet, so the page falls back to the demo Worker at `ercot-hackathon.jordan-691.workers.dev`, whose source is on the `jordaaan` branch (`src/help.js`).
+- It's static and doesn't change `/godseye/`, the router, or any tests.
