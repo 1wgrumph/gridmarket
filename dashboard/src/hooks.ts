@@ -6,9 +6,6 @@ type Poll = Snapshot & { listeners: Set<() => void>; timer: number };
 
 /** One poll per path: components that read the same path share its fetches and last-known data. */
 const polls = new Map<string, Poll>();
-/** First loads still in flight; lets a burst of secondary reads wait for the page's first polls. */
-const firstLoads = new Set<Promise<void>>();
-export const pollsSettled = () => Promise.allSettled([...firstLoads]).then(() => undefined);
 
 function subscribe(path: string, intervalMs: number, listener: () => void) {
   let poll = polls.get(path);
@@ -25,9 +22,7 @@ function subscribe(path: string, intervalMs: number, listener: () => void) {
     };
     created.timer = window.setInterval(load, intervalMs);
     polls.set(path, poll = created);
-    const first = load()!;
-    firstLoads.add(first);
-    first.finally(() => firstLoads.delete(first));
+    load();
   }
   poll.listeners.add(listener);
   return () => {

@@ -22,7 +22,8 @@ import Overview from './Overview';
 // run through the backend parsers (fixtures/livegrid.PROVENANCE.md).
 const mockHistoryData = (livegrid as { series: Record<string, unknown[]> }).series;
 const CAPTURE = Date.parse('2026-09-27T03:55:00Z');
-const settle = () => act(() => vi.advanceTimersByTimeAsync(10_000));
+// Short steps: each act() exit commits React updates, whose effects schedule the next timers.
+const settle = async () => { for (let t = 0; t < 10_000; t += 250) await act(() => vi.advanceTimersByTimeAsync(250)); };
 
 let requestedUrls: string[] = [];
 let failFirstDemand = true;

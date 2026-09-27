@@ -12,13 +12,14 @@ import {
 import { get, type SignalHistoryRow } from '../api';
 import { centralStamp, csvName, ExportActions, toCsv, utcStamp } from '../csv';
 import { centralTime, parseTime } from '../format';
-import { pollsSettled } from '../hooks';
 import { contextLink, setViewQuery, useViewQuery } from './navigation';
 import Panel from './Panel';
 
 type Props = {
   index?: string;
   marketProducts?: { zone: string }[];
+  /** False until the page's first polls have answered; history reads wait for it. */
+  ready?: boolean;
 };
 
 /** History keys the backend stores: Worker snapshot hubs, SCED lambda and actual demand,
@@ -103,7 +104,7 @@ async function fetchSeries(url: string, active: () => boolean): Promise<SignalHi
   return [];
 }
 
-export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props) {
+export default function LiveGridPanel({ index = 'LIVE', marketProducts, ready = true }: Props) {
   const params = useViewQuery();
   const range: 24 | 48 = params.get('range') === '48' ? 48 : 24;
   const setRange = (hours: 24 | 48) => setViewQuery({ range: hours === 48 ? '48' : undefined });
@@ -113,14 +114,12 @@ export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props)
   const warm = useRef(false);
 
   useEffect(() => {
+    if (!warm.current && !ready) return;
     let active = true;
     const isActive = () => active;
 
     async function fetchAll() {
-      if (!warm.current) {
-        await sleep(START_WAIT_MS);
-        await pollsSettled();
-      }
+      if (!warm.current) await sleep(START_WAIT_MS);
       // Minute-floored window.
       const nowMs = Math.floor(Date.now() / 60_000) * 60_000;
       const end = new Date(nowMs).toISOString();
@@ -150,7 +149,7 @@ export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props)
       active = false;
       window.clearTimeout(timerId);
     };
-  }, [range]);
+  }, [range, ready]);
 
   const rows = (key: Key) => data[key] ?? [];
 

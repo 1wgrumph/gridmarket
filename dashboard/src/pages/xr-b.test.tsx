@@ -49,8 +49,9 @@ function overviewFetch(input: RequestInfo | URL): Reply {
   return body === undefined ? notFound(url.pathname) : reply(200, body);
 }
 
-/** Let the panel's startup wait and spaced reads run on the frozen clock. */
-const settle = () => act(() => vi.advanceTimersByTimeAsync(10_000));
+/** Let the panel's startup wait and spaced reads run on the frozen clock. Short steps:
+    each act() exit commits React updates, whose effects schedule the next timers. */
+const settle = async (ms = 10_000) => { for (let t = 0; t < ms; t += 250) await act(() => vi.advanceTimersByTimeAsync(250)); };
 
 async function livePanel() {
   render(<Overview />);
@@ -173,7 +174,7 @@ describe('XR-B F5 cold Overview load against the per-IP bucket', () => {
     }));
     render(<Overview />);
     const panel = await screen.findByRole('region', { name: /live grid/i });
-    await act(() => vi.advanceTimersByTimeAsync(30_000));
+    await settle(30_000);
     await within(panel).findByText(/76,715\s*MW/);
     expect(historyUrls.length).toBe(CONTRACT_KEYS.length);
     expect(statuses.filter(s => s === 429)).toEqual([]);
