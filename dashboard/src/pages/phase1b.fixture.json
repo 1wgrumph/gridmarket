@@ -19,6 +19,7 @@
     "brier": { "dart-north-14": 0.17, "dart-south-15": 0.21 },
     "jev_enabled": false
   },
+  "/v1/router/history": { "events": [], "count": 0, "limit": 50 },
   "/v1/bots": [
     { "id": "bot-7", "bot_index": 0, "bot_type": "score follower", "provider_id": "lonestar", "dormant": true },
     { "id": "bot-8", "bot_index": 1, "bot_type": "market maker", "provider_id": "base-sim", "dormant": false }

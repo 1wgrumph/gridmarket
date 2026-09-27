@@ -10,7 +10,10 @@ import { centralTime as time } from '../format';
 
 type Check = RouterCheck & { horizon_s: number; created_at: string; resolves_at: string; outcome: boolean | number | null };
 /** Router response per CONTRACTS.md: latest checks, per-check Brier score, and the Jev flag. */
-type Router = { checks: Check[]; brier: Record<string, number>; jev_enabled: boolean };
+type Router = { checks: Check[]; brier: Record<string, number>; brier_events?: Record<string, number>; brier_mean?: number | null; jev_enabled: boolean };
+/** Resolved forecast outcome per GET /v1/router/history: last forecast per event. */
+type HistoryEvent = { subject: string; zone: string; delivery_hour: string; probability: number; outcome: boolean; brier: number; resolves_at: string };
+type History = { events: HistoryEvent[]; count: number; limit: number };
 
 const bandTone = { alert: 'down', review: 'info', log: '' } as const;
 const levelTone = { high: 'up', medium: 'info', low: '' } as const;
@@ -52,6 +55,50 @@ function Zone({ p, signals, expanded, onToggle }: { p: Prediction; signals: Sign
   </article>;
 }
 
+const MIN_RESOLVED = 20;
+const BINS: [number, number][] = [[0, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1]];
+
+/** Calibration bins: predicted range vs share of events that happened, with sample counts. */
+function Calibration({ events }: { events: HistoryEvent[] }) {
+  return <div className="table-scroll"><table className="data-table" aria-label="Calibration">
+    <thead><tr><th scope="col">Predicted</th><th scope="col">Observed frequency</th></tr></thead>
+    <tbody>{BINS.map(([lo, hi]) => {
+      const inBin = events.filter(e => e.probability >= lo && (e.probability < hi || hi === 1));
+      const happened = inBin.filter(e => e.outcome).length;
+      const observed = inBin.length ? happened / inBin.length : null;
+      return <tr key={lo}>
+        <td className="num">{Math.round(lo * 100)}–{Math.round(hi * 100)}%</td>
+        <td>{observed === null ? <span className="muted">no forecasts</span> : <>
+          <span className="cal-bar" aria-hidden><i style={{ width: `${observed * 100}%` }}/></span>
+          <span className="num">Observed {pct(observed)} · n={inBin.length}</span>
+        </>}</td>
+      </tr>;
+    })}</tbody>
+  </table></div>;
+}
+
+function TrackRecord({ history, mean }: { history: History; mean: number | null | undefined }) {
+  const events = history.events;
+  if (events.length < MIN_RESOLVED)
+    return <div className="empty">Not enough resolved forecasts yet: {events.length} of {MIN_RESOLVED}.</div>;
+  const aggregate = mean ?? events.reduce((sum, e) => sum + e.brier, 0) / events.length;
+  return <>
+    <p className="panel-copy">Aggregate Brier {aggregate.toFixed(2)} across {events.length} resolved events · lower is better, 0 is perfect.</p>
+    <Calibration events={events}/>
+    <div className="table-scroll"><table className="data-table" aria-label="Resolved events">
+      <thead><tr><th scope="col">Event</th><th scope="col" className="end">Predicted</th><th scope="col">Happened</th><th scope="col" className="end">Brier</th><th scope="col">Resolved</th></tr></thead>
+      <tbody>{events.map(e => <tr key={e.subject}>
+        <td>{e.zone} <time dateTime={e.delivery_hour}>{time(e.delivery_hour)}</time></td>
+        <td className="end num">{pct(e.probability)}</td>
+        <td>{e.outcome ? 'Yes' : 'No'}</td>
+        <td className="end num">{e.brier.toFixed(2)}</td>
+        <td><time dateTime={e.resolves_at}>{time(e.resolves_at)}</time></td>
+      </tr>)}</tbody>
+    </table></div>
+    <p className="panel-end">Outcomes resolved from ERCOT day-ahead and real-time prices; probabilities are simulated scarcity forecasts. Times Central.</p>
+  </>;
+}
+
 export default function Predictions() {
   const predictions = usePredictions();
   const signals = useResource<Signal[]>('/v1/signals');
@@ -69,6 +116,7 @@ export default function Predictions() {
   const visible = rows.filter(p => (!zone || p.zone === zone) && (all || p.delivery_hour === selectedWindow));
   // hooks.ts types useRouterChecks as RouterCheck[], but /v1/router returns the object above.
   const router = useResource<Router>('/v1/router');
+  const history = useResource<History>('/v1/router/history');
   const brier = router.data?.brier ?? {};
   const disclaimers = [...new Set((predictions.data ?? []).map(p => p.disclaimer))];
   const jev = router.data?.jev_enabled;
@@ -94,7 +142,7 @@ export default function Predictions() {
             <thead><tr>
               <th scope="col">Subject</th><th scope="col">Family</th><th scope="col" className="end">Probability</th>
               {jev && <th scope="col" className="end">Jev</th>}
-              <th scope="col">Band</th><th scope="col" className="end">Brier</th><th scope="col">Decided by</th><th scope="col">Resolves</th>
+              <th scope="col">Band</th><th scope="col" className="end">Brier</th><th scope="col">Outcome</th><th scope="col">Decided by</th><th scope="col">Resolves</th>
             </tr></thead>
             <tbody>{checks.map(c => <tr key={c.check_id}>
               <td><a href={c.family === 'health' ? contextLink('#/providers', { provider: c.subject, at: c.created_at }) : contextLink('#/', { zone: c.subject.split(':')[0], hour: c.subject.slice(c.subject.indexOf(':') + 1), at: c.created_at })}>{c.subject}</a></td>
@@ -103,10 +151,17 @@ export default function Predictions() {
               {jev && <td className="end num">{c.jev_probability === null ? '—' : pct(c.jev_probability)}</td>}
               <td><span className={`tag ${bandTone[c.band] ?? ''}`}>{c.band}</span></td>
               <td className="end num">{brier[c.check_id]?.toFixed(2) ?? '—'}</td>
+              <td>{c.outcome == null ? '—' : c.outcome ? 'Yes' : 'No'}</td>
               <td className="muted">{c.baseline ? 'baseline rules' : 'model'}</td>
               <td><time dateTime={c.resolves_at}>{time(c.resolves_at)}</time></td>
             </tr>)}</tbody>
           </table></div>
+        </FeedBody>
+      </Panel>
+      <Panel title="Forecast track record" index="03" className="span-all" busy={history.loading}
+        meta={<><Stale feed={history}/><span>{history.data ? `${history.data.events.length} RESOLVED` : 'TRACK RECORD'}</span></>}>
+        <FeedBody feed={history} reserve="reserve-predictions-track">
+          {history.data && <TrackRecord history={history.data} mean={router.data?.brier_mean}/>}
         </FeedBody>
       </Panel>
     </div>
