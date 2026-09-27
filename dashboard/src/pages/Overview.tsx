@@ -152,7 +152,7 @@ export default function Overview() {
         <h1 id="story-title"><span className="story-kicker">Overview</span> Texas home batteries, paid to help when the grid is tight.</h1>
         <p className="story-subline">A simulated flexibility exchange running on real ERCOT conditions.</p>
         <p className="story-body">Homes promise to hold back or share battery power in the hours Texas runs short. Traders and AI agents buy those promises. Real grid prices decide what they were worth.</p>
-        <div className="story-actions"><a className="action-primary" href={contextLink('#/tour')}>Start the 3-minute tour</a><a className="action-secondary" href={contextLink('#/sandbox')}>Try the sandbox</a></div>
+        <div className="story-actions"><a className="action-primary" href={contextLink('#/tour')}>Start the 3-minute tour</a>{views && <a className="action-secondary action-external" href={views} target="_blank" rel="noreferrer">Open God's Eye: live Texas grid <Icon name="up-right"/></a>}<a className="action-secondary" href={contextLink('#/sandbox')}>Try the sandbox</a></div>
       </div>
       <div className="story-replay">
         <p className="story-replay-label">Replay a real day{replay.peak && ` · ${replay.peak.day}`}</p>
@@ -162,6 +162,14 @@ export default function Overview() {
         <a href={contextLink('#/replay', { day: '2026-08-26' })}>Watch batteries play that day <Icon name="up-right"/></a>
       </div>
     </section>
+    {views && <section className="godseye-feature" aria-labelledby="godseye-title">
+      <div className="page-heading">
+        <div><p className="eyebrow">SEE TEXAS LIVE</p><h2 id="godseye-title" className="page-title">God's Eye<span className="title-period">.</span></h2></div>
+        <a className="action-primary action-external" href={views} target="_blank" rel="noreferrer">Open God's Eye full screen <Icon name="up-right"/></a>
+      </div>
+      <p className="godseye-lede">Live ERCOT demand, prices and all 643 Texas power plants on a 3D map, with GridMarket trades streaming in.</p>
+      <iframe src={views} title="God's Eye: live Texas grid" loading="lazy" allow="fullscreen" allowFullScreen/>
+    </section>}
     <FirstSteps/>
     <div className="page-heading">
       <div><p className="eyebrow">THE MARKET, AT A GLANCE</p><h2 className="page-title">Grid overview<span className="title-period">.</span></h2></div>

@@ -733,3 +733,13 @@ thead th{font-weight:500;letter-spacing:.02em}
 .export-actions>.action-secondary{padding:8px 14px;font-size:13px}
 .export-actions>[role=status]{flex-basis:100%;margin:0;min-height:1lh;font-size:12px;overflow-wrap:anywhere}
 @media(max-width:760px){.export-actions{padding-inline:14px}}
+
+/* God's Eye on the Overview: hero action, feature section with a fixed-height embed (no layout shift), accent nav entry. */
+.action-external{gap:8px;font-weight:600}
+.godseye-feature{padding-bottom:28px;border-bottom:1px solid var(--line)}
+.godseye-feature .page-heading{flex-wrap:wrap}
+.godseye-lede{font-size:16px;line-height:1.5;max-width:40em;margin:0 0 16px}
+.godseye-feature iframe{display:block;width:100%;height:600px;border:1px solid var(--line);border-top:2px solid var(--accent-fill);border-radius:var(--r-2);background:var(--surface)}
+@media(max-width:760px){.godseye-feature iframe{height:460px}}
+nav a.nav-external,nav a.nav-external .nav-number{color:var(--accent);font-weight:600}
+.nav-external .nav-number{display:inline-flex;width:13px}

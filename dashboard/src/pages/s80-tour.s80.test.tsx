@@ -171,7 +171,10 @@ describe('S80 navigation', () => {
     const group = within(nav).getByRole('group', { name: 'More pages' });
     expect(more.getAttribute('aria-controls')).toBe(group.id);
     const inGroup = new Set(within(group).getAllByRole('link'));
-    const primary = within(nav).getAllByRole('link').filter(a => !inGroup.has(a));
+    const outside = within(nav).getAllByRole('link').filter(a => !inGroup.has(a));
+    // The external God's Eye entry is not an in-app route.
+    const primary = outside.filter(a => a.getAttribute('target') !== '_blank');
+    expect(outside.filter(a => a.getAttribute('target') === '_blank').map(label)).toEqual(["God's Eye"]);
     expect(primary.map(label)).toEqual(['Overview', 'Start here', 'Replay', 'Market', 'Judge sandbox']);
     expect(primary.map(a => a.getAttribute('href'))).toEqual(['#/', '#/tour', '#/replay', '#/market', '#/sandbox']);
     expect([...inGroup].map(label)).toEqual(['Predictions', 'Providers', 'Bots', 'Spec']);
