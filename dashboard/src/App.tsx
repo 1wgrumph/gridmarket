@@ -18,7 +18,6 @@ function ReplayRoute() {
   const step = new URLSearchParams(window.location.hash.split('?')[1]).get('step');
   return <>
     <StepBanner step={step === '2' ? 2 : 1}/>
-    <p role="status" style={{ display: 'none' }}>Replay arrives with the full build.</p>
     <Replay />
   </>;
 }

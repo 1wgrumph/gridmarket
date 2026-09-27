@@ -149,11 +149,13 @@ describe('S80 first-run checklist', () => {
     expect(screen.queryByRole('link', { name: /God's Eye/ })).toBeNull();
   });
 
-  it('S80-10 Replay has an honest lane state and contextual next steps', async () => {
+  it('S80-10 Replay renders the real replay page and contextual next steps', async () => {
     window.location.hash = '#/replay?day=2026-08-26&step=2';
     render(<App/>);
     const main = screen.getByRole('main');
-    expect(within(main).getByText(/Replay arrives with the full build/)).toBeTruthy();
+    expect(within(main).getByRole('heading', { level: 1, name: /^Replay/ })).toBeTruthy();
+    expect(within(main).getByRole('region', { name: 'Scoreboard · baseline' })).toBeTruthy();
+    expect(within(main).queryByText(/Replay arrives with the full build/)).toBeNull();
     expect(within(main).getByRole('link', { name: /Next: Place a first order/ }).getAttribute('href')).toBe('#/sandbox');
   });
 });
