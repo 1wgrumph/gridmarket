@@ -1224,6 +1224,13 @@
       "decision": "AGY Gemini 3.8 Flash medium becomes the first route for implementer, light implementer and integration engineer dispatches after the running jobs finish; assurance roles unchanged.",
       "owner_quote": "Ok use agy when runs are done",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-141",
+      "decided_at": "2026-09-26T19:02:00-05:00",
+      "decided_by": "Orchestrator (delegate; now coordinating S18 directly after stopping the fast-mode PS Coordinator per DEC-GM-139)",
+      "decision": "Deploy-merge conflicts on integration-stretch fixed in assembly repair S18-R1: admin trust narrowed from all private ranges to loopback plus GRIDMARKET_ADMIN_NETS (compose sets its own fixed bridge subnet); S43b tests use a real loopback client; one documented net-worth rule shared by account() and the bot profile (cash + unsettled flat futures P&L + open futures marked to reference, no spot revaluation) with the order-dependent state leak fixed. Remaining S18 merges: ux2, esr, ux, godseye, then replay (after S72/S69c) and docs2 last.",
+      "reversible": true
     }
   ],
   "stages": {
