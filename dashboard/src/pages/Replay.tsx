@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { completeFirstStep } from '../components/FirstSteps';
+import Icon from '../components/Icon';
 import Panel from '../components/Panel';
 import { get, send } from '../api';
 import type { ReplayDecision, ReplayRun, ReplayScore } from '../api';
@@ -424,8 +425,11 @@ export default function Replay() {
     window.location.hash = `${path}?${params.toString()}`;
   };
 
+  const godseye = import.meta.env.VITE_GODSEYE_URL as string | undefined;
   return <>
-    <PageHeading eyebrow="03 / HISTORICAL REPLAY" title="Replay" />
+    <PageHeading eyebrow="03 / HISTORICAL REPLAY" title="Replay">
+      {godseye && <a className="action-secondary action-external" href={new URL('/replay/#start', godseye).href} target="_blank" rel="noreferrer">See 26 Aug in 3D (God's Eye) <Icon name="up-right"/></a>}
+    </PageHeading>
     {(daysError ?? baseError) && <p className="connection-line has-error" role="alert">{daysError ?? baseError}</p>}
 
     <div className="page-grid"><Panel title="Replay day" index="01" className="span-all" busy={baseLoading} meta={<span>{base ? `RUN ${base.run_id.slice(0, 12)}` : 'NO RUN'}</span>}>

@@ -165,7 +165,10 @@ export default function Overview() {
     {views && <section className="godseye-feature" aria-labelledby="godseye-title">
       <div className="page-heading">
         <div><p className="eyebrow">SEE TEXAS LIVE</p><h2 id="godseye-title" className="page-title">God's Eye<span className="title-period">.</span></h2></div>
-        <a className="action-primary action-external" href={views} target="_blank" rel="noreferrer">Open God's Eye full screen <Icon name="up-right"/></a>
+        <div className="story-actions">
+          <a className="action-primary action-external" href={views} target="_blank" rel="noreferrer">Open God's Eye full screen <Icon name="up-right"/></a>
+          <a className="action-secondary action-external" href={new URL('/replay/#start', views).href} target="_blank" rel="noreferrer">Watch 26 Aug in 3D <Icon name="up-right"/></a>
+        </div>
       </div>
       <p className="godseye-lede">Live ERCOT demand, prices and all 643 Texas power plants on a 3D map, with GridMarket trades streaming in.</p>
       <iframe src={views} title="God's Eye: live Texas grid" loading="lazy" allow="fullscreen" allowFullScreen/>

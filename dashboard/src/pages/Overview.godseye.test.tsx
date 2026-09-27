@@ -66,6 +66,12 @@ describe("God's Eye on the homepage", () => {
     const open = within(section).getByRole('link', { name: "Open God's Eye full screen" });
     external(open);
     expect(open.className).toContain('action-primary');
+    const tour = within(section).getByRole('link', { name: 'Watch 26 Aug in 3D' });
+    expect(tour.getAttribute('href')).toBe('https://views.example.test/replay/#start');
+    expect(tour.getAttribute('target')).toBe('_blank');
+    expect(tour.getAttribute('rel')).toBe('noreferrer');
+    expect(tour.className).toContain('action-secondary');
+    expect(open.nextElementSibling).toBe(tour);
     const frame = within(section).getByTitle("God's Eye: live Texas grid");
     expect(frame.tagName).toBe('IFRAME');
     expect(frame.getAttribute('src')).toBe(GODSEYE);
@@ -98,6 +104,7 @@ describe("God's Eye on the homepage", () => {
     expect(screen.queryByRole('region', { name: /^God's Eye ?\.$/ })).toBeNull();
     expect(screen.queryByTitle("God's Eye: live Texas grid")).toBeNull();
     expect(screen.queryByRole('link', { name: /God's Eye/ })).toBeNull();
+    expect(screen.queryByRole('link', { name: /in 3D/ })).toBeNull();
     expect(within(hero).getAllByRole('link').filter(a => a.closest('.story-actions')).map(a => a.textContent?.trim())).toEqual(['Start the 3-minute tour', 'Try the sandbox']);
   });
 });
