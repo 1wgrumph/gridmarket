@@ -110,7 +110,7 @@ function Board({ products }: { products: MarketProduct[] }) {
         <Depth title="Bids" side="bid" levels={book.bids} max={max} unavailable={!!detail.error && !detail.data}/>
         <Depth title="Asks" side="ask" levels={book.asks} max={max} unavailable={!!detail.error && !detail.data}/>
       </div>
-      <div className="panel-end"><span>Spread {spread == null && (detail.error && !detail.data ? 'unavailable: order book could not be loaded' : 'unavailable: requires bids and sell orders')}</span>{spread != null && <strong className="num">{usd(spread)}</strong>}</div>
+      <div className="panel-end"><span>Spread {spread == null && (detail.error && !detail.data ? 'unavailable: order book could not be loaded' : 'unavailable: requires buy and sell orders')}</span>{spread != null && <strong className="num">{usd(spread)}</strong>}</div>
       <p className="context-actions"><a href={contextLink('#/predictions', { zone: selected.zone, hour: selected.delivery_hour })}>Why this forecast?</a> · <a href={contextLink('#/sandbox', { zone: selected.zone, hour: selected.delivery_hour })}>Place an order</a></p>
     </Panel>
     <Panel title="Recent trades" index="03" busy={tradeFeed.loading} meta={<><Stale feed={tradeFeed}/><span>{where}</span></>}>
