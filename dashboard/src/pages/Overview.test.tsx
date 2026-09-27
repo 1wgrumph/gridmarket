@@ -116,8 +116,8 @@ describe("S04 Overview page and app shell (fixture: overview.json)", () => {
   it("[SEIT-GM-UI-01] links to Godseye from VITE_GODSEYE_URL", async () => {
     vi.stubEnv("VITE_GODSEYE_URL", VIEWS_URL);
     render(<Overview />);
-    const link = (await screen.findByRole("link", { name: /god's eye/i })) as HTMLAnchorElement;
-    expect(link.getAttribute("href")).toBe(VIEWS_URL);
+    const links = await screen.findAllByRole("link", { name: /god's eye/i });
+    expect(links.map(link => link.getAttribute("href"))).toEqual([VIEWS_URL, VIEWS_URL, VIEWS_URL]);
   });
 
   it("[SEIT-GM-UI-01] shell navigates to every frozen page route without login", async () => {
@@ -374,8 +374,8 @@ describe("S52a design v2 Overview and rail", () => {
     vi.stubEnv("VITE_GODSEYE_URL", VIEWS_URL);
     view.unmount();
     render(<Overview />);
-    const link = await screen.findByRole("link", { name: /god's eye/i });
-    expect(link.getAttribute("href")).toBe(VIEWS_URL);
+    const links = await screen.findAllByRole("link", { name: /god's eye/i });
+    expect(links.map(link => link.getAttribute("href"))).toEqual([VIEWS_URL, VIEWS_URL, VIEWS_URL]);
   });
 
   it("fixture badge appears only with VITE_FIXTURES=1", async () => {

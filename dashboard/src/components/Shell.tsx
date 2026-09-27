@@ -40,6 +40,7 @@ export default function Shell({ children }: { children: ReactNode }) {
     return () => { window.removeEventListener('hashchange', update); window.clearInterval(timer); };
   }, []);
   const fixtures = import.meta.env.VITE_FIXTURES === '1';
+  const godseye = import.meta.env.VITE_GODSEYE_URL as string | undefined;
   const gridSignals = signals.data?.filter(s => s.report_id === 'ESR' || s.report_id.startsWith('NP'));
   const latest = gridSignals?.reduce<string | undefined>((max, s) => !max || s.published_at > max ? s.published_at : max, undefined);
   const stale = gridSignals?.filter(s => s.stale).length ?? 0;
@@ -62,7 +63,9 @@ export default function Shell({ children }: { children: ReactNode }) {
         <div id="sidebar-content" className={`sidebar-content ${menu ? 'is-open' : ''}`}>
           <p className="eyebrow nav-caption">THE EXCHANGE</p>
           <nav aria-label="Primary">
-            {nav.map(link)}
+            {nav.slice(0, 3).map(link)}
+            {godseye && <a className="nav-external" href={godseye} target="_blank" rel="noreferrer"><span className="nav-number"><Icon name="up-right"/></span>God's Eye</a>}
+            {nav.slice(3).map(link)}
             <button type="button" className="nav-more" aria-expanded={moreOpen} aria-controls="nav-more" onClick={() => setMoreOpen(!moreOpen)}><span className="nav-number"><Icon name={moreOpen ? 'minus' : 'plus'}/></span>More</button>
             <div id="nav-more" role="group" aria-label="More pages" className={moreOpen ? 'nav-group' : 'nav-group is-collapsed'}>{more.map(link)}</div>
           </nav>

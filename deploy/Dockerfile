@@ -6,6 +6,9 @@ WORKDIR /src/dashboard
 COPY dashboard/package.json dashboard/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY dashboard/ ./
+# Empty hides every God's Eye link and the embedded live grid.
+ARG VITE_GODSEYE_URL=
+ENV VITE_GODSEYE_URL=$VITE_GODSEYE_URL
 RUN npm run build
 
 FROM python:3.12-slim-bookworm

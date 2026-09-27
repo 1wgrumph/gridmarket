@@ -18,6 +18,8 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
+      args:
+        VITE_GODSEYE_URL: "${VITE_GODSEYE_URL:-}"
     environment:
       GRIDMARKET_ADMIN_NETS: "172.23.0.0/16"
     ports:
@@ -30,6 +32,8 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
+      args:
+        VITE_GODSEYE_URL: "${VITE_GODSEYE_URL:-}"
     command: ["python", "-m", "gridmarket_server.bots"]
     environment:
       # Inside this container, loopback is itself; the API lives on `app`.
