@@ -2,6 +2,8 @@
 // Secrets (set with `wrangler secret put`): ERCOT_USERNAME, ERCOT_PASSWORD, ERCOT_SUBSCRIPTION_KEY, ERCOT_ESR_SUBSCRIPTION_KEY, MARKET_KEY
 
 import { buildSnapshot } from "./snapshot.js";
+import { buildNodes, SP_PATTERN } from "./node.js";
+import { SP_ALLOWLIST } from "./sp-allowlist.js";
 
 const TOKEN_URL =
   "https://ercotb2c.b2clogin.com/ercotb2c.onmicrosoft.com/B2C_1_PUBAPI-ROPC-FLOW/oauth2/v2.0/token";
@@ -28,6 +30,18 @@ const ALLOWED_REPORTS = new Set([
 
 // Query params the EDC view sends; nothing else is forwarded to ERCOT.
 const EDC_PARAMS = ["deliveryDateFrom", "deliveryDateTo", "hourEndingFrom", "hourEndingTo", "size"];
+
+// Keyless /api/node draws on its own pools, never the market's "ercot" key. Each upstream
+// call costs NODE_CLIENT_COST units of the client's pool, so one client gets about one
+// full four-point lookup (8 calls) per budget window; all clients share the "node" pool.
+// ponytail: reuses the ERCOT_BUDGET binding's limit; a dedicated binding if tuning is needed.
+const NODE_CLIENT_COST = 3;
+async function nodeBudget(limiter, ip) {
+  for (let i = 0; i < NODE_CLIENT_COST; i++) {
+    if (!(await limiter.limit({ key: `node:${ip}` })).success) return { success: false };
+  }
+  return limiter.limit({ key: "node" });
+}
 
 // Coalesce concurrent snapshot builds per isolate.
 let snapshotInflight = null;
@@ -143,19 +157,22 @@ async function ercotGet(env, path, search, opts = {}) {
 }
 
 // Raw JSON fetch used by the snapshot builder
-async function ercotJSON(env, path, params = {}) {
+async function ercotJSON(env, path, params = {}, budget = null) {
   const qs = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]));
   const url = `${API_BASE}${path}?${qs}`;
-  const call = async (token) => {
-    if (!(await takeBudget(env))) throw new Error("Upstream ERCOT budget exceeded");
+  const call = async (forceToken = false) => {
+    if (budget ? !(await budget.limit({ key: "ercot" })).success : !(await takeBudget(env))) {
+      throw new Error("Upstream ERCOT budget exceeded");
+    }
+    const token = await getToken(env, forceToken);
     return fetch(url, { headers: { Authorization: `Bearer ${token}`, "Ocp-Apim-Subscription-Key": env.ERCOT_SUBSCRIPTION_KEY, Accept: "application/json" } });
   };
-  let res = await call(await getToken(env));
-  if (res.status === 401) res = await call(await getToken(env, true));
+  let res = await call();
+  if (res.status === 401) res = await call(true);
   for (let attempt = 1; res.status === 429 && attempt <= 4; attempt++) {
     const wait = Number(res.headers.get("retry-after")) * 1000 || 900 * attempt;
     await new Promise((r) => setTimeout(r, Math.min(wait, 4000)));
-    res = await call(await getToken(env));
+    res = await call();
   }
   if (!res.ok) throw new Error(`${path} returned ${res.status}`);
   return res.json();
@@ -209,6 +226,38 @@ export default {
         return json({ MARKET_URL: env.MARKET_URL || null });
       }
 
+      // Anonymous dashboard allowlist: this one fixed URL, before the secret gate.
+      // The shared per-client limiter above also applies to cache hits.
+      if (p === "/api/esr-dashboard") {
+        if (request.method !== "GET") return json({ error: "Method not allowed" }, 405, { Allow: "GET, OPTIONS" });
+        const key = "esr-dashboard:v1";
+        const hit = await env.CACHE.get(key);
+        if (hit) return json(JSON.parse(hit), 200, { "x-cache": "HIT" });
+        const source = "https://www.ercot.com/api/1/services/read/dashboards/energy-storage-resources.json";
+        const response = await fetch(source, { headers: { Accept: "application/json" }, redirect: "manual", signal: AbortSignal.timeout(15000) });
+        if (!response.ok) return json({ error: "Waiting for ERCOT" }, 502);
+        const raw = await response.json();
+        const utc = value => {
+          if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}$/.test(value)) throw new Error("Waiting for ERCOT");
+          const time = new Date(value.replace(" ", "T").replace(/([+-]\d{2})(\d{2})$/, "$1:$2"));
+          if (!Number.isFinite(time.getTime())) throw new Error("Waiting for ERCOT");
+          return time.toISOString();
+        };
+        const normalize = row => {
+          if (!row || ![row.totalCharging, row.totalDischarging, row.netOutput].every(Number.isFinite) || row.totalCharging > 0 || row.totalDischarging < 0) throw new Error("Waiting for ERCOT");
+          return { timestamp: utc(row.timestamp), charging_mw: row.totalCharging, discharging_mw: row.totalDischarging, net_mw: row.netOutput };
+        };
+        const rows = [...(raw.previousDay?.data || []), ...(raw.currentDay?.data || [])]
+          .sort((a, b) => Date.parse(utc(a.timestamp)) - Date.parse(utc(b.timestamp)));
+        const latest = normalize(rows.at(-1));
+        const prior = rows.find(row => Date.parse(utc(row.timestamp)) === Date.parse(latest.timestamp) - 3600000);
+        const hourAgo = prior ? normalize(prior) : null;
+        const out = { ...latest, source, source_timestamp: raw.lastUpdated, updated_at: utc(raw.lastUpdated),
+          hour_ago: hourAgo, change_net_mw: hourAgo ? latest.net_mw - hourAgo.net_mw : null };
+        await env.CACHE.put(key, JSON.stringify(out), { expirationTtl: 60 });
+        return json(out, 200, { "x-cache": "MISS" });
+      }
+
       // The ESR route alone needs the ESR key; every other route ignores it.
       if (p === ESR_ROUTE && !env.ERCOT_ESR_SUBSCRIPTION_KEY) {
         return json({ error: "Worker secrets not set", secretsMissing: ["ERCOT_ESR_SUBSCRIPTION_KEY"] }, 503);
@@ -219,6 +268,23 @@ export default {
         if (missing.length) {
           return json({ error: "Worker secrets not set", secretsMissing: missing }, 503);
         }
+      }
+
+      // Live price at one or more settlement points, for the plant drill-down
+      if (p === "/api/node") {
+        const sps = [...new Set((url.searchParams.get("sp") || "").split(",").map((x) => x.trim().toUpperCase()))].sort();
+        if (sps.length > 4 || sps.some((sp) => !SP_PATTERN.test(sp) || !SP_ALLOWLIST.has(sp))) {
+          return json({ error: "Pass ?sp=SETTLEMENT_POINT (comma-separated, up to 4 known points)" }, 400);
+        }
+        const key = "node:v1:" + sps.join(",");
+        const hit = await env.CACHE.get(key);
+        if (hit) return json(JSON.parse(hit), 200, { "x-cache": "HIT" });
+        const ip = request.headers.get("cf-connecting-ip") || "unknown";
+        const budget = env.ERCOT_BUDGET && { limit: () => nodeBudget(env.ERCOT_BUDGET, ip) };
+        const out = await buildNodes((path, params) => ercotJSON(env, path, params, budget), sps);
+        // Never cache a failure: a budget or upstream error must not poison the point for 5 minutes.
+        if (!Object.keys(out.errors).length) await env.CACHE.put(key, JSON.stringify(out), { expirationTtl: 300 });
+        return json(out, 200, { "x-cache": "MISS" });
       }
 
       // One cached call for the 3D grid diagram

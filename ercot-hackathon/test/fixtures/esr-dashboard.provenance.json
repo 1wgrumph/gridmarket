@@ -1,0 +1,6 @@
+{
+  "url": "https://www.ercot.com/api/1/services/read/dashboards/energy-storage-resources.json",
+  "retrieved_at": "2026-09-26T22:34:22.896291Z",
+  "sha256": "438be56f57e09887ebcf94a861143c9924d53f2d1d0be2670c39607d2a3f4f26",
+  "transformation": "None; exact response bytes."
+}

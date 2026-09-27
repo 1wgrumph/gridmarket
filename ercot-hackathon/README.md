@@ -9,8 +9,11 @@ Live: https://ercot-hackathon.jordan-691.workers.dev
 | `/` | 2-Day Aggregate Energy Demand Curves (NP3-907-EX) chart |
 | `/diagram/` | Grid District: weather → renewables → dispatch → prices → decision engine → router |
 | `/planet/` | Grid Planet: the same data as a small cel-shaded planet |
-| `/godseye/` | God's Eye ERCOT: CesiumJS globe over Texas with live hub prices, weather zones, renewables and flows. Visual language from [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) (MIT) |
+| `/godseye/` | God's Eye ERCOT: CesiumJS globe over Texas with 1,023 EIA-860 power plants (resource silhouettes, legend filters, search) and a drill-down per plant with units, grid connection and live settlement-point prices. Also hub prices and weather zones. Visual language from [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) (MIT) |
 | `/api/snapshot` | One cached call: demand, hub SPPs, DAM + DART, SCED lambda + headroom, wind, solar, weather, baseline checks |
+| `/api/esr-dashboard` | Anonymous ERCOT storage dashboard: UTC readings, signed charging/discharging MW, net MW and one-hour net change (cached 60 s; per-client limit; failures never cached) |
+| `/api/node?sp=<settlement point>` | Latest real-time SPP, recent intervals and day-ahead price at up to 4 ERCOT settlement points (cached 5 min) |
+| `/data/tx_plants.json` | Texas power plants built from EIA-860 2025 early release: plant, generator, wind, solar and storage files |
 | `/api/edc` | NP3-907-EX proxy |
 | `/api/products` | All ERCOT EMIL products |
 | `/api/report/<emil-id>/<report>` | Generic proxy for any report |
@@ -43,3 +46,35 @@ The owner sets `vars.MARKET_URL` in `wrangler.jsonc` to the GridMarket origin (A
 ```bash
 node --test "test/*.test.mjs"                # stub env and fetch, no network
 ```
+
+## Docs
+
+- `docs/ercot-jev-map.html`: ERCOT × Jev decision map. Which ERCOT reports feed which calibrated checks, the routing policy, and the phased build.
+
+## Help the grid (God’s Eye)
+
+Demand now, Batteries now and Help windows are independent toggles in the
+Plants & layers panel (collapsible on phones). Demand uses `/api/snapshot`
+`demand.mw` and `sced.onlineHSL`; forecasts use `MARKET_URL` `/v1/signals`
+NP3-565-CD load-zone rows. The 24-hour scrubber only shades a zone when all
+24 hourly values are supplied, relative to that zone’s own peak. The current
+backend returns only the latest signal per report/zone, so a full forecast
+requires a backend contract extension. Missing hours/peaks say “Waiting for
+ERCOT”; no forecast values are extrapolated. Weather-to-load-zone mapping
+and map areas are labelled approximate/schematic.
+
+Help windows group consecutive HIGH-or-above prediction hours, exclude
+UNAVAILABLE and past hours, and use Central Time including dates and DST
+abbreviations. They are simulation estimates, not ERCOT alerts.
+
+`GET /api/esr-dashboard` fetches only
+`https://www.ercot.com/api/1/services/read/dashboards/energy-storage-resources.json`
+without credentials or redirects. It returns `timestamp` (reading UTC),
+`source_timestamp` (verbatim `lastUpdated`), `updated_at` (source update UTC),
+`charging_mw` (nonpositive), `discharging_mw` (nonnegative), `net_mw`,
+`hour_ago`, `change_net_mw`, and `source`. The one-hour comparison requires
+a reading exactly one hour earlier; otherwise it is null. Invalid readings
+or upstream failures return 502 without caching. The page refreshes every
+minute and labels retained or older-than-ten-minute readings stale. These
+are system-wide grid batteries, never household or individual-plant output.
+The existing battery-only filter and market ESR reading remain available.
