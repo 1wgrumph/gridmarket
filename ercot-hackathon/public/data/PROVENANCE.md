@@ -28,3 +28,17 @@
 - Gap admitted: the early-release input bytes are no longer retrievable, so
   the sample is reconciled against the final release, not the exact input
   vintage. ERCOT node-name mapping was not independently source-reconciled.
+
+## aug26.json — SOURCED (ERCOT Public API)
+
+- Fixture sha256: `3d69318405d64c296a6aacb40fe4419dfbf6dcdb87f53d0ab98893fbf218847e`.
+  Consumer: `ercot-hackathon/public/replay/` (God's Eye replay page).
+- Stated source: `ERCOT Public API: NP6-905-CD, NP4-190-CD, NP6-235-CD, NP6-323-CD, NP4-732-CD, NP4-737-CD, NP4-722-CD, NP6-345-CD`.
+- Contents:
+  - `source`: stated as `"ERCOT Public API: NP6-905-CD, NP4-190-CD, NP6-235-CD, NP6-323-CD, NP4-732-CD, NP4-737-CD, NP4-722-CD, NP6-345-CD"`.
+  - `intervals`: 96 real-time 15-minute intervals for 2026-08-26, each with timestamp `t`, prices `p` (for hubs `HB_HOUSTON`, `HB_NORTH`, `HB_SOUTH`, `HB_WEST` and load zone `LZ_HOUSTON`), and demand `d`.
+  - `hours`: 24 hourly records with hour ending `he`, day-ahead price `da`, `wind`, `solar`, `load`, and `temp`.
+  - `sced`: 295 SCED records with timestamp `ts`, system lambda `lam`, online HSL `hsl`, and `adder`.
+  - `spike`: summary object for the peak event (`interval`: 89, `t`: "22:15", `tEnd`: "22:30", `hub`: "HB_HOUSTON", `price`: 780.46, `lz`: 780.45, `demand`: 73518, `daHE`: 23, `da`: 98.54, `lamMax`: 914.5, `hsl`: 86441, `solar19`: 16901, `solar20`: 3867, `solar21`: 25, `wind23`: 7716, `peakDemand`: 90482, `peakDemandT`: "16:30", `dayHigh`: {`hub`: "HB_WEST", `price`: 795.33, `t`: "22:00"}).
+- Provenance and retrieval: the retrieval time was not recorded; the file was added in commit 80d673f by Jordan Hill. It is served as-is.
+
