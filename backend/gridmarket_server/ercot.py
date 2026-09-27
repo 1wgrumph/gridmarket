@@ -36,6 +36,12 @@ POLL_MINUTES = {
     "ESR": 5,
     "NWS-TEMP": 60,
     "NWS-ALERTS": 5,
+    # Snapshot series the poll stores (parse_snapshot) and history serves;
+    # the poll cadence key stays "SNAPSHOT" (DEC-GM-152).
+    "SNAPSHOT-HUBS": 5,
+    "SNAPSHOT-SCED": 5,
+    "SNAPSHOT-DEMAND": 5,
+    "SNAPSHOT-DAM": 5,
 }
 CENTRAL = ZoneInfo("America/Chicago")
 logger = logging.getLogger(__name__)

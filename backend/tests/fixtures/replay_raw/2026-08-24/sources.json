@@ -18,7 +18,7 @@
       "url": "https://www.ercot.com/misapp/servlets/IceDocListJsonWS?reportTypeId=13052"
     }
   ],
-  "selection_reason": "2026-08-24 is selected as a representative weekday operating day approximately one week prior to the end of the public load archive (2026-08-31). Peak HB_HOUSTON RT is 20.54/MWh, with evening spread 20.54 - 5.70 = 04.84/MWh.",
+  "selection_reason": "2026-08-24 is selected as a representative weekday operating day approximately one week prior to the end of the public load archive (2026-08-31). Peak HB_HOUSTON RT is 120.54/MWh, with evening spread 120.54 - 15.70 = 104.84/MWh.",
   "sources": {
     "da_prices": {
       "archive_published_at": "2026-09-20T13:03:03Z",

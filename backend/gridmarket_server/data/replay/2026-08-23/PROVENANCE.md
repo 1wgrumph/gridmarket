@@ -1,6 +1,6 @@
 # ERCOT replay provenance: 2026-08-23
 
-2026-08-23 has complete required data and the second largest HB_HOUSTON evening (17:00-21:00 Central) maximum minus daily minimum among August 2026 days inspected: 83.21 - 0.40 = 62.81/MWh, with peak RT price 62.40/MWh. This is a price-spread selection, not a declaration of an ERCOT scarcity event.
+2026-08-23 has complete required data and the second largest HB_HOUSTON evening (17:00-21:00 Central) maximum minus daily minimum among August 2026 days inspected: 383.21 - 20.40 = 362.81/MWh, with peak RT price 562.40/MWh. This is a price-spread selection, not a declaration of an ERCOT scarcity event.
 
 Historical ERCOT observations; simulated households, batteries, procurement and outcomes.
 All required series are settlement/display-only: original publication/availability and revision history are unknown.
@@ -43,7 +43,7 @@ Script SHA-256: `a35f7aee9dfe4b673370e6f99c2739b8a19ae3b098e55fd1994fee08cd6094a
 Parse the actual ZIP/XLSX shared-string and worksheet bytes; select D and the eight named points, retaining HU/LZ and excluding LZEW.
 Convert hour-ending/quarter labels to UTC. Keep hourly load at hourly resolution. No filling, interpolation or price clipping.
 Canonical JSON is sorted by UTC start and point; numeric source values are converted to JSON numbers without price rounding.
-Normalized output hashes are in meta.json; meta.json SHA-256: `724ae35fb8bc258530c07a82bde273d45d024f46c23cd42f87e3b115a50a2878`.
+Normalized output hashes are in meta.json; meta.json SHA-256: `b3763132e55b6c24d5ac9e31a215fe9d54986112c436bf9557c0f177517ab9ce`.
 
 ## Reproduction and fixture provenance
 

@@ -1,6 +1,6 @@
 # ERCOT replay provenance: 2026-07-20
 
-2026-07-20 has complete required data and the largest HB_HOUSTON evening (17:00-21:00 Central) maximum minus daily minimum in July 2026: 22.87 - 8.93 = 03.94/MWh, with peak RT price of 22.87/MWh. This provides cross-month summer representation under complete archive coverage.
+2026-07-20 has complete required data and the largest HB_HOUSTON evening (17:00-21:00 Central) maximum minus daily minimum in July 2026: 222.87 - 18.93 = 203.94/MWh, with peak RT price of 222.87/MWh. This provides cross-month summer representation under complete archive coverage.
 
 Historical ERCOT observations; simulated households, batteries, procurement and outcomes.
 All required series are settlement/display-only: original publication/availability and revision history are unknown.
@@ -43,7 +43,7 @@ Script SHA-256: `a35f7aee9dfe4b673370e6f99c2739b8a19ae3b098e55fd1994fee08cd6094a
 Parse the actual ZIP/XLSX shared-string and worksheet bytes; select D and the eight named points, retaining HU/LZ and excluding LZEW.
 Convert hour-ending/quarter labels to UTC. Keep hourly load at hourly resolution. No filling, interpolation or price clipping.
 Canonical JSON is sorted by UTC start and point; numeric source values are converted to JSON numbers without price rounding.
-Normalized output hashes are in meta.json; meta.json SHA-256: `6a2c5fc485dccd4aa008ae48d60d2815078b512ee94c2387f1d3e66bf1be0252`.
+Normalized output hashes are in meta.json; meta.json SHA-256: `8621d49f8fd4206f608e27efad7ab08b202e4e052e894e3d081b968e92457a4c`.
 
 ## Reproduction and fixture provenance
 
