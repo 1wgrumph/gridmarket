@@ -14,6 +14,7 @@ Live: https://ercot-hackathon.jordan-691.workers.dev
 | `/api/edc` | NP3-907-EX proxy |
 | `/api/products` | All ERCOT EMIL products |
 | `/api/report/<emil-id>/<report>` | Generic proxy for any report |
+| `/api/report/esr/charging_mw` | 4-second ESR charging MW proxy (separate API product) |
 | `/api/health` | Which secrets are set, whether a token is cached |
 | `/api/config` | `MARKET_URL` for the views' GridMarket feed |
 
@@ -32,6 +33,7 @@ wrangler kv namespace create ercot-hackathon-cache   # put the id in wrangler.js
 wrangler secret put ERCOT_USERNAME          # API Explorer sign-in email
 wrangler secret put ERCOT_PASSWORD
 wrangler secret put ERCOT_SUBSCRIPTION_KEY  # Primary key from apiexplorer.ercot.com profile
+wrangler secret put ERCOT_ESR_SUBSCRIPTION_KEY  # Primary key for the ESR API product
 wrangler secret put MARKET_KEY              # Shared key clients send as x-gridmarket-key
 wrangler deploy
 ```

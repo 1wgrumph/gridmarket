@@ -164,6 +164,7 @@ def list_bots() -> list[dict[str, object]]:
                     "losses": losses,
                     "loss_share": losses / len(pnls) if pnls else 0.0,
                     "thresholds": thresholds_from_ledger(conn, master, index),
+                    **economy.stats(account_id),
                 }
             )
         return rows

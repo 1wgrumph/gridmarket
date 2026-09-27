@@ -24,12 +24,78 @@
     { "id": "bot-8", "bot_index": 1, "bot_type": "market maker", "provider_id": "base-sim", "dormant": false }
   ],
   "/v1/bots/bot-7": {
-    "id": "bot-7", "bot_type": "score follower", "blend": { "score follower": 0.7, "saver": 0.3 }, "provider_id": "lonestar", "cash": 912, "net_worth": 1054, "pnl": 24, "trades": 8, "losses": 2, "loss_share": 0.25, "worst_loss": -18, "dormant": true,
-    "traits": { "risk appetite": 0.8, "patience": 0.3 },
-    "household": { "batteries": [13.5], "zone": "NORTH", "reserve_pct": 0.2, "schedule": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] },
-    "employed": true, "job": "technician", "pay": 40, "deposits": 40,
-    "balance_history": [{ "at": "2026-09-25T13:00:00Z", "balance": 990 }, { "at": "2026-09-26T13:00:00Z", "balance": 1054 }]
+    "id": "bot-7",
+    "bot_type": "score follower",
+    "blend": {
+      "score follower": 0.5182612276891416,
+      "heat seller": 0.32320520986987944,
+      "saver": 0.158533562440979
+    },
+    "provider_id": "base_sim",
+    "traits": {
+      "risk appetite": 0.16618658309870227,
+      "patience": 0.12500341869413137,
+      "reaction delay": 0.4192743656894099,
+      "loss aversion": 0.20841623145645705,
+      "herd versus contrarian": 0.5387899934209822,
+      "daily activity pattern": 0.8127364646637034,
+      "wealth": 0.017962330810836535
+    },
+    "household": {
+      "batteries": [
+        11.1
+      ],
+      "zone": "LZ_NORTH",
+      "reserve_pct": 0.3735,
+      "schedule": [
+        0.11202939736202987,
+        0.10224536679883137,
+        0.11956927245225948,
+        0.11991908927680504,
+        0.11119261208443719,
+        0.10836295396776514,
+        0.10381548749381414,
+        0.10902135879367619,
+        0.11741784304612878,
+        1.7503650158242807,
+        1.6798538303617159,
+        1.694018421959313,
+        1.7222783597452498,
+        1.6838830403240967,
+        1.5104707296857969,
+        1.7631994793401367,
+        1.7940236472638231,
+        0.10455183269323315,
+        0.10399584705711251,
+        0.11910912322043202,
+        0.10586859040380331,
+        0.10026940573751385,
+        0.10701155591725611,
+        0.10628957421459069
+      ]
+    },
+    "employed": false,
+    "pay": 44.61,
+    "cash": 912.0,
+    "balance": [
+      872.0,
+      912.0
+    ],
+    "balance_history": [
+      {
+        "at": "2026-09-25 13:00:00",
+        "balance": 912.0
+      }
+    ],
+    "trades": 0,
+    "losses": 1,
+    "loss_share": 0.25,
+    "worst_loss": -18.0,
+    "pnl": 24.0,
+    "net_worth": 912.0,
+    "dormant": false
   },
+  "_bot_profile_provenance": {"source": "http://127.0.0.1:18864/v1/bots/bot-7", "retrieved_at": "2026-09-26T21:27:54.223994+00:00", "sha256": "00633874036e72bb354e341f61cf9842e969ebda605ef80fc2a4cdc34fe22542", "transformation": "None. Captured from a local seeded backend; generated population profile with controlled account cash 91200 cents and four settled positions (-1800, 1400, 1400, 1400 cents). One 4000-cent payroll deposit."},
   "/v1/bots/diversity": {
     "coverage": 0.68,
     "entropy": 1.47,

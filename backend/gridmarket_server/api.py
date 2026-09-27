@@ -180,7 +180,8 @@ class Boundary:
             # Check before any credential lookup. Valid account keys refund this
             # token and use their own bucket; anonymous traffic shares the IP cap.
             ip_identity = "ip:" + address(request)
-            self.limit(ip_identity, 10, 20, headers)
+            rate, burst = (30, 60) if public else (10, 20)
+            self.limit(ip_identity, rate, burst, headers)
             if path.startswith("/v1/admin/"):
                 admin_guard(request)
             elif within(path, PRIVATE):

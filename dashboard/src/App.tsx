@@ -18,9 +18,10 @@ export default function App() {
     window.addEventListener('hashchange', update);
     return () => window.removeEventListener('hashchange', update);
   }, []);
-  const page = route.startsWith('#/bots/') ? <BotProfile id={decodeURIComponent(route.slice('#/bots/'.length))} /> : ({
+  const path = route.split('?')[0] || '#/';
+  const page = path.startsWith('#/bots/') ? <BotProfile id={decodeURIComponent(path.slice('#/bots/'.length))} /> : ({
     '#/': <Overview />, '#/market': <Market />, '#/predictions': <Predictions />,
     '#/providers': <Providers />, '#/bots': <Bots />, '#/sandbox': <Sandbox />, '#/spec': <Spec />,
-  } as Record<string, React.ReactNode>)[route] ?? <p>Page not found.</p>;
+  } as Record<string, React.ReactNode>)[path] ?? <p>Page not found.</p>;
   return <Shell>{page}</Shell>;
 }
