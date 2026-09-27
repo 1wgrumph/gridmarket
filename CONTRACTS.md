@@ -180,7 +180,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 
 | Name | Owning lane | Contract |
 | --- | --- | --- |
-| `#/` Overview, `useMarketStatus`, `useMarketActivity`, `useSignals` | ui | Overview shell and feed |
+| `#/` Overview, `useMarketStatus`, `useMarketActivity`, `useSignals`, `LiveGridPanel` | ui | Overview shell, live grid and feed |
 | `#/market` Market, `useMarket` | pages | Products and book |
 | `#/predictions` Predictions, `usePredictions`, `useRouterChecks` | pages | Scores and checks |
 | `#/providers` Providers, `useProviders`, `useProviderHealth` | providers-page | Provider health |
