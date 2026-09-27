@@ -1,0 +1,221 @@
+{
+ "/v1/bots/bot_0": {
+  "balance": [
+   499.33,
+   522.38
+  ],
+  "balance_history": [
+   {
+    "at": "2026-09-27 01:27:54",
+    "balance": 522.38
+   }
+  ],
+  "blend": {
+   "alert reactor": 0.45590664558648814,
+   "market maker": 0.43292596703665176,
+   "saver": 0.1111673873768601
+  },
+  "bot_type": "market maker",
+  "cash": 522.38,
+  "dormant": false,
+  "employed": true,
+  "household": {
+   "batteries": [
+    16.29
+   ],
+   "reserve_pct": 0.1731,
+   "schedule": [
+    0.11633520360848729,
+    0.10060422131763141,
+    0.11294753667936824,
+    0.10553809229474904,
+    0.10505454130257089,
+    0.1075170260136114,
+    2.2431892034138885,
+    2.2878959854635217,
+    2.196483907766054,
+    0.11838244572643027,
+    0.1179376024918847,
+    0.11228398997861616,
+    0.11844141185227941,
+    0.10597208581341151,
+    0.11267767323842129,
+    0.1132648357019429,
+    0.10584551762493724,
+    2.151132499000617,
+    2.2694045879336198,
+    2.3585671840453637,
+    0.1123175446814349,
+    0.11720379448503482,
+    0.10265987796770981,
+    0.10379220048809386
+   ],
+   "zone": "LZ_HOUSTON"
+  },
+  "id": "bot_0",
+  "info": {
+   "delay_s": 329,
+   "ev_bias": -0.0687849018258482,
+   "families": [
+    "congestion-pressure",
+    "peak-period",
+    "weather-alert"
+   ],
+   "noise": 0.0702462362497977
+  },
+  "loss_share": 0.0,
+  "losses": 0,
+  "net_worth": 522.38,
+  "pay": 23.05,
+  "pnl": 0.0,
+  "provider_id": "base_sim",
+  "trades": 0,
+  "traits": {
+   "daily activity pattern": 0.4395384499219399,
+   "herd versus contrarian": 0.5588952211462324,
+   "loss aversion": 0.15357501539005516,
+   "patience": 0.4441506404370383,
+   "reaction delay": 0.4194175321930707,
+   "risk appetite": 0.7514466485424645,
+   "wealth": 0.1926699923584808
+  },
+  "worst_loss": 0.0
+ },
+ "/v1/market": [
+  {
+   "delivery_hour": "2026-09-27T02:00:00+00:00",
+   "id": "SPOT-LZ_HOUSTON-2026-09-26-21",
+   "status": "open",
+   "symbol": "SPOT-LZ_HOUSTON-2026-09-26-21",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T05:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026-09-27-00",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026-09-27-00",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T05:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026-09-27-00",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026-09-27-00",
+   "zone": "LZ_NORTH"
+  }
+ ],
+ "/v1/market/FLEX-LZ_HOUSTON-2026-09-27-00": {
+  "delivery_hour": "2026-09-27T05:00:00+00:00",
+  "id": "FLEX-LZ_HOUSTON-2026-09-27-00",
+  "orders": [],
+  "status": "open",
+  "symbol": "FLEX-LZ_HOUSTON-2026-09-27-00",
+  "zone": "LZ_HOUSTON"
+ },
+ "/v1/market/history": [
+  {
+   "buy_order_id": "b47af526374541e0a97221f84ac1f025",
+   "created_at": "2026-09-27 01:28:06",
+   "id": "ae39dc72b5b74603ad732ec8cd94d448",
+   "price_cents": 37,
+   "product_id": "FLEX-LZ_NORTH-2026-09-27-00",
+   "quantity": 3,
+   "sell_order_id": "43a8e17e330f4820933b60b374149138"
+  },
+  {
+   "buy_order_id": "ed5253e4e9df4f4199fc36db197be2c9",
+   "created_at": "2026-09-27 01:28:06",
+   "id": "3e0214b86f754ee294494846d2f84bf2",
+   "price_cents": 45,
+   "product_id": "FLEX-LZ_HOUSTON-2026-09-27-00",
+   "quantity": 1,
+   "sell_order_id": "a04ed766f5b547b9a40cf125ff53fa37"
+  },
+  {
+   "buy_order_id": "de7688ce3bb342ff81003a3d9427d98d",
+   "created_at": "2026-09-27 01:28:06",
+   "id": "8afa364f309e48899c8c874dced5f2ea",
+   "price_cents": 42,
+   "product_id": "FLEX-LZ_HOUSTON-2026-09-27-00",
+   "quantity": 2,
+   "sell_order_id": "ce0985da78654060a86b301684986e65"
+  }
+ ],
+ "/v1/market/history?product_id=FLEX-LZ_HOUSTON-2026-09-27-00": [
+  {
+   "buy_order_id": "ed5253e4e9df4f4199fc36db197be2c9",
+   "created_at": "2026-09-27 01:28:06",
+   "id": "3e0214b86f754ee294494846d2f84bf2",
+   "price_cents": 45,
+   "product_id": "FLEX-LZ_HOUSTON-2026-09-27-00",
+   "quantity": 1,
+   "sell_order_id": "a04ed766f5b547b9a40cf125ff53fa37"
+  },
+  {
+   "buy_order_id": "de7688ce3bb342ff81003a3d9427d98d",
+   "created_at": "2026-09-27 01:28:06",
+   "id": "8afa364f309e48899c8c874dced5f2ea",
+   "price_cents": 42,
+   "product_id": "FLEX-LZ_HOUSTON-2026-09-27-00",
+   "quantity": 2,
+   "sell_order_id": "ce0985da78654060a86b301684986e65"
+  }
+ ],
+ "/v1/orders": [
+  {
+   "account_id": "2ca897ba4d3e44e9939b27edec05399b",
+   "created_at": "2026-09-27 01:28:06",
+   "id": "538bfa1987cb4e3bacc605f6661bb018",
+   "price_cents": 12,
+   "product_id": "FLEX-LZ_NORTH-2026-09-27-00",
+   "quantity": 1,
+   "remaining_qty": 1,
+   "side": "buy",
+   "status": "open"
+  },
+  {
+   "account_id": "2ca897ba4d3e44e9939b27edec05399b",
+   "created_at": "2026-09-27 01:28:06",
+   "id": "b47af526374541e0a97221f84ac1f025",
+   "price_cents": 37,
+   "product_id": "FLEX-LZ_NORTH-2026-09-27-00",
+   "quantity": 3,
+   "remaining_qty": 0,
+   "side": "buy",
+   "status": "filled"
+  },
+  {
+   "account_id": "2ca897ba4d3e44e9939b27edec05399b",
+   "created_at": "2026-09-27 01:28:06",
+   "id": "ed5253e4e9df4f4199fc36db197be2c9",
+   "price_cents": 45,
+   "product_id": "FLEX-LZ_HOUSTON-2026-09-27-00",
+   "quantity": 1,
+   "remaining_qty": 0,
+   "side": "buy",
+   "status": "filled"
+  },
+  {
+   "account_id": "2ca897ba4d3e44e9939b27edec05399b",
+   "created_at": "2026-09-27 01:28:06",
+   "id": "de7688ce3bb342ff81003a3d9427d98d",
+   "price_cents": 42,
+   "product_id": "FLEX-LZ_HOUSTON-2026-09-27-00",
+   "quantity": 2,
+   "remaining_qty": 0,
+   "side": "buy",
+   "status": "filled"
+  }
+ ],
+ "/v1/sandbox/keys": {
+  "account_id": "2ca897ba4d3e44e9939b27edec05399b",
+  "api_key": "gm_fixture_not_a_credential",
+  "label": "Export buyer"
+ },
+ "_provenance": {
+  "retrieved_at": "2026-09-27T01:28:06.876603+00:00",
+  "sha256": "5d2b30583b470f73fc85e2591bdc61ec91d3bcc38d5ac23418db5dc5f1c2d817",
+  "source": "http://127.0.0.1:18951 (local GridMarket backend, commit 2e9cd44, fresh DB, GRIDMARKET_NWS=off)",
+  "transformation": "Sandbox api_key replaced with a placeholder. Trades created by two sandbox keys crossing orders on FLEX-LZ_HOUSTON-2026-09-27-00 (2 @ 42c, 1 @ 45c) and FLEX-LZ_NORTH-2026-09-27-00 (3 @ 37c); one resting buy on FLEX-LZ_NORTH-2026-09-27-00. sha256 covers the JSON of all other keys (indent=1, sort_keys). After hashing, /v1/market was trimmed from 96 open products to the traded products plus one spot product."
+ }
+}
