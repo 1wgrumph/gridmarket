@@ -178,3 +178,172 @@ def test_r1_mutations_of_captured_parent_fail_typed():
         b.check_coverage(good[:-1], manifest["day"], "rt_prices")
     with pytest.raises(b.InputFailure, match="DUPLICATE_KEY"):
         b.check_coverage(good + good[:1], manifest["day"], "rt_prices")
+
+
+def _assert_day_shape_and_rebuild(tmp_path, day, expected):
+    b = builder()
+    raw_dir = Path(__file__).parent / f"fixtures/replay_raw/{day}"
+    data_dir = ROOT / f"backend/gridmarket_server/data/replay/{day}"
+    manifest_path = raw_dir / "sources.json"
+
+    # 1. Exact rebuild from captured excerpts produces every committed byte.
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--raw-dir",
+            str(raw_dir),
+            "--manifest",
+            str(manifest_path),
+            "--output",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert sorted(p.name for p in tmp_path.iterdir()) == sorted(p.name for p in data_dir.iterdir())
+    for path in data_dir.iterdir():
+        assert (tmp_path / path.name).read_bytes() == path.read_bytes()
+
+    # 2. Shape, resolution, units, and raw row fidelity
+    manifest = json.loads(manifest_path.read_text())
+    start_utc = datetime.fromisoformat(f"{day}T05:00:00Z")
+    for name, minutes, count, unit in [
+        ("rt_prices", 15, 768, "$/MWh"),
+        ("da_prices", 60, 192, "$/MWh"),
+        ("load", 60, 24, "MW"),
+    ]:
+        data = json.loads((data_dir / f"{name}.json").read_text())
+        rows = data["observations"]
+        source = manifest["sources"][name]
+        raw_rows = dict(b.read_rows((raw_dir / source["file"]).read_bytes(), source))
+        val_col = {"rt_prices": "G", "da_prices": "E", "load": "J"}[name]
+        for obs in rows:
+            orig = raw_rows[obs["provenance"]["row"]]
+            assert obs["value"] == float(orig[val_col])
+        assert data["unit"] == unit and data["resolution_minutes"] == minutes
+        assert len(rows) == count
+        points = ["ERCOT"] if name == "load" else b.POINTS
+        for pt in points:
+            series = [r for r in rows if r["point"] == pt]
+            assert [r["interval_start"] for r in series] == [
+                b.iso(start_utc + timedelta(minutes=i * minutes)) for i in range(1440 // minutes)
+            ]
+
+    # 3. Specific expected values from captured ERCOT observations
+    rt_rows = json.loads((data_dir / "rt_prices.json").read_text())["observations"]
+    da_rows = json.loads((data_dir / "da_prices.json").read_text())["observations"]
+    load_rows = json.loads((data_dir / "load.json").read_text())["observations"]
+
+    houston_rt = [r["value"] for r in rt_rows if r["point"] == "HB_HOUSTON"]
+    assert houston_rt[0] == expected["hb_rt_first"]
+    assert min(houston_rt) == expected["hb_rt_min"]
+    assert max(houston_rt) == expected["hb_rt_max"]
+    assert (
+        max(
+            r["value"]
+            for r in rt_rows
+            if r["point"] == "HB_HOUSTON"
+            and 17 <= datetime.fromisoformat(r["central_label"]).hour < 21
+        )
+        == expected["hb_rt_eve_max"]
+    )
+    assert (
+        next(r for r in da_rows if r["point"] == "HB_HOUSTON")["value"] == expected["hb_da_first"]
+    )
+    assert load_rows[0]["value"] == expected["load_first"]
+
+    # 4. Committed folder stays under 500 KB
+    total_size = sum(p.stat().st_size for p in data_dir.iterdir())
+    assert total_size < 500_000
+
+    # 5. Qualification hashes and availability metadata
+    meta = json.loads((data_dir / "meta.json").read_text())
+    assert meta["day"] == day
+    assert all(v["complete"] for v in meta["qualification"]["required_sources"].values())
+    assert meta["qualification"]["decision_eligible_series"] == []
+    assert set(meta["qualification"]["settlement_only_series"]) == {
+        "rt_prices",
+        "da_prices",
+        "load",
+    }
+    assert meta["transformation"]["script_sha256"] == b.sha(SCRIPT.read_bytes())
+    for name, digest in meta["normalized_sha256"].items():
+        assert b.sha((data_dir / name).read_bytes()) == digest
+
+
+def test_replay_day_2026_08_31(tmp_path):
+    _assert_day_shape_and_rebuild(
+        tmp_path,
+        "2026-08-31",
+        {
+            "hb_rt_first": 23.87,
+            "hb_rt_min": 19.99,
+            "hb_rt_max": 90.14,
+            "hb_rt_eve_max": 90.14,
+            "hb_da_first": 23.89,
+            "load_first": 66060.260873,
+        },
+    )
+
+
+def test_replay_day_2026_08_24(tmp_path):
+    _assert_day_shape_and_rebuild(
+        tmp_path,
+        "2026-08-24",
+        {
+            "hb_rt_first": 27.54,
+            "hb_rt_min": 15.7,
+            "hb_rt_max": 120.54,
+            "hb_rt_eve_max": 120.54,
+            "hb_da_first": 28.95,
+            "load_first": 69256.459314,
+        },
+    )
+
+
+def test_replay_day_2026_08_23(tmp_path):
+    _assert_day_shape_and_rebuild(
+        tmp_path,
+        "2026-08-23",
+        {
+            "hb_rt_first": 80.24,
+            "hb_rt_min": 20.4,
+            "hb_rt_max": 562.4,
+            "hb_rt_eve_max": 383.21,
+            "hb_da_first": 31.42,
+            "load_first": 67639.663175,
+        },
+    )
+
+
+def test_replay_day_2026_08_17(tmp_path):
+    _assert_day_shape_and_rebuild(
+        tmp_path,
+        "2026-08-17",
+        {
+            "hb_rt_first": 23.48,
+            "hb_rt_min": 16.4,
+            "hb_rt_max": 351.81,
+            "hb_rt_eve_max": 351.81,
+            "hb_da_first": 29.13,
+            "load_first": 64889.911896,
+        },
+    )
+
+
+def test_replay_day_2026_07_20(tmp_path):
+    _assert_day_shape_and_rebuild(
+        tmp_path,
+        "2026-07-20",
+        {
+            "hb_rt_first": 30.7,
+            "hb_rt_min": 18.93,
+            "hb_rt_max": 222.87,
+            "hb_rt_eve_max": 222.87,
+            "hb_da_first": 32.18,
+            "load_first": 63052.508836,
+        },
+    )
