@@ -252,5 +252,26 @@ describe("S71 Replay page (fixture: replay.json)", () => {
       });
     });
   });
-});
 
+  describe("God's Eye 3D replay tour link", () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    it("links the header to the 26 Aug 3D tour on the God's Eye origin when VITE_GODSEYE_URL is set", async () => {
+      vi.stubEnv("VITE_GODSEYE_URL", "https://views.example.test/godseye/");
+      render(<Replay />);
+      const link = screen.getByRole("link", { name: "See 26 Aug in 3D (God's Eye)" });
+      expect(link.getAttribute("href")).toBe("https://views.example.test/replay/#start");
+      expect(link.getAttribute("target")).toBe("_blank");
+      expect(link.getAttribute("rel")).toBe("noreferrer");
+      expect(link.closest(".page-heading")?.querySelector("h1")?.textContent).toMatch(/^Replay/);
+      await screen.findByRole("region", { name: /scoreboard · baseline/i });
+    });
+
+    it("shows no 3D tour link when VITE_GODSEYE_URL is unset", async () => {
+      vi.stubEnv("VITE_GODSEYE_URL", "");
+      render(<Replay />);
+      expect(screen.queryByRole("link", { name: /in 3D/ })).toBeNull();
+      await screen.findByRole("region", { name: /scoreboard · baseline/i });
+    });
+  });
+});
