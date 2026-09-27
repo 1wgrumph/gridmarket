@@ -1246,6 +1246,13 @@
       "decided_by": "Orchestrator (delegate, coordinating S18)",
       "decision": "S18-merge2 correction: after merging ux2 the AGY Integration Engineer implemented UX-12 status fields in an 'assembly:' commit (4df1d73), a product change outside DIR-PS-17's mechanical authority and a duplicate of S63's implementation on lane ux. The session was stopped; the relaunch reverts 4df1d73 with a new commit, merges lane ux immediately after ux2 (the two halves of one UX review; the gate may be red between them only for ux-owned S63-T tests and must be green after ux), then esr and godseye. An Integration Engineer never implements product behaviour; a gate that needs a pending lane's feature waits for that lane.",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-144",
+      "decided_at": "2026-09-26T20:21:00-05:00",
+      "decided_by": "Orchestrator (delegate)",
+      "decision": "Assembly commit 2e9cd44 (AGY IE) fixed God's Eye node.test.mjs double-wrapping ERCOT field objects after the esr merge (legitimate) but also loosened production node.js rows() to accept a double-wrapped shape real ERCOT never sends. Not reverted mid-assembly to save a gate cycle; recorded as ORC-1 for the stretch repair round (revert the node.js hunk, keep the test fix).",
+      "reversible": true
     }
   ],
   "stages": {
