@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 /* S71 Replay page, rendered from dashboard/src/fixtures/replay.json, captured
-   from the running S69 backend (see replay.PROVENANCE.md). Fetch is stubbed:
+   from the running S69b backend (see replay.PROVENANCE.md). Fetch is stubbed:
    GET /v1/replay/days serves the captured day list, POST /v1/replay serves the
-   captured baseline or scenario run by disruption count. No network. */
+   captured baseline or scenario run by disruption count (a 1-asset POST serves
+   the captured homeValue run), GET decisions filters the baseline trace. */
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 // @ts-ignore TS2732: resolveJsonModule is off in the frozen tsconfig; vitest/vite load JSON at runtime.
@@ -12,10 +13,12 @@ import Replay from "./Replay";
 
 type Day = { day: string; availability_mode: string };
 type Row = { strategy: string; net_value_cents: number; failed_commitments: number };
+type Step = { interval_start: string; interval_end: string; decisions: { strategy: string; decision_time: string }[] };
 
 const days = (fixture as { days: { days: Day[] } }).days.days;
-const baseline = (fixture as { baseline: { run_id: string; disclaimer: string; availability_mode: string; scoreboard: Row[] } }).baseline;
+const baseline = (fixture as { baseline: { run_id: string; disclaimer: string; availability_mode: string; scoreboard: Row[]; timeline: Step[] } }).baseline;
 const scenario = (fixture as { scenario: { run_id: string; scoreboard: Row[] } }).scenario;
+const homeValue = (fixture as { homeValue: unknown }).homeValue;
 const money = (cents: number) => `${cents < 0 ? "−" : "+"}$${(Math.abs(cents) / 100).toFixed(2)}`;
 
 let fetchMock: Mock;
@@ -23,12 +26,22 @@ let fetchMock: Mock;
 beforeEach(() => {
   window.location.hash = "#/replay?day=2026-08-26";
   fetchMock = vi.fn(async (input: string, init?: { method?: string; body?: string }) => {
-    const path = input.startsWith("http") ? new URL(input).pathname : input;
+    const path = (input.startsWith("http") ? new URL(input).pathname : input).split("?")[0];
+    const query = input.includes("?") ? new URL(input, "http://x").searchParams : new URLSearchParams();
     if (path === "/v1/replay/days") return { ok: true, status: 200, json: async () => (fixture as { days: unknown }).days };
     if (path === "/v1/replay" && (init?.method ?? "GET") === "POST") {
-      const body = JSON.parse(String(init?.body ?? "{}")) as { disruptions?: unknown[] };
+      const body = JSON.parse(String(init?.body ?? "{}")) as { disruptions?: unknown[]; fleet: { assets: unknown[] } };
+      if (body.fleet.assets.length === 1) return { ok: true, status: 200, json: async () => homeValue };
       const run = (body.disruptions?.length ?? 0) > 0 ? scenario : baseline;
       return { ok: true, status: 200, json: async () => run };
+    }
+    if (path.startsWith("/v1/replay/") && path.endsWith("/decisions")) {
+      const strategy = query.get("strategy");
+      const start = query.get("start") ?? "";
+      const end = query.get("end") ?? "";
+      const decisions = baseline.timeline.flatMap(step => step.decisions)
+        .filter(d => d.strategy === strategy && d.decision_time >= start && d.decision_time < end);
+      return { ok: true, status: 200, json: async () => ({ run_id: baseline.run_id, decisions }) };
     }
     if (path === "/v1/signals") return { ok: true, status: 200, json: async () => [] };
     return { ok: false, status: 404, json: async () => ({ error: { code: "NOT_FOUND", message: path } }) };
@@ -43,11 +56,13 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+const esr = (rows: Row[]) => rows.find(row => row.strategy === "esr_informed") as Row;
+
 async function loaded() {
   render(<Replay />);
   const board = await screen.findByRole("region", { name: /scoreboard · baseline/i });
   await within(board).findByRole("row", { name: /battery-aware/i });
-  expect((await within(board).findAllByText(money(105))).length).toBeGreaterThanOrEqual(3);
+  await within(board).findByText(money(esr(baseline.scoreboard).net_value_cents));
   return board;
 }
 
@@ -97,7 +112,7 @@ describe("S71 Replay page (fixture: replay.json)", () => {
 
   it("opens the why card for a clicked lane quarter with reason and input times", async () => {
     const board = await loaded();
-    expect(board.textContent).toContain(money(105));
+    expect(board.textContent).toContain(money(esr(baseline.scoreboard).net_value_cents));
     const lanes = await screen.findByRole("region", { name: /strategy lanes/i });
     const lane = within(lanes).getByRole("group", { name: /battery-aware lane/i });
     const cells = within(lane).getAllByRole("button");
@@ -119,13 +134,14 @@ describe("S71 Replay page (fixture: replay.json)", () => {
     const form = await screen.findByRole("region", { name: /disruptions/i });
     fireEvent.click(within(form).getByRole("button", { name: /run scenario/i }));
     const versus = await screen.findByRole("region", { name: /baseline versus scenario/i });
-    await waitFor(() => expect(versus.textContent).toContain(money(83)));
-    expect(versus.textContent).toContain(money(105));
+    await waitFor(() => expect(versus.textContent).toContain(money(esr(scenario.scoreboard).net_value_cents)));
+    expect(versus.textContent).toContain(money(esr(baseline.scoreboard).net_value_cents));
     expect(versus.textContent).toMatch(/failed commitment/i);
     const posts = fetchMock.mock.calls.filter(([path, init]) => path === "/v1/replay" && init?.method === "POST");
     expect(posts.length).toBeGreaterThanOrEqual(2);
-    const payload = JSON.parse(String(posts[posts.length - 1][1].body)) as { disruptions: { type: string }[] };
-    expect(payload.disruptions[0].type).toBe("provider_offline");
+    const scenPost = posts.map(([, init]) => JSON.parse(String(init.body)) as { disruptions: { type: string }[] })
+      .find(payload => payload.disruptions.length > 0);
+    expect(scenPost?.disruptions[0].type).toBe("provider_offline");
     fireEvent.click(within(form).getByRole("button", { name: /^reset$/i }));
     await waitFor(() => expect(screen.queryByRole("region", { name: /baseline versus scenario/i })).toBeNull());
   });

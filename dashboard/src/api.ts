@@ -38,9 +38,14 @@ export type ReplayScore = {
   charging_cost_cents: number; flexibility_bonus_cents: number; shortfall_penalty_cents: number;
   opening_energy_value_cents: number; terminal_energy_value_cents: number;
   energy_delivered_kwh: string; requested_kwh: string; accepted_kwh: string; delivered_kwh: string;
-  shortfall_kwh: string; min_reserve_kwh: string; observed_min_soc_kwh: string;
+  shortfall_kwh: string; self_supply_kwh: string; min_reserve_kwh: string; observed_min_soc_kwh: string;
   start_soc_kwh: string; end_soc_kwh: string; reserve_breach_count: number;
   attempted_reserve_violations: number; failed_commitments: number;
+};
+export type FleetRow = {
+  interval_start: string; interval_end: string; soc_kwh: string; spp: string;
+  charge_kw: string; offered_kwh: string; accepted_kwh: string; delivered_kwh: string;
+  self_supply_kwh: string; shortfall_kwh: string; failed_commitments: number;
 };
 export type ReplayAsset = {
   asset_id: string; provider_id: string; capacity_kwh: string; initial_soc_kwh: string;
@@ -55,9 +60,11 @@ export type ReplayRun = {
     disruptions: { type: string; provider_id?: string; source?: string; start: string; end: string }[];
   };
   scoreboard: ReplayScore[]; timeline: ReplayStep[];
-  /** S69b additions (optional until that lane lands); the page probes them defensively. */
-  fleet_timeline?: Record<string, { interval_start: string; action?: string; soc_kwh?: string }[]>;
-  procurement_quarters?: string[];
+  /** S69b body: fleet aggregates per strategy, DAM-selected procurement hours, sample home. */
+  fleet_timeline: Record<string, FleetRow[]>;
+  procurement_hours: string[];
+  sample_asset_id: string;
+  strategy_rules: Record<string, { display_name: string; rules: string }>;
 };
 
 export async function get<T>(path: string, key?: string): Promise<T> {

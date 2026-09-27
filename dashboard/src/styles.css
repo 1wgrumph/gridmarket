@@ -538,3 +538,18 @@ thead th{font-weight:500;letter-spacing:.02em}
 .replay-head .tag{min-width:150px;justify-content:center}
 @media(max-width:760px){.reserve-prices .loading{min-height:455px}.reserve-lanes .loading{min-height:355px}.reserve-why .loading{min-height:465px}}
 @media(max-width:360px){.reserve-prices .loading{min-height:470px}.reserve-lanes .loading{min-height:370px}.reserve-why .loading{min-height:500px}}
+/* S72 your turn: mockup layout in shipped tokens; the value card reserves one line for CLS. */
+.score-anchor{display:contents}
+.your-slider{display:flex;flex-direction:column;gap:6px;padding:0 18px 4px}
+.slider-scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.slider-label{font-size:14px}
+.your-slider input,.your-fleet input{width:100%;min-height:44px;accent-color:var(--accent-fill)}
+.your-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:12px 18px 4px}
+.your-card{display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:var(--r-4);background:var(--secondary);font-size:12px}
+.your-card strong{font-size:26px;font-weight:700;line-height:1.2;min-height:31px}
+.your-fleet{display:flex;flex-direction:column;gap:6px;padding:14px 18px 0;margin-top:12px;border-top:1px solid var(--line)}
+.fleet-line{margin:0;font-size:15px}
+.next-steps{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;list-style:none;margin:12px 0 0;padding:12px 18px 16px;font-size:14px}
+.next-steps .show-book{min-height:44px}
+#your-turn .connection-line{margin:8px 18px 0}
+@media(max-width:760px){.your-cards{grid-template-columns:minmax(0,1fr)}.your-slider,.your-fleet,.next-steps{padding-inline:14px}#your-turn .connection-line{margin-inline:14px}}
