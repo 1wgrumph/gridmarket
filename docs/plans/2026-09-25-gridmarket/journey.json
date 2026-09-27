@@ -1289,6 +1289,17 @@
         "packets/RP/RP-A2.md",
         "evidence/live-capture-20260927/"
       ]
+    },
+    {
+      "id": "DEC-GM-149",
+      "at": "2026-09-27T05:53:08Z",
+      "by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "Repaired stretch candidate f8f3df9 passed the full deterministic gate (RP-merge); PR #18 opened and merges once the Orchestrator's mutation rerun (market, ercot, scoring; 8 workers on the byte-identical backend of 18cc6d9, only PROVENANCE.md differs) reports >= 70% per CMD-MUTATION. To pull the schedule left, the extras X1-X5 are assembled now on gridmarket/integration-extras from f8f3df9, routed to the Implementer role because the repair round and the extras touch the same pages (merge-conflict resolution is judgement work per the owner's routing). Their own review and one repair follow, then v0.5.0. Claude Code agent launches now pass settings that disable the Co-Authored-By trailer; six earlier commits keep it (no force-push).",
+      "refs": [
+        "candidates/stretch-r1",
+        "packets/X/X-merge.md",
+        "PR #18"
+      ]
     }
   ],
   "stages": {
