@@ -102,8 +102,8 @@ coverage:
 mutation:
 	mkdir -p backend/mutants
 	test -L backend/mutants/source-tests || ln -s ../tests backend/mutants/source-tests
-	cd backend && uv run --frozen mutmut run $(MUTANTS)
-	cd backend && uv run --frozen mutmut export-cicd-stats
+	cd backend && GRIDMARKET_NWS=off uv run --frozen --extra ml mutmut run $(MUTANTS)
+	cd backend && GRIDMARKET_NWS=off uv run --frozen --extra ml mutmut export-cicd-stats
 	cat backend/mutants/mutmut-cicd-stats.json
 	@python3 -c 'import json; s=json.load(open("backend/mutants/mutmut-cicd-stats.json")); n=s["killed"]+s["survived"]+s["timeout"]; assert n, "No scored mutants"; print("Mutation score: {:.2%} ({}/{})".format(s["killed"]/n, s["killed"], n))'
 

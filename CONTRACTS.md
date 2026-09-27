@@ -183,7 +183,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `#/` Overview, `useMarketStatus`, `useMarketActivity`, `useSignals` | ui | Overview shell and feed |
 | `#/market` Market, `useMarket` | pages | Products and book |
 | `#/predictions` Predictions, `usePredictions`, `useRouterChecks` | pages | Scores and checks |
-| `#/providers` Providers, `useProviders`, `useProviderHealth` | providers-page | Provider health |
+| `#/providers` Providers, `useProviders`, `useProviderHealth` | providers-page | Provider health; worker health check links to `#provider-worker` (DEC-GM-147) |
 | `#/bots` Bots, `useBots`, `useBotDiversity` | pages | Population and diversity |
 | `#/bots/:id` BotProfile, `useBotProfile` | pages | Public profile |
 | `#/sandbox` Sandbox | pages | Judge key onboarding |

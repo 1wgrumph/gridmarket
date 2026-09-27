@@ -18,7 +18,7 @@ from gridmarket_server import ercot
 
 NOW = datetime(2026, 9, 26, 14, 0, 10, tzinfo=UTC)
 H14, H15 = "2026-09-26T14:00:00+00:00", "2026-09-26T15:00:00+00:00"
-HELPER = Path(__file__).parent.parent.parent / "ercot-hackathon/test/snapshot-stub.mjs"
+HELPER = Path(__file__).resolve().parent.parent.parent / "ercot-hackathon/test/snapshot-stub.mjs"
 
 
 class FrozenDatetime(datetime):
