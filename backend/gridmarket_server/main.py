@@ -1,6 +1,7 @@
 """FastAPI composition root for the contract-first skeleton."""
 
 import asyncio
+import inspect
 import os
 import sqlite3
 from contextlib import asynccontextmanager, suppress
@@ -23,11 +24,21 @@ from . import (
     seed,
 )
 from .providers import enabled
+from .replay import routes as replay
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def normalize_env() -> None:
+    """Empty means unset: a blank ``KEY=`` line in ``.env`` must not override defaults."""
+    for name, value in list(os.environ.items()):
+        if name.startswith("GRIDMARKET_") and value == "":
+            del os.environ[name]
+
+
 def create_app() -> FastAPI:
+    normalize_env()
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         db_path = Path(os.getenv("GRIDMARKET_DB", "/data/gridmarket.db"))
@@ -36,19 +47,31 @@ def create_app() -> FastAPI:
             db.execute("PRAGMA journal_mode=WAL")
             db.executescript((Path(__file__).with_name("schema.sql")).read_text())
             seed.seed(db)
+            economy.rebuild(db)
         app.state.providers = enabled()
 
-        async def repeat(seconds: int, fn):
+        # Finish initial provider state before requests can race the first heartbeat.
+        await asyncio.to_thread(health.tick)
+
+        async def repeat(seconds: int, fn, *, delay_first: bool = False):
+            if delay_first:
+                await asyncio.sleep(seconds)
             while True:
-                result = fn()
-                if asyncio.iscoroutine(result):
-                    await result
+                try:
+                    if inspect.iscoroutinefunction(fn):
+                        await fn()
+                    else:
+                        await asyncio.to_thread(fn)
+                except Exception:
+                    import logging
+
+                    logging.getLogger(__name__).exception("Scheduled tick failed: %s", fn.__name__)
                 await asyncio.sleep(seconds)
 
         jobs = [
             asyncio.create_task(repeat(60, decision_router.tick)),
             asyncio.create_task(repeat(60, economy.tick)),
-            asyncio.create_task(repeat(10, health.tick)),
+            asyncio.create_task(repeat(10, health.tick, delay_first=True)),
         ]
         if os.getenv("GRIDMARKET_WORKER_URL"):
             jobs.append(asyncio.create_task(repeat(60, ercot.poll)))
@@ -64,7 +87,7 @@ def create_app() -> FastAPI:
                     await job
 
     app = FastAPI(title="GridMarket", lifespan=lifespan)
-    for module in (market, api, bots_api, decision_router, health, adversary_api):
+    for module in (market, api, bots_api, decision_router, health, adversary_api, replay):
         app.include_router(module.router)
     for url, relative in (("/llms.txt", "docs/llms.txt"), ("/guide.md", "docs/USER_GUIDE.md")):
         path = ROOT / relative

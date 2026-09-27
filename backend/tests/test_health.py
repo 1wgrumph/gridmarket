@@ -1,6 +1,8 @@
 """S10 heartbeat, health checks, and outage checks (SEIT-GM-PROV-03/04)."""
 
+import asyncio
 import sqlite3
+import threading
 from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -76,7 +78,7 @@ def test_seit_gm_prov_04_heartbeat_30_second_boundary_and_recovery(service) -> N
 
 def test_seit_gm_router_03_worker_and_provider_health_bands(service, monkeypatch) -> None:
     _, db_path = service
-    monkeypatch.setattr(ercot, "worker_stats", lambda: WorkerStats(requests=100))
+    monkeypatch.setattr(ercot, "worker_stats", lambda: WorkerStats(requests=100, snapshot_age_s=0))
     healthy = [row for row in decision_router.evaluate() if row.family == "health"]
     assert {row.subject.lower() for row in healthy} >= {"worker", "base_sim", "lonestar"}
     assert all(row.horizon_s == 900 and 0 <= row.probability < 0.5 for row in healthy)
@@ -104,11 +106,11 @@ def test_seit_gm_router_03_each_worker_stat_changes_probability(service, monkeyp
         checks = [row for row in decision_router.evaluate() if row.family == "health"]
         return next(row.probability for row in checks if row.subject.lower() == "worker")
 
-    baseline = worker_probability(WorkerStats(requests=100))
+    baseline = worker_probability(WorkerStats(requests=100, snapshot_age_s=0))
     variants = (
-        WorkerStats(requests=100, errors=100),
-        WorkerStats(requests=100, http_429=100),
-        WorkerStats(requests=100, latencies_ms=[20_000] * 100),
+        WorkerStats(requests=100, errors=100, snapshot_age_s=0),
+        WorkerStats(requests=100, http_429=100, snapshot_age_s=0),
+        WorkerStats(requests=100, latencies_ms=[20_000] * 100, snapshot_age_s=0),
         WorkerStats(requests=100, snapshot_age_s=3600),
     )
     assert all(worker_probability(stats) > baseline for stats in variants)
@@ -192,7 +194,7 @@ def test_seit_gm_prov_04_public_health_route(service) -> None:
 
 
 def test_seit_gm_prov_04_heartbeat_loop_runs_every_ten_seconds() -> None:
-    assert "repeat(10, health.tick)" in Path(main.__file__).read_text()
+    assert "repeat(10, health.tick, delay_first=True)" in Path(main.__file__).read_text()
 
 
 def test_health_live_provider_documents(service, monkeypatch) -> None:
@@ -288,9 +290,11 @@ def test_health_admin_error_contract(service, monkeypatch) -> None:
         assert response.json() == {
             "error": {"code": "FORBIDDEN", "message": "Admin routes are local only"}
         }
-    for host in ("::1", "testclient"):
+    for host in ("::1", "172.23.0.1"):
         local = TestClient(client.app, client=(host, 0))
         assert local.post(url, headers=authorized, json={"active": False}).status_code == 200
+    denied = TestClient(client.app, client=("testclient", 0))
+    assert denied.post(url, headers=authorized, json={"active": False}).status_code == 403
     monkeypatch.delenv("GRIDMARKET_ADMIN_KEY")
     response = client.post(url, headers={"Authorization": "Bearer "}, json={"active": True})
     assert response.status_code == 401
@@ -335,3 +339,32 @@ def test_health_risk_calibration_and_check_contract(service, monkeypatch) -> Non
         }
     assert health._risk([-1, 2]) == pytest.approx(1 / (1 + math.exp(1)))
     assert rows["base_sim"].probability == pytest.approx(1 / (1 + math.exp(3)))
+
+
+def test_s43b_startup_waits_for_first_health_tick(tmp_path, monkeypatch):
+    monkeypatch.setenv("GRIDMARKET_DB", str(tmp_path / "startup.db"))
+    monkeypatch.setenv("GRIDMARKET_NWS", "off")
+    monkeypatch.delenv("GRIDMARKET_WORKER_URL", raising=False)
+    entered, release = threading.Event(), threading.Event()
+    real_tick = health.tick
+
+    def held_tick():
+        entered.set()
+        assert release.wait(5), "startup test did not release health tick"
+        real_tick()
+
+    monkeypatch.setattr(health, "tick", held_tick)
+
+    async def start():
+        app = main.create_app()
+        lifespan = app.router.lifespan_context(app)
+        startup = asyncio.create_task(lifespan.__aenter__())
+        try:
+            assert await asyncio.to_thread(entered.wait, 5), "first health tick did not start"
+            assert not startup.done(), "startup accepted requests before health tick completed"
+        finally:
+            release.set()
+            await startup
+            await lifespan.__aexit__(None, None, None)
+
+    asyncio.run(start())

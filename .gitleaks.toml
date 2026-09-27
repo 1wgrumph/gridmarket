@@ -2,3 +2,12 @@ title = "GridMarket secret scan"
 
 [extend]
 useDefault = true
+
+[allowlist]
+description = "Synthetic test fixture API key in dashboard flow tests (DEC-GM-147 / F4)"
+paths = [
+    "^dashboard/src/pages/s63-flows\\.s63\\.test\\.tsx$",
+]
+regexes = [
+    "gm_test_key_abcdef123456",
+]

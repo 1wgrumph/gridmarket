@@ -1,0 +1,417 @@
+{
+  "_meta": {
+    "totalRecords": 48,
+    "pageSize": 1000,
+    "totalPages": 1,
+    "currentPage": 1,
+    "query": {
+      "parameterCount": 3,
+      "parameters": {
+        "deliveryDateFrom": "2026-09-26",
+        "deliveryDateTo": "2026-09-27",
+        "settlementPoint": "LZ_NORTH"
+      },
+      "sortedBy": "deliveryDate: ASC"
+    }
+  },
+  "report": {
+    "reportName": "dam_stlmnt_pnt_prices",
+    "reportDisplayName": "DAM Settlement Point Prices",
+    "reportId": "12331",
+    "reportEMIL": "NP4-190-CD",
+    "downloadLimit": 2000000
+  },
+  "fields": [
+    {
+      "name": "deliveryDate",
+      "label": "Delivery Date",
+      "cardinality": 1,
+      "dataType": "DATE",
+      "searchable": true,
+      "sortable": true,
+      "hasRange": true
+    },
+    {
+      "name": "hourEnding",
+      "label": "Hour Ending",
+      "cardinality": 2,
+      "dataType": "VARCHAR",
+      "searchable": true,
+      "sortable": true,
+      "hasRange": false
+    },
+    {
+      "name": "settlementPoint",
+      "label": "Settlement Point",
+      "cardinality": 3,
+      "dataType": "VARCHAR",
+      "searchable": true,
+      "sortable": true,
+      "hasRange": false
+    },
+    {
+      "name": "settlementPointPrice",
+      "label": "Settlement Point Price",
+      "cardinality": 4,
+      "dataType": "DOUBLE",
+      "searchable": true,
+      "sortable": true,
+      "hasRange": true
+    },
+    {
+      "name": "DSTFlag",
+      "label": "DST Flag",
+      "cardinality": 5,
+      "dataType": "BOOLEAN",
+      "searchable": true,
+      "sortable": true,
+      "hasRange": false
+    }
+  ],
+  "data": [
+    [
+      "2026-09-26",
+      "24:00",
+      "LZ_NORTH",
+      32.49,
+      false
+    ],
+    [
+      "2026-09-26",
+      "23:00",
+      "LZ_NORTH",
+      37.32,
+      false
+    ],
+    [
+      "2026-09-26",
+      "22:00",
+      "LZ_NORTH",
+      44.16,
+      false
+    ],
+    [
+      "2026-09-26",
+      "21:00",
+      "LZ_NORTH",
+      52.75,
+      false
+    ],
+    [
+      "2026-09-26",
+      "20:00",
+      "LZ_NORTH",
+      64.45,
+      false
+    ],
+    [
+      "2026-09-26",
+      "19:00",
+      "LZ_NORTH",
+      65.64,
+      false
+    ],
+    [
+      "2026-09-26",
+      "18:00",
+      "LZ_NORTH",
+      48.52,
+      false
+    ],
+    [
+      "2026-09-26",
+      "17:00",
+      "LZ_NORTH",
+      37.86,
+      false
+    ],
+    [
+      "2026-09-26",
+      "16:00",
+      "LZ_NORTH",
+      33.31,
+      false
+    ],
+    [
+      "2026-09-26",
+      "15:00",
+      "LZ_NORTH",
+      28.65,
+      false
+    ],
+    [
+      "2026-09-26",
+      "14:00",
+      "LZ_NORTH",
+      24.66,
+      false
+    ],
+    [
+      "2026-09-26",
+      "13:00",
+      "LZ_NORTH",
+      19.52,
+      false
+    ],
+    [
+      "2026-09-26",
+      "12:00",
+      "LZ_NORTH",
+      17.14,
+      false
+    ],
+    [
+      "2026-09-26",
+      "11:00",
+      "LZ_NORTH",
+      17.23,
+      false
+    ],
+    [
+      "2026-09-26",
+      "10:00",
+      "LZ_NORTH",
+      20.07,
+      false
+    ],
+    [
+      "2026-09-26",
+      "09:00",
+      "LZ_NORTH",
+      21.94,
+      false
+    ],
+    [
+      "2026-09-26",
+      "08:00",
+      "LZ_NORTH",
+      26.61,
+      false
+    ],
+    [
+      "2026-09-26",
+      "07:00",
+      "LZ_NORTH",
+      26.55,
+      false
+    ],
+    [
+      "2026-09-26",
+      "06:00",
+      "LZ_NORTH",
+      25.16,
+      false
+    ],
+    [
+      "2026-09-26",
+      "05:00",
+      "LZ_NORTH",
+      24.22,
+      false
+    ],
+    [
+      "2026-09-26",
+      "04:00",
+      "LZ_NORTH",
+      24.7,
+      false
+    ],
+    [
+      "2026-09-26",
+      "03:00",
+      "LZ_NORTH",
+      25.34,
+      false
+    ],
+    [
+      "2026-09-26",
+      "02:00",
+      "LZ_NORTH",
+      27.4,
+      false
+    ],
+    [
+      "2026-09-26",
+      "01:00",
+      "LZ_NORTH",
+      30.75,
+      false
+    ],
+    [
+      "2026-09-27",
+      "24:00",
+      "LZ_NORTH",
+      36.32,
+      false
+    ],
+    [
+      "2026-09-27",
+      "23:00",
+      "LZ_NORTH",
+      53.14,
+      false
+    ],
+    [
+      "2026-09-27",
+      "22:00",
+      "LZ_NORTH",
+      88.06,
+      false
+    ],
+    [
+      "2026-09-27",
+      "21:00",
+      "LZ_NORTH",
+      99.05,
+      false
+    ],
+    [
+      "2026-09-27",
+      "20:00",
+      "LZ_NORTH",
+      110,
+      false
+    ],
+    [
+      "2026-09-27",
+      "19:00",
+      "LZ_NORTH",
+      109.87,
+      false
+    ],
+    [
+      "2026-09-27",
+      "18:00",
+      "LZ_NORTH",
+      76.66,
+      false
+    ],
+    [
+      "2026-09-27",
+      "17:00",
+      "LZ_NORTH",
+      53.9,
+      false
+    ],
+    [
+      "2026-09-27",
+      "16:00",
+      "LZ_NORTH",
+      43.75,
+      false
+    ],
+    [
+      "2026-09-27",
+      "15:00",
+      "LZ_NORTH",
+      36.86,
+      false
+    ],
+    [
+      "2026-09-27",
+      "14:00",
+      "LZ_NORTH",
+      32.51,
+      false
+    ],
+    [
+      "2026-09-27",
+      "13:00",
+      "LZ_NORTH",
+      26.83,
+      false
+    ],
+    [
+      "2026-09-27",
+      "12:00",
+      "LZ_NORTH",
+      21.98,
+      false
+    ],
+    [
+      "2026-09-27",
+      "11:00",
+      "LZ_NORTH",
+      20.19,
+      false
+    ],
+    [
+      "2026-09-27",
+      "10:00",
+      "LZ_NORTH",
+      18.97,
+      false
+    ],
+    [
+      "2026-09-27",
+      "09:00",
+      "LZ_NORTH",
+      21.61,
+      false
+    ],
+    [
+      "2026-09-27",
+      "08:00",
+      "LZ_NORTH",
+      28.96,
+      false
+    ],
+    [
+      "2026-09-27",
+      "07:00",
+      "LZ_NORTH",
+      27.73,
+      false
+    ],
+    [
+      "2026-09-27",
+      "06:00",
+      "LZ_NORTH",
+      25.51,
+      false
+    ],
+    [
+      "2026-09-27",
+      "05:00",
+      "LZ_NORTH",
+      25.04,
+      false
+    ],
+    [
+      "2026-09-27",
+      "04:00",
+      "LZ_NORTH",
+      24.72,
+      false
+    ],
+    [
+      "2026-09-27",
+      "03:00",
+      "LZ_NORTH",
+      27.41,
+      false
+    ],
+    [
+      "2026-09-27",
+      "02:00",
+      "LZ_NORTH",
+      29.2,
+      false
+    ],
+    [
+      "2026-09-27",
+      "01:00",
+      "LZ_NORTH",
+      31.24,
+      false
+    ]
+  ],
+  "_links": {
+    "self": {
+      "href": "https://api.ercot.com/api/public-reports/np4-190-cd/dam_stlmnt_pnt_prices"
+    },
+    "parent": {
+      "href": "https://api.ercot.com/api/public-reports/np4-190-cd"
+    }
+  }
+}

@@ -68,17 +68,6 @@ def test_seit_gm_prov_01_adapters_conform(market) -> None:
     for name, adapter in adapters.items():
         assert adapter.provider_id == name
         assert adapter.display_name
-        for method in (
-            "list_customers",
-            "list_assets",
-            "available_capacity",
-            "reserve_capacity",
-            "release_capacity",
-            "verify_delivery",
-            "asset_status",
-            "heartbeat",
-        ):
-            assert callable(getattr(adapter, method))
         assert adapter.list_customers(), name
         assets = adapter.list_assets()
         assert assets, name
@@ -86,6 +75,15 @@ def test_seit_gm_prov_01_adapters_conform(market) -> None:
             hour = db.execute("SELECT delivery_hour FROM products WHERE id='spot'").fetchone()[0]
         assert adapter.available_capacity(assets[0]["id"], hour) > 0
         assert adapter.asset_status(assets[0]["id"])["online"] is True
+        assert adapter.heartbeat() is None
+        assert adapter.verify_delivery("missing-reservation") is False
+        with sqlite3.connect(db_path) as db:
+            held_before = adapter.available_capacity(assets[0]["id"], hour)
+            bound = type(adapter)(db, "conform-order")
+            reservation = bound.reserve_capacity(db, assets[0]["id"], hour, 1)
+            assert bound.available_capacity(assets[0]["id"], hour) < held_before
+            bound.release_capacity(db, reservation)
+            assert bound.available_capacity(assets[0]["id"], hour) == held_before
     assert client.get("/v1/providers").status_code == 200
 
 
@@ -126,7 +124,10 @@ def test_seit_gm_prov_02_lonestar_population_and_public_counts(market) -> None:
     response = client.get("/v1/providers")
     assert response.status_code == 200
     assert "lonestar" in response.text and "base_sim" in response.text
-    assert str(seeded["lonestar"]) in response.text
+    # UX-12 includes the non-bot seller who owns a provider asset.
+    summary = {row["id"]: row["participants"] for row in response.json()}
+    assert summary["lonestar"] == seeded["lonestar"] + 1
+    assert summary["base_sim"] == seeded["base_sim"] + 1
 
 
 def test_seit_gm_prov_02_cross_provider_fill(market) -> None:

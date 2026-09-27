@@ -1,0 +1,322 @@
+{
+  "clock": "2026-09-26T10:00:00Z",
+  "/v1/market/status": {
+    "status": "open",
+    "anomalies": []
+  },
+  "/v1/market/history": [
+    {
+      "id": "trade-301",
+      "product_id": "FLEX-LZ_HOUSTON-2026092618",
+      "buy_order_id": "order-buy-301",
+      "sell_order_id": "order-sell-301",
+      "quantity": 2,
+      "price_cents": 5020,
+      "created_at": "2026-09-26T09:55:05Z"
+    },
+    {
+      "id": "trade-302",
+      "product_id": "FLEX-LZ_HOUSTON-2026092618",
+      "buy_order_id": "order-buy-302",
+      "sell_order_id": "order-sell-302",
+      "quantity": 1,
+      "price_cents": 4980,
+      "created_at": "2026-09-26T09:56:10Z"
+    },
+    {
+      "id": "trade-303",
+      "product_id": "FLEX-LZ_HOUSTON-2026092618",
+      "buy_order_id": "order-buy-303",
+      "sell_order_id": "order-sell-303",
+      "quantity": 3,
+      "price_cents": 5050,
+      "created_at": "2026-09-26T09:57:45Z"
+    },
+    {
+      "id": "trade-304",
+      "product_id": "FLEX-LZ_HOUSTON-2026092618",
+      "buy_order_id": "order-buy-304",
+      "sell_order_id": "order-sell-304",
+      "quantity": 2,
+      "price_cents": 5010,
+      "created_at": "2026-09-26T09:58:30Z"
+    }
+  ],
+  "/v1/market/activity": [],
+  "/v1/predictions": [
+    {
+      "confidence": 0.86,
+      "delivery_hour": "2026-09-26T18:00:00Z",
+      "disclaimer": "Simulation estimate, not guaranteed profit.",
+      "drivers": [
+        {
+          "contribution": 6.2,
+          "detail": "DA SPP $45.10 vs RT mean $38.42",
+          "factor": "price spread"
+        },
+        {
+          "contribution": 0,
+          "detail": "Load 0 MW vs 0 MW 24-hour mean",
+          "factor": "load pressure"
+        },
+        {
+          "contribution": 3.8,
+          "detail": "Outage capacity 2,310 MW vs 1,640 MW median",
+          "factor": "outage pressure"
+        },
+        {
+          "contribution": 0,
+          "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+          "factor": "heat stress"
+        },
+        {
+          "contribution": 4,
+          "detail": "NERC 5x16 on-peak hour",
+          "factor": "peak-period"
+        }
+      ],
+      "expected_value": 0.0523,
+      "generated_at": "2026-09-26T09:59:00Z",
+      "level": "HIGH",
+      "market_price": 0.0481,
+      "score": 72.4,
+      "zone": "LZ_HOUSTON"
+    },
+    {
+      "confidence": 0.71,
+      "delivery_hour": "2026-09-26T19:00:00Z",
+      "disclaimer": "Simulation estimate, not guaranteed profit.",
+      "drivers": [
+        {
+          "contribution": 2.1,
+          "detail": "Load forecast 15,230 MW vs 14,100 MW mean",
+          "factor": "load pressure"
+        }
+      ],
+      "expected_value": 0.0439,
+      "generated_at": "2026-09-26T09:59:00Z",
+      "level": "MEDIUM",
+      "market_price": null,
+      "score": 45.8,
+      "zone": "LZ_NORTH"
+    }
+  ],
+  "/v1/signals": [
+    {
+      "age_s": 12,
+      "fetched_at": "2026-09-26T09:59:48Z",
+      "interval_minutes": 5,
+      "interval_start": "2026-09-26T09:55:00Z",
+      "published_at": "2026-09-26T09:59:48Z",
+      "report_id": "NP6-905-CD",
+      "stale": false,
+      "unit": "$/MWh",
+      "value": 38.42,
+      "zone": "LZ_HOUSTON"
+    },
+    {
+      "age_s": 120,
+      "fetched_at": "2026-09-26T09:58:00Z",
+      "interval_minutes": 60,
+      "interval_start": "2026-09-26T18:00:00Z",
+      "published_at": "2026-09-26T09:58:00Z",
+      "report_id": "NP4-190-CD",
+      "stale": false,
+      "unit": "$/MWh",
+      "value": 45.1,
+      "zone": "LZ_HOUSTON"
+    },
+    {
+      "age_s": 90,
+      "fetched_at": "2026-09-26T09:58:30Z",
+      "interval_minutes": 60,
+      "interval_start": "2026-09-26T19:00:00Z",
+      "published_at": "2026-09-26T09:58:30Z",
+      "report_id": "NP4-190-CD",
+      "stale": false,
+      "unit": "$/MWh",
+      "value": 47.25,
+      "zone": "LZ_HOUSTON"
+    },
+    {
+      "age_s": 60,
+      "fetched_at": "2026-09-26T09:59:00Z",
+      "interval_minutes": 60,
+      "interval_start": "2026-09-26T20:00:00Z",
+      "published_at": "2026-09-26T09:59:00Z",
+      "report_id": "NP4-190-CD",
+      "stale": false,
+      "unit": "$/MWh",
+      "value": 44.02,
+      "zone": "LZ_HOUSTON"
+    },
+    {
+      "age_s": 30,
+      "fetched_at": "2026-09-26T09:59:30Z",
+      "interval_minutes": 60,
+      "interval_start": "2026-09-26T18:00:00Z",
+      "published_at": "2026-09-26T09:59:30Z",
+      "report_id": "NP3-565-CD",
+      "stale": false,
+      "unit": "MW",
+      "value": 15230,
+      "zone": "LZ_NORTH"
+    },
+    {
+      "age_s": 900,
+      "fetched_at": "2026-09-26T09:45:00Z",
+      "interval_minutes": 60,
+      "interval_start": "2026-09-26T18:00:00Z",
+      "published_at": "2026-09-26T09:45:00Z",
+      "report_id": "NP3-565-CD",
+      "stale": true,
+      "unit": "MW",
+      "value": 9810,
+      "zone": "LZ_WEST"
+    },
+    {
+      "age_s": 30,
+      "fetched_at": "2026-09-26T09:59:30Z",
+      "interval_minutes": 60,
+      "interval_start": "2026-09-26T18:00:00Z",
+      "published_at": "2026-09-26T09:59:30Z",
+      "report_id": "NP3-565-CD",
+      "stale": false,
+      "unit": "MW",
+      "value": 21000,
+      "zone": "Coast"
+    },
+    {
+      "age_s": 30,
+      "fetched_at": "2026-09-26T09:59:30Z",
+      "interval_minutes": 5,
+      "interval_start": "2026-09-26T09:59:30Z",
+      "published_at": "2026-09-26T09:59:30Z",
+      "report_id": "NWS-ALERTS",
+      "stale": false,
+      "unit": "count",
+      "value": 2,
+      "zone": "LZ_HOUSTON"
+    },
+    {
+      "age_s": 12,
+      "fetched_at": "2026-09-26T09:59:48Z",
+      "interval_minutes": 5,
+      "interval_start": "2026-09-26T09:55:00Z",
+      "published_at": "2026-09-26T09:59:48Z",
+      "report_id": "NP6-905-CD",
+      "stale": false,
+      "unit": "$/MWh",
+      "value": 41.2,
+      "zone": "LZ_NORTH"
+    },
+    {
+      "report_id": "ESR",
+      "zone": "ERCOT",
+      "value": 812.5,
+      "unit": "MW",
+      "interval_start": "2026-09-26T09:59:48Z",
+      "interval_minutes": 1,
+      "published_at": "2026-09-26T09:59:48Z",
+      "fetched_at": "2026-09-26T09:59:48Z",
+      "age_s": 12,
+      "stale": false
+    }
+  ],
+  "/v1/providers": [
+    {
+      "id": "provider-a",
+      "display_name": "Provider A",
+      "participants": 2
+    },
+    {
+      "id": "provider-b",
+      "display_name": "Provider B",
+      "participants": 0
+    }
+  ],
+  "/v1/bots": [
+    {
+      "id": "bot-0",
+      "bot_index": 0,
+      "bot_type": "market maker",
+      "provider_id": "provider-a",
+      "dormant": false,
+      "cash": 1000,
+      "net_worth": 1000,
+      "pnl": 0,
+      "losses": 0
+    },
+    {
+      "id": "bot-1",
+      "bot_index": 1,
+      "bot_type": "market maker",
+      "provider_id": "provider-a",
+      "dormant": false,
+      "cash": 1000,
+      "net_worth": 1000,
+      "pnl": 0,
+      "losses": 0
+    },
+    {
+      "id": "bot-2",
+      "bot_index": 2,
+      "bot_type": "market maker",
+      "provider_id": "provider-a",
+      "dormant": true,
+      "cash": 1000,
+      "net_worth": 1000,
+      "pnl": 0,
+      "losses": 0
+    }
+  ],
+  "/v1/market": [
+    {
+      "id": "FLEX-LZ_HOUSTON-2026092618",
+      "symbol": "FLEX-LZ_HOUSTON-2026092618",
+      "zone": "LZ_HOUSTON",
+      "delivery_hour": "2026-09-26T18:00:00Z",
+      "status": "open"
+    },
+    {
+      "id": "FLEX-LZ_NORTH-2026092619",
+      "symbol": "FLEX-LZ_NORTH-2026092619",
+      "zone": "LZ_NORTH",
+      "delivery_hour": "2026-09-26T19:00:00Z",
+      "status": "open"
+    },
+    {
+      "id": "SPOT-LZ_HOUSTON-2026092612",
+      "symbol": "SPOT-LZ_HOUSTON-2026092612",
+      "zone": "LZ_HOUSTON",
+      "delivery_hour": "2026-09-26T12:00:00Z",
+      "status": "open"
+    },
+    {
+      "id": "FLEX-LZ_WEST-2026092618",
+      "symbol": "FLEX-LZ_WEST-2026092618",
+      "zone": "LZ_WEST",
+      "delivery_hour": "2026-09-26T18:00:00Z",
+      "status": "closed"
+    }
+  ],
+  "/v1/market/FLEX-LZ_HOUSTON-2026092618": {
+    "id": "FLEX-LZ_HOUSTON-2026092618",
+    "symbol": "FLEX-LZ_HOUSTON-2026092618",
+    "zone": "LZ_HOUSTON",
+    "delivery_hour": "2026-09-26T18:00:00Z",
+    "status": "open",
+    "orders": [
+      {
+        "side": "buy",
+        "price_cents": 42,
+        "quantity": 2
+      },
+      {
+        "side": "sell",
+        "price_cents": 48,
+        "quantity": 3
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"replaces_capture": "owner market-key capture of GET https://api.ercot.com/api/public-data/rptesr-m/4_sec_esr_charging_mw (response bytes, retrieval UTC, sha256)", "sha256": "06934dd8edfccdc9a36505f568f7c43524e254abdd5a1b99863bdbb6f5e6533d", "status": "synthetic", "transformation": "none; invented 3-row shape mirroring the backend esr_charging.json fixture", "url": null}

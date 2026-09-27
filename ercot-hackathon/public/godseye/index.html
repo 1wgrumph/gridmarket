@@ -3,330 +3,645 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>God's Eye ERCOT</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<title>God's Eye · GridMarket</title>
+<link rel="preload" href="/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin />
 <link href="https://cdn.jsdelivr.net/npm/cesium@1.124.0/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/cesium@1.124.0/Build/Cesium/Cesium.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<style>
-/* Visual language follows God's Eye View (MIT, bilawalsidhu/gods-eye-view): dark glass, cyan accent, mono HUD. */
-:root{
-  --bg-dark:#0a0a0f; --glass-bg:rgba(12,12,20,.72); --glass-border:rgba(255,255,255,.08); --glass-border-hover:rgba(255,255,255,.15);
-  --accent:#00d4ff; --accent-dim:rgba(0,212,255,.15); --accent-glow:rgba(0,212,255,.4);
-  --text-primary:#e8eaed; --text-secondary:rgba(232,234,237,.5); --text-dim:rgba(232,234,237,.3);
-  --good:#3ddc84; --warn:#ffb020; --bad:#ff4d5e;
-  --font-mono:'JetBrains Mono','SF Mono','Fira Code',monospace; --font-sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
-  --panel-radius:16px; --btn-radius:10px;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-dark);color:var(--text-primary);font-family:var(--font-sans)}
-#globe{position:absolute;inset:0}
-#globe .cesium-viewer-bottom{left:auto;right:12px;bottom:6px}
-.cesium-credit-textContainer,.cesium-credit-logoContainer{opacity:.6}
-#fx{position:absolute;inset:0;pointer-events:none;z-index:2;mix-blend-mode:normal}
-body.look-crt #fx{background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px);}
-body.look-flir #globe canvas{filter:grayscale(1) contrast(1.35) brightness(1.1) sepia(.2) hue-rotate(-20deg)}
-body.look-nvg #globe canvas{filter:grayscale(1) sepia(1) hue-rotate(60deg) saturate(3) brightness(1.05) contrast(1.2)}
-body.look-nvg #fx{background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.75) 100%)}
-.vignette{position:absolute;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse at 50% 55%,transparent 55%,rgba(5,6,10,.7) 100%)}
-.glass{background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);border:1px solid var(--glass-border);border-radius:var(--panel-radius)}
-.hud{position:absolute;z-index:5}
-.mono{font-family:var(--font-mono)}
-.eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-secondary)}
-
-.brand{top:20px;left:24px;display:flex;gap:14px;align-items:center}
-.logo{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--accent);box-shadow:0 0 18px var(--accent-glow),inset 0 0 12px var(--accent-dim);position:relative}
-.logo::after{content:"";position:absolute;inset:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
-.brand h1{font-family:var(--font-mono);font-size:15px;letter-spacing:.24em;font-weight:700}
-.brand h1 span{color:var(--accent)}
-.brand .eyebrow{margin-top:4px}
-.live{display:inline-flex;align-items:center;gap:6px;color:var(--good)}
-.live i{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:pulse 1.6s infinite}
-.live.down{color:var(--bad)}
-@keyframes pulse{50%{opacity:.3}}
-
-.readout{top:20px;left:50%;transform:translateX(-50%);padding:8px 16px;display:flex;gap:22px;font-family:var(--font-mono);font-size:11px;white-space:nowrap}
-.readout b{color:var(--accent);font-weight:500;margin-left:6px}
-
-.layers{top:96px;left:24px;width:212px;padding:12px}
-.layers .eyebrow{padding:2px 4px 8px}
-.toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:8px 10px;border-radius:var(--btn-radius);border:1px solid transparent;background:transparent;color:var(--text-primary);font:500 12px var(--font-sans);cursor:pointer;transition:all .15s}
-.toggle:hover{border-color:var(--glass-border-hover);background:rgba(255,255,255,.03)}
-.toggle .sw{width:9px;height:9px;border-radius:50%;box-shadow:0 0 8px currentColor;flex:none}
-.toggle .lbl{display:flex;gap:9px;align-items:center}
-.toggle .st{font:500 10px var(--font-mono);color:var(--text-dim);letter-spacing:.1em}
-.toggle.on .st{color:var(--accent)}
-.toggle.off{opacity:.5}
-.looks{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-border)}
-.looks button{font:500 10px var(--font-mono);letter-spacing:.08em;padding:6px 0;border-radius:8px;border:1px solid var(--glass-border);background:transparent;color:var(--text-secondary);cursor:pointer}
-.looks button.on{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
-
-.intel{top:96px;right:24px;width:330px;max-height:calc(100% - 200px);overflow:auto;padding:14px}
-.intel h2{font-family:var(--font-mono);font-size:13px;letter-spacing:.14em;margin:6px 0 10px;color:var(--accent);text-transform:uppercase}
-.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--glass-border);font-size:12px}
-.row:last-child{border-bottom:0}
-.row .k{color:var(--text-secondary)}
-.row .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums;text-align:right}
-.sect{margin-top:14px}
-.check{padding:9px 10px;border:1px solid var(--glass-border);border-radius:10px;margin-top:8px}
-.check .q{font-size:12px;line-height:1.4}
-.check .m{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font:500 10px var(--font-mono);letter-spacing:.08em;color:var(--text-secondary);text-transform:uppercase}
-.check .p{font:700 16px var(--font-mono)}
-.bar{height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:6px;overflow:hidden}
-.bar i{display:block;height:100%}
-.note{font-size:11px;color:var(--text-dim);margin-top:10px;line-height:1.45}
-
-.dash{display:inline-block;margin-top:6px;font:500 10px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);text-decoration:none}
-.dash:hover{text-decoration:underline}
-[hidden]{display:none!important}
-.market{left:24px;bottom:84px;width:300px;max-height:34vh;overflow:auto;padding:12px}
-.mf-title{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-secondary);margin:2px 0 6px}
-.mf-strip,.mf-alerts{list-style:none;margin:0 0 10px;padding:0;font-size:12px}
-.mf-strip li,.mf-alerts li{padding:5px 0;border-bottom:1px solid var(--glass-border)}
-.mf-strip li:last-child,.mf-alerts li:last-child{border-bottom:0}
-.mf-strip b{color:var(--accent);font-weight:500}
-.mf-alerts b{float:right;font-family:var(--font-mono);color:var(--bad)}
-
-.dock{left:50%;bottom:22px;transform:translateX(-50%);display:flex;gap:6px;padding:6px;max-width:calc(100vw - 32px);overflow-x:auto}
-.dock button{flex:none;font:500 11px var(--font-mono);letter-spacing:.08em;padding:9px 12px;border-radius:var(--btn-radius);border:1px solid var(--glass-border);background:transparent;color:var(--text-primary);cursor:pointer;transition:all .15s;white-space:nowrap}
-.dock button:hover{border-color:var(--accent);color:var(--accent)}
-.dock button b{color:var(--accent);font-weight:500;margin-left:6px}
-
-.target{position:absolute;z-index:4;pointer-events:none;transform:translate(-50%,-50%)}
-.target .box{width:46px;height:46px;border:1px solid var(--accent);box-shadow:0 0 10px var(--accent-glow)}
-.target .box::before,.target .box::after{content:"";position:absolute;width:10px;height:10px;border-color:var(--accent);border-style:solid}
-.target .tag{position:absolute;left:54px;top:-2px;font:500 10px var(--font-mono);letter-spacing:.1em;color:var(--accent);white-space:nowrap;background:rgba(10,10,15,.7);padding:2px 5px;border-left:2px solid var(--accent)}
-.target .tag b{color:var(--text-primary);font-weight:500}
-
-button:focus-visible{outline:2px solid var(--text-primary);outline-offset:2px}
-@media (max-width:820px){
-  .readout{display:none}
-  .layers{top:auto;bottom:84px;left:12px;width:auto;right:12px;display:flex;overflow-x:auto;gap:4px;padding:8px}
-  .layers .eyebrow,.looks{display:none}
-  .toggle{flex:none;width:auto}
-  .intel{top:78px;right:12px;left:12px;width:auto;max-height:34vh}
-  .brand{left:12px;top:12px}
-  .brand h1{font-size:12px}
-  .market{left:12px;right:12px;bottom:140px;width:auto;max-height:22vh}
-}
-@media (prefers-reduced-motion:reduce){.live i{animation:none}}
-</style>
+<link rel="stylesheet" href="./godseye.css" />
 </head>
 <body>
-<div id="globe"></div>
-<div class="vignette"></div>
-<div id="fx"></div>
-<div id="targets"></div>
-
-<div class="hud brand">
-  <div class="logo"></div>
-  <div><h1>GOD'S EYE <span>// ERCOT</span></h1><div class="eyebrow"><span class="live" id="live"><i></i><span id="liveText">acquiring feed</span></span></div><a class="dash" id="dashboard" href="#" hidden>GridMarket dashboard →</a></div>
-</div>
-<div class="hud readout glass" id="readout">
-  <span>LAT<b id="lat">—</b></span><span>LON<b id="lon">—</b></span><span>ALT<b id="alt">—</b></span><span>SCED<b id="sced">—</b></span><span>λ<b id="lam">—</b></span>
-</div>
-
-<div class="hud layers glass" id="layers">
-  <div class="eyebrow">// layers</div>
-  <div class="looks" id="looks">
-    <button data-look="none" class="on">STD</button><button data-look="flir">FLIR</button><button data-look="nvg">NVG</button><button data-look="crt">CRT</button>
+<a class="skip" href="#main">Skip to the map</a>
+<header class="hud brand">
+  <div class="brand-title"><div class="wordmark">GridMarket</div><h1>God's Eye<span>.</span></h1></div>
+  <div class="brand-meta"><div class="live" id="live" role="status"><span id="liveText">Connecting to ERCOT…</span></div><a class="dash" id="dashboard" href="#" hidden>Open dashboard →</a></div>
+</header>
+<section class="hud readout" aria-label="Latest market readings">
+  <ul id="tickerAccessible" class="sr-only"></ul>
+  <div class="ticker-window" role="region" tabindex="0" aria-label="Market ticker; focus to pause">
+    <div class="ticker-track" aria-hidden="true"><ul class="ticker-run"></ul><ul class="ticker-run"></ul></div>
   </div>
-</div>
+  <button id="tickerPause">Pause</button>
+</section>
+<main id="main" tabindex="-1" aria-label="Map explorer">
+<div id="globe"></div>
+<div id="fx"></div>
+<div id="targets"><div class="target" id="tgt"><div class="box"></div><div class="tag"></div></div></div>
+<div id="tip"></div>
+<nav class="hud panel-tabs" aria-label="Map panels">
+  <button data-panel="rail" aria-controls="rail" aria-expanded="false">Plants &amp; layers</button>
+  <button data-panel="intel" aria-controls="intel" aria-expanded="false">System &amp; details</button>
+</nav>
 
-<div class="hud intel glass" id="intel"><div class="eyebrow">// intel feed</div><h2>Acquiring ERCOT</h2></div>
+<section class="hud rail glass" id="rail" aria-label="Plants and layers">
+  <div class="panel-heading"><h2>Explore the grid</h2><span class="eyebrow">01</span></div>
+  <section class="help-grid" aria-label="Help the grid">
+    <h3>Help the grid</h3>
+    <div class="row2" id="helpToggles">
+      <button class="pill" data-help="demand" aria-pressed="false" aria-controls="helpDemand">Demand now</button>
+      <button class="pill" data-help="batteries" aria-pressed="false" aria-controls="helpBatteries">Batteries now</button>
+      <button class="pill" data-help="windows" aria-pressed="false" aria-controls="helpWindows">Help windows</button>
+    </div>
+    <div id="helpDemand" hidden aria-live="polite"></div>
+    <div id="helpBatteries" hidden aria-live="polite"></div>
+    <div id="helpWindows" hidden aria-live="polite"></div>
+    <div id="helpForecast" hidden>
+      <label for="helpHour">Forecast hour · Central Time</label>
+      <input id="helpHour" type="range" min="0" max="23" value="0" step="1" />
+      <output id="helpHourLabel" for="helpHour"></output>
+      <div class="note">Load relative to each zone’s own 24-hour peak; map shading runs from each zone’s 24-hour low to its peak. Weather-to-load-zone mapping is approximate; map areas are schematic.</div>
+      <ul id="helpZones" aria-label="Forecast load by zone"></ul>
+      <div class="note" id="helpPublished"></div>
+    </div>
+  </section>
+  <div class="search"><input id="q" aria-label="Find a plant, operator or county" type="search" placeholder="Find a plant, operator or county" autocomplete="off" /></div>
+  <div class="results" id="results"></div>
+  <section class="livebox" aria-label="GridMarket battery signal">
+    <div class="lbl">GridMarket battery signal</div>
+    <div id="batteryReading" aria-live="polite">Waiting for ERCOT</div>
+    <div class="note">ERCOT energy storage · refreshed every 5 minutes</div>
+  </section>
+  <button class="pill" id="batteriesOnly" aria-pressed="false">Batteries only · includes hybrids</button>
+  <div class="eyebrow">Power plants by fuel</div>
+  <div class="note" id="shown" aria-live="polite"></div>
+  <div class="legend" id="legend"></div>
+  <div class="slider">
+    <label for="minmw">Minimum size <b id="minmwv">10 MW</b></label>
+    <input id="minmw" type="range" min="0" max="7" step="1" value="2" />
+  </div>
+  <div class="row2">
+    <button class="pill on" id="ercotOnly" aria-pressed="true">ERCOT grid only</button>
+    <button class="pill on" id="labelsBtn" aria-pressed="true">Labels</button>
+  </div>
+  <div class="sep"></div>
+  <div class="eyebrow">Map layers</div>
+  <div class="row2" id="layerPills"></div>
+  <div class="eyebrow">Display effects</div>
+  <div class="row2" id="looks">
+    <button class="pill on" data-look="none">Natural</button><button class="pill" data-look="flir">Thermal</button><button class="pill" data-look="nvg">Night vision</button><button class="pill" data-look="crt">Scanlines</button>
+  </div>
+  <footer class="note credits">God's Eye by Jordan Hill.<br>Based on <a href="https://github.com/bilawalsidhu/gods-eye-view">God's Eye View</a> · MIT license.</footer>
+</section>
+
+<section class="hud intel glass" id="intel" aria-label="System and plant details"><div class="eyebrow">02 · System overview</div><h2>Connecting to ERCOT…</h2></section>
 <div class="hud dock glass" id="dock"></div>
-<div class="hud market glass" id="market" hidden aria-label="Market activity and router checks (baseline rules)"></div>
+<section class="hud market glass" id="market" hidden aria-label="GridMarket trades and scarcity alerts"></section>
+</main>
 
-<script>
+<script type="module">
+import { forecastHours, historyPath, publishedText, shade, peakLabel, helpWindows, windowText, mwText, waiting, LOAD_ZONES } from "./help-grid.js";
+import { fetchMarket } from "/market-feed.js";
+import { countyToZone, tradeLink, leadPrediction, isBattery, latestESR, formatESR, zoneName, sectorName, ctTime, intervalText, checkName, checkQuestion, routeName, activityText } from "./geo.js";
+
 const fmt=(n,d=0)=>n==null||!isFinite(n)?'—':Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
-const money=n=>n==null?'—':(n<0?'−$':'$')+fmt(Math.abs(n),2);
-const signed=(n,d=0)=>n==null?'—':(n>0?'+':n<0?'−':'')+fmt(Math.abs(n),d);
-const band=p=>p>=.8?'#3ddc84':p>=.5?'#ffb020':'#8a8f98';
+const money=n=>n==null||!isFinite(n)?'—':(n<0?'−$':'$')+fmt(Math.abs(n),2);
+const signed=(n,d=0)=>n==null||!isFinite(n)?'—':(n>0?'+':n<0?'−':'')+fmt(Math.abs(n),d);
+const band=p=>p>=.8?'var(--accent)':p>=.5?'var(--warning)':'var(--muted)';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const C=Cesium;
+const API=location.protocol==='file:'||window.__PREVIEW?'https://ercot-hackathon.jordan-691.workers.dev':'';
 
-/* Places. Hubs sit on the metro that anchors each trading hub; weather zones use ERCOT's zone centers (approximate). */
+/* ---------- resource types: colour + dedicated silhouette ---------- */
+const TYPES={
+  nuclear:{label:'Nuclear',color:'#b8dbd9'},
+  coal:{label:'Coal',color:'#586f7c'},
+  gas:{label:'Natural gas',color:'#9bbbbd'},
+  oil:{label:'Petroleum',color:'#586f7c'},
+  wind:{label:'Wind',color:'#f4f4f9'},
+  solar:{label:'Solar',color:'#c4dad7'},
+  storage:{label:'Battery storage',color:'#88baac'},
+  hydro:{label:'Hydroelectric',color:'#586f7c'},
+  biomass:{label:'Biomass & landfill gas',color:'#88baac'},
+  other:{label:'Other',color:'#b8dbd9'}
+};
+const ORDER=['nuclear','coal','gas','oil','wind','solar','storage','hydro','biomass','other'];
+function glyph(t){
+  const c=TYPES[t].color, k='#0e1214';
+  const g={
+    nuclear:`<path d="M17 58 C22 42 23 28 19 10 L45 10 C41 28 42 42 47 58 Z" fill="${c}" stroke="${k}" stroke-width="2"/><path d="M20 20 C26 22 38 22 44 20" stroke="${k}" stroke-width="1.5" fill="none" opacity=".5"/><circle cx="26" cy="7" r="4" fill="#fff" opacity=".7"/><circle cx="33" cy="4" r="4.5" fill="#fff" opacity=".6"/><circle cx="40" cy="7" r="3.5" fill="#fff" opacity=".5"/>`,
+    coal:`<rect x="8" y="34" width="34" height="24" fill="${c}" stroke="${k}" stroke-width="2"/><rect x="44" y="12" width="7" height="46" fill="${c}" stroke="${k}" stroke-width="2"/><rect x="54" y="20" width="6" height="38" fill="${c}" stroke="${k}" stroke-width="2"/><rect x="14" y="40" width="6" height="6" fill="${k}" opacity=".45"/><rect x="26" y="40" width="6" height="6" fill="${k}" opacity=".45"/><circle cx="48" cy="7" r="4" fill="#6b6b6b" opacity=".85"/><circle cx="54" cy="4" r="3.5" fill="#6b6b6b" opacity=".7"/>`,
+    gas:`<path d="M6 58 L6 36 L30 28 L30 58 Z" fill="${c}" stroke="${k}" stroke-width="2"/><rect x="30" y="38" width="18" height="20" fill="${c}" stroke="${k}" stroke-width="2"/><rect x="50" y="16" width="8" height="42" fill="${c}" stroke="${k}" stroke-width="2"/><path d="M54 4 C58 9 58 12 54 15 C50 12 50 9 54 4 Z" fill="#c4dad7" stroke="${k}" stroke-width="1"/><rect x="12" y="44" width="12" height="4" fill="${k}" opacity=".4"/>`,
+    oil:`<rect x="8" y="30" width="26" height="28" rx="3" fill="${c}" stroke="${k}" stroke-width="2"/><ellipse cx="21" cy="30" rx="13" ry="4" fill="${c}" stroke="${k}" stroke-width="2"/><path d="M47 22 C53 32 56 38 56 44 A9 9 0 0 1 38 44 C38 38 41 32 47 22 Z" fill="${c}" stroke="${k}" stroke-width="2"/><rect x="36" y="52" width="22" height="6" fill="${c}" stroke="${k}" stroke-width="2"/>`,
+    wind:`<path d="M30.5 26 L33.5 26 L35 60 L29 60 Z" fill="${c}" stroke="${k}" stroke-width="1.5"/><circle cx="32" cy="24" r="3.2" fill="${c}" stroke="${k}" stroke-width="1.5"/><path d="M32 21 L30 2 L34.5 4 Z" fill="${c}" stroke="${k}" stroke-width="1.5"/><path d="M34.6 25.5 L51 35 L47 38 Z" fill="${c}" stroke="${k}" stroke-width="1.5"/><path d="M29.4 25.5 L13 35 L12.5 30 Z" fill="${c}" stroke="${k}" stroke-width="1.5"/>`,
+    solar:`<circle cx="50" cy="12" r="6" fill="${c}" stroke="${k}" stroke-width="1.5"/><path d="M4 50 L16 32 L42 32 L30 50 Z" fill="${c}" stroke="${k}" stroke-width="2"/><path d="M10 41 L36 41 M23 32 L17 50 M29.5 32 L23.5 50 M16.5 32 L10.5 50" stroke="${k}" stroke-width="1.2" opacity=".55"/><path d="M26 58 L36 44 L60 44 L50 58 Z" fill="${c}" stroke="${k}" stroke-width="2"/><path d="M31 51 L55 51 M42 44 L37 58 M48 44 L43 58" stroke="${k}" stroke-width="1.2" opacity=".55"/>`,
+    storage:`<rect x="6" y="26" width="52" height="32" rx="3" fill="${c}" stroke="${k}" stroke-width="2"/><rect x="24" y="20" width="16" height="6" fill="${c}" stroke="${k}" stroke-width="2"/><path d="M34 31 L25 44 L32 44 L29 54 L39 40 L32 40 Z" fill="${k}" opacity=".65"/><path d="M12 32 L12 52 M52 32 L52 52" stroke="${k}" stroke-width="1.2" opacity=".4"/>`,
+    hydro:`<path d="M6 58 L14 22 L50 22 L58 58 Z" fill="${c}" stroke="${k}" stroke-width="2"/><path d="M14 22 L50 22" stroke="${k}" stroke-width="3"/><path d="M22 34 L22 50 M32 34 L32 50 M42 34 L42 50" stroke="${k}" stroke-width="2" opacity=".45"/><path d="M4 16 Q12 10 20 16 T36 16 T52 16 T62 14" stroke="${c}" stroke-width="3" fill="none"/>`,
+    biomass:`<path d="M14 56 C8 36 20 16 44 12 C48 34 38 52 14 56 Z" fill="${c}" stroke="${k}" stroke-width="2"/><path d="M14 56 C22 42 30 32 40 20" stroke="${k}" stroke-width="1.6" fill="none" opacity=".6"/><rect x="48" y="30" width="7" height="28" fill="${c}" stroke="${k}" stroke-width="2"/>`,
+    other:`<path d="M32 8 L53 20 L53 44 L32 56 L11 44 L11 20 Z" fill="${c}" stroke="${k}" stroke-width="2"/><circle cx="32" cy="32" r="7" fill="${k}" opacity=".45"/>`
+  }[t];
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><ellipse cx="32" cy="60" rx="24" ry="3" fill="#000" opacity=".45"/>${g}</svg>`;
+}
+const ICON={}; ORDER.forEach(t=>ICON[t]='data:image/svg+xml;utf8,'+encodeURIComponent(glyph(t)));
+
+/* ---------- geography ---------- */
 const HUBS={HB_NORTH:[-96.80,32.78,'Dallas–Fort Worth'],HB_HOUSTON:[-95.37,29.76,'Houston'],HB_SOUTH:[-98.49,29.42,'San Antonio'],HB_WEST:[-102.08,31.99,'Midland–Odessa']};
 const ZONES={'Coast':[-95.2,29.3],'East':[-94.6,31.8],'Far West':[-103.4,31.0],'North':[-98.6,33.7],'North Central':[-97.3,32.4],'South Central':[-97.7,30.2],'Southern':[-98.2,27.4],'West':[-100.4,32.2]};
-const WIND=[[-101.9,35.2,'Panhandle wind'],[-100.8,32.4,'West Texas wind'],[-97.6,27.0,'Coastal wind']];
-const SOLAR=[[-102.9,31.3,'Permian solar'],[-99.9,31.1,'Central West solar']];
-const LOAD=[[-96.8,32.78],[-95.37,29.76],[-98.49,29.42],[-97.74,30.27]];
 const BASE_HQ=[-97.745,30.258];
 const TX=[[-106.6,31.9],[-106.5,32.0],[-103.06,32.0],[-103.04,36.5],[-103.0,36.5],[-100.0,36.5],[-100.0,34.56],[-99.2,34.37],[-98.1,34.13],[-97.0,33.85],[-96.3,33.75],[-95.3,33.87],[-94.48,33.64],[-94.04,33.55],[-94.04,31.99],[-93.6,31.0],[-93.7,30.07],[-93.84,29.7],[-94.7,29.35],[-95.3,28.9],[-96.4,28.4],[-97.2,27.8],[-97.4,26.9],[-97.15,25.95],[-97.5,25.9],[-98.2,26.06],[-99.1,26.45],[-99.5,27.5],[-100.3,28.3],[-101.0,29.7],[-101.8,29.8],[-102.4,29.8],[-102.7,29.7],[-103.1,29.0],[-103.8,29.3],[-104.5,29.7],[-104.9,30.6],[-105.6,31.1],[-106.2,31.5],[-106.6,31.9]];
+const km=(a,b)=>{const R=6371,toR=Math.PI/180,dLat=(b[1]-a[1])*toR,dLon=(b[0]-a[0])*toR,x=Math.sin(dLat/2)**2+Math.cos(a[1]*toR)*Math.cos(b[1]*toR)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x));};
+const nearest=(pt,obj)=>Object.entries(obj).map(([k,v])=>[k,km(pt,v)]).sort((a,b)=>a[1]-b[1])[0];
 
-/* Viewer: keyless Esri World Imagery, the same default God's Eye View uses without credentials. */
+/* ---------- viewer: keyless Esri World Imagery, as God's Eye View uses without credentials ---------- */
 C.Ion.defaultAccessToken='';
 const viewer=new C.Viewer('globe',{
   baseLayer:C.ImageryLayer.fromProviderAsync(C.ArcGisMapServerImageryProvider.fromUrl('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',{credit:'Powered by Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',enablePickFeatures:false})),
-  terrain:undefined, geocoder:false, homeButton:false, sceneModePicker:false, baseLayerPicker:false, navigationHelpButton:false,
-  animation:false, timeline:false, fullscreenButton:false, infoBox:false, selectionIndicator:false, requestRenderMode:false
+  terrain:undefined,geocoder:false,homeButton:false,sceneModePicker:false,baseLayerPicker:false,navigationHelpButton:false,
+  animation:false,timeline:false,fullscreenButton:false,infoBox:false,selectionIndicator:false
 });
 const scene=viewer.scene;
-scene.globe.enableLighting=false;
-scene.skyAtmosphere.show=true;
-scene.globe.showGroundAtmosphere=true;
-scene.fog.enabled=true;
-scene.globe.baseColor=C.Color.fromCssColorString('#0a0a0f');
-viewer.imageryLayers.layerAdded.addEventListener(l=>{l.brightness=.72;l.saturation=.7;l.contrast=1.08;});
-if(viewer.imageryLayers.length) { const l=viewer.imageryLayers.get(0); l.brightness=.72; l.saturation=.7; l.contrast=1.08; }
-scene.postProcessStages.bloom && (scene.postProcessStages.bloom.enabled=false);
+scene.globe.enableLighting=false; scene.skyAtmosphere.show=true; scene.globe.showGroundAtmosphere=true; scene.fog.enabled=true;
+scene.globe.baseColor=C.Color.fromCssColorString('#0e1214');
+viewer.imageryLayers.layerAdded.addEventListener(l=>{l.brightness=.62;l.saturation=.6;l.contrast=1.08;});
+if(viewer.imageryLayers.length){const l=viewer.imageryLayers.get(0);l.brightness=.62;l.saturation=.6;l.contrast=1.08;}
+viewer.screenSpaceEventHandler.removeInputAction(C.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
-const ACC=C.Color.fromCssColorString('#00d4ff');
-const G={};
-['outline','prices','weather','renew','load','flows','decision'].forEach(k=>{ G[k]=new C.CustomDataSource(k); viewer.dataSources.add(G[k]); });
+const ACC=C.Color.fromCssColorString('#b8dbd9');
+const INK=C.Color.fromCssColorString('#0e1214');
+// Map text is ghost white on near-opaque ink in both themes (17:1); resource colour stays on the silhouettes.
+const MAP_TEXT=C.Color.fromCssColorString('#f4f4f9');
+const G={}; ['outline','prices','weather','plants','help'].forEach(k=>{G[k]=new C.CustomDataSource(k);viewer.dataSources.add(G[k]);});
 
-/* Texas outline and a faint cyan scan wall */
-G.outline.entities.add({polyline:{positions:C.Cartesian3.fromDegreesArray(TX.flat()),width:2,material:new C.PolylineGlowMaterialProperty({glowPower:.25,color:ACC.withAlpha(.9)}),clampToGround:true}});
-G.outline.entities.add({wall:{positions:C.Cartesian3.fromDegreesArrayHeights(TX.flatMap(p=>[p[0],p[1],60000])),minimumHeights:TX.map(()=>0),material:new C.ColorMaterialProperty(ACC.withAlpha(.05)),outline:false}});
+G.outline.entities.add({polyline:{positions:C.Cartesian3.fromDegreesArray(TX.flat()),width:2,material:C.Color.fromCssColorString('#586f7c'),clampToGround:true}});
+G.outline.entities.add({position:C.Cartesian3.fromDegrees(...BASE_HQ),point:{pixelSize:7,color:C.Color.WHITE,outlineColor:ACC,outlineWidth:2},
+  label:{text:'Base Power HQ · 205 E Riverside',font:'500 11px Inter, sans-serif',fillColor:MAP_TEXT,showBackground:true,backgroundColor:INK.withAlpha(.88),pixelOffset:new C.Cartesian2(0,-18),distanceDisplayCondition:new C.DistanceDisplayCondition(0,300000)}});
 
-/* Base Power HQ: where the hackathon runs */
-G.decision.entities.add({position:C.Cartesian3.fromDegrees(...BASE_HQ),point:{pixelSize:7,color:C.Color.WHITE,outlineColor:ACC,outlineWidth:2},
-  label:{text:'BASE POWER HQ · 205 E RIVERSIDE',font:'500 11px JetBrains Mono',fillColor:C.Color.WHITE.withAlpha(.85),showBackground:true,backgroundColor:C.Color.fromCssColorString('#0a0a0f').withAlpha(.7),pixelOffset:new C.Cartesian2(0,-18),distanceDisplayCondition:new C.DistanceDisplayCondition(0,900000)}});
-
-/* ---------- live state ---------- */
-let SNAP=null;
-const state={hub:{},temps:{},wind:0,solar:0,demand:.7,checks:[]};
-const priceColor=p=>{ if(p==null) return C.Color.GRAY; const t=clamp(p/150,0,1); return C.Color.lerp(C.Color.fromCssColorString('#3ddc84'),C.Color.fromCssColorString('#ff4d5e'),t,new C.Color()); };
-const tempColor=t=>C.Color.lerp(C.Color.fromCssColorString('#4fa3ff'),C.Color.fromCssColorString('#ff8a3d'),clamp((t-60)/35,0,1),new C.Color());
-
-// Hub price columns: height and color follow the live 15-minute SPP (full height at $200/MWh)
-const colLen=hub=>20000+clamp((state.hub[hub]??0)/200,0,1)*380000;
-Object.entries(HUBS).forEach(([hub,[lon,lat]])=>{
-  G.prices.entities.add({id:'hub-'+hub,
-    position:new C.CallbackProperty(()=>C.Cartesian3.fromDegrees(lon,lat,colLen(hub)/2),false),
-    cylinder:{length:new C.CallbackProperty(()=>colLen(hub),false),topRadius:9000,bottomRadius:9000,
-      material:new C.ColorMaterialProperty(new C.CallbackProperty(()=>priceColor(state.hub[hub]).withAlpha(.8),false)),outline:true,outlineColor:ACC.withAlpha(.5)}});
-  G.prices.entities.add({id:'hubtag-'+hub,
-    position:new C.CallbackProperty(()=>C.Cartesian3.fromDegrees(lon,lat,colLen(hub)+8000),false),
-    label:{text:new C.CallbackProperty(()=>`${hub.replace('HB_','')}  ${money(state.hub[hub])}`,false),font:'500 12px JetBrains Mono',fillColor:C.Color.WHITE,showBackground:true,
-      backgroundColor:C.Color.fromCssColorString('#0a0a0f').withAlpha(.78),backgroundPadding:new C.Cartesian2(6,4),verticalOrigin:C.VerticalOrigin.BOTTOM,pixelOffset:new C.Cartesian2(0,-6),
-      disableDepthTestDistance:Number.POSITIVE_INFINITY}});
-});
-
-// Weather zones: tinted discs + temperature tags
-Object.entries(ZONES).forEach(([zone,[lon,lat]])=>{
-  G.weather.entities.add({position:C.Cartesian3.fromDegrees(lon,lat),
-    ellipse:{semiMajorAxis:95000,semiMinorAxis:95000,material:new C.ColorMaterialProperty(new C.CallbackProperty(()=>state.temps[zone]!=null?tempColor(state.temps[zone]).withAlpha(.22):C.Color.WHITE.withAlpha(.05),false)),
-      outline:true,outlineColor:new C.CallbackProperty(()=>state.temps[zone]!=null?tempColor(state.temps[zone]).withAlpha(.7):C.Color.WHITE.withAlpha(.2),false),height:0},
-    label:{text:new C.CallbackProperty(()=>`${zone.toUpperCase()}  ${state.temps[zone]!=null?fmt(state.temps[zone],1)+'°F':'—'}`,false),font:'500 10px JetBrains Mono',
-      fillColor:C.Color.WHITE.withAlpha(.85),showBackground:true,backgroundColor:C.Color.fromCssColorString('#0a0a0f').withAlpha(.55),pixelOffset:new C.Cartesian2(0,22),
-      distanceDisplayCondition:new C.DistanceDisplayCondition(0,4200000)}});
-});
-
-// Renewables: pulsing rings sized by output
-let pulse=0;
-WIND.forEach(([lon,lat,name])=>G.renew.entities.add({position:C.Cartesian3.fromDegrees(lon,lat),
-  ellipse:{semiMajorAxis:new C.CallbackProperty(()=>40000+state.wind*90000+(pulse%1)*30000,false),semiMinorAxis:new C.CallbackProperty(()=>40000+state.wind*90000+(pulse%1)*30000,false),
-    material:new C.ColorMaterialProperty(new C.CallbackProperty(()=>C.Color.fromCssColorString('#e8eaed').withAlpha(.18*(1-(pulse%1))),false)),outline:true,outlineColor:C.Color.fromCssColorString('#e8eaed').withAlpha(.6),height:1000},
-  label:{text:new C.CallbackProperty(()=>`◎ ${name.toUpperCase()}`,false),font:'500 10px JetBrains Mono',fillColor:C.Color.WHITE.withAlpha(.8),pixelOffset:new C.Cartesian2(0,-14),distanceDisplayCondition:new C.DistanceDisplayCondition(0,3500000)}}));
-SOLAR.forEach(([lon,lat,name])=>G.renew.entities.add({position:C.Cartesian3.fromDegrees(lon,lat),
-  ellipse:{semiMajorAxis:new C.CallbackProperty(()=>30000+state.solar*110000,false),semiMinorAxis:new C.CallbackProperty(()=>30000+state.solar*110000,false),
-    material:new C.ColorMaterialProperty(new C.CallbackProperty(()=>C.Color.fromCssColorString('#ffd24a').withAlpha(.08+state.solar*.3),false)),outline:true,outlineColor:C.Color.fromCssColorString('#ffd24a').withAlpha(.7),height:1000},
-  label:{text:`☀ ${name.toUpperCase()}`,font:'500 10px JetBrains Mono',fillColor:C.Color.fromCssColorString('#ffd24a'),pixelOffset:new C.Cartesian2(0,-14),distanceDisplayCondition:new C.DistanceDisplayCondition(0,3500000)}}));
-
-// Load centers: glow dots scaled by demand vs capacity
-LOAD.forEach(([lon,lat])=>G.load.entities.add({position:C.Cartesian3.fromDegrees(lon,lat),
-  point:{pixelSize:new C.CallbackProperty(()=>8+state.demand*14+Math.sin(pulse*6.28)*2,false),color:C.Color.fromCssColorString('#ff8a3d').withAlpha(.85),outlineColor:C.Color.WHITE.withAlpha(.6),outlineWidth:1}}));
-
-// Flows: arcs from generation regions to load centers
-function arc(a,b,h=160000,n=40){ const pts=[]; for(let i=0;i<=n;i++){ const t=i/n; pts.push(C.Cartesian3.fromDegrees(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.sin(Math.PI*t)*h)); } return pts; }
-[[WIND[0],LOAD[0]],[WIND[1],LOAD[0]],[WIND[1],LOAD[3]],[SOLAR[0],LOAD[2]],[SOLAR[1],LOAD[3]],[WIND[2],LOAD[1]],[WIND[2],LOAD[2]]].forEach(([g,l],i)=>{
-  G.flows.entities.add({polyline:{positions:arc(g,l,120000+i*15000),width:3,material:new C.PolylineDashMaterialProperty({color:ACC.withAlpha(.85),gapColor:C.Color.TRANSPARENT,dashLength:24})}});
-});
-
-/* ---------- HUD ---------- */
-const LAYERS=[['prices','Hub prices','#ff4d5e'],['weather','Weather zones','#4fa3ff'],['renew','Wind + solar','#ffd24a'],['load','Load centers','#ff8a3d'],['flows','Power flows','#00d4ff'],['outline','Texas grid','#e8eaed']];
-const layersEl=document.getElementById('layers');
-LAYERS.forEach(([id,label,color])=>{ const b=document.createElement('button'); b.className='toggle on'; b.innerHTML=`<span class="lbl"><span class="sw" style="background:${color};color:${color}"></span>${label}</span><span class="st">ON</span>`;
-  b.onclick=()=>{ G[id].show=!G[id].show; b.classList.toggle('on',G[id].show); b.classList.toggle('off',!G[id].show); b.querySelector('.st').textContent=G[id].show?'ON':'OFF'; };
-  layersEl.insertBefore(b,document.getElementById('looks')); });
-document.querySelectorAll('#looks button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('#looks button').forEach(x=>x.classList.toggle('on',x===b)); document.body.className = b.dataset.look==='none'?'':'look-'+b.dataset.look; });
-
-// Each target is a point on the ground; the camera orbits it at a range and pitch.
-const FLY={
-  texas:{lon:-99.3,lat:31.0,range:2300000,pitch:-52,label:'TEXAS'},
-  north:{lon:-96.8,lat:32.78,range:520000,pitch:-40,label:'HB_NORTH'},
-  houston:{lon:-95.37,lat:29.76,range:480000,pitch:-40,label:'HB_HOUSTON'},
-  south:{lon:-98.49,lat:29.42,range:480000,pitch:-40,label:'HB_SOUTH'},
-  west:{lon:-102.08,lat:31.99,range:560000,pitch:-40,label:'HB_WEST'},
-  permian:{lon:-102.6,lat:31.4,range:700000,pitch:-38,label:'PERMIAN'},
-  base:{lon:-97.745,lat:30.258,range:12000,pitch:-35,label:'BASE HQ'}
+/* ---------- live state from /api/snapshot ---------- */
+let SNAP=null, snapshotPending=true;
+const state={hub:{},temps:{}};
+const hubName=hub=>hub.replace(/^HB_/, '').toLowerCase().replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())+' hub';
+let plantReading='', trades=[], snapshotStale=false, marketStale=false;
+const ticker=document.querySelector('.readout'), track=ticker.querySelector('.ticker-track');
+const runs=[...track.children], accessible=document.getElementById('tickerAccessible');
+let tickerWidth=0;
+function sizeTicker(){
+  const width=runs[0].getBoundingClientRect().width;
+  if(!width||width===tickerWidth) return;
+  // Preserve the pixel offset when content or viewport width changes. CSS owns every frame.
+  const transform=getComputedStyle(track).transform;
+  const offset=transform==='none'?0:Math.abs(new DOMMatrixReadOnly(transform).m41);
+  tickerWidth=width;
+  track.style.setProperty('--ticker-width',width+'px');
+  track.style.setProperty('--ticker-duration',(width/50)+'s');
+  const animation=track.getAnimations()[0];
+  if(animation) animation.currentTime=(offset%width)/50*1000;
+}
+function renderTicker(){
+  const stale=snapshotStale?' · stale':'';
+  const items=Object.entries(state.hub).filter(([,price])=>Number.isFinite(price))
+    .map(([hub,price])=>`${hubName(hub)} ${money(price)}/MWh${stale}`);
+  if(Number.isFinite(SNAP?.sced?.systemLambda)) items.push(`System lambda ${money(SNAP.sced.systemLambda)}/MWh${stale}`);
+  if(plantReading) items.push(plantReading);
+  items.push(...trades.map(t=>`GridMarket trade · ${activityText(t)}${marketStale?' · stale':''}`));
+  for(const list of [...runs,accessible]){
+    items.forEach((text,i)=>{
+      const item=list.children[i]||list.appendChild(document.createElement('li'));
+      if(item.textContent!==text) item.textContent=text;
+    });
+    while(list.children.length>items.length) list.lastElementChild.remove();
+  }
+  sizeTicker();
+}
+new ResizeObserver(()=>{
+  track.style.setProperty('--ticker-min',ticker.querySelector('.ticker-window').clientWidth+'px');
+  sizeTicker();
+}).observe(runs[0]);
+new ResizeObserver(()=>{
+  track.style.setProperty('--ticker-min',ticker.querySelector('.ticker-window').clientWidth+'px');
+}).observe(ticker);
+document.fonts.ready.then(sizeTicker);
+document.getElementById('tickerPause').onclick=e=>{
+  e.currentTarget.textContent=ticker.classList.toggle('paused')?'Resume':'Pause';
 };
-function fly(k,dur=2.4){ const f=FLY[k];
-  viewer.camera.flyToBoundingSphere(new C.BoundingSphere(C.Cartesian3.fromDegrees(f.lon,f.lat,0),1),
-    {offset:new C.HeadingPitchRange(0,C.Math.toRadians(f.pitch),f.range),duration:dur,easingFunction:C.EasingFunction.QUADRATIC_IN_OUT}); }
-const dock=document.getElementById('dock');
-function renderDock(){ dock.innerHTML=Object.entries(FLY).map(([k,f])=>{ const hub={north:'HB_NORTH',houston:'HB_HOUSTON',south:'HB_SOUTH',west:'HB_WEST'}[k]; return `<button data-k="${k}">${f.label}${hub&&state.hub[hub]!=null?`<b>${money(state.hub[hub])}</b>`:''}</button>`; }).join('');
-  dock.querySelectorAll('button').forEach(b=>b.onclick=()=>fly(b.dataset.k)); }
-renderDock();
-
-const intel=document.getElementById('intel');
-function renderIntel(){
-  const s=SNAP; if(!s) return;
-  const hn=s.hubs?.find(h=>h.hub==='HB_NORTH');
-  intel.innerHTML=`<div class="eyebrow">// intel feed · ${s.ct.date} ${String(s.ct.hour).padStart(2,'0')}:${String(s.ct.minute).padStart(2,'0')} CT</div>
-  <h2>ERCOT system</h2>
-  <div class="row"><span class="k">Demand</span><span class="v">${fmt(s.demand?.mw)} MW</span></div>
-  <div class="row"><span class="k">Today's peak</span><span class="v">${fmt(s.demand?.todayPeak)} MW</span></div>
-  <div class="row"><span class="k">Online capacity (HSL)</span><span class="v">${fmt(s.sced?.onlineHSL)} MW</span></div>
-  <div class="row"><span class="k">Headroom</span><span class="v">${fmt(s.sced?.headroomPct,1)}% · ${fmt(s.sced?.headroomMW)} MW</span></div>
-  <div class="row"><span class="k">System lambda</span><span class="v">${money(s.sced?.systemLambda)}</span></div>
-  <div class="sect eyebrow">// prices $/MWh</div>
-  ${(s.hubs||[]).map(h=>`<div class="row"><span class="k">${h.hub}</span><span class="v" style="color:${priceColor(h.price).toCssColorString()}">${money(h.price)}</span></div>`).join('')}
-  <div class="row"><span class="k">DA HB_NORTH · HE${s.dam?.hourEnding??'—'}</span><span class="v">${money(s.dam?.price)}</span></div>
-  <div class="row"><span class="k">DART (RT − DA)</span><span class="v">${signed(s.dam?.dart,2)}</span></div>
-  <div class="sect eyebrow">// supply</div>
-  <div class="row"><span class="k">Wind · HE${s.wind?.actualHE??'—'}</span><span class="v">${fmt(s.wind?.actualMW)} MW <span style="color:var(--text-dim)">(${signed(s.wind?.errorMW)})</span></span></div>
-  <div class="row"><span class="k">Solar · HE${s.solar?.actualHE??'—'}</span><span class="v">${fmt(s.solar?.actualMW)} MW <span style="color:var(--text-dim)">(${signed(s.solar?.errorMW)})</span></span></div>
-  <div class="row"><span class="k">Weather zones avg</span><span class="v">${fmt(s.weather?.avgF,1)}°F</span></div>
-  <div class="sect eyebrow">// decision checks</div>
-  ${(s.checks||[]).map(c=>`<div class="check"><div class="q">${c.question}</div><div class="m"><span>${c.id} · ${c.route}</span><span class="p" style="color:${band(c.p)}">${fmt(c.p,2)}</span></div><div class="bar"><i style="width:${c.p*100}%;background:${band(c.p)}"></i></div></div>`).join('')}
-  <div class="note">Baseline rules until jev-gateway is live. Not trading advice. Data: ERCOT Public API via ercot-hackathon worker. Hub columns sit on each hub's anchor metro; weather zone centers are approximate.</div>`;
+function setPanel(panel){
+  document.body.dataset.panel=panel;
+  document.querySelectorAll('.panel-tabs button').forEach(b=>b.setAttribute('aria-expanded',String(b.dataset.panel===panel)));
 }
-
-async function load(){
-  const live=document.getElementById('live'), lt=document.getElementById('liveText');
-  try{ const r=await fetch('/api/snapshot'); if(!r.ok) throw 0; SNAP=await r.json();
-    (SNAP.hubs||[]).forEach(h=>state.hub[h.hub]=h.price);
-    (SNAP.weather?.zones||[]).forEach(z=>state.temps[z.zone]=z.tempF);
-    state.wind=clamp((SNAP.wind?.actualMW??0)/25000,0,1); state.solar=clamp(Math.max(SNAP.solar?.forecastNowMW??0,SNAP.solar?.actualMW??0)/28000,0,1);
-    state.demand=SNAP.demand&&SNAP.sced?clamp(SNAP.demand.mw/SNAP.sced.onlineHSL,0,1):.7;
-    live.className='live'; lt.textContent=`live · ercot public api`;
-    document.getElementById('sced').textContent=SNAP.sced?SNAP.sced.timestamp.slice(11,16):'—';
-    document.getElementById('lam').textContent=money(SNAP.sced?.systemLambda);
-    renderIntel(); renderDock();
-  }catch(e){ live.className='live down'; lt.textContent='feed unavailable'; }
-}
-load(); setInterval(load,5*60*1000);
-
-/* Target box on the hottest hub, the way God's Eye View locks onto a contact */
-const targets=document.getElementById('targets');
-const tgt=document.createElement('div'); tgt.className='target'; tgt.innerHTML='<div class="box"></div><div class="tag"></div>'; targets.appendChild(tgt);
-
-/* Readout + animation */
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-viewer.clock.onTick.addEventListener(()=>{
-  pulse += reduce?0:.006;
-  const c=viewer.camera.positionCartographic;
-  document.getElementById('lat').textContent=C.Math.toDegrees(c.latitude).toFixed(3)+'°';
-  document.getElementById('lon').textContent=C.Math.toDegrees(c.longitude).toFixed(3)+'°';
-  document.getElementById('alt').textContent=fmt(c.height/1000,0)+' km';
-  const hot=Object.entries(state.hub).filter(([,v])=>v!=null).sort((a,b)=>b[1]-a[1])[0];
-  if(hot){ const [hub]=hot, [lon,lat,metro]=HUBS[hub];
-    const w=C.SceneTransforms.worldToWindowCoordinates ? C.SceneTransforms.worldToWindowCoordinates(scene,C.Cartesian3.fromDegrees(lon,lat)) : C.SceneTransforms.wgs84ToWindowCoordinates(scene,C.Cartesian3.fromDegrees(lon,lat));
-    if(w){ tgt.style.display='block'; tgt.style.left=w.x+'px'; tgt.style.top=w.y+'px'; tgt.querySelector('.tag').innerHTML=`TRK ${hub} <b>${money(hot[1])}</b> · ${metro.toUpperCase()} · HIGHEST HUB`; } else tgt.style.display='none';
+document.querySelectorAll('.panel-tabs button').forEach(b=>b.onclick=()=>setPanel(document.body.dataset.panel===b.dataset.panel?'':b.dataset.panel));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&document.body.dataset.panel){
+    const button=document.querySelector(`.panel-tabs [data-panel="${document.body.dataset.panel}"]`);
+    setPanel(''); button.focus();
   }
 });
+const market=document.getElementById('market');
+document.querySelector('.credits').before(market);
+const priceColor=p=>p==null?C.Color.GRAY:C.Color.lerp(C.Color.fromCssColorString('#88baac'),C.Color.fromCssColorString('#f2a07e'),clamp(p/150,0,1),new C.Color());
+const tempColor=t=>C.Color.lerp(C.Color.fromCssColorString('#586f7c'),C.Color.fromCssColorString('#f2a07e'),clamp((t-60)/35,0,1),new C.Color());
 
-// Opening move: orbit in from space to Texas
+const colLen=h=>20000+clamp((state.hub[h]??0)/200,0,1)*380000;
+Object.entries(HUBS).forEach(([hub,[lon,lat]])=>{
+  G.prices.entities.add({position:new C.CallbackProperty(()=>C.Cartesian3.fromDegrees(lon,lat,colLen(hub)/2),false),
+    cylinder:{length:new C.CallbackProperty(()=>colLen(hub),false),topRadius:7000,bottomRadius:7000,material:new C.ColorMaterialProperty(new C.CallbackProperty(()=>priceColor(state.hub[hub]).withAlpha(.72),false)),outline:true,outlineColor:ACC.withAlpha(.5)}});
+  G.prices.entities.add({position:new C.CallbackProperty(()=>C.Cartesian3.fromDegrees(lon,lat,colLen(hub)+8000),false),
+    label:{text:new C.CallbackProperty(()=>state.hub[hub]!=null?`${hubName(hub)}  ${money(state.hub[hub])}`:hubName(hub),false),font:'500 12px Inter, sans-serif',fillColor:MAP_TEXT,showBackground:true,backgroundColor:INK.withAlpha(.88),
+      backgroundPadding:new C.Cartesian2(6,4),verticalOrigin:C.VerticalOrigin.BOTTOM,pixelOffset:new C.Cartesian2(0,-6),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
+});
+Object.entries(ZONES).forEach(([zone,[lon,lat]])=>{
+  G.weather.entities.add({position:C.Cartesian3.fromDegrees(lon,lat),
+    ellipse:{semiMajorAxis:95000,semiMinorAxis:95000,material:new C.ColorMaterialProperty(new C.CallbackProperty(()=>state.temps[zone]!=null?tempColor(state.temps[zone]).withAlpha(.14):C.Color.WHITE.withAlpha(.04),false)),
+      outline:true,outlineColor:new C.CallbackProperty(()=>state.temps[zone]!=null?tempColor(state.temps[zone]).withAlpha(.55):C.Color.WHITE.withAlpha(.2),false),height:0},
+    label:{text:new C.CallbackProperty(()=>zone+(state.temps[zone]!=null?'  '+fmt(state.temps[zone],1)+'°F':''),false),font:'500 11px Inter, sans-serif',
+      fillColor:MAP_TEXT,showBackground:true,backgroundColor:INK.withAlpha(.88),pixelOffset:new C.Cartesian2(0,22),distanceDisplayCondition:new C.DistanceDisplayCondition(900000,4200000)}});
+});
+
+/* ---------- power plants (EIA-860) ---------- */
+let PLANTS=[], META=null, selected=null;
+const filt={batteriesOnly:false,types:new Set(ORDER),minIdx:2,ercotOnly:true,labels:true};
+const MINS=[0,5,10,25,50,100,250,500];
+const plantEnt=new Map();
+
+function plantSize(mw){ return clamp(18+Math.sqrt(mw)*1.25,20,86); }
+function addPlants(){
+  for(const p of PLANTS){
+    const e=G.plants.entities.add({id:'plant-'+p.code,position:C.Cartesian3.fromDegrees(p.lon,p.lat,0),
+      billboard:{image:ICON[p.prim],width:plantSize(p.mw),height:plantSize(p.mw),verticalOrigin:C.VerticalOrigin.BOTTOM,
+        scaleByDistance:new C.NearFarScalar(4e4,1.35,3.2e6,.38),disableDepthTestDistance:Number.POSITIVE_INFINITY,
+        color:p.ba==='ERCO'?C.Color.WHITE:C.Color.WHITE.withAlpha(.5)},
+      label:{text:p.name,font:'500 11px Inter, sans-serif',fillColor:MAP_TEXT,showBackground:true,backgroundColor:INK.withAlpha(.88),backgroundPadding:new C.Cartesian2(5,3),
+        verticalOrigin:C.VerticalOrigin.TOP,pixelOffset:new C.Cartesian2(0,6),disableDepthTestDistance:Number.POSITIVE_INFINITY,
+        distanceDisplayCondition:new C.DistanceDisplayCondition(0,p.mw>=1500?2.2e6:p.mw>=800?9e5:p.mw>=300?3.5e5:1.2e5),show:true}});
+    e.plant=p; plantEnt.set(p.code,e);
+  }
+}
+function applyFilter(){
+  const min=MINS[filt.minIdx]; let n=0, mw=0;
+  for(const p of PLANTS){ const e=plantEnt.get(p.code);
+    const on=(filt.batteriesOnly?isBattery(p):filt.types.has(p.prim))&&p.mw>=min&&(!filt.ercotOnly||p.ba==='ERCO');
+    e.show=on; e.label.show=filt.labels; if(on){n++;mw+=p.mw;} }
+  document.getElementById('shown').textContent=`${fmt(n)} plants shown · ${fmt(mw/1000,1)} GW`;
+  plantReading=`${fmt(n)} plants shown · ${fmt(mw/1000,1)} GW`;
+  renderTicker();
+  document.getElementById('minmwv').textContent=min?`${min} MW`:'all';
+  const batteryButton=document.getElementById('batteriesOnly');
+  batteryButton.classList.toggle('on',filt.batteriesOnly);
+  batteryButton.setAttribute('aria-pressed',String(filt.batteriesOnly));
+  document.getElementById('ercotOnly').setAttribute('aria-pressed',String(filt.ercotOnly));
+  document.getElementById('labelsBtn').setAttribute('aria-pressed',String(filt.labels));
+  renderLegend();
+}
+
+/* legend with counts + capacity, doubling as layer toggles */
+function renderLegend(){
+  const min=MINS[filt.minIdx]; const agg={}; ORDER.forEach(t=>agg[t]={n:0,mw:0});
+  const focused=document.activeElement?.closest?.('#legend .lg')?.dataset.t;
+  PLANTS.forEach(p=>{ if(p.mw>=min&&(!filt.ercotOnly||p.ba==='ERCO')){agg[p.prim].n++;agg[p.prim].mw+=p.mw;} });
+  document.getElementById('legend').innerHTML=ORDER.filter(t=>agg[t].n).map(t=>`<button class="lg ${filt.types.has(t)?'':'off'}" data-t="${t}" aria-pressed="${filt.types.has(t)}"><img src="${ICON[t]}" alt=""><span>${TYPES[t].label}</span><span class="n"><b>${fmt(agg[t].mw/1000,1)} GW</b>${fmt(agg[t].n)} plants</span></button>`).join('');
+  document.querySelectorAll('.lg').forEach(b=>b.onclick=()=>{ const t=b.dataset.t; filt.batteriesOnly=false; filt.types.has(t)?filt.types.delete(t):filt.types.add(t); applyFilter(); });
+  if(focused) document.querySelector(`#legend .lg[data-t="${focused}"]`)?.focus();
+}
+document.getElementById('batteriesOnly').onclick=()=>{filt.batteriesOnly=!filt.batteriesOnly;applyFilter();};
+document.getElementById('minmw').oninput=e=>{filt.minIdx=+e.target.value;applyFilter();};
+document.getElementById('ercotOnly').onclick=e=>{filt.ercotOnly=!filt.ercotOnly;e.currentTarget.classList.toggle('on',filt.ercotOnly);applyFilter();};
+document.getElementById('labelsBtn').onclick=e=>{filt.labels=!filt.labels;e.currentTarget.classList.toggle('on',filt.labels);applyFilter();};
+const LAYERS=[['prices','Hub prices'],['weather','Weather zones'],['outline','Texas outline']];
+document.getElementById('layerPills').innerHTML=LAYERS.map(([id,l])=>`<button class="pill on" aria-pressed="true" data-l="${id}">${l}</button>`).join('');
+document.querySelectorAll('#layerPills .pill').forEach(b=>b.onclick=()=>{const g=G[b.dataset.l];g.show=!g.show;b.classList.toggle('on',g.show);b.setAttribute('aria-pressed',String(g.show));});
+document.querySelectorAll('#looks .pill').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.look==='none')));
+document.querySelectorAll('#looks .pill').forEach(b=>b.onclick=()=>{document.querySelectorAll('#looks .pill').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',String(x===b));});document.body.className=b.dataset.look==='none'?'':'look-'+b.dataset.look;});
+
+/* search */
+const q=document.getElementById('q'), results=document.getElementById('results');
+q.oninput=()=>{ const s=q.value.trim().toLowerCase(); if(s.length<2){results.innerHTML='';return;}
+  const hits=PLANTS.filter(p=>(p.name+' '+(p.op||'')+' '+(p.county||'')).toLowerCase().includes(s)).slice(0,8);
+  results.innerHTML=hits.map(p=>`<button data-c="${p.code}"><span>${esc(p.name)}</span><span>${TYPES[p.prim].label.split(' ')[0]} · ${fmt(p.mw)} MW</span></button>`).join('')||'<div class="note">No plant matches.</div>';
+  results.querySelectorAll('button').forEach(b=>b.onclick=()=>{selectPlant(+b.dataset.c);results.innerHTML='';q.value='';});
+};
+
+/* ---------- camera ---------- */
+const FLY={texas:[-99.3,31.0,2300000,-52,'Texas'],north:[-96.8,32.78,520000,-40,'HB_NORTH'],houston:[-95.37,29.76,480000,-40,'HB_HOUSTON'],south:[-98.49,29.42,480000,-40,'HB_SOUTH'],west:[-102.08,31.99,560000,-40,'HB_WEST'],permian:[-102.6,31.4,700000,-38,'Permian'],base:[-97.745,30.258,12000,-35,'Base HQ']};
+function flyTo(lon,lat,range,pitch,dur=2.4){ viewer.camera.flyToBoundingSphere(new C.BoundingSphere(C.Cartesian3.fromDegrees(lon,lat,0),1),{offset:new C.HeadingPitchRange(C.Math.toRadians(-15),C.Math.toRadians(pitch),range),duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:dur,easingFunction:C.EasingFunction.QUADRATIC_IN_OUT}); }
+const dock=document.getElementById('dock');
+function renderDock(){ dock.innerHTML=Object.entries(FLY).map(([k,f])=>{const hub={north:'HB_NORTH',houston:'HB_HOUSTON',south:'HB_SOUTH',west:'HB_WEST'}[k];return `<button data-k="${k}">${hub?hubName(hub):f[4]}${hub&&state.hub[hub]!=null?`<b>${money(state.hub[hub])}</b>`:''}</button>`;}).join('');
+  dock.querySelectorAll('button').forEach(b=>b.onclick=()=>{const f=FLY[b.dataset.k];flyTo(f[0],f[1],f[2],f[3]);}); }
+renderDock();
+
+/* ---------- system intel panel ---------- */
+const intel=document.getElementById('intel');
+function renderSystem(){
+  const s=SNAP;
+  const top=PLANTS.filter(p=>p.ba==='ERCO').slice(0,6);
+  intel.innerHTML=`<div class="eyebrow">02 · System overview${s?` · ${s.ct.date} ${String(s.ct.hour).padStart(2,'0')}:${String(s.ct.minute).padStart(2,'0')} CT`:''}</div>
+  <h2>ERCOT system</h2>
+  ${s?`<div class="row"><span class="k">Demand</span><span class="v num">${fmt(s.demand?.mw)} MW</span></div>
+  <div class="row"><span class="k">Available capacity</span><span class="v num">${fmt(s.sced?.onlineHSL)} MW</span></div>
+  <div class="row"><span class="k">Spare capacity</span><span class="v num">${fmt(s.sced?.headroomPct,1)}% · ${fmt(s.sced?.headroomMW)} MW</span></div>
+  <div class="row"><span class="k">System marginal price · $/MWh</span><span class="v num">${money(s.sced?.systemLambda)}</span></div>
+  <div class="row"><span class="k">Wind now · hour ending ${s.wind?.actualHE??'—'}</span><span class="v num">${fmt(s.wind?.actualMW)} MW</span></div>
+  <div class="row"><span class="k">Solar now · hour ending ${s.solar?.actualHE??'—'}</span><span class="v num">${fmt(s.solar?.actualMW)} MW</span></div>
+  <div class="sect eyebrow">Hub prices · $/MWh</div>
+  ${(s.hubs||[]).map(h=>`<div class="row"><span class="k">${hubName(h.hub)}</span><span class="v num">${money(h.price)}</span></div>`).join('')}
+  <div class="row"><span class="k">North real-time − day-ahead</span><span class="v num">${signed(s.dam?.dart,2)}</span></div>`:`<div class="note">${snapshotPending?'Loading live ERCOT data…':'Live ERCOT data unavailable. Plant data remains available.'}</div>`}
+  <div class="sect eyebrow">Largest plants · select for details</div>
+  ${top.map(p=>`<button class="row" data-c="${p.code}"><span class="k"><img src="${ICON[p.prim]}" alt="" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px">${esc(p.name)}</span><span class="v num">${fmt(p.mw)} MW</span></button>`).join('')}
+  ${s&&s.checks?.length?`<div class="sect eyebrow">Price risk checks · simple rules, not advice</div>${s.checks.map(c=>`<div class="check"><div class="q">${esc(checkQuestion(c.id,c.question))}</div><div class="m"><span>${esc(routeName(c.route))}</span><span class="p num">${fmt(c.p*100)}%</span></div><div class="bar"><i style="width:${c.p*100}%;background:${band(c.p)}"></i></div></div>`).join('')}`:''}
+  <div class="note">Plants: ${META?esc(META.source):'EIA-860'}. Click any plant silhouette for its units, grid connection and live settlement price. Checks use baseline rules, not trading advice.</div>`;
+  intel.querySelectorAll('[data-c]').forEach(r=>r.onclick=()=>selectPlant(+r.dataset.c));
+}
+
+/* ---------- zone scarcity (separate from plant settlement prices) ---------- */
+let marketUrl='', predictions=null;
+function zoneHTML(p){
+  if(p.ba!=='ERCO') return '';
+  const zone=countyToZone(p.county), prediction=leadPrediction(predictions,zone);
+  const href=tradeLink(marketUrl,zone);
+  return `<div class="sect eyebrow">Zone scarcity</div>
+    <div class="row"><span class="k">Load zone</span><span class="v">${zone?`${zoneName(zone)} load zone`:'Unknown county'}</span></div>
+    <div class="note">Approximate, by county · navigation only</div>
+    ${prediction?`<div class="row"><span class="k">Scarcity score</span><span class="v num">${fmt(prediction.score,1)} · ${esc(prediction.level)}</span></div>
+    <div class="note">Lead delivery hour: <time datetime="${esc(prediction.delivery_hour)}">${esc(ctTime(prediction.delivery_hour))}</time></div>`:`<div class="note">${predictions===null?'Market not connected':'Scarcity data unavailable'}</div>`}
+    ${href?`<a class="dash" href="${esc(href)}">Trade this zone →</a>`:''}`;
+}
+async function marketGet(base,path){
+  const r=await fetch(base+path,{signal:AbortSignal.timeout(20000)});
+  if(!r.ok) throw new Error('Market unavailable');
+  return r.json();
+}
+/* One status line for both sources; last-known data stays on screen, marked stale. */
+let snapshotState='pending', marketFeed=null;
+function renderStatus(){
+  const ercot={pending:'Connecting to ERCOT…',live:'Live ERCOT data',stale:'ERCOT unavailable · last known data',down:'ERCOT data unavailable'}[snapshotState];
+  const mkt=(marketUrl||marketFeed)&&marketStale?(marketFeed?'Market unavailable · last known trades':'Market unavailable'):'';
+  document.getElementById('live').className='live'+(snapshotState==='stale'||snapshotState==='down'||mkt?' down':'');
+  document.getElementById('liveText').innerHTML=esc(ercot)+(mkt?'<br>'+esc(mkt):'');
+}
+function renderMarket(){
+  if(!marketFeed){market.hidden=true;return;}
+  const activity=(Array.isArray(marketFeed.activity)?marketFeed.activity:marketFeed.activity?.items||[]).slice(0,8);
+  const checks=Array.isArray(marketFeed.router)?marketFeed.router:marketFeed.router?.checks||[];
+  const alerts=checks.filter(r=>r.band==='alert');
+  const stale=marketStale?' <span class="badge warn">Stale · last known</span>':'';
+  market.innerHTML=`<div class="mf-title">Latest GridMarket activity${stale}</div>
+    <ul class="mf-strip">${activity.map(i=>`<li>${esc(activityText(i))}</li>`).join('')||'<li>No trades yet</li>'}</ul>
+    <div class="mf-title">Scarcity alerts · simple rules, not advice${stale}</div>
+    <ul class="mf-alerts">${alerts.map(r=>`<li>${esc(checkName(r.check_id))} <b><span class="num">${Math.round(r.probability*100)}%</span> · Alert</b></li>`).join('')||`<li>${marketStale?'No alerts at last check':'No alerts right now'}</li>`}</ul>`;
+  market.hidden=false;
+}
+let marketReq=0;
+async function refreshMarket(){
+  let esr=null;
+  const my=++marketReq;
+  try{
+    const cfg=await fetch('/api/config',{signal:AbortSignal.timeout(20000)}).then(r=>{if(!r.ok) throw new Error('Config unavailable');return r.json();});
+    const link=tradeLink(cfg.MARKET_URL,'LZ_NORTH');
+    const url=link?link.split('#')[0].replace(/\/+$/,''):'';
+    const now=Date.now();
+    const [forecast,signals,feed,history]=url?await Promise.all([
+      marketGet(url,'/v1/predictions').catch(()=>null),
+      marketGet(url,'/v1/signals').catch(()=>null),
+      fetchMarket(url),
+      Promise.all(LOAD_ZONES.map(zone=>marketGet(url,historyPath(zone,now)).catch(()=>null)))
+    ]):[null,null,null,[]];
+    // A slower, older refresh must not overwrite a newer one.
+    if(my!==marketReq) return;
+    marketUrl=url;
+    predictions=Array.isArray(forecast)?forecast:null;
+    esr=latestESR(signals);
+    helpHistory=Object.fromEntries(LOAD_ZONES.map((zone,i)=>[zone,history[i]])); helpPredictions=predictions;
+    const dashboard=document.getElementById('dashboard');
+    dashboard.hidden=!marketUrl;
+    if(marketUrl) dashboard.href=marketUrl;
+    if(feed&&!feed.offline){
+      marketFeed=feed; marketStale=false;
+      const activity=Array.isArray(feed.activity)?feed.activity:feed.activity?.items;
+      trades=(Array.isArray(activity)?activity:[]).filter(t=>(t.type==='fill'||t.entry_type==='fill')&&Number.isFinite(t.price_cents)&&Number.isFinite(t.quantity)&&typeof t.symbol==='string').slice(0,8);
+    }else{
+      marketStale=true;
+      if(!marketUrl){trades=[];marketFeed=null;}
+    }
+  }catch{if(my!==marketReq) return; predictions=null;helpHistory=null;helpPredictions=null;marketStale=true;}
+  renderMarket(); renderStatus(); renderTicker(); renderHelp();
+  const box=document.getElementById('zoneMarket');
+  if(box&&selected) box.innerHTML=zoneHTML(selected);
+  const reading=formatESR(esr);
+  document.getElementById('batteryReading').innerHTML=esc(reading==='Battery data unavailable'?waiting:reading)+
+    (reading==='Battery data unavailable'?'':`<div class="note">Updated <time datetime="${esc(esr.fetched_at)}">${esc(ctTime(esr.fetched_at))}</time></div>`);
+}
+
+/* ---------- Help the grid: independent public feeds and controls ---------- */
+const help={demand:false,batteries:false,windows:false};
+let helpHistory=null, helpPredictions=null, batteryDashboard=null, batteryStale=false;
+const helpHour=document.getElementById('helpHour');
+// Representative areas, not electrical boundaries; same approximation as the backend roll-up.
+const loadAreas={LZ_NORTH:[-97.3,33.0,160000],LZ_HOUSTON:[-95.2,29.3,95000],LZ_SOUTH:[-98.2,27.8,130000],LZ_WEST:[-102,31.8,200000]};
+const helpAreas={}, narrow=matchMedia('(max-width:900px)'), compact=matchMedia('(max-width:600px)'); // Phones: the list names each peak hour.
+for(const [zone,[lon,lat,radius]] of Object.entries(loadAreas)){
+  helpAreas[zone]=G.help.entities.add({position:C.Cartesian3.fromDegrees(lon,lat),
+    ellipse:{semiMajorAxis:radius,semiMinorAxis:radius,material:ACC.withAlpha(0),outline:true,outlineColor:ACC.withAlpha(.6)},
+    label:{text:zoneName(zone),font:'500 12px Inter, sans-serif',fillColor:MAP_TEXT,showBackground:true,backgroundColor:INK.withAlpha(.88),pixelOffset:new C.Cartesian2(0,34),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
+}
+function renderHelp(){
+  const now=Date.now(), forecast=forecastHours(helpHistory,now), index=Number(helpHour.value);
+  for(const [name,id] of [['demand','helpDemand'],['batteries','helpBatteries'],['windows','helpWindows']]) document.getElementById(id).hidden=!help[name];
+  document.getElementById('helpForecast').hidden=!(help.demand||help.windows);
+  G.help.show=help.demand||help.windows;
+  const demand=SNAP?.demand?.mw, capacity=SNAP?.sced?.onlineHSL;
+  document.getElementById('helpDemand').innerHTML=`<b>ERCOT-wide demand</b><div>${mwText(demand)} / ${mwText(capacity)} available capacity</div>
+    <div class="note">${Number.isFinite(demand)&&Number.isFinite(capacity)&&capacity>0?`${fmt(demand/capacity*100,1)}% of available capacity`:waiting}${snapshotStale?' · Stale · last known':''}</div>`;
+  const b=batteryDashboard;
+  const stale=batteryStale||(b&&now-Date.parse(b.timestamp)>10*60*1000);
+  document.getElementById('helpBatteries').innerHTML=b?`<b>Texas grid batteries</b>
+    <div>Charging ${mwText(b.charging_mw)}</div><div>Discharging ${mwText(b.discharging_mw)}</div>
+    <div>Net ${mwText(b.net_mw)}</div><div>Net change over 1 hour: ${Number.isFinite(b.change_net_mw)?(b.change_net_mw>0?'+':'')+mwText(b.change_net_mw):waiting}</div>
+    <div class="note">${stale?'Stale · last known · ':''}Reading ${esc(ctTime(b.timestamp))}<br>Source updated ${esc(ctTime(b.updated_at))}</div>`:`<b>Texas grid batteries</b><div>${waiting}</div>`;
+  document.getElementById('helpBatteries').innerHTML+='<div class="note">ERCOT energy-storage dashboard · system-wide, not household batteries. Highlighted plants include hybrids; markers show locations, not individual output. Refreshes every minute.</div>';
+  const windows=helpWindows(helpPredictions,now);
+  const available=Array.isArray(helpPredictions)&&helpPredictions.some(p=>p.level!=='UNAVAILABLE'&&Number.isFinite(p.score)&&Date.parse(p.delivery_hour)>=now&&Date.parse(p.delivery_hour)<now+24*3600000);
+  document.getElementById('helpWindows').innerHTML='<b>Next help windows</b><div class="note">Simulation estimate, not an ERCOT alert</div><div class="help-chips">'+
+    (windows.length?windows.map(w=>`<span class="badge">${esc(windowText(w))}</span>`).join(''):`<span>${available?'No HIGH-or-above windows in supplied predictions':waiting}</span>`)+ '</div>';
+  const hour=ctTime(new Date(forecast.hours[index]).toISOString());
+  document.getElementById('helpHourLabel').textContent=hour;
+  helpHour.setAttribute('aria-valuetext',hour);
+  document.getElementById('helpZones').innerHTML=Object.entries(forecast.zones).map(([zone,data])=>{
+    const value=data.values[index], ratio=Number.isFinite(value)&&data.peak>0?value/data.peak:null;
+    const peak=data.peakHour===null?null:ctTime(new Date(data.peakHour).toISOString()), atPeak=data.peakHour===forecast.hours[index];
+    const text=`${zoneName(zone)}: ${mwText(value)} · ${ratio===null?'24-hour peak: '+waiting:fmt(ratio*100)+'% of own peak · peak '+peak}`;
+    const area=helpAreas[zone];
+    const t=shade(value,data);
+    if(area){area.ellipse.material=t===null?ACC.withAlpha(0):C.Color.lerp(C.Color.fromCssColorString('#b8dbd9'),C.Color.fromCssColorString('#04724d'),t,new C.Color()).withAlpha(.15+t*.45);
+      area.ellipse.outlineColor=atPeak?C.Color.fromCssColorString('#f4f4f9'):ACC.withAlpha(.6);
+      area.label.text=zoneName(zone)+(ratio===null?(compact.matches?'':' · '+waiting):' · '+(atPeak?'Peak hour · ':'')+fmt(ratio*100)+'% of peak'+(narrow.matches?'':'\nPeak '+peakLabel(data.peakHour)));}
+    return `<li>${esc(text)}${atPeak?' <span class="badge">Peak hour</span>':''}</li>`;
+  }).join('');
+  const published=publishedText(Object.values(forecast.zones).map(z=>z.published).filter(Boolean).sort().pop());
+  document.getElementById('helpPublished').textContent='Forecast published '+(published??waiting);
+}
+function highlightBatteries(){
+  for(const p of PLANTS){const e=plantEnt.get(p.code);e.billboard.scale=help.batteries&&isBattery(p)?1.3:1;
+    e.billboard.color=help.batteries&&isBattery(p)?C.Color.fromCssColorString('#88baac'):(p.ba==='ERCO'?C.Color.WHITE:C.Color.WHITE.withAlpha(.5));}
+}
+document.querySelectorAll('#helpToggles button').forEach(button=>button.onclick=()=>{
+  const key=button.dataset.help; help[key]=!help[key];button.setAttribute('aria-pressed',String(help[key]));button.classList.toggle('on',help[key]);renderHelp();highlightBatteries();
+});
+helpHour.oninput=renderHelp;
+async function refreshBatteries(){
+  try{const r=await fetch(API+'/api/esr-dashboard',{signal:AbortSignal.timeout(20000)});if(!r.ok)throw new Error(waiting);
+    const b=await r.json();if(![b.charging_mw,b.discharging_mw,b.net_mw].every(Number.isFinite)||!Number.isFinite(Date.parse(b.timestamp)))throw new Error(waiting);
+    batteryDashboard=b;batteryStale=false;
+  }catch{batteryStale=true;}
+  renderHelp();
+}
+renderHelp();refreshBatteries();setInterval(refreshBatteries,60000);
+
+/* ---------- plant drill-down ---------- */
+function spark(series,color){
+  const v=(series||[]).filter(x=>x!=null&&isFinite(x)); if(v.length<2) return '';
+  const mn=Math.min(...v),mx=Math.max(...v),W=300,H=34;
+  const pts=v.map((y,i)=>`${(i/(v.length-1)*W).toFixed(1)},${(H-3-((y-mn)/((mx-mn)||1))*(H-6)).toFixed(1)}`).join(' ');
+  const last=pts.split(' ').pop().split(',');
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="0,${H} ${pts} ${W},${H}" fill="${color}" fill-opacity=".12"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke"/><circle cx="${last[0]}" cy="${last[1]}" r="2.8" fill="${color}"/></svg>`;
+}
+const CHEM={LIB:'lithium-ion',NIB:'nickel-based',PB:'lead-acid',NAB:'sodium-based',FLB:'flow battery',MAB:'metal-air',OTH:'other'};
+const STAT_BA={ERCO:'ERCOT',SWPP:'Southwest Power Pool',MISO:'MISO',EPE:'El Paso Electric (WECC)',PNM:'PNM (WECC)'};
+function plantHTML(p){
+  const t=TYPES[p.prim];
+  const yrs=p.units.map(u=>u.yr).filter(Boolean); const first=yrs.length?Math.min(...yrs):null, last=yrs.length?Math.max(...yrs):null;
+  const summer=p.units.reduce((a,u)=>a+(u.sum||0),0);
+  const hub=nearest([p.lon,p.lat],Object.fromEntries(Object.entries(HUBS).map(([k,v])=>[k,[v[0],v[1]]])));
+  const zone=nearest([p.lon,p.lat],ZONES);
+  const mixTotal=Object.values(p.cap).reduce((a,b)=>a+b,0);
+  const w=p.units.find(u=>u.wind)?.wind, sol=p.units.filter(u=>u.solar), st=p.units.filter(u=>u.stor);
+  const retiring=p.units.filter(u=>u.ret);
+  let fleet='';
+  if(SNAP&&(p.prim==='wind'||p.prim==='solar')){
+    const f=p.prim==='wind'?SNAP.wind:SNAP.solar;
+    const installed=PLANTS.filter(x=>x.ba==='ERCO').reduce((a,x)=>a+(x.cap[p.prim]||0),0);
+    const util=f&&f.actualMW!=null&&installed?f.actualMW/installed:null;
+    fleet=`<div class="sect eyebrow">ERCOT ${p.prim} fleet now</div>
+      <div class="row"><span class="k">Fleet output · hour ending ${f?.actualHE??'—'}</span><span class="v num">${fmt(f?.actualMW)} MW</span></div>
+      <div class="row"><span class="k">Fleet forecast error</span><span class="v num">${signed(f?.errorMW)} MW</span></div>
+      <div class="row"><span class="k">Installed ERCOT ${p.prim} (EIA-860)</span><span class="v num">${fmt(installed/1000,1)} GW</span></div>
+      ${util!=null?`<div class="row"><span class="k">Fleet running at</span><span class="v num">${fmt(util*100,1)}% of installed</span></div>
+      <div class="row"><span class="k">This plant at the fleet rate</span><span class="v num">≈ ${fmt(p.cap[p.prim]*util)} MW</span></div>`:''}
+      <div class="note">ERCOT publishes wind and solar output system-wide, not per plant, so the last line is an estimate.</div>`;
+  }
+  return `<div class="topline"><div class="eyebrow">Plant details · EIA ${p.code}</div><button class="back" id="back">← System</button></div>
+  <div class="p-head" style="margin-top:10px"><img src="${ICON[p.prim]}" alt="${t.label}"><div><h3>${esc(p.name)}</h3><div class="sub">${esc(p.op)} · ${esc(p.county)} County${p.city?` · ${esc(p.city)}`:''}</div></div></div>
+  <div class="badges"><span class="badge">${t.label}</span><span class="badge ${p.ba==='ERCO'?'accent':'warn'}">${STAT_BA[p.ba]||esc(p.ba)}</span>${p.sector?`<span class="badge">${esc(sectorName(p.sector))}</span>`:''}${p.planned.length?`<span class="badge warn">${p.planned.length} unit(s) planned</span>`:''}</div>
+  <div class="tiles">
+    <div class="tile"><div class="k">Rated capacity</div><div class="v num">${fmt(p.mw)}</div><div class="s">MW</div></div>
+    <div class="tile"><div class="k">Summer</div><div class="v num">${fmt(summer)}</div><div class="s">MW net</div></div>
+    <div class="tile"><div class="k">Units</div><div class="v">${p.units.length}</div><div class="s">${first?(first===last?`online ${first}`:`${first}–${last}`):''}</div></div>
+  </div>
+  ${Object.keys(p.cap).length>1?`<div class="sect eyebrow">Capacity mix</div><div class="mix">${Object.entries(p.cap).map(([k,v])=>`<i style="width:${v/mixTotal*100}%;background:${TYPES[k].color}" title="${TYPES[k].label} ${fmt(v)} MW"></i>`).join('')}</div><div class="mixkey">${Object.entries(p.cap).map(([k,v])=>`<span style="--c:${TYPES[k].color}">${TYPES[k].label} ${fmt(v)} MW</span>`).join('')}</div>`:''}
+  <div class="sect eyebrow">Live prices at this plant</div>
+  <div id="liveMarket">${p.ba!=='ERCO'?`<div class="note">This plant sits in ${STAT_BA[p.ba]||p.ba}, outside the ERCOT market, so ERCOT prices don't apply to it.</div>`:p.nodes.length?'<div class="livebox"><div class="lbl">Loading settlement point…</div></div>':'<div class="note">Plant price unavailable: no ERCOT settlement point is mapped to this plant. The nearest hub price is shown below.</div>'}</div>
+  ${p.ba==='ERCO'?`<div class="row"><span class="k">Nearest hub · ${Math.round(hub[1])} km</span><span class="v">${hubName(hub[0])} ${money(state.hub[hub[0]])}</span></div>
+  <div class="row"><span class="k">Weather zone (nearest, approx.)</span><span class="v">${zone[0]} ${state.temps[zone[0]]!=null?fmt(state.temps[zone[0]],1)+'°F':''}</span></div>`:''}
+  <div id="zoneMarket" aria-live="polite">${zoneHTML(p)}</div>
+  ${fleet}
+  ${w?`<div class="sect eyebrow">Wind turbines</div>
+    <div class="row"><span class="k">Turbines</span><span class="v num">${fmt(p.units.reduce((a,u)=>a+(u.wind?.n||0),0))}</span></div>
+    <div class="row"><span class="k">Model</span><span class="v">${esc(w.mfr||'—')} ${esc(w.model||'')}</span></div>
+    <div class="row"><span class="k">Hub height</span><span class="v num">${w.hub?fmt(w.hub)+' ft':'—'}</span></div>
+    <div class="row"><span class="k">Wind quality class</span><span class="v">${w.cls??'—'}</span></div>`:''}
+  ${sol.length?`<div class="sect eyebrow">Solar array</div>
+    <div class="row"><span class="k">Tracking</span><span class="v">${esc([...new Set(sol.map(u=>u.solar.track).filter(Boolean))].join(', ')||'—')}</span></div>
+    <div class="row"><span class="k">DC capacity</span><span class="v num">${fmt(sol.reduce((a,u)=>a+(u.solar.dc||0),0))} MWdc</span></div>
+    <div class="row"><span class="k">Bifacial modules</span><span class="v">${sol.some(u=>u.solar.bifacial)?'yes':'no'}</span></div>`:''}
+  ${st.length?`<div class="sect eyebrow">Battery storage</div>
+    <div class="row"><span class="k">Energy capacity</span><span class="v num">${fmt(st.reduce((a,u)=>a+(u.stor.mwh||0),0))} MWh</span></div>
+    <div class="row"><span class="k">Duration</span><span class="v">${esc([...new Set(st.map(u=>u.stor.hrs).filter(Boolean))].map(h=>h+' h').join(', ')||'—')}</span></div>
+    <div class="row"><span class="k">Chemistry</span><span class="v">${esc([...new Set(st.map(u=>CHEM[u.stor.chem]||u.stor.chem).filter(Boolean))].join(', ')||'—')}</span></div>
+    <div class="row"><span class="k">Reported uses</span><span class="v" style="max-width:60%">${esc([...new Set(st.flatMap(u=>u.stor.uses))].join(', ')||'—')}</span></div>`:''}
+  <div class="sect eyebrow">Grid connection</div>
+  <div class="row"><span class="k">Balancing authority</span><span class="v">${esc(p.baName||p.ba)}</span></div>
+  <div class="row"><span class="k">Transmission owner</span><span class="v" style="max-width:62%">${esc(p.to||'—')}</span></div>
+  <div class="row"><span class="k">Interconnection voltage</span><span class="v num">${p.kv.length?p.kv.map(k=>fmt(k)+' kV').join(' / '):'—'}</span></div>
+  ${p.water?`<div class="row"><span class="k">Water source</span><span class="v" style="max-width:62%">${esc(p.water)}</span></div>`:''}
+  ${p.pipes.length?`<div class="row"><span class="k">Gas pipelines</span><span class="v" style="max-width:62%">${esc(p.pipes.join(', '))}</span></div>`:''}
+  <div class="row"><span class="k">Location</span><span class="v num">${p.lat.toFixed(4)}°, ${p.lon.toFixed(4)}°</span></div>
+  <div class="sect eyebrow">Generating units (${p.units.length})</div>
+  <div class="tblwrap"><table class="units"><thead><tr><th scope="col">Unit</th><th scope="col">Technology</th><th scope="col" style="text-align:right">MW</th><th scope="col" style="text-align:right">Online</th></tr></thead><tbody>
+  ${p.units.slice(0,14).map(u=>`<tr><td class="n" style="text-align:left">${esc(u.id)}</td><td>${esc(u.tech)}${u.chp?' · combined heat and power':''}${u.ret?` <span style="color:var(--warn)">· retires ${u.ret}</span>`:''}${u.node?`<div class="note" style="margin-top:2px">Settlement point ${esc(u.node)}</div>`:''}</td><td class="n">${fmt(u.mw,1)}</td><td class="n">${u.yr??'—'}</td></tr>`).join('')}
+  </tbody></table></div>
+  ${p.units.length>14?`<div class="note">+ ${p.units.length-14} more units</div>`:''}
+  ${retiring.length?`<div class="note" style="color:var(--warn)">${retiring.length} unit(s) report a planned retirement year.</div>`:''}
+  ${p.planned.length?`<div class="sect eyebrow">Planned additions</div>${p.planned.map(u=>`<div class="row"><span class="k">${esc(u.tech)}</span><span class="v num">${fmt(u.mw)} MW · ${u.yr??'—'}<div style="font-size:11px;color:var(--text-dim)">${esc(u.status)}</div></span></div>`).join('')}`:''}
+  <div class="note">Source: EIA-860 2025 early release, plant ${p.code}. <a href="https://www.eia.gov/electricity/data/browser/#/plant/${p.code}" target="_blank" rel="noopener">Open in EIA Electricity Data Browser ↗</a>${p.nodes.length?`<br>Settlement point${p.nodes.length>1?'s':''}: ${p.nodes.map(esc).join(', ')} (${p.nodeSrc==='EIA-860'?'from EIA-860':'matched by ERCOT naming'}).`:''}</div>`;
+}
+async function fetchNodes(sps){
+  const r=await fetch(API+'/api/node?sp='+encodeURIComponent(sps.join(',')));
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+let reqId=0;
+async function loadNode(p){
+  if(p.ba!=='ERCO'||!p.nodes.length) return;
+  const my=++reqId, box=document.getElementById('liveMarket');
+  try{
+    const d=await fetchNodes(p.nodes.slice(0,4)); if(my!==reqId) return;
+    const hub=nearest([p.lon,p.lat],Object.fromEntries(Object.entries(HUBS).map(([k,v])=>[k,[v[0],v[1]]])))[0];
+    box.innerHTML=d.nodes.map(n=>{
+      const rt=n.rt?.price, basis=rt!=null&&state.hub[hub]!=null?rt-state.hub[hub]:null, dart=rt!=null&&n.da?.price!=null?rt-n.da.price:null;
+      const col=rt==null?'var(--muted)':'var(--accent)';
+      const when=n.rt&&intervalText(n.rt.hour,n.rt.interval);
+      return `<div class="livebox"><div class="lbl">Settlement point ${esc(n.sp)}${when?` · ${when}`:''}</div>
+        <div class="big num">${n.rt?money(rt):d.errors?.[n.sp+':rt']?'unavailable':'no prices yet today'}<span style="font-size:11px;color:var(--text-secondary);font-weight:500"> /MWh</span></div>
+        ${spark(n.rt?.series,col)}
+        <div class="row"><span class="k">Day-ahead · hour ending ${n.da?.he??'—'}</span><span class="v num">${money(n.da?.price)}</span></div>
+        <div class="row"><span class="k">Real-time − day-ahead</span><span class="v num">${signed(dart,2)}</span></div>
+        <div class="row"><span class="k">Difference from ${hubName(hub)}</span><span class="v num">${signed(basis,2)}</span></div></div>`;
+    }).join('')+(d.errors&&Object.keys(d.errors).length?`<div class="note">Some prices are unavailable right now: ${esc([...new Set(Object.keys(d.errors).map(k=>k.split(':')[0]))].join(', '))}. Try again in a minute.</div>`:'');
+  }catch(e){ if(my===reqId) box.innerHTML=`<div class="note">Live settlement price unavailable (${esc(e.message)}). Try again in a minute.</div>`; }
+}
+function selectPlant(code,fly=true){
+  const p=PLANTS.find(x=>x.code===code); if(!p) return;
+  selected=p;
+  if(filt.batteriesOnly&&!isBattery(p)){filt.batteriesOnly=false;applyFilter();}
+  if(!filt.types.has(p.prim)||(filt.ercotOnly&&p.ba!=='ERCO')||p.mw<MINS[filt.minIdx]){ filt.types.add(p.prim); if(p.ba!=='ERCO'){filt.ercotOnly=false;document.getElementById('ercotOnly').classList.remove('on');} if(p.mw<MINS[filt.minIdx]){filt.minIdx=0;document.getElementById('minmw').value=0;} applyFilter(); }
+  intel.innerHTML=plantHTML(p); intel.scrollTop=0;
+  if(fly&&matchMedia('(max-width:900px)').matches) setPanel('intel');
+  document.getElementById('back').onclick=()=>{selected=null;renderSystem();history.replaceState(null,'',location.pathname);};
+  if(fly&&matchMedia('(max-width:900px)').matches) document.getElementById('back').focus({preventScroll:true});
+  if(fly) flyTo(p.lon,p.lat,clamp(9000+Math.sqrt(p.mw)*700,12000,60000),-32,2.2);
+  history.replaceState(null,'','#plant-'+p.code);
+  loadNode(p);
+}
+
+/* ---------- picking + hover ---------- */
+const handler=new C.ScreenSpaceEventHandler(scene.canvas);
+handler.setInputAction(ev=>{ const hit=scene.pick(ev.position); if(hit&&hit.id&&hit.id.plant) selectPlant(hit.id.plant.code); },C.ScreenSpaceEventType.LEFT_CLICK);
+const tip=document.getElementById('tip');
+handler.setInputAction(ev=>{ const hit=scene.pick(ev.endPosition);
+  if(hit&&hit.id&&hit.id.plant){ const p=hit.id.plant; tip.style.display='block';
+    tip.innerHTML=`${esc(p.name)} · <b>${fmt(p.mw)} MW</b> ${TYPES[p.prim].label.toLowerCase()}`; tip.style.left=Math.max(8,Math.min(ev.endPosition.x+14,innerWidth-tip.offsetWidth-8))+'px';
+    tip.style.top=Math.min(ev.endPosition.y+scene.canvas.getBoundingClientRect().top+12,innerHeight-tip.offsetHeight-8)+'px'; scene.canvas.style.cursor='pointer'; }
+  else { tip.style.display='none'; scene.canvas.style.cursor=''; } },C.ScreenSpaceEventType.MOUSE_MOVE);
+
+/* ---------- data loading ---------- */
+async function loadPlants(){
+  const d=window.__PLANTS||await (await fetch(API+'/data/tx_plants.json')).json(); META=d.meta; PLANTS=d.plants;
+  addPlants(); applyFilter(); renderSystem(); highlightBatteries();
+  const m=location.hash.match(/plant-(\d+)/); if(m) setTimeout(()=>selectPlant(+m[1]),1800);
+}
+async function loadSnap(){
+  try{ const r=await fetch(API+'/api/snapshot'); if(!r.ok) throw 0; SNAP=await r.json();
+    Object.keys(state.hub).forEach(k=>delete state.hub[k]); (SNAP.hubs||[]).forEach(h=>state.hub[h.hub]=h.price); (SNAP.weather?.zones||[]).forEach(z=>state.temps[z.zone]=z.tempF);
+    snapshotState='live'; renderStatus();
+    snapshotPending=false; snapshotStale=false; renderTicker(); renderHelp();
+    renderDock(); if(!selected) renderSystem(); else if(!document.querySelector('#liveMarket .livebox .big')) selectPlant(selected.code,false);
+  }catch(e){ snapshotPending=false; snapshotState=SNAP?'stale':'down'; renderStatus(); snapshotStale=true; renderTicker(); renderHelp(); if(!selected) renderSystem(); }
+}
+loadPlants().catch(e=>{intel.innerHTML=`<div class="note">Couldn't load plant data: ${esc(e.message)}</div>`;});
+loadSnap(); setInterval(loadSnap,5*60*1000);
+refreshMarket(); setInterval(refreshMarket,5*60*1000);
+
+/* ---------- target lock + readout ---------- */
+const tgt=document.getElementById('tgt'); const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const toWin=(pos)=>(C.SceneTransforms.worldToWindowCoordinates||C.SceneTransforms.wgs84ToWindowCoordinates)(scene,pos);
+viewer.clock.onTick.addEventListener(()=>{
+  let lon,lat,tag;
+  if(selected){ lon=selected.lon; lat=selected.lat; tag=`${esc(selected.name)} <b>${fmt(selected.mw)} MW</b> · ${TYPES[selected.prim].label}`; }
+  else if(G.prices.show){ const hot=Object.entries(state.hub).filter(([k,v])=>HUBS[k]&&v!=null).sort((a,b)=>b[1]-a[1])[0]; if(hot){ [lon,lat]=HUBS[hot[0]]; tag=`${hubName(hot[0])} <b>${money(hot[1])}</b> · Highest hub price`; } }
+  if(lon==null){tgt.style.display='none';return;}
+  const w=toWin(C.Cartesian3.fromDegrees(lon,lat,0));
+  if(w){ tgt.classList.toggle('label-left',w.x>scene.canvas.clientWidth/2); tgt.style.display='block'; tgt.style.left=w.x+'px'; tgt.style.top=(w.y-(selected?20:0))+'px'; tgt.querySelector('.tag').innerHTML=tag; } else tgt.style.display='none';
+});
+
 viewer.camera.setView({destination:C.Cartesian3.fromDegrees(-99,20,18000000)});
-setTimeout(()=>fly('texas',reduce?0:4.2),300);
-if(window.gsap && !reduce){ gsap.from('.hud',{opacity:0,y:-8,stagger:.08,duration:.6,delay:.8,ease:'power2.out'}); }
+setTimeout(()=>{const f=FLY.texas;flyTo(f[0],f[1],f[2],f[3],reduce?0:4.2);},300);
+
 </script>
-<script type="module">
-import { mountFeed } from "/market-feed.js";
-mountFeed(document.getElementById("market"), document.getElementById("dashboard"));
-</script>
+
 </body>
 </html>

@@ -102,13 +102,15 @@ def test_seit_gm_data_05_representative_points_and_forecast_alerts(
         for call in calls
         if urlsplit(call["path"]).path == "/alerts/active"
     )
-    assert ercot.signals.latest("NWS-TEMP", "LZ_HOUSTON").value == 91
-    assert ercot.signals.latest("NWS-ALERTS", "LZ_HOUSTON").value == 2
+    first = ercot.signals.series(
+        "NWS-TEMP", "LZ_HOUSTON", "2026-09-26T20:00:00+00:00", "2026-09-26T21:00:00+00:00"
+    )
+    assert [signal.value for signal in first] == [89]
+    assert ercot.signals.latest("NWS-ALERTS", "LZ_HOUSTON").value == 1
 
 
 def test_seit_gm_data_05_six_request_sliding_budget() -> None:
     clock = [0.0]
-    assert callable(getattr(nws, "RequestBudget", None))
     budget = nws.RequestBudget(limit=6, window_s=60, clock=lambda: clock[0])
     sent: list[float] = []
     for request in range(100):

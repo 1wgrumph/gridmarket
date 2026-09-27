@@ -28,5 +28,5 @@ Table (T7): Open items
 | Slip trigger for diversity layers 2, 3, 5a, 6 | Orchestrator | Sat 2026-09-26 14:00 CDT | Layers move to phase 2; dormant rate stays in 1b |
 | Create tunnel credentials and start the `tunnel` profile | Owner | Sunday recording | No public demo URL |
 | Set the Jev key and turn the Jev flag on for the demo | Owner | Sunday recording | Jev column stays hidden; baseline rules still answer |
-| AZHQ visual-review skill availability | Owner | Phase 1b | Typed gap; vitest render tests are the evidence (RISK-GM-18) |
+| Browser visual review tooling availability | Owner | Phase 1b | Typed gap; vitest render tests are the evidence (RISK-GM-18) |
 | Make the repository public after the secret scan | Owner | Before submission 11:00 CDT Sunday | Judges cannot read the code or this specification |

@@ -1,0 +1,5613 @@
+{
+ "/v1/bots": [
+  {
+   "bot_index": 0,
+   "bot_type": "market maker",
+   "dormant": false,
+   "id": "bot_0",
+   "provider_id": "base_sim",
+   "blend": {
+    "alert reactor": 0.45590664558648814,
+    "market maker": 0.43292596703665176,
+    "saver": 0.1111673873768601
+   },
+   "cash": 499.33,
+   "net_worth": 499.33,
+   "pnl": 0.0,
+   "trades": 0,
+   "losses": 0
+  },
+  {
+   "bot_index": 1,
+   "bot_type": "market maker",
+   "dormant": false,
+   "id": "bot_1",
+   "provider_id": "base_sim",
+   "blend": {
+    "alert reactor": 0.06648434287629573,
+    "market maker": 0.802959552452506,
+    "saver": 0.13055610467119827
+   },
+   "cash": 481.73,
+   "net_worth": 481.73,
+   "pnl": 0.0,
+   "trades": 0,
+   "losses": 0
+  }
+ ],
+ "/v1/bots/bot_0": {
+  "balance": [
+   499.33,
+   499.33
+  ],
+  "balance_history": [],
+  "blend": {
+   "alert reactor": 0.45590664558648814,
+   "market maker": 0.43292596703665176,
+   "saver": 0.1111673873768601
+  },
+  "bot_type": "market maker",
+  "cash": 499.33,
+  "dormant": false,
+  "employed": true,
+  "household": {
+   "batteries": [
+    16.29
+   ],
+   "reserve_pct": 0.1731,
+   "schedule": [
+    0.11633520360848729,
+    0.10060422131763141,
+    0.11294753667936824,
+    0.10553809229474904,
+    0.10505454130257089,
+    0.1075170260136114,
+    2.2431892034138885,
+    2.2878959854635217,
+    2.196483907766054,
+    0.11838244572643027,
+    0.1179376024918847,
+    0.11228398997861616,
+    0.11844141185227941,
+    0.10597208581341151,
+    0.11267767323842129,
+    0.1132648357019429,
+    0.10584551762493724,
+    2.151132499000617,
+    2.2694045879336198,
+    2.3585671840453637,
+    0.1123175446814349,
+    0.11720379448503482,
+    0.10265987796770981,
+    0.10379220048809386
+   ],
+   "zone": "LZ_HOUSTON"
+  },
+  "id": "bot_0",
+  "loss_share": 0.0,
+  "losses": 0,
+  "net_worth": 499.33,
+  "pay": 23.05,
+  "pnl": 0.0,
+  "provider_id": "base_sim",
+  "trades": 0,
+  "traits": {
+   "daily activity pattern": 0.4395384499219399,
+   "herd versus contrarian": 0.5588952211462324,
+   "loss aversion": 0.15357501539005516,
+   "patience": 0.4441506404370383,
+   "reaction delay": 0.4194175321930707,
+   "risk appetite": 0.7514466485424645,
+   "wealth": 0.1926699923584808
+  },
+  "worst_loss": 0.0
+ },
+ "/v1/bots/bot_1": {
+  "balance": [
+   481.73,
+   481.73
+  ],
+  "balance_history": [],
+  "blend": {
+   "alert reactor": 0.06648434287629573,
+   "market maker": 0.802959552452506,
+   "saver": 0.13055610467119827
+  },
+  "bot_type": "market maker",
+  "cash": 481.73,
+  "dormant": false,
+  "employed": false,
+  "household": {
+   "batteries": [
+    36.92
+   ],
+   "reserve_pct": 0.4714,
+   "schedule": [
+    0.10642021080866458,
+    0.11415277818407475,
+    0.11420585232173033,
+    0.10491183449908706,
+    0.11741943093395585,
+    0.11685084903461662,
+    0.10151838124395281,
+    0.10303900519550496,
+    0.10773146806378142,
+    1.6396353103862709,
+    1.680958869866078,
+    1.743844332896529,
+    1.5161490059202105,
+    1.7779794154641722,
+    1.7148226034747793,
+    1.6436938608277072,
+    1.6111263576275072,
+    0.10440277983698242,
+    0.11571733650179256,
+    0.11929107774103183,
+    0.10325919381082185,
+    0.1140464459392051,
+    0.10236841011919483,
+    0.1132042003947599
+   ],
+   "zone": "LZ_HOUSTON"
+  },
+  "id": "bot_1",
+  "loss_share": 0.0,
+  "losses": 0,
+  "net_worth": 481.73,
+  "pay": 51.08,
+  "pnl": 0.0,
+  "provider_id": "base_sim",
+  "trades": 0,
+  "traits": {
+   "daily activity pattern": 0.7473764278607284,
+   "herd versus contrarian": 0.8418101815131854,
+   "loss aversion": 0.5527577081342223,
+   "patience": 0.3277107662992956,
+   "reaction delay": 0.9604323345070697,
+   "risk appetite": 0.7531063007775326,
+   "wealth": 0.18063174410777977
+  },
+  "worst_loss": 0.0
+ },
+ "/v1/market": [
+  {
+   "delivery_hour": "2026-09-26T23:00:00+00:00",
+   "id": "SPOT-LZ_HOUSTON-2026092623",
+   "status": "open",
+   "symbol": "SPOT-LZ_HOUSTON-2026092623",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-26T23:00:00+00:00",
+   "id": "SPOT-LZ_NORTH-2026092623",
+   "status": "open",
+   "symbol": "SPOT-LZ_NORTH-2026092623",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-26T23:00:00+00:00",
+   "id": "SPOT-LZ_SOUTH-2026092623",
+   "status": "open",
+   "symbol": "SPOT-LZ_SOUTH-2026092623",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-26T23:00:00+00:00",
+   "id": "SPOT-LZ_WEST-2026092623",
+   "status": "open",
+   "symbol": "SPOT-LZ_WEST-2026092623",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T00:00:00+00:00",
+   "id": "SPOT-LZ_HOUSTON-2026092700",
+   "status": "open",
+   "symbol": "SPOT-LZ_HOUSTON-2026092700",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T00:00:00+00:00",
+   "id": "SPOT-LZ_NORTH-2026092700",
+   "status": "open",
+   "symbol": "SPOT-LZ_NORTH-2026092700",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T00:00:00+00:00",
+   "id": "SPOT-LZ_SOUTH-2026092700",
+   "status": "open",
+   "symbol": "SPOT-LZ_SOUTH-2026092700",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T00:00:00+00:00",
+   "id": "SPOT-LZ_WEST-2026092700",
+   "status": "open",
+   "symbol": "SPOT-LZ_WEST-2026092700",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T01:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092701",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092701",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T01:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092701",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092701",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T01:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092701",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092701",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T01:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092701",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092701",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T02:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092702",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092702",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T02:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092702",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092702",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T02:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092702",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092702",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T02:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092702",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092702",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T03:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092703",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092703",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T03:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092703",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092703",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T03:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092703",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092703",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T03:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092703",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092703",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T04:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092704",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092704",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T04:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092704",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092704",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T04:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092704",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092704",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T04:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092704",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092704",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T05:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092705",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092705",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T05:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092705",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092705",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T05:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092705",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092705",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T05:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092705",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092705",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T06:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092706",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092706",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T06:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092706",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092706",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T06:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092706",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092706",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T06:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092706",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092706",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T07:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092707",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092707",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T07:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092707",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092707",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T07:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092707",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092707",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T07:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092707",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092707",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T08:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092708",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092708",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T08:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092708",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092708",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T08:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092708",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092708",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T08:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092708",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092708",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T09:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092709",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092709",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T09:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092709",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092709",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T09:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092709",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092709",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T09:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092709",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092709",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T10:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092710",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092710",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T10:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092710",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092710",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T10:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092710",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092710",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T10:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092710",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092710",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T11:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092711",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092711",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T11:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092711",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092711",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T11:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092711",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092711",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T11:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092711",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092711",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T12:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092712",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092712",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T12:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092712",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092712",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T12:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092712",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092712",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T12:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092712",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092712",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T13:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092713",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092713",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T13:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092713",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092713",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T13:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092713",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092713",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T13:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092713",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092713",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T14:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092714",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092714",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T14:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092714",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092714",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T14:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092714",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092714",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T14:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092714",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092714",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T15:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092715",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092715",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T15:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092715",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092715",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T15:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092715",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092715",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T15:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092715",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092715",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T16:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092716",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092716",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T16:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092716",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092716",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T16:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092716",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092716",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T16:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092716",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092716",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T17:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092717",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092717",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T17:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092717",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092717",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T17:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092717",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092717",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T17:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092717",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092717",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T18:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092718",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092718",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T18:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092718",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092718",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T18:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092718",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092718",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T18:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092718",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092718",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T19:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092719",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092719",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T19:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092719",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092719",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T19:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092719",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092719",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T19:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092719",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092719",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T20:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092720",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092720",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T20:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092720",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092720",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T20:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092720",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092720",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T20:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092720",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092720",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T21:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092721",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092721",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T21:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092721",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092721",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T21:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092721",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092721",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T21:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092721",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092721",
+   "zone": "LZ_WEST"
+  },
+  {
+   "delivery_hour": "2026-09-27T22:00:00+00:00",
+   "id": "FLEX-LZ_HOUSTON-2026092722",
+   "status": "open",
+   "symbol": "FLEX-LZ_HOUSTON-2026092722",
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "delivery_hour": "2026-09-27T22:00:00+00:00",
+   "id": "FLEX-LZ_NORTH-2026092722",
+   "status": "open",
+   "symbol": "FLEX-LZ_NORTH-2026092722",
+   "zone": "LZ_NORTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T22:00:00+00:00",
+   "id": "FLEX-LZ_SOUTH-2026092722",
+   "status": "open",
+   "symbol": "FLEX-LZ_SOUTH-2026092722",
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "delivery_hour": "2026-09-27T22:00:00+00:00",
+   "id": "FLEX-LZ_WEST-2026092722",
+   "status": "open",
+   "symbol": "FLEX-LZ_WEST-2026092722",
+   "zone": "LZ_WEST"
+  }
+ ],
+ "/v1/market/FLEX-LZ_HOUSTON-2026092701": {
+  "delivery_hour": "2026-09-27T01:00:00+00:00",
+  "id": "FLEX-LZ_HOUSTON-2026092701",
+  "orders": [],
+  "status": "open",
+  "symbol": "FLEX-LZ_HOUSTON-2026092701",
+  "zone": "LZ_HOUSTON"
+ },
+ "/v1/market/FLEX-LZ_NORTH-2026092701": {
+  "delivery_hour": "2026-09-27T01:00:00+00:00",
+  "id": "FLEX-LZ_NORTH-2026092701",
+  "orders": [],
+  "status": "open",
+  "symbol": "FLEX-LZ_NORTH-2026092701",
+  "zone": "LZ_NORTH"
+ },
+ "/v1/market/FLEX-LZ_SOUTH-2026092701": {
+  "delivery_hour": "2026-09-27T01:00:00+00:00",
+  "id": "FLEX-LZ_SOUTH-2026092701",
+  "orders": [],
+  "status": "open",
+  "symbol": "FLEX-LZ_SOUTH-2026092701",
+  "zone": "LZ_SOUTH"
+ },
+ "/v1/market/FLEX-LZ_WEST-2026092701": {
+  "delivery_hour": "2026-09-27T01:00:00+00:00",
+  "id": "FLEX-LZ_WEST-2026092701",
+  "orders": [],
+  "status": "open",
+  "symbol": "FLEX-LZ_WEST-2026092701",
+  "zone": "LZ_WEST"
+ },
+ "/v1/market/SPOT-LZ_HOUSTON-2026092623": {
+  "delivery_hour": "2026-09-26T23:00:00+00:00",
+  "id": "SPOT-LZ_HOUSTON-2026092623",
+  "orders": [],
+  "status": "open",
+  "symbol": "SPOT-LZ_HOUSTON-2026092623",
+  "zone": "LZ_HOUSTON"
+ },
+ "/v1/market/SPOT-LZ_HOUSTON-2026092700": {
+  "delivery_hour": "2026-09-27T00:00:00+00:00",
+  "id": "SPOT-LZ_HOUSTON-2026092700",
+  "orders": [],
+  "status": "open",
+  "symbol": "SPOT-LZ_HOUSTON-2026092700",
+  "zone": "LZ_HOUSTON"
+ },
+ "/v1/market/SPOT-LZ_NORTH-2026092623": {
+  "delivery_hour": "2026-09-26T23:00:00+00:00",
+  "id": "SPOT-LZ_NORTH-2026092623",
+  "orders": [],
+  "status": "open",
+  "symbol": "SPOT-LZ_NORTH-2026092623",
+  "zone": "LZ_NORTH"
+ },
+ "/v1/market/SPOT-LZ_NORTH-2026092700": {
+  "delivery_hour": "2026-09-27T00:00:00+00:00",
+  "id": "SPOT-LZ_NORTH-2026092700",
+  "orders": [],
+  "status": "open",
+  "symbol": "SPOT-LZ_NORTH-2026092700",
+  "zone": "LZ_NORTH"
+ },
+ "/v1/market/SPOT-LZ_SOUTH-2026092623": {
+  "delivery_hour": "2026-09-26T23:00:00+00:00",
+  "id": "SPOT-LZ_SOUTH-2026092623",
+  "orders": [],
+  "status": "open",
+  "symbol": "SPOT-LZ_SOUTH-2026092623",
+  "zone": "LZ_SOUTH"
+ },
+ "/v1/market/SPOT-LZ_SOUTH-2026092700": {
+  "delivery_hour": "2026-09-27T00:00:00+00:00",
+  "id": "SPOT-LZ_SOUTH-2026092700",
+  "orders": [],
+  "status": "open",
+  "symbol": "SPOT-LZ_SOUTH-2026092700",
+  "zone": "LZ_SOUTH"
+ },
+ "/v1/market/SPOT-LZ_WEST-2026092623": {
+  "delivery_hour": "2026-09-26T23:00:00+00:00",
+  "id": "SPOT-LZ_WEST-2026092623",
+  "orders": [],
+  "status": "open",
+  "symbol": "SPOT-LZ_WEST-2026092623",
+  "zone": "LZ_WEST"
+ },
+ "/v1/market/SPOT-LZ_WEST-2026092700": {
+  "delivery_hour": "2026-09-27T00:00:00+00:00",
+  "id": "SPOT-LZ_WEST-2026092700",
+  "orders": [],
+  "status": "open",
+  "symbol": "SPOT-LZ_WEST-2026092700",
+  "zone": "LZ_WEST"
+ },
+ "/v1/market/activity": [],
+ "/v1/market/history": [],
+ "/v1/market/status": {
+  "active_traders": 60,
+  "anomalies": [],
+  "open_interest": 0,
+  "status": "open"
+ },
+ "/v1/predictions": [
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-26T23:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.828358+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T00:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.829533+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T01:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.830614+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T02:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.831721+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T03:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.832867+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T04:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.834046+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T05:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.835168+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T06:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.836330+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T07:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.838341+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T08:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.839122+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T09:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.839714+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T10:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.840247+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T11:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.840759+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T12:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.841250+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T13:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.841931+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T14:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.842753+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T15:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.843896+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T16:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.845605+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T17:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.846809+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T18:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.847996+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T19:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.849124+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T20:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.850243+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T21:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.851389+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T22:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.852512+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_HOUSTON"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-26T23:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.853585+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T00:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.854706+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T01:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.855787+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T02:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.856906+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T03:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.858016+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T04:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.859104+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T05:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.860203+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T06:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.861310+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T07:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.862442+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T08:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.863477+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T09:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.864519+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T10:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.865556+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T11:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.866610+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T12:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.867688+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T13:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.868729+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T14:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.869799+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T15:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.872643+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T16:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.873692+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T17:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.874663+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T18:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.875660+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T19:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.876607+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T20:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.877552+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T21:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.878478+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T22:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.879417+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_NORTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-26T23:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.880344+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T00:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.881316+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T01:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.882254+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T02:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.883177+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T03:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.884101+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T04:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.885046+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T05:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.885994+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T06:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.886960+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T07:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.887931+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T08:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.888923+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T09:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.889851+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T10:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.890782+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T11:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.891727+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T12:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.892648+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T13:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.893562+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T14:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.894474+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T15:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.895421+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T16:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.896333+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T17:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.897239+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T18:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.898163+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T19:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.899077+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T20:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.899990+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T21:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.900933+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T22:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.903987+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_SOUTH"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-26T23:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.905083+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T00:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.906172+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T01:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.907138+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T02:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.908072+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T03:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.908998+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T04:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.909950+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T05:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.910877+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T06:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.911808+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T07:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.912722+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T08:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.913664+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T09:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.914561+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T10:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.915487+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T11:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.916445+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T12:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.917378+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T13:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.918406+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T14:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.919529+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T15:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.920574+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T16:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.921639+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T17:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.922588+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T18:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.923598+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T19:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.924522+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T20:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.925460+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T21:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.926381+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  },
+  {
+   "confidence": 0.6,
+   "delivery_hour": "2026-09-27T22:00:00+00:00",
+   "disclaimer": "Simulation estimate, not guaranteed profit.",
+   "drivers": [
+    {
+     "contribution": 0.0,
+     "detail": "Day-ahead 0 vs real-time 0 $/MWh",
+     "factor": "price-spread"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Load 0 MW vs 0 MW 24-hour mean",
+     "factor": "load-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Outage capacity 0 MW vs 0 MW median",
+     "factor": "outage-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "RT vs hub spread plus constraints none",
+     "factor": "congestion-pressure"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "Temperature reading unavailable (no NWS-TEMP signal)",
+     "factor": "heat-stress"
+    },
+    {
+     "contribution": -4.0,
+     "detail": "NERC off-peak hour",
+     "factor": "peak-period"
+    },
+    {
+     "contribution": 0.0,
+     "detail": "0 active Severe or Extreme weather alerts",
+     "factor": "weather-alert"
+    }
+   ],
+   "expected_value": 0.0,
+   "generated_at": "2026-09-26T22:51:52.927286+00:00",
+   "level": "MEDIUM",
+   "market_price": null,
+   "score": 46.0,
+   "zone": "LZ_WEST"
+  }
+ ],
+ "/v1/providers": [
+  {
+   "display_name": "Base Simulation",
+   "id": "base_sim",
+   "online": true,
+   "participants": 60
+  }
+ ],
+ "/v1/providers/health": [
+  {
+   "display_name": "Base Simulation",
+   "heartbeat_age_s": 1.306765,
+   "id": "base_sim",
+   "last_heartbeat": "2026-09-26T22:51:51.692554+00:00",
+   "online": true,
+   "online_assets": 73,
+   "outage_active": false,
+   "outage_until": null
+  }
+ ],
+ "/v1/router": {
+  "brier": {},
+  "checks": [
+   {
+    "band": "log",
+    "baseline": true,
+    "check_id": "health:worker",
+    "created_at": "2026-09-26T22:51:01.533844+00:00",
+    "family": "health",
+    "horizon_s": 900,
+    "jev_probability": null,
+    "outcome": null,
+    "probability": 0.04742587317756678,
+    "resolves_at": "2026-09-26T23:06:01.533844+00:00",
+    "subject": "worker"
+   },
+   {
+    "band": "log",
+    "baseline": true,
+    "check_id": "health:base_sim",
+    "created_at": "2026-09-26T22:51:01.533844+00:00",
+    "family": "health",
+    "horizon_s": 900,
+    "jev_probability": null,
+    "outcome": null,
+    "probability": 0.08815914178470632,
+    "resolves_at": "2026-09-26T23:06:01.533844+00:00",
+    "subject": "base_sim"
+   }
+  ],
+  "jev_enabled": false
+ },
+ "/v1/signals": []
+}

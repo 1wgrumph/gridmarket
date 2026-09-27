@@ -1,5 +1,4 @@
 # Planning package stays out of the image; the rest of docs/ serves /llms.txt, /guide.md, /kit/.
-docs/plans/
 .git
 .env
 *.db

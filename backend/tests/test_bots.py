@@ -133,7 +133,6 @@ def test_SEIT_GM_BOT_01_seeded_orders(server, monkeypatch) -> None:
     """Sixty simulated seconds, at least 10 SDK orders from at least 3 derived keys."""
     base_url, db_path, _app = server
     _isolated()
-    assert callable(getattr(bots, "step_all", None))
     clock = Clock()
     calls: list[tuple[str, float]] = []
     _patch_orders(monkeypatch, clock, calls)
@@ -165,8 +164,6 @@ def test_SEIT_GM_BOT_03_order_limit(server, monkeypatch) -> None:
     """At most 6 orders per bot per 60s, and the server rejects an oversized order."""
     base_url, db_path, _app = server
     _isolated()
-    assert callable(getattr(bots, "submit", None))
-    assert callable(getattr(bots, "step_all", None))
     send = Client.place_order
     clock = Clock()
     calls: list[tuple[str, float]] = []
@@ -216,7 +213,6 @@ def test_SEIT_GM_BOT_03_order_limit(server, monkeypatch) -> None:
 def test_SEIT_GM_BOT_07_admin_spawn(server) -> None:
     """Admin spawn adds 1-10 sampled bots, rejects the rest, and the loop polls them."""
     base_url, db_path, app = server
-    assert callable(getattr(bots, "step_all", None))
 
     def count() -> int:
         conn = sqlite3.connect(db_path)
@@ -306,7 +302,7 @@ def test_SEIT_GM_BOT_07_admin_spawn(server) -> None:
 def test_phase1b_F1_admin_spawn_rejects_non_loopback_peer(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """AC-GM-API-07: a non-loopback peer gets 403 and spawns nothing, even with the key."""
+    """AC-GM-API-07: a nonlocal peer gets 403 and spawns nothing, even with the key."""
     db_path = tmp_path / "gridmarket.db"
     conn = sqlite3.connect(db_path)
     conn.executescript(SCHEMA.read_text())
@@ -314,11 +310,12 @@ def test_phase1b_F1_admin_spawn_rejects_non_loopback_peer(
     conn.close()
     monkeypatch.setenv("GRIDMARKET_DB", str(db_path))
     monkeypatch.setenv("GRIDMARKET_NWS", "off")
+    monkeypatch.setenv("GRIDMARKET_BOT_SECRET", SECRET)
     monkeypatch.setenv("GRIDMARKET_BOT_MASTER_SEED", "20260926")
     monkeypatch.setenv("GRIDMARKET_ADMIN_KEY", ADMIN)
     app = main.create_app()
     headers = {"Authorization": f"Bearer {ADMIN}"}
-    denied = TestClient(app, client=("10.1.2.3", 50000)).post(
+    denied = TestClient(app, client=("203.0.113.5", 50000)).post(
         "/v1/admin/bots", json={"count": 1}, headers=headers
     )
     assert denied.status_code == 403
@@ -327,7 +324,9 @@ def test_phase1b_F1_admin_spawn_rejects_non_loopback_peer(
         assert conn.execute("SELECT COUNT(*) FROM bots").fetchone()[0] == 0
     finally:
         conn.close()
-    allowed = TestClient(app).post("/v1/admin/bots", json={"count": 1}, headers=headers)
+    allowed = TestClient(app, client=("127.0.0.1", 50000)).post(
+        "/v1/admin/bots", json={"count": 1}, headers=headers
+    )
     assert allowed.status_code == 200
 
 

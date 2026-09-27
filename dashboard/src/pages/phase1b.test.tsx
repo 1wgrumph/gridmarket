@@ -32,9 +32,11 @@ describe('phase 1b dashboard pages', () => {
   it('SEIT-GM-UI-01-PAGES Market shows products, book depth, and recent trades', async () => {
     visit('#/market');
     expect(await screen.findByText('NORTH-20260926-14')).toBeTruthy();
-    expect(screen.getByText(/bid/i)).toBeTruthy();
-    expect(screen.getByText(/ask/i)).toBeTruthy();
-    expect(screen.getByText(/recent trades/i)).toBeTruthy();
+    const book = within(await screen.findByRole('region', { name: 'Book depth' }));
+    expect(await book.findByText('3 @ $41.00')).toBeTruthy();
+    expect(book.getByRole('heading', { name: 'Bids' })).toBeTruthy();
+    expect(book.getByRole('heading', { name: 'Asks' })).toBeTruthy();
+    expect(book.getByText('2 @ $43.00')).toBeTruthy();
     expect(await within(await screen.findByRole('region', { name: 'Recent trades' })).findByText('1 @ $42.00')).toBeTruthy();
   });
 
@@ -47,7 +49,9 @@ describe('phase 1b dashboard pages', () => {
 
   it('SEIT-GM-UI-01-PAGES Predictions shows signed factors, market check, band, and Brier score', async () => {
     visit('#/predictions');
-    expect(await screen.findByText('DART spread')).toBeTruthy();
+    const scores = await screen.findByRole('region', { name: /zone scores/i });
+    fireEvent.click((await within(scores).findAllByRole('button', { name: /why this estimate/i }))[0]);
+    expect(await within(scores).findByText('DART spread')).toBeTruthy();
     expect(screen.getByText('Wind')).toBeTruthy();
     expect(await within(screen.getByText('DART spread').closest('li')!).findByText('+0.18')).toBeTruthy();
     expect(await within(screen.getByText('Wind').closest('li')!).findByText('-0.12')).toBeTruthy();
@@ -123,7 +127,7 @@ describe('phase 1b dashboard pages', () => {
   it('SEIT-GM-UI-03 bot profile shows traits, economy, performance, and balance history', async () => {
     visit('#/bots/bot-7');
     expect(await screen.findByText(/risk appetite/i)).toBeTruthy();
-    for (const label of [/patience/i, /score follower/i, /saver/i, /household/i, /technician/i, /pay/i, /balance/i, /trades/i, /losses/i, /worst loss/i, /dormant/i]) {
+    for (const label of [/patience/i, /score follower/i, /saver/i, /household/i, /^(?:Not )?employed$/i, /pay/i, /balance/i, /trades/i, /losses/i, /worst loss/i, /dormant/i]) {
       expect(screen.getAllByText(label).length).toBeGreaterThan(0);
     }
     expect(await within(screen.getByText('Loss share').parentElement!).findByText('25%')).toBeTruthy();
@@ -147,9 +151,9 @@ describe('phase 1b dashboard pages', () => {
     expect(new Headers(orderCall?.init?.headers).get('Authorization')).toBe('Bearer gm_fixture_only_key');
   });
 
-  it('SEIT-GM-UI-01-PAGES Spec links to the generated GridMarket specification', () => {
+  it('SEIT-GM-UI-01-PAGES Spec renders the generated GridMarket specification (UX-04)', () => {
     visit('#/spec');
-    const links = screen.getAllByRole('link');
-    expect(links.some(link => link.getAttribute('href')?.startsWith('https://github.com/') && link.getAttribute('href')?.includes('spec/GridMarket-Specification.md'))).toBe(true);
+    const doc = screen.getByRole('article', { name: /gridmarket specification/i });
+    expect(within(doc).getByRole('heading', { name: 'GridMarket Architecture Specification' })).toBeTruthy();
   });
 });

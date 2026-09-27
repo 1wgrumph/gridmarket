@@ -1,14 +1,1 @@
-{
-  "asOf": "2026-09-26T14:00:00Z",
-  "ct": "2026-09-26 09:00 CDT",
-  "heNow": 9,
-  "errors": [],
-  "demand": {"current": 70234},
-  "hubs": {"HB_HOUSTON": 48.5, "HB_NORTH": 51.25},
-  "dam": {"HB_NORTH": 60.75},
-  "sced": {"lambda": 36.5},
-  "wind": {},
-  "solar": {},
-  "weather": {},
-  "checks": []
-}
+{"asOf":"2026-09-26T14:00:00.000Z","ct":{"date":"2026-09-26","hour":9,"minute":0},"heNow":10,"errors":{},"demand":{"mw":70234,"timeEnding":"10:00","todayPeak":70234,"series":[70100,70234]},"hubs":[{"hub":"HB_NORTH","price":51.25,"hour":10,"interval":1,"series":[51.25]},{"hub":"HB_HOUSTON","price":48.5,"hour":10,"interval":1,"series":[48.5]},{"hub":"HB_SOUTH","price":null},{"hub":"HB_WEST","price":null}],"dam":{"hub":"HB_NORTH","hourEnding":10,"price":60.75,"dart":-9.5,"dayPeak":60.75},"sced":{"timestamp":"2026-09-26T09:55:00","systemLambda":36.5,"reliabilityAdder":0,"onlineHSL":82000,"onlineLSL":30000,"lambdaSeries":[36.5],"headroomMW":11766,"headroomPct":16.8},"wind":{"source":"wind","actualMW":12000,"actualHE":9,"forecastAtActualMW":12500,"errorMW":-500,"forecastNowMW":11800,"capacityMW":13000,"series":[12000,11800]},"solar":{"source":"solar","actualMW":9000,"actualHE":9,"forecastAtActualMW":9200,"errorMW":-200,"forecastNowMW":11000,"capacityMW":9500,"series":[9000,11000]},"weather":{"hourEnding":"10:00","zones":[{"zone":"Coast","tempF":80},{"zone":"East","tempF":80},{"zone":"Far West","tempF":80},{"zone":"North","tempF":80},{"zone":"North Central","tempF":80},{"zone":"South Central","tempF":80},{"zone":"Southern","tempF":80},{"zone":"West","tempF":80}],"avgF":80,"maxF":80,"minF":80},"checks":[{"id":"scarcity-2h","question":"P(HB_NORTH RT > $150 within 2h)","p":0.17,"inputs":{"headroomPct":16.8,"reliabilityAdder":0},"route":"log","engine":"baseline"},{"id":"dart-north","question":"P(RT > DA at HB_NORTH, HE10)","p":0.23,"inputs":{"dart":-9.5,"daPrice":60.75},"route":"log","engine":"baseline"},{"id":"renew-shortfall","question":"P(renewables under-deliver next hour > 1 GW)","p":0.71,"inputs":{"windErrorMW":-500,"solarErrorMW":-200},"route":"review","engine":"baseline"}]}

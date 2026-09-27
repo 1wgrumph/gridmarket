@@ -31,12 +31,10 @@ def factor_id(name: str) -> str:
 
 
 def score_hour(**kwargs: object) -> Prediction:
-    assert callable(getattr(scoring, "score_hour", None))
     return scoring.score_hour(**kwargs)
 
 
 def on_peak(hour: datetime) -> bool:
-    assert callable(getattr(scoring, "on_peak", None))
     return scoring.on_peak(hour)
 
 
@@ -82,7 +80,6 @@ def test_seit_gm_score_01_seven_signed_explained_drivers_and_value() -> None:
     ("score", "expected"), [(39.99, "LOW"), (40, "MEDIUM"), (69.99, "MEDIUM"), (70, "HIGH")]
 )
 def test_seit_gm_score_01_level_boundaries(score: float, expected: str) -> None:
-    assert callable(getattr(scoring, "level_for_score", None))
     assert scoring.level_for_score(score) == expected
 
 
@@ -122,16 +119,19 @@ def test_seit_gm_score_05_temperature_and_alerts_are_monotone() -> None:
 
 
 def test_seit_gm_score_04_five_weekdays_by_sixteen_peak_hours() -> None:
-    # Mon 2026-09-28 through Fri 2026-10-02: all 5 × 16 hour endings.
+    # Mon 2026-09-28 through Fri 2026-10-02: all 5 × 16 hour endings HE7-HE22
+    # Central, passed as UTC like production delivery hours (September is CDT).
+    monday = datetime.fromisoformat("2026-09-28T00:00:00+00:00")
     for day in range(5):
-        date = datetime.fromisoformat("2026-09-28T00:00:00-05:00") + timedelta(days=day)
-        for hour in range(7, 23):
-            assert on_peak(date.replace(hour=hour))
-            result = score_hour(**inputs(delivery_hour=date.replace(hour=hour).isoformat()))
+        for ending in range(7, 23):
+            hour = monday + timedelta(days=day, hours=ending - 1 + 5)
+            assert on_peak(hour), hour.isoformat()
+            result = score_hour(**inputs(delivery_hour=hour.isoformat()))
             peak = next(d for d in result.drivers if factor_id(d["factor"]) == "peak-period")
             assert peak["contribution"] > 0
-        for hour in (6, 23):
-            assert not on_peak(date.replace(hour=hour))
+        for ending in (6, 23):
+            assert not on_peak(monday + timedelta(days=day, hours=ending - 1 + 5))
+    assert not on_peak(monday + timedelta(days=5, hours=18))  # Saturday noon CDT
 
 
 @pytest.mark.parametrize(
@@ -333,7 +333,8 @@ def test_predict_selects_signal_for_delivery_hour(
     )
     predictions = {item.delivery_hour: item for item in scoring.predict()}
     assert driver_detail(predictions[HOUR], "price-spread").startswith("Day-ahead 100 vs")
-    assert driver_detail(predictions[unmatched], "price-spread").startswith("Day-ahead 0 vs")
+    assert "unavailable" in driver_detail(predictions[unmatched], "price-spread").lower()
+    assert predictions[unmatched].level == "UNAVAILABLE"
 
 
 def test_predict_missing_temperature_marked_unavailable(

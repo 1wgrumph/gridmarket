@@ -50,7 +50,7 @@ def api(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("GRIDMARKET_ADMIN_KEY", "gm_s02_admin_local")
     monkeypatch.setenv("GRIDMARKET_BOT_MASTER_SEED", "s02-api")
     monkeypatch.setenv("GRIDMARKET_BOT_SECRET", "s02-local-test-secret")
-    with TestClient(main.create_app()) as client:
+    with TestClient(main.create_app(), client=("127.0.0.1", 0)) as client:
         yield path, client
 
 
@@ -93,7 +93,11 @@ def test_dir_p1a_11_market_status_exposes_anomalies(api):
 
 def test_assurance_f5_activity_has_overview_fields(api):
     _, client = api
-    assert client.get("/v1/market/activity").json() == []
+    assert [
+        item
+        for item in client.get("/v1/market/activity").json()
+        if item["type"] in ("order", "fill")
+    ] == []
     for account, side in (("member", "buy"), ("sandbox", "sell")):
         response = client.post(
             "/v1/orders", headers=headers(account, "activity"), json={**ORDER, "side": side}
@@ -101,7 +105,7 @@ def test_assurance_f5_activity_has_overview_fields(api):
         assert response.status_code == 200
     response = client.get("/v1/market/activity")
     assert response.status_code == 200
-    activity = response.json()
+    activity = [item for item in response.json() if item["type"] in ("order", "fill")]
     assert len(activity) == 4
     assert {item["type"] for item in activity} == {"order", "fill"}
     for item in activity:

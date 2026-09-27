@@ -1,0 +1,19 @@
+{
+  "series": "rt_spp",
+  "source": "rt_spp",
+  "settlement_point": "LZ_HOUSTON",
+  "zone": "LZ_HOUSTON",
+  "value": "10",
+  "unit": "USD/MWh",
+  "interval_start": "2026-06-15T05:00:00Z",
+  "interval_end": "2026-06-15T05:15:00Z",
+  "published_at": "2026-06-15T05:20:00Z",
+  "available_at": "2026-06-15T05:20:00Z",
+  "retrieval_time": "2026-09-26T20:00:00Z",
+  "quality": "synthetic",
+  "provenance": {
+    "label": "synthetic",
+    "claims_external_observation": false,
+    "note": "Constructed test value. Not an ERCOT capture."
+  }
+}

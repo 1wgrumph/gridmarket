@@ -3,18 +3,21 @@
 import asyncio
 import hashlib
 import hmac
+import ipaddress
 import json
+import logging
 import math
 import os
 import re
 import time
 from contextlib import asynccontextmanager, suppress
+from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from starlette.exceptions import HTTPException
 from starlette.middleware import Middleware
 
@@ -38,20 +41,68 @@ def within(path: str, prefixes: tuple[str, ...]) -> bool:
 
 
 def address(request: Request) -> str:
-    return request.headers.get(
+    host = request.headers.get(
         "CF-Connecting-IP", request.client.host if request.client else "unknown"
     )
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return host
+    if isinstance(ip, ipaddress.IPv6Address):
+        if ip.ipv4_mapped:
+            return str(ip.ipv4_mapped)
+        return str(ipaddress.ip_network(f"{ip}/64", strict=False))
+    return str(ip)
+
+
+def _parse_admin_nets(
+    raw: str | None = None,
+) -> tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]:
+    text = os.getenv("GRIDMARKET_ADMIN_NETS", "") if raw is None else raw
+    if not text.strip():
+        return ()
+    nets = []
+    for part in text.split(","):
+        part = part.strip()
+        if part:
+            nets.append(ipaddress.ip_network(part, strict=False))
+    return tuple(nets)
+
+
+# Loopback only by default; compose deployment configures GRIDMARKET_ADMIN_NETS.
+ADMIN_NETS: tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...] = ()
+
+
+def admin_local(host: str | None) -> bool:
+    """Loopback or a compose-subnet peer (the bridge gateway) with no tunnel header.
+
+    The published port binds 127.0.0.1 only, so such a peer is the host owner
+    or another compose service; tunnel traffic always carries CF-Connecting-IP.
+    """
+    if not host:
+        return False
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    if address in (ipaddress.ip_address("127.0.0.1"), ipaddress.ip_address("::1")):
+        return True
+    trusted = _parse_admin_nets() or ADMIN_NETS
+    return any(address in net for net in trusted)
 
 
 def admin_guard(request: Request) -> None:
+    # Reject remote peers before touching the secret: no key oracle remotely.
+    if "CF-Connecting-IP" in request.headers or not admin_local(
+        request.client.host if request.client else None
+    ):
+        market.reject("FORBIDDEN", 403)
     configured = os.getenv("GRIDMARKET_ADMIN_KEY", "")
     authorization = request.headers.get("Authorization", "")
-    if not configured or not hmac.compare_digest(authorization, "Bearer " + configured):
+    if not configured or not hmac.compare_digest(
+        authorization.encode(), ("Bearer " + configured).encode()
+    ):
         market.reject("UNAUTHENTICATED", 401)
-    if "CF-Connecting-IP" in request.headers:
-        market.reject("FORBIDDEN", 403)
-    if request.client and request.client.host not in ("127.0.0.1", "::1", "testclient"):
-        market.reject("FORBIDDEN", 403)
 
 
 def error_response(status: int, code: str, message: str | None = None, headers=None):
@@ -80,7 +131,14 @@ async def validation_error(request: Request, exc: RequestValidationError):
         market.observe_rejection(
             exc, getattr(request.state, "account_id", None), "VALIDATION_ERROR"
         )
-    return error_response(422, "VALIDATION_ERROR")
+    problem = exc.errors()[0]
+    field = ".".join(str(part) for part in problem["loc"])
+    return error_response(422, "VALIDATION_ERROR", f"{field}: {problem['msg']}")
+
+
+async def unhandled_error(request: Request, exc: Exception):
+    logging.getLogger(__name__).exception("unhandled %s %s", request.method, request.url.path)
+    return error_response(500, "INTERNAL_ERROR", "Internal error")
 
 
 class Boundary:
@@ -89,6 +147,26 @@ class Boundary:
         # ponytail: one-process token buckets; use a shared store for multiple API workers.
         self.buckets: dict[str, tuple[float, float]] = {}
         self.pruned_at = time.monotonic()
+
+    def limit(self, identity, rate, burst, headers):
+        now = time.monotonic()
+        if now - self.pruned_at > 60:
+            self.buckets = {
+                key: value for key, value in self.buckets.items() if now - value[1] < 60
+            }
+            self.pruned_at = now
+        tokens, prior = self.buckets.get(identity, (float(burst), now))
+        tokens = min(burst, tokens + (now - prior) * rate)
+        headers.update(
+            {
+                "X-RateLimit-Limit": str(rate),
+                "X-RateLimit-Remaining": str(max(0, int(tokens - 1))),
+            }
+        )
+        if tokens < 1:
+            headers["Retry-After"] = str(max(1, math.ceil((1 - tokens) / rate)))
+            market.reject("RATE_LIMITED", 429)
+        self.buckets[identity] = (tokens - 1, now)
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -100,8 +178,11 @@ class Boundary:
         cors = public and bool(origin) and origin == os.getenv("GRIDMARKET_CORS_ORIGIN")
         headers = {}
         try:
-            rate = burst = 0
-            identity = ""
+            # Check before any credential lookup. Valid account keys refund this
+            # token and use their own bucket; anonymous traffic shares the IP cap.
+            ip_identity = "ip:" + address(request)
+            rate, burst = (30, 60) if public else (10, 20)
+            self.limit(ip_identity, rate, burst, headers)
             if path.startswith("/v1/admin/"):
                 admin_guard(request)
             elif within(path, PRIVATE):
@@ -121,27 +202,9 @@ class Boundary:
                     ).fetchone()
                 request.state.account_id = account_id
                 rate, burst = (5, 10) if sandbox else (20, 40)
-                identity = "key:" + digest
-            elif public:
-                rate, burst = 10, 20
-                identity = "ip:" + address(request)
-            if rate:
-                now = time.monotonic()
-                if now - self.pruned_at > 60:
-                    self.buckets = {
-                        key: value for key, value in self.buckets.items() if now - value[1] < 60
-                    }
-                    self.pruned_at = now
-                tokens, prior = self.buckets.get(identity, (float(burst), now))
-                tokens = min(burst, tokens + (now - prior) * rate)
-                headers = {
-                    "X-RateLimit-Limit": str(rate),
-                    "X-RateLimit-Remaining": str(max(0, int(tokens - 1))),
-                }
-                if tokens < 1:
-                    headers["Retry-After"] = str(max(1, math.ceil((1 - tokens) / rate)))
-                    market.reject("RATE_LIMITED", 429)
-                self.buckets[identity] = (tokens - 1, now)
+                tokens, prior = self.buckets[ip_identity]
+                self.buckets[ip_identity] = (tokens + 1, prior)
+                self.limit("key:" + digest, rate, burst, headers)
         except HTTPException as exc:
             response = await http_error(request, exc)
             response.headers.update(headers)
@@ -172,11 +235,17 @@ async def lifespan(app):
     app.user_middleware.insert(0, middleware)
     app.exception_handlers[HTTPException] = http_error
     app.exception_handlers[RequestValidationError] = validation_error
+    app.exception_handlers[Exception] = unhandled_error
     app.middleware_stack = app.build_middleware_stack()
 
     async def repeat():
         while True:
-            await asyncio.to_thread(market.tick)
+            try:
+                await asyncio.to_thread(market.tick)
+            except Exception:
+                import logging
+
+                logging.getLogger(__name__).exception("Market tick failed; retrying next tick")
             await asyncio.sleep(60)
 
     task = asyncio.create_task(repeat())
@@ -197,7 +266,7 @@ class OrderRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     product_id: str
     side: Literal["buy", "sell"]
-    quantity: StrictInt
+    quantity: StrictInt = Field(ge=1)
     price_cents: StrictInt
 
 
@@ -206,6 +275,8 @@ def place_order(request: Request, body: OrderRequest) -> dict:
     key = request.headers.get("Idempotency-Key")
     if not key:
         market.reject("IDEMPOTENCY_KEY_REQUIRED", 400)
+    if len(key) > 128:
+        market.reject("VALIDATION_ERROR", 422, "Idempotency-Key must be at most 128 characters")
     account_id = request.state.account_id
     payload = body.model_dump()
     digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
@@ -268,35 +339,38 @@ def account(request: Request) -> dict:
         result["unrealized_pnl_cents"] = 0
         for position in market.rows(
             db,
-            "SELECT p.*,x.zone,x.delivery_hour FROM positions p JOIN products x ON x.id=p.product_id WHERE p.account_id=? AND p.quantity!=0 AND x.symbol LIKE 'FLEX-%'",
+            "SELECT p.*,x.zone,x.delivery_hour FROM positions p JOIN products x ON x.id=p.product_id WHERE p.account_id=? AND x.status!='settled' AND x.symbol NOT LIKE 'SPOT-%'",
             (account_id,),
         ):
-            last = db.execute(
-                "SELECT price_cents FROM trades WHERE product_id=? ORDER BY rowid DESC LIMIT 1",
-                (position["product_id"],),
-            ).fetchone()
-            if last:
-                mark = last[0]
+            if position["quantity"] == 0:
+                mark = 0
             else:
-                book = db.execute(
-                    "SELECT MAX(CASE WHEN side='buy' THEN price_cents END),MIN(CASE WHEN side='sell' THEN price_cents END) FROM orders WHERE product_id=? AND status='open'",
+                last = db.execute(
+                    "SELECT price_cents FROM trades WHERE product_id=? ORDER BY rowid DESC LIMIT 1",
                     (position["product_id"],),
                 ).fetchone()
-                if all(price is not None for price in book):
-                    mark = sum(book) / 2
+                if last:
+                    mark = last[0]
                 else:
-                    prediction = next(
-                        (
-                            p
-                            for p in scoring.predict()
-                            if p.zone == position["zone"]
-                            and p.delivery_hour == position["delivery_hour"]
-                        ),
-                        None,
-                    )
-                    if prediction is None:
-                        continue
-                    mark = prediction.expected_value * 100
+                    book = db.execute(
+                        "SELECT MAX(CASE WHEN side='buy' THEN price_cents END),MIN(CASE WHEN side='sell' THEN price_cents END) FROM orders WHERE product_id=? AND status='open'",
+                        (position["product_id"],),
+                    ).fetchone()
+                    if all(price is not None for price in book):
+                        mark = sum(book) / 2
+                    else:
+                        prediction = next(
+                            (
+                                p
+                                for p in scoring.predict()
+                                if p.zone == position["zone"]
+                                and p.delivery_hour == position["delivery_hour"]
+                            ),
+                            None,
+                        )
+                        if prediction is None:
+                            continue
+                        mark = prediction.expected_value * 100
             prior = db.execute(
                 "SELECT COALESCE(SUM(pnl_cents),0) FROM settled_positions WHERE account_id=? AND product_id=?",
                 (account_id, position["product_id"]),
@@ -362,19 +436,55 @@ def asset(request: Request, id: str) -> dict:
     return found
 
 
+@router.get("/v1/signals/history")
+def signals_history(report_id: str, zone: str, start: str, end: str) -> list[dict]:
+    from . import ercot
+
+    if report_id not in ercot.POLL_MINUTES:
+        market.reject("VALIDATION_ERROR", 422, f"report_id: unknown report {report_id!r}")
+    if not zone:
+        market.reject("VALIDATION_ERROR", 422, "zone: zone is required")
+    try:
+        since = datetime.fromisoformat(start)
+    except ValueError:
+        market.reject("VALIDATION_ERROR", 422, "start: invalid timestamp")
+        raise
+    try:
+        until = datetime.fromisoformat(end)
+    except ValueError:
+        market.reject("VALIDATION_ERROR", 422, "end: invalid timestamp")
+        raise
+    for field, stamp in (("start", since), ("end", until)):
+        if stamp.tzinfo is None:
+            market.reject("VALIDATION_ERROR", 422, f"{field}: timestamp requires a UTC offset")
+    if until <= since:
+        market.reject("VALIDATION_ERROR", 422, "end: end must be after start")
+    if until - since > timedelta(hours=48):
+        market.reject("VALIDATION_ERROR", 422, "end: window exceeds 48 hours")
+    rows = ercot.signals.history(
+        report_id, zone, since.astimezone(UTC).isoformat(), until.astimezone(UTC).isoformat()
+    )
+    if len(rows) > 10000:
+        market.reject(
+            "VALIDATION_ERROR", 422, "end: window holds more than 10000 rows; narrow start/end"
+        )
+    return rows
+
+
 @router.get("/v1/providers")
 def providers() -> list[dict]:
     from . import health
 
     with market.connection() as db:
-        counts = dict(
-            db.execute("SELECT provider_id, COUNT(*) FROM bots GROUP BY provider_id").fetchall()
-        )
+        participants = market.rows(db, "SELECT provider_id, account_id FROM bots")
     return [
         {
             "id": name,
             "display_name": cls.display_name,
-            "participants": counts.get(name, 0),
+            "participants": len(
+                {p["account_id"] for p in participants if p["provider_id"] == name}
+                | {customer["id"] for customer in cls().list_customers()}
+            ),
             "online": health.is_online(name),
         }
         for name, cls in enabled().items()
@@ -385,7 +495,7 @@ def providers() -> list[dict]:
 def sandbox(request: Request, body: dict) -> dict:
     label = body.get("label", "Sandbox")
     if not isinstance(label, str) or re.fullmatch(r"[A-Za-z0-9 _-]{1,24}", label) is None:
-        market.reject("VALIDATION_ERROR")
+        market.reject("VALIDATION_ERROR", 422, "label must be 1–24 letters, digits, spaces, _ or -")
     client_address = address(request)
     hashed = hashlib.sha256(client_address.encode()).hexdigest()
     with market.connection(write=True) as db:

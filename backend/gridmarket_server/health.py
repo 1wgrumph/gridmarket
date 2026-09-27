@@ -39,7 +39,8 @@ BIAS, WEIGHT = -3.0, 2.0
 
 
 def _path() -> Path:
-    return Path(os.getenv("GRIDMARKET_DB", "/data/gridmarket.db"))
+    # Health probes run in fresh processes, so empty means unset here too.
+    return Path(os.getenv("GRIDMARKET_DB") or "/data/gridmarket.db")
 
 
 @contextmanager
@@ -80,7 +81,9 @@ def heartbeat(provider_id: str) -> None:
     with _db() as db:
         db.execute(
             "INSERT INTO provider_health (provider_id, online, last_heartbeat) VALUES (?, 1, ?) "
-            "ON CONFLICT(provider_id) DO UPDATE SET online=1, last_heartbeat=excluded.last_heartbeat",
+            "ON CONFLICT(provider_id) DO UPDATE SET online=1, last_heartbeat=excluded.last_heartbeat "
+            "WHERE provider_health.outage_until IS NULL "
+            "OR julianday(provider_health.outage_until)<=julianday(excluded.last_heartbeat)",
             (provider_id, _now().isoformat()),
         )
 
@@ -89,7 +92,9 @@ def is_online(provider_id: str) -> bool:
     state = _state(provider_id)
     if state is None:
         return True
-    online, last, _ = state
+    online, last, until = state
+    if until and _parse(until) > _now():
+        return False
     age = _age(last)
     if age is not None and age > OFFLINE_AFTER_S:
         if online:
@@ -108,21 +113,29 @@ def is_online(provider_id: str) -> bool:
 
 def tick() -> None:
     """Every 10 s: each enabled adapter heartbeats unless in a simulated outage."""
+    from . import decision_router
+
     for provider_id, adapter in providers.enabled().items():
         try:
             state = _state(provider_id)
+            was = None if state is None else bool(state[0])
             until = state[2] if state else None
             if until and _parse(until) <= _now():
                 with _db() as db:
                     db.execute(
-                        "UPDATE provider_health SET outage_until=NULL WHERE provider_id=?",
-                        (provider_id,),
+                        "UPDATE provider_health SET outage_until=NULL "
+                        "WHERE provider_id=? AND outage_until=?",
+                        (provider_id, until),
                     )
                 until = None
             if not until:
                 adapter().heartbeat()
                 heartbeat(provider_id)
-            is_online(provider_id)
+            now_online = is_online(provider_id)
+            if was is not None and was != now_online:
+                # State transition: refresh the stored checks now so /v1/router
+                # reflects it within one 10 s tick, inside the 60 s deadline (A8).
+                decision_router.tick()
         except Exception:
             log.exception("heartbeat failed for %s", provider_id)
 
@@ -155,13 +168,20 @@ def checks() -> list[CheckResult]:
     requests = max(stats.requests, 1)
     latencies = sorted(stats.latencies_ms)
     p95 = latencies[math.ceil(0.95 * len(latencies)) - 1] if latencies else 0.0
-    worker = [
+    terms = [
         stats.errors / requests,
         stats.http_429 / requests,
         p95 / TIMEOUT_MS,
-        (stats.snapshot_age_s or 0.0) / (2 * SNAPSHOT_POLL_S),
     ]
-    results = [_check("worker", _risk(worker), now)]
+    age = stats.snapshot_age_s
+    if age is None:
+        # No snapshot ever parsed: total data loss once polling has started.
+        worker_p = 1.0 if stats.requests > 0 else _risk([*terms, 0.0])
+    elif age > 2 * SNAPSHOT_POLL_S:
+        worker_p = 1.0
+    else:
+        worker_p = _risk([*terms, age / (2 * SNAPSHOT_POLL_S)])
+    results = [_check("worker", worker_p, now)]
     for provider_id in providers.enabled():
         if is_online(provider_id):
             state = _state(provider_id)
@@ -176,25 +196,46 @@ def _error(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse({"error": {"code": code, "message": message}}, status_code=status)
 
 
+_ADMIN_NETS = (
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("fd00::/8"),
+)
+
+
 def _local(host: str) -> bool:
-    if host == "testclient":  # Starlette's in-process TestClient, never a network peer
-        return True
+    """Loopback or a compose-subnet peer (the bridge gateway); see api.admin_local."""
     try:
-        return ipaddress.ip_address(host).is_loopback
+        address = ipaddress.ip_address(host)
     except ValueError:
         return False
+    return address.is_loopback or any(address in net for net in _ADMIN_NETS)
 
 
 def _admin_denied(request: Request) -> JSONResponse | None:
-    key = os.getenv("GRIDMARKET_ADMIN_KEY", "")
-    given = request.headers.get("authorization", "")
-    if not key or not hmac.compare_digest(given.encode(), f"Bearer {key}".encode()):
-        return _error(401, "UNAUTHENTICATED", "Admin key required")
     if request.headers.get("cf-connecting-ip") or not _local(
         request.client.host if request.client else ""
     ):
         return _error(403, "FORBIDDEN", "Admin routes are local only")
+    key = os.getenv("GRIDMARKET_ADMIN_KEY", "")
+    given = request.headers.get("authorization", "")
+    if not key or not hmac.compare_digest(
+        given.encode("utf-8", "ignore"), f"Bearer {key}".encode()
+    ):
+        return _error(401, "UNAUTHENTICATED", "Admin key required")
     return None
+
+
+def db_writable() -> bool:
+    """A real write, rolled back: False when the DB is read-only or the disk is full."""
+    try:
+        with _db(timeout=2.0) as db:
+            db.execute("INSERT OR IGNORE INTO provider_health (provider_id) VALUES ('_probe')")
+            db.rollback()
+    except sqlite3.Error:
+        return False
+    return True
 
 
 @router.post("/v1/admin/providers/{id}/outage")

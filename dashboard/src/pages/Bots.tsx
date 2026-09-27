@@ -3,17 +3,17 @@ import { Button } from '@astryxdesign/core';
 import { CartesianGrid, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts';
 import Panel from '../components/Panel';
 import { useBotDiversity, useBots } from '../hooks';
+import { usd } from '../format';
 import { send, type ApiError } from '../api';
 import { FeedBody, PageHeading, Stale } from './Market';
 
-/** GET /v1/bots lists id, bot_index, bot_type, provider_id, dormant; economy columns render "—" until served. */
+/** GET /v1/bots serves the public economy fields; missing ones render "Unavailable". */
 type PublicBot = { id: string; bot_type: string; provider_id: string; dormant: boolean }
   & Partial<{ blend: Record<string, number>; cash: number; net_worth: number; pnl: number; trades: number; losses: number }>;
 type Diversity = { coverage: number; entropy: number; points: { risk_appetite: number; patience: number }[] };
 
 const pct = (p: number) => `${Math.round(p * 100)}%`;
-const usd = (n?: number) => n === undefined ? '—' : n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-const blend = (b: Record<string, number>) => Object.entries(b).map(([type, w]) => `${type} ${pct(w)}`).join(' · ');
+const blend = (b: Record<string, number>) => Object.entries(b).map(([type, w]) => `${type} ${pct(w)}`).join(' · ') || 'unavailable';
 const tick = { fill: 'var(--muted)', fontSize: 11 };
 const tooltip = { background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', fontSize: 12, borderRadius: 'var(--r-2)' };
 
@@ -55,6 +55,7 @@ function SpawnForm() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!adminKey.trim()) { setResult({ ok: false, text: 'Enter the admin key to spawn bots' }); return; }
     setBusy(true);
     try {
       await send('POST', '/v1/admin/bots', { count: Number(count), ...(seed.trim() ? { seed: seed.trim() } : {}) }, adminKey);
@@ -66,12 +67,12 @@ function SpawnForm() {
 
   return <Panel title="Owner · spawn bots" index="01" className="span-all" meta={<span>ADMIN KEY · NOT STORED</span>}>
     <form className="form-row" onSubmit={submit}>
-      <label className="field">Admin key<input type="password" autoComplete="off" required value={adminKey} onChange={e => setAdminKey(e.target.value)}/></label>
+      <label className="field">Admin key<input type="password" autoComplete="off" value={adminKey} onChange={e => setAdminKey(e.target.value)}/></label>
       <label className="field">Count (1–10)<input style={{ width: '6rem' }} type="number" min={1} max={10} required value={count} onChange={e => setCount(e.target.value)}/></label>
       <label className="field">Seed (optional)<input style={{ width: '8rem' }} value={seed} onChange={e => setSeed(e.target.value)}/></label>
       <Button type="submit" label="Spawn bots" variant="primary" isLoading={busy}/>
     </form>
-    {result && <p className={`form-result ${result.ok ? 'muted' : 'warning-text'}`} role="status">{result.text}</p>}
+    {result && <p className={`form-result ${result.ok ? 'muted' : 'warning-text'}`} role="status" aria-live="polite">{result.text}</p>}
   </Panel>;
 }
 
@@ -83,18 +84,19 @@ export default function Bots() {
     : <strong className="unavailable">{bots.loading ? 'loading' : 'not yet available'}</strong>;
 
   return <>
-    <PageHeading eyebrow="05 / BOT POPULATION" title="Bots"/>
-    <div className="page-grid">
-      {/* The owner form sits above the polled panels so their first load never shifts it. */}
-      <SpawnForm/>
-    </div>
+    <PageHeading eyebrow="08 / BOT POPULATION" title="Bots"/>
     <section className="stat-strip" aria-label="Population key numbers">
       <div><span>Population</span>{value(String(rows.length))}<span>bots listed</span></div>
       <div><span>Dormant rate</span>{value(rows.length ? pct(dormant / rows.length) : '—')}<span>{bots.data ? `${dormant} of ${rows.length} bots` : 'share of population'}</span></div>
     </section>
+    <section className="stat-strip" aria-label="Performance summary">
+      <div><span>Population P&amp;L</span>{value(rows.length && rows.every(b => Number.isFinite(b.pnl)) ? usd(rows.reduce((sum, b) => sum + b.pnl!, 0)) : 'Unavailable')}<span>Simulated settled performance</span></div>
+      <div><span>Profitable bots</span>{value(String(rows.filter(b => Number.isFinite(b.pnl) && b.pnl! > 0).length))}<span>{rows.filter(b => Number.isFinite(b.pnl)).length} with reported P&amp;L</span></div>
+    </section>
     <div className="page-grid">
+      <div className="panel span-all performance-summary"><p className="panel-copy">Net reported simulated P&amp;L: <strong>{rows.some(b => Number.isFinite(b.pnl)) ? usd(rows.reduce((total, b) => total + (Number.isFinite(b.pnl) ? b.pnl! : 0), 0)) : 'unavailable'}</strong> · {rows.filter(b => Number.isFinite(b.pnl)).length} of {rows.length} bots reporting. Compare cash, net worth and trades below. Summaries refresh every 2 seconds.</p></div>
       <Panel title="All bots" index="02" className="span-all" busy={bots.loading} meta={<><Stale feed={bots}/><span>SIMULATED ACCOUNTS</span></>}>
-        <FeedBody feed={bots} unavailable="Bots not yet available">
+        <FeedBody feed={bots} unavailable="Bots not yet available" reserve="reserve-bots">
           {rows.length ? <div className="table-scroll"><table className="data-table">
             <thead><tr>
               <th scope="col">Bot</th><th scope="col">Type</th><th scope="col">Blend</th><th scope="col">Provider</th>
@@ -108,7 +110,7 @@ export default function Bots() {
               <td>{b.provider_id}</td>
               <td className="end num">{usd(b.cash)}</td>
               <td className="end num">{usd(b.net_worth)}</td>
-              <td className={`end num ${(b.pnl ?? 0) < 0 ? 'down-text' : 'up-text'}`}>{usd(b.pnl)}</td>
+              <td className={`end num ${!Number.isFinite(b.pnl) ? 'muted' : b.pnl! < 0 ? 'down-text' : 'up-text'}`}>{usd(b.pnl)}</td>
               <td className="end num">{b.trades ?? '—'}</td>
               <td className="end num">{b.losses ?? '—'}</td>
               <td><span className={`tag ${b.dormant ? 'down' : 'up'}`}>{b.dormant ? 'dormant' : 'active'}</span></td>
@@ -116,6 +118,7 @@ export default function Bots() {
           </table></div> : <div className="empty">No bots yet</div>}
         </FeedBody>
       </Panel>
+      <details className="admin-disclosure span-all" open><summary>Owner administration</summary><SpawnForm/></details>
       {!bots.loading && <DiversityPanel/>}
     </div>
   </>;

@@ -1,3 +1,112 @@
 {
-  "properties": {"forecastHourly": "__BASE_URL__/gridpoints/TEST/1,1/forecast/hourly"}
+    "@context": [
+        "https://geojson.org/geojson-ld/geojson-context.jsonld",
+        {
+            "@version": "1.1",
+            "wx": "__BASE_URL__/ontology#",
+            "s": "https://schema.org/",
+            "geo": "http://www.opengis.net/ont/geosparql#",
+            "unit": "http://codes.wmo.int/common/unit/",
+            "@vocab": "__BASE_URL__/ontology#",
+            "geometry": {
+                "@id": "s:GeoCoordinates",
+                "@type": "geo:wktLiteral"
+            },
+            "city": "s:addressLocality",
+            "state": "s:addressRegion",
+            "distance": {
+                "@id": "s:Distance",
+                "@type": "s:QuantitativeValue"
+            },
+            "bearing": {
+                "@type": "s:QuantitativeValue"
+            },
+            "value": {
+                "@id": "s:value"
+            },
+            "unitCode": {
+                "@id": "s:unitCode",
+                "@type": "@id"
+            },
+            "forecastOffice": {
+                "@type": "@id"
+            },
+            "forecastGridData": {
+                "@type": "@id"
+            },
+            "publicZone": {
+                "@type": "@id"
+            },
+            "county": {
+                "@type": "@id"
+            }
+        }
+    ],
+    "id": "__BASE_URL__/points/29.76,-95.37",
+    "type": "Feature",
+    "geometry": {
+        "type": "Point",
+        "coordinates": [
+            -95.37,
+            29.76
+        ]
+    },
+    "properties": {
+        "@id": "__BASE_URL__/points/29.76,-95.37",
+        "@type": "wx:Point",
+        "cwa": "HGX",
+        "type": "land",
+        "forecastOffice": "__BASE_URL__/offices/HGX",
+        "gridId": "HGX",
+        "gridX": 63,
+        "gridY": 95,
+        "forecast": "__BASE_URL__/gridpoints/HGX/63,95/forecast",
+        "forecastHourly": "__BASE_URL__/gridpoints/HGX/63,95/forecast/hourly",
+        "forecastGridData": "__BASE_URL__/gridpoints/HGX/63,95",
+        "observationStations": "__BASE_URL__/gridpoints/HGX/63,95/stations",
+        "relativeLocation": {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -95.3888059,
+                    29.7857435
+                ]
+            },
+            "properties": {
+                "city": "Houston",
+                "state": "TX",
+                "distance": {
+                    "unitCode": "wmoUnit:m",
+                    "value": 0
+                },
+                "bearing": {
+                    "unitCode": "wmoUnit:degree_(angle)",
+                    "value": 0
+                }
+            }
+        },
+        "forecastZone": "__BASE_URL__/zones/forecast/TXZ213",
+        "county": "__BASE_URL__/zones/county/TXC201",
+        "fireWeatherZone": "__BASE_URL__/zones/fire/TXZ213",
+        "timeZone": "America/Chicago",
+        "radarStation": "KHGX",
+        "astronomicalData": {
+            "sunrise": "2026-09-26T07:12:08-05:00",
+            "sunset": "2026-09-26T19:13:16-05:00",
+            "transit": "2026-09-26T13:12:42-05:00",
+            "civilTwilightBegin": "2026-09-26T06:48:24-05:00",
+            "civilTwilightEnd": "2026-09-26T19:37:00-05:00",
+            "nauticalTwilightBegin": "2026-09-26T06:20:42-05:00",
+            "nauticalTwilightEnd": "2026-09-26T20:04:42-05:00",
+            "astronomicalTwilightBegin": "2026-09-26T05:52:50-05:00",
+            "astronomicalTwilightEnd": "2026-09-26T20:32:34-05:00"
+        },
+        "nwr": {
+            "transmitter": "KGG68",
+            "sameCode": "048201",
+            "areaBroadcast": "__BASE_URL__/radio/KGG68/broadcast",
+            "pointBroadcast": "__BASE_URL__/points/29.76,-95.37/radio"
+        }
+    }
 }

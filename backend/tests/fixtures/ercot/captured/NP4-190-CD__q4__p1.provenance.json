@@ -1,0 +1,6 @@
+{
+  "source": "/api/report/np4-190-cd/dam_stlmnt_pnt_prices?deliveryDateFrom=2026-09-26&deliveryDateTo=2026-09-27&settlementPoint=HB_HUBAVG&size=1000&sort=deliveryDate&page=1",
+  "retrieved_at_utc": "2026-09-27T03:55:50.722476+00:00",
+  "sha256": "0f4158440b9c6556e4dba707c5b3e538d5f33f31aed0375fdb9c484c31f6cde0",
+  "note": "Real Worker response. Retrieved without a market key."
+}

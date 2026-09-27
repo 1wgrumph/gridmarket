@@ -28,7 +28,8 @@ def store(db: sqlite3.Connection, account_id: str, key: str, label: str) -> None
 
 def issue(db: sqlite3.Connection, label: str, address: str | None = None) -> dict[str, str]:
     account_id, key = uuid.uuid4().hex, sandbox_key()
-    db.execute("INSERT INTO accounts(id,display_name) VALUES (?,?)", (account_id, label))
+    display_name = f"sandbox:{label}" if address is not None else label
+    db.execute("INSERT INTO accounts(id,display_name) VALUES (?,?)", (account_id, display_name))
     store(db, account_id, key, label)
     if address is not None:
         db.execute(

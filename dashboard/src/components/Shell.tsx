@@ -4,12 +4,12 @@ import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/Segme
 import { gridmarketTheme } from '../theme';
 import { useSignals } from '../hooks';
 import Icon from './Icon';
+import { contextLink } from './navigation';
 import '../styles.css';
 
-const nav = [
-  ['#/', 'Overview', '01'], ['#/market', 'Market', '02'], ['#/predictions', 'Predictions', '03'], ['#/providers', 'Providers', '04'],
-  ['#/bots', 'Bots', '05'], ['#/sandbox', 'Judge sandbox', '06'], ['#/spec', 'Spec', '07'],
-] as const;
+const nav = [['#/', 'Overview', '01'], ['#/tour', 'Start here', '02'], ['#/replay', 'Replay', '03'], ['#/market', 'Market', '04'], ['#/sandbox', 'Judge sandbox', '05']] as const;
+const more = [['#/predictions', 'Predictions', '06'], ['#/providers', 'Providers', '07'], ['#/bots', 'Bots', '08'], ['#/spec', 'Spec', '09']] as const;
+const inMore = (hash: string) => more.some(([href]) => { const path = hash.split('?')[0]; return path === href || path.startsWith(`${href}/`); });
 const central = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', ...options });
 const clockFormat = central({ hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 const dayFormat = central({ weekday: 'long', day: 'numeric', month: 'long' });
@@ -26,25 +26,31 @@ export function Disclosures() {
 
 export default function Shell({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<Mode>(() => {
-    const saved = localStorage.getItem('gm-theme');
-    return saved === 'light' || saved === 'system' ? saved : 'dark';
+    try { const saved = localStorage.getItem('gm-theme'); return saved === 'light' || saved === 'system' ? saved : 'dark'; } catch { return 'dark'; }
   });
   const [menu, setMenu] = useState(false);
   const [route, setRoute] = useState(window.location.hash || '#/');
+  const [moreOpen, setMoreOpen] = useState(() => inMore(route));
   const [now, setNow] = useState(Date.now());
   const signals = useSignals();
   useEffect(() => {
-    const update = () => { setRoute(window.location.hash || '#/'); setMenu(false); };
+    const update = () => { setRoute(window.location.hash || '#/'); setMenu(false); if (inMore(window.location.hash)) setMoreOpen(true); };
     window.addEventListener('hashchange', update);
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => { window.removeEventListener('hashchange', update); window.clearInterval(timer); };
   }, []);
   const fixtures = import.meta.env.VITE_FIXTURES === '1';
-  const latest = signals.data?.reduce<string | undefined>((max, s) => !max || s.published_at > max ? s.published_at : max, undefined);
-  const stale = signals.data?.filter(s => s.stale).length ?? 0;
+  const gridSignals = signals.data?.filter(s => s.report_id === 'ESR' || s.report_id.startsWith('NP'));
+  const latest = gridSignals?.reduce<string | undefined>((max, s) => !max || s.published_at > max ? s.published_at : max, undefined);
+  const stale = gridSignals?.filter(s => s.stale).length ?? 0;
+  const path = route.split('?')[0] || '#/';
+  const link = ([href, label, number]: readonly [string, string, string]) => {
+    const current = href === '#/' ? path === '#/' : path === href || path.startsWith(`${href}/`);
+    return <a key={href} href={contextLink(href)} className={current ? 'selected' : ''} aria-current={current ? 'page' : undefined}><span className="nav-number">{number}</span>{label}{current && <span className="nav-arrow"><Icon name="up-right"/></span>}</a>;
+  };
   const freshness = signals.error ? 'Stale · connection lost'
     : latest ? `Published ${publishFormat.format(new Date(latest))}${stale ? ` · ${stale} stale` : ''}`
-    : 'Publish time unavailable';
+    : 'ERCOT feed not connected';
   return <Theme theme={gridmarketTheme} mode={mode}>
     <a className="skip-link" href="#main" onClick={event => { event.preventDefault(); document.getElementById('main')?.focus(); }}>Skip to main content</a>
     <div className="app-shell">
@@ -55,13 +61,14 @@ export default function Shell({ children }: { children: ReactNode }) {
         </div>
         <div id="sidebar-content" className={`sidebar-content ${menu ? 'is-open' : ''}`}>
           <p className="eyebrow nav-caption">THE EXCHANGE</p>
-          <nav aria-label="Primary">{nav.map(([href, label, number]) => {
-            const current = href === '#/' ? route === '#/' : route === href || route.startsWith(`${href}/`);
-            return <a key={href} href={href} className={current ? 'selected' : ''} aria-current={current ? 'page' : undefined}><span className="nav-number">{number}</span>{label}{current && <span className="nav-arrow"><Icon name="up-right"/></span>}</a>;
-          })}</nav>
+          <nav aria-label="Primary">
+            {nav.map(link)}
+            <button type="button" className="nav-more" aria-expanded={moreOpen} aria-controls="nav-more" onClick={() => setMoreOpen(!moreOpen)}><span className="nav-number"><Icon name={moreOpen ? 'minus' : 'plus'}/></span>More</button>
+            <div id="nav-more" role="group" aria-label="More pages" className={moreOpen ? 'nav-group' : 'nav-group is-collapsed'}>{more.map(link)}</div>
+          </nav>
           <div className="sidebar-bottom">
             <div className="market-clock"><p className="eyebrow">MARKET CLOCK · TEXAS</p><time className="num">{clockFormat.format(now)}<small> CT</small></time><span>{dayFormat.format(now)}</span></div>
-            <div className="freshness"><span className={`status-dot ${signals.error || stale ? 'warning' : ''}`}/><div><strong>ERCOT data</strong><p>{freshness}</p><span className="tiny">Polling every 2 seconds</span></div></div>
+            <div className="freshness"><span className={`status-dot ${signals.error || stale || !latest ? 'warning' : ''}`}/><div><strong>ERCOT data</strong><p>{freshness}{!latest && !signals.error && <> · Live data needs the Worker (GRIDMARKET_WORKER_URL). <a href="#/spec">Setup docs</a></>}</p><span className="tiny">Polling every 2 seconds</span></div></div>
             <a className="judge-cta" href="#/sandbox"><span>YOUR TURN TO TRADE</span><strong>Get API key <Icon name="up-right"/></strong><small>$1,000 simulated cash to start</small></a>
             <p className="sidebar-foot">BASE / AITX HACKATHON<span>FINAL EDITION · 2026</span></p>
           </div>
@@ -72,12 +79,12 @@ export default function Shell({ children }: { children: ReactNode }) {
           <span className="eyebrow">TEXAS FLEXIBILITY EXCHANGE</span>
           <div className="header-controls">
             <span className="fixture-tag">{fixtures ? 'ILLUSTRATIVE FIXTURES' : 'SIMULATED MARKET'}</span>
-            <SegmentedControl label="Color theme" value={mode} onChange={value => { setMode(value as Mode); localStorage.setItem('gm-theme', value); }} size="sm">
+            <SegmentedControl label="Color theme" value={mode} onChange={value => { setMode(value as Mode); try { localStorage.setItem('gm-theme', value); } catch { /* Keep this session usable. */ } }} size="sm">
               <SegmentedControlItem value="dark" label="Dark"/><SegmentedControlItem value="light" label="Light"/><SegmentedControlItem value="system" label="Auto"/>
             </SegmentedControl>
           </div>
         </header>
-        <main id="main" tabIndex={-1}>{children}{route !== '#/' && <Disclosures/>}</main>
+        <main id="main" tabIndex={-1}>{children}{path !== '#/' && <Disclosures/>}</main>
         <footer className="page-footer"><span>Real grid context. Simulated energy markets.</span><span>GridMarket</span></footer>
       </div>
     </div>

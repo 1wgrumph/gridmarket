@@ -425,7 +425,7 @@ number), and `views/views.json` (system views of the Systems Modeler).
 | Term | Definition | Source |
 |---|---|---|
 | Zone | One of the ERCOT load zones LZ_HOUSTON, LZ_NORTH, LZ_SOUTH, LZ_WEST | Technical plan |
-| Delivery hour | A one-hour interval starting on the hour, America/Chicago | Technical plan |
+| Delivery hour | A one-hour interval starting on the hour (hour-beginning), America/Chicago; `HH` is its Central start hour | Technical plan |
 | Flex Credit | 1 kWh of battery flexibility for one delivery hour; priced in $/credit = $/MWh ÷ 1000 | Intent §5, DEC-GM-008 |
 | Spot product | `SPOT-<zone>-<YYYY-MM-DD>-<HH>`, delivery 1 or 2 hours ahead, backed by a capacity reservation | Technical plan |
 | Future product | `FLEX-<zone>-<YYYY-MM-DD>-<HH>`, delivery 3 to 24 hours ahead, cash-settled at expiry | Technical plan |
@@ -505,7 +505,7 @@ them is late.
 | Slip trigger for diversity layers 2, 3, 5a, 6 | Orchestrator | Sat 2026-09-26 14:00 CDT | Layers move to phase 2; dormant rate stays in 1b |
 | Create tunnel credentials and start the `tunnel` profile | Owner | Sunday recording | No public demo URL |
 | Set the Jev key and turn the Jev flag on for the demo | Owner | Sunday recording | Jev column stays hidden; baseline rules still answer |
-| AZHQ visual-review skill availability | Owner | Phase 1b | Typed gap; vitest render tests are the evidence (RISK-GM-18) |
+| Browser visual review tooling availability | Owner | Phase 1b | Typed gap; vitest render tests are the evidence (RISK-GM-18) |
 | Make the repository public after the secret scan | Owner | Before submission 11:00 CDT Sunday | Judges cannot read the code or this specification |
 
 ### Risks and unresolved evidence
@@ -522,7 +522,7 @@ them is late.
 - **Where:** The technical plan's Risks table (RISK-GM-01..19).
 
 Unresolved evidence at revision 0.1: the live Worker response shapes
-(RISK-GM-09), the owner's Worker deployment (RISK-GM-02), the visual-review
+(RISK-GM-09), the owner's Worker deployment (RISK-GM-02), the browser visual review
 capability (RISK-GM-18), and the stretch lanes that have not yet reported
 green. The table lists the risks that most shape the architecture.
 
@@ -654,7 +654,17 @@ Every hour the settlement tick lists, per zone, spot products for delivery
 hours 1–2 hours ahead and future products for 3–24 hours ahead, and closes
 products whose delivery hour has started; both types trade through one
 matching engine (AC-GM-MKT-01). The API also accepts the alias
-`FLEX-<zone>-<HH>` for the next future product with delivery hour `HH`.
+`FLEX-<zone>-<HH>` for the next listed future product with hour-beginning
+`HH` in America/Chicago. Canonical symbols are
+`FLEX-<zone>-<YYYY-MM-DD>-<HH>` and `SPOT-<zone>-<YYYY-MM-DD>-<HH>`,
+using the Central delivery date and start hour. The `delivery_hour` field
+stores the corresponding UTC instant; expiry uses the end of that one-hour interval.
+On fall-back, the first Central 01:00 keeps the plain symbol; the second
+(standard time, UTC-06:00) appends `R`, for example
+`FLEX-LZ_HOUSTON-2026-11-01-01R` (also applicable to `SPOT`).
+These are separate products, books and settlements at 06:00Z and 07:00Z
+on 2026-11-01. The hour alias selects the earliest open matching product
+by UTC instant, advancing to the repeated hour once the first closes.
 
 Order submission runs in one transaction: authenticate the key (401),
 rate-limit per key (429), check the Idempotency-Key (400 missing, 409

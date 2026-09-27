@@ -1,5 +1,13 @@
 {
-  "fields": ["deliveryDate", "hourEnding", "settlementPoint", "settlementPointPrice", "publishTime"],
-  "data": [["2026-09-26", 10, "LZ_HOUSTON", 60.75, "2026-09-26T12:00:00Z"]],
-  "_meta": {"totalRecords": 1}
+  "fields": [
+    {"name": "deliveryDate", "label": "Delivery Date", "dataType": "DATE"},
+    {"name": "hourEnding", "label": "Hour Ending", "dataType": "VARCHAR"},
+    {"name": "settlementPoint", "label": "Settlement Point", "dataType": "VARCHAR"},
+    {"name": "settlementPointPrice", "label": "Settlement Point Price", "dataType": "DOUBLE"},
+    {"name": "DSTFlag", "label": "DST Flag", "dataType": "BOOLEAN"}
+  ],
+  "data": [
+    ["2026-09-26", "10:00", "LZ_HOUSTON", 60.75, false]
+  ],
+  "_meta": {"totalRecords": 1, "pageSize": 1, "totalPages": 1, "currentPage": 1}
 }
