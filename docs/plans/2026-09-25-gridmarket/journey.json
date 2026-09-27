@@ -1300,6 +1300,17 @@
         "packets/X/X-merge.md",
         "PR #18"
       ]
+    },
+    {
+      "id": "DEC-GM-150",
+      "at": "2026-09-27T07:00:16Z",
+      "by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "Visible route gap: AGY headless sessions (Gemini 3.8 Flash medium) run long commands as background tasks, idle up to 30 minutes, then terminate them on exit without committing or reporting (RP-A: make mutation; X-merge: gates and browser check). Short AGY packets (release notes, RP-B2, X2b) completed. For gate-heavy packets (full gate plus browser checks), dispatch goes to the next implementer route, Muse Code / Muse Spark 1.3 / max; X-merge2 finishes the extras assembly there. Mutation: the ercot poll-loop mutants (x_poll, x__poll, x__get, x_backoff_seconds, x__acquire; 234 of 4,742) hang on real sleeps and are excluded from the scored selection as a typed gap; all other market, scoring and ercot mutants are scored. Release notes for v0.4.0 were corrected once (fixes to 0.3.0 behaviour listed as fixes).",
+      "refs": [
+        "packets/X/X-merge2.md",
+        "evidence/stretch/mutation-rp4.selection",
+        "exits/REL-0.4.0"
+      ]
     }
   ],
   "stages": {
