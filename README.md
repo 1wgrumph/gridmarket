@@ -72,13 +72,13 @@ both are served from one origin. Use the `.env` copied above, set
 ```sh
 make setup
 npm --prefix dashboard run build
-uv run --env-file .env --project backend --frozen uvicorn gridmarket_server.main:app --host 127.0.0.1 --port 8000
+uv run --project backend --frozen --env-file .env uvicorn gridmarket_server.main:app --host 127.0.0.1 --port 8000
 ```
 
 In a second terminal at the repository root, load the same `.env`:
 
 ```sh
-PYTHONPATH=sdk/python uv run --env-file .env --project backend --frozen python -m gridmarket_server.bots
+PYTHONPATH=sdk/python uv run --project backend --frozen --env-file .env python -m gridmarket_server.bots
 ```
 
 Open <http://127.0.0.1:8000/>. Rebuild the dashboard after frontend edits;
