@@ -2,7 +2,7 @@
 
 Cloudflare Worker that reads the ERCOT Public Data API and serves two live 3D views of the Texas grid.
 
-Live: https://ercot-hackathon.jordan-691.workers.dev
+Live: https://ercot-hackathon.1wgrumph.workers.dev
 
 | Path | What it is |
 |---|---|

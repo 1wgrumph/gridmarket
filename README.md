@@ -32,11 +32,14 @@ Start the app below, then follow [Your first 3 minutes](docs/judges.md) to monit
 
 ## Live links
 
-- **God's Eye, 3D Texas grid on live ERCOT data:** <https://ercot-hackathon.jordan-691.workers.dev/godseye/>
-- **The real day, one click:** <https://ercot-hackathon.jordan-691.workers.dev/godseye/#start> replays 26 Aug 2026 and stops on Houston's $780.46/MWh spike.
+- **Dashboard and market (live exchange, 60 bots, judge sandbox):** <https://came-grace-cycling-ala.trycloudflare.com>
+- **API docs:** <https://came-grace-cycling-ala.trycloudflare.com/docs>
+- **God's Eye, 3D Texas grid on live ERCOT data:** <https://ercot-hackathon.1wgrumph.workers.dev/godseye/>
+- **The real day, one click:** <https://ercot-hackathon.1wgrumph.workers.dev/replay/#start> replays 26 Aug 2026 and stops on Houston's $780.46/MWh spike.
 - This deployment runs the standalone God's Eye build on the [`jordaaan` branch](https://github.com/1wgrumph/gridmarket/tree/jordaaan/ercot-hackathon) (26 Aug replay, help windows, simulated batteries). The version on `main` adds backend integration and tests, and deploys with the same [Worker setup](ercot-hackathon/README.md#setup).
-- **ERCOT data edge (Worker API):** <https://ercot-hackathon.jordan-691.workers.dev/api/snapshot>
-- **Market, dashboard, replay and sandbox:** run locally with Docker Compose (below); the 3-minute path starts at <http://127.0.0.1:8000/>.
+- **ERCOT data edge (Worker API):** <https://ercot-hackathon.1wgrumph.workers.dev/api/snapshot>
+
+The market runs on the team's machine through a Cloudflare tunnel during judging; if it is unreachable, the 3-minute local run below gives the same product.
 
 ## Run it locally
 
