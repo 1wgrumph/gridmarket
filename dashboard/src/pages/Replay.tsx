@@ -21,11 +21,19 @@ const DAY_HINT = 'Historical ERCOT observations; simulated households, batteries
 const HOME_SPEC = { capacityKwh: 13.5, initialSocKwh: 6.75, maxDischargeKw: 5, etaRoundTrip: 0.9, loadKw: 1.2 };
 const FALLBACK_HORIZON = 4;
 
+const DEFAULT_DAY = '2026-08-26';
+const PLACES: Record<string, string> = {
+  LZ_WEST: 'West Texas',
+  LZ_NORTH: 'North Texas',
+  LZ_SOUTH: 'South Texas',
+  LZ_HOUSTON: 'Houston',
+};
 const strategyLabel = (id: string) => STRATEGIES.find(s => s.id === id)?.label ?? id;
 const clock = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' });
 const fmtTime = (iso: string) => `${clock.format(new Date(iso))} CT`;
 const fmtDay = (day: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Chicago', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${day}T12:00:00Z`));
 const fmtShort = (day: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Chicago', day: 'numeric', month: 'short' }).format(new Date(`${day}T12:00:00Z`));
+const fmtWeekday = (day: string) => new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'long' }).format(new Date(`${day}T12:00:00Z`));
 // True minus (U+2212) for negatives, per docs/design/DESIGN.md.
 const money = (cents: number) => `${cents < 0 ? '−' : cents > 0 ? '+' : ''}$${(Math.abs(cents) / 100).toFixed(2)}`;
 const messageOf = (reason: unknown) => (reason as { error?: { message?: string } })?.error?.message ?? String(reason);
@@ -46,13 +54,16 @@ const fmtInput = (value: string | number): string => {
   return text.length > 80 ? `${text.slice(0, 80)}…` : text;
 };
 const hashParams = () => new URLSearchParams(window.location.hash.split('?')[1] ?? '');
-const hashDay = () => hashParams().get('day') ?? '';
+const onReplay = () => (window.location.hash || '#/replay').split('?')[0] === '#/replay';
+const hashDay = () => hashParams().get('day') || DEFAULT_DAY;
 const hashInt = (key: string, fallback: number, min: number, max: number) => {
   const value = Number(hashParams().get(key));
   return Number.isInteger(value) && value >= min && value <= max ? value : fallback;
 };
 /** Silent URL sync (no hashchange): slider state stays shareable and survives Back. */
 const writeHash = (mutate: (p: URLSearchParams) => void) => {
+  // Replay state belongs to Replay: never write it onto the page being navigated to.
+  if (!onReplay()) return;
   const path = (window.location.hash || '#/replay').split('?')[0];
   const params = hashParams();
   mutate(params);
@@ -200,7 +211,7 @@ export default function Replay() {
     get<{ days: DayInfo[] }>('/v1/replay/days')
       .then(body => setDays(body.days))
       .catch(reason => setDaysError(messageOf(reason)));
-    const sync = () => { const d = hashDay(); if (d) setDay(d); };
+    const sync = () => { if (onReplay()) setDay(hashDay()); };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
   }, []);
@@ -208,7 +219,10 @@ export default function Replay() {
     if (hashParams().get('panel') === 'your-turn') yourRef.current?.scrollIntoView?.();
   }, []);
   useEffect(() => {
-    if (days && days.length && !days.some(d => d.day === day)) setDay(days[0].day);
+    if (days && days.length && !days.some(d => d.day === day)) {
+      const fallback = days.some(d => d.day === DEFAULT_DAY) ? DEFAULT_DAY : days[0].day;
+      setDay(fallback);
+    }
   }, [days, day]);
   useEffect(() => {
     if (!day || !days?.some(d => d.day === day)) return;
@@ -402,14 +416,22 @@ export default function Replay() {
   const valueScore = valueRun?.scoreboard.find(s => s.strategy === 'esr_informed') ?? valueRun?.scoreboard[0];
   const homeCount = base ? base.binding.fleet.assets.length : HOMES;
 
+  const selectDay = (nextDay: string) => {
+    setDay(nextDay);
+    const params = hashParams();
+    params.set('day', nextDay);
+    const path = (window.location.hash || '#/replay').split('?')[0];
+    window.location.hash = `${path}?${params.toString()}`;
+  };
+
   return <>
     <PageHeading eyebrow="03 / HISTORICAL REPLAY" title="Replay" />
     {(daysError ?? baseError) && <p className="connection-line has-error" role="alert">{daysError ?? baseError}</p>}
 
     <div className="page-grid"><Panel title="Replay day" index="01" className="span-all" busy={baseLoading} meta={<span>{base ? `RUN ${base.run_id.slice(0, 12)}` : 'NO RUN'}</span>}>
       <div className="replay-head">
-        <label>Day <select aria-label="Replay day" value={day} onChange={e => { setDay(e.target.value); const params = hashParams(); params.set('day', e.target.value); window.location.hash = `#/replay?${params.toString()}`; }}>
-          {(days ?? []).map(d => <option key={d.day} value={d.day}>{d.day}</option>)}
+        <label>Day <select aria-label="Replay day" value={day} onChange={e => selectDay(e.target.value)}>
+          {(days ?? []).map(d => <option key={d.day} value={d.day}>{fmtDay(d.day)}</option>)}
         </select></label>
         <label>Zone <select aria-label="Zone" value={zone} onChange={e => setZone(e.target.value)}>
           {ZONES.map(z => <option key={z} value={z}>{z.replace(/^LZ_/, '')}</option>)}
@@ -423,6 +445,64 @@ export default function Replay() {
       <p className="panel-copy">{base?.disclaimer ?? DAY_HINT}</p>
       <details className="panel-copy"><summary>Availability assumption</summary><p className="muted">{base?.availability_note ?? '…'}</p></details>
       <p className="panel-copy muted">Optional gaps: {dayInfo ? (dayInfo.gaps.length ? dayInfo.gaps.join(', ') : 'none') : '…'}</p>
+
+      <div className="table-scroll" aria-label="Catalogued replay days">
+        <table className="data-table day-picker-table" aria-label="Catalogued replay days">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Weekday</th>
+              <th scope="col" className="end">Peak RT price</th>
+              <th scope="col">Peak location</th>
+              <th scope="col">Data gaps</th>
+              <th scope="col" className="end">Select</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(days ?? []).map(d => {
+              const isSelected = d.day === day;
+              const peakWhere = d.peak_rt_price
+                ? (PLACES[d.peak_rt_price.point] ? `${PLACES[d.peak_rt_price.point]} (${d.peak_rt_price.point})` : d.peak_rt_price.point)
+                : '—';
+              const gapsText = d.gaps && d.gaps.length ? d.gaps.join(', ') : 'None';
+              return (
+                <tr
+                  key={d.day}
+                  className={isSelected ? 'selected' : ''}
+                  onClick={() => selectDay(d.day)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <th scope="row">
+                    <button
+                      type="button"
+                      className="code"
+                      style={{ background: 'none', border: 0, padding: 0, font: 'inherit', color: 'var(--accent)', cursor: 'pointer', textAlign: 'left' }}
+                      onClick={e => { e.stopPropagation(); selectDay(d.day); }}
+                      aria-pressed={isSelected}
+                    >
+                      {d.day}
+                    </button>
+                  </th>
+                  <td>{fmtWeekday(d.day)}</td>
+                  <td className="num end">{d.peak_rt_price ? `$${d.peak_rt_price.value.toFixed(2)}/MWh` : '—'}</td>
+                  <td>{peakWhere}</td>
+                  <td>{gapsText}</td>
+                  <td className="end">
+                    <button
+                      type="button"
+                      className="show-book"
+                      aria-pressed={isSelected}
+                      onClick={e => { e.stopPropagation(); selectDay(d.day); }}
+                    >
+                      {isSelected ? 'Selected' : 'Replay'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </Panel></div>
 
     <div className="replay-grid">

@@ -13,7 +13,7 @@ from collections.abc import Callable
 from contextlib import closing
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Query, Request, Response
 
 from . import ercot, jev, scoring
 from .contracts import CheckResult
@@ -176,6 +176,36 @@ def tick() -> None:
     with _connect() as db, db:
         resolve(db, t)
         publish(db, results)
+
+
+@router.get("/v1/router/history")
+def get_router_history(
+    request: Request, response: Response, limit: int = Query(50, ge=1, le=200)
+) -> dict:
+    origin = os.getenv("GRIDMARKET_CORS_ORIGIN")
+    if origin and request.headers.get("origin") == origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+    response.headers["Vary"] = "Origin"
+    with _connect() as db:
+        rows = db.execute(
+            f"SELECT {COLUMNS} FROM router_results WHERE outcome IS NOT NULL ORDER BY created_at"
+        ).fetchall()
+    events: dict[str, dict] = {}
+    for row in rows:
+        item = dict(zip(COLUMNS.split(", "), row, strict=True))
+        zone, _, delivery_hour = item["subject"].partition(":")
+        outcome = bool(item["outcome"])
+        events[item["subject"]] = {
+            "subject": item["subject"],
+            "zone": zone,
+            "delivery_hour": delivery_hour,
+            "probability": item["probability"],
+            "outcome": outcome,
+            "brier": (item["probability"] - outcome) ** 2,
+            "resolves_at": item["resolves_at"],
+        }
+    ordered = sorted(events.values(), key=lambda e: e["resolves_at"])[-limit:]
+    return {"events": ordered, "count": len(ordered), "limit": limit}
 
 
 @router.get("/v1/router")

@@ -11,6 +11,7 @@ import FirstSteps from '../components/FirstSteps';
 import { contextLink, setViewQuery, useViewQuery } from '../components/navigation';
 import ZoneDetail from '../components/ZoneDetail';
 import ZoneMap, { zoneName, mapZones } from '../components/ZoneMap';
+import LiveGridPanel from '../components/LiveGridPanel';
 
 const PriceChart = lazy(() => import('../components/PriceChart'));
 type Resource = { data: unknown; error: string | null; loading: boolean };
@@ -224,6 +225,7 @@ export default function Overview() {
         <div className="book-body">{product ? <OrderBook symbol={product.symbol}/> : <Empty loading={market.loading} label="No open products"/>}</div>
         <div className="panel-end"><span className="status-dot"/><span>Updates every 2 seconds</span></div>
       </Panel>
+      <LiveGridPanel marketProducts={market.data ?? []} ready={!resources.some(r => r.loading)}/>
       <Panel title="Across the load zones" index="04" className="zones-panel" busy={signals.loading} meta={<><StaleTag res={signals}/><span>SPP · $/MWh</span></>}>
         <div className="zone-body">{zones.length ? <table className="zone-table">
           <thead><tr><th scope="col">Zone</th><th scope="col">RT $/MWh</th><th scope="col" className="trend-column">Last hours</th><th scope="col">Scarcity</th><th scope="col">Published</th></tr></thead>

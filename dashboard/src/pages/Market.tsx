@@ -3,10 +3,11 @@ import { centralTime, contextLink, setViewQuery, useViewQuery } from '../compone
 import Panel from '../components/Panel';
 import { useMarket, useResource } from '../hooks';
 import { usd as dollars } from '../format';
-import type { Activity, MarketProduct } from '../api';
+import { get, type Activity, type MarketProduct } from '../api';
+import { centralStamp, csvName, ExportActions, money, toCsv, utcStamp } from '../csv';
 
 type Level = { price_cents: number; quantity: number };
-type Trade = { id: string; quantity: number; price_cents: number; created_at: string };
+type Trade = { id: string; product_id?: string; quantity: number; price_cents: number; created_at: string };
 /**
  * GET /v1/market/{symbol} returns the product plus `orders`: open depth aggregated per side and price,
  * ascending by price. `book` and `recent_trades` are the older recorded fixture shape; every field is
@@ -31,6 +32,14 @@ function bookOf(detail: ProductDetail | null): { bids: Level[]; asks: Level[] } 
 }
 
 const usd = (cents: number) => dollars(cents / 100);
+
+const TRADE_COLUMNS = ['trade_id', 'product_id', 'zone', 'delivery_hour_utc', 'delivery_hour_central', 'traded_at_utc', 'traded_at_central', 'quantity', 'price_cents', 'price_usd', 'value_cents', 'value_usd', 'source'];
+/** One CSV row per fill; zone and delivery stay empty for a product no longer listed. */
+const tradeCsv = (trades: Trade[], productOf: (t: Trade) => MarketProduct | undefined) => toCsv(TRADE_COLUMNS, trades.map(t => {
+  const p = productOf(t);
+  return [t.id, t.product_id ?? p?.id, p?.zone, utcStamp(p?.delivery_hour), centralStamp(p?.delivery_hour), utcStamp(t.created_at), centralStamp(t.created_at),
+    t.quantity, ...money(t.price_cents), ...money(t.quantity * t.price_cents), 'GridMarket simulated exchange (GET /v1/market/history)'];
+}));
 const time = centralTime;
 
 /** Panel-meta tag: the last poll failed and the panel still shows last-known data. Shared by the phase 1b pages. */
@@ -114,6 +123,11 @@ function Board({ products }: { products: MarketProduct[] }) {
       <p className="context-actions"><a href={contextLink('#/predictions', { zone: selected.zone, hour: selected.delivery_hour })}>Why this forecast?</a> · <a href={contextLink('#/sandbox', { zone: selected.zone, hour: selected.delivery_hour })}>Place an order</a></p>
     </Panel>
     <Panel title="Recent trades" index="03" busy={tradeFeed.loading} meta={<><Stale feed={tradeFeed}/><span>{where}</span></>}>
+      <ExportActions query={`curl -s '${window.location.origin}/v1/market/history?product_id=${encodeURIComponent(selected.id)}'`} exports={[
+        { label: 'Download CSV', disabled: !trades.length, name: () => csvName(`trades-${selected.symbol}`), csv: () => tradeCsv(trades, () => selected) },
+        { label: 'Download CSV · all products', name: () => csvName('trades-all-products'),
+          csv: async () => tradeCsv(await get<Trade[]>('/v1/market/history'), t => products.find(p => p.id === t.product_id)) },
+      ]}/>
       <div className="market-trades" role="region" aria-label="Recent trade entries" tabIndex={0}>
       <FeedBody feed={tradeFeed} reserve="reserve-market-trades">
         {trades.length ? <ul className="row-list">

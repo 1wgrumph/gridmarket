@@ -55,6 +55,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `GET /v1/providers` | market | Public provider summary |
 | `GET /v1/providers/health` | lonestar | Public heartbeat and outage state |
 | `GET /v1/router` | router | Public checks and calibration |
+| `GET /v1/router/history` | router | Public resolved outcomes over time: last forecast per event, oldest first, `limit` 1–200 default 50 |
 | `GET /v1/bots` | bots | Public population |
 | `GET /v1/bots/{id}` | bots | Public bot profile |
 | `GET /v1/bots/diversity` | bots | Public diversity measures |
@@ -89,6 +90,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | Asset: `id`, `account_id`, `provider_id`, `zone`, `capacity_kwh`, `soc_kwh`, `min_reserve_kwh`, `charge_kw`, `discharge_kw` | market | Battery |
 | Prediction response: `zone`, `delivery_hour`, `score`, `level`, `confidence`, `expected_value`, `market_price`, `drivers`, `disclaimer`, `generated_at` | data | `drivers` entries have `factor`, `contribution`, `detail`; `level` is `LOW`/`MEDIUM`/`HIGH`, or `UNAVAILABLE` when a core ERCOT input is missing (S76: missing drivers contribute 0 with an "unavailable" detail, `expected_value` is 0.0 without a DA price) |
 | Router response: `checks`, `brier`, `jev_enabled` | router | Latest results, per-check calibration, Jev flag (S76b: plus `brier_events` per-subject scores using the last forecast per event and `brier_mean` over resolved events, `null` when none) |
+| Router history response: `events`, `count`, `limit` | router | Resolved events oldest first; each has `subject`, `zone`, `delivery_hour`, `probability` (last forecast), `outcome`, `brier`, `resolves_at` |
 | Bot response: `id`, `bot_type`, `blend`, `provider_id`, `cash`, `net_worth`, `pnl`, `trades`, `losses`, `dormant` | bots | Public bot profile |
 | Sandbox key request: `label` | market | `^[A-Za-z0-9 _-]{1,24}$` |
 | Sandbox key response: `account_id`, `api_key`, `label` | market | Key shown once |
@@ -180,7 +182,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 
 | Name | Owning lane | Contract |
 | --- | --- | --- |
-| `#/` Overview, `useMarketStatus`, `useMarketActivity`, `useSignals` | ui | Overview shell and feed |
+| `#/` Overview, `useMarketStatus`, `useMarketActivity`, `useSignals`, `LiveGridPanel` | ui | Overview shell, live grid and feed |
 | `#/market` Market, `useMarket` | pages | Products and book |
 | `#/predictions` Predictions, `usePredictions`, `useRouterChecks` | pages | Scores and checks |
 | `#/providers` Providers, `useProviders`, `useProviderHealth` | providers-page | Provider health; worker health check links to `#provider-worker` (DEC-GM-147) |

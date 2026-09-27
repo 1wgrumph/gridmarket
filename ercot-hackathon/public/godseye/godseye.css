@@ -92,5 +92,6 @@ button.row{width:100%;text-align:left;background:transparent;border-width:0 0 1p
 .help-grid h3{font-size:14px;font-weight:500}.help-grid b{font-weight:500}.help-grid .note{margin-top:6px}
 .help-grid [aria-live]{font-size:12px;border-top:1px solid var(--line);padding-top:8px}
 #helpForecast{font-size:11px;display:grid;gap:6px}#helpHour{min-height:28px}#helpZones{list-style:none;display:grid;gap:6px}
+#helpHourLabel{flex:1;align-self:center}#helpNow:disabled{opacity:.45}
 .help-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.help-chips .badge{color:var(--text);background:var(--secondary)}
 @media(max-width:900px){#helpToggles button{min-height:40px}}

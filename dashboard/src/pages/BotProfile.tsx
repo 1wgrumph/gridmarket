@@ -6,6 +6,7 @@ import { useBotProfile } from '../hooks';
 import { usd } from '../format';
 import type { Bot } from '../api';
 import { FeedBody, PageHeading, Stale } from './Market';
+import { centralStamp, csvName, ExportActions, money, toCsv, utcStamp } from '../csv';
 
 /** Contract Bot fields plus the profile extras; extras may be absent, so they render as "—". */
 type Profile = Bot & Partial<{
@@ -20,6 +21,16 @@ const pct = (p?: number) => p === undefined ? '—' : `${Math.round(p * 100)}%`;
 const day = centralTime;
 const tick = { fill: 'var(--muted)', fontSize: 11 };
 const tooltip = { background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', fontSize: 12, borderRadius: 'var(--r-2)' };
+
+const BOT_SOURCE = 'GridMarket simulated bot population (GET /v1/bots/{id})';
+/** Balance points as served, then the settled P&L total stamped with the export time: the API serves no per-point P&L. */
+function botCsv(b: Profile) {
+  const now = new Date().toISOString();
+  return toCsv(['bot_id', 'record', 'at_utc', 'at_central', 'cents', 'usd', 'source'], [
+    ...(b.balance_history ?? []).map(p => [b.id, 'balance', utcStamp(p.at), centralStamp(p.at), ...money(p.balance * 100), BOT_SOURCE]),
+    [b.id, 'settled_pnl_total', utcStamp(now), centralStamp(now), ...money(typeof b.pnl === 'number' ? b.pnl * 100 : null), BOT_SOURCE],
+  ]);
+}
 
 function Facts({ rows }: { rows: [string, ReactNode][] }) {
   return <dl className="facts">
@@ -82,6 +93,8 @@ export default function BotProfile({ id }: { id: string }) {
           ]}/>
         </Panel>
         <Panel title="Balance history" index="05" className="span-2" meta={meta}>
+          <ExportActions query={`curl -s '${window.location.origin}/v1/bots/${encodeURIComponent(b.id)}'`}
+            exports={[{ label: 'Download CSV', name: () => csvName(`bot-${b.id}`), csv: () => botCsv(b) }]}/>
           <div className="chart" role="img" aria-label={`Simulated balance, ${b.balance_history?.length ?? 0} points.`}>
             {b.balance_history?.length ? <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <LineChart data={b.balance_history} margin={{ top: 24, right: 36, left: 0, bottom: 2 }}>

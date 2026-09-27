@@ -8,6 +8,8 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 // @ts-ignore TS2732: resolveJsonModule is off in the frozen tsconfig; vitest/vite load JSON at runtime.
 import fixture from "../fixtures/replay.json";
+// @ts-ignore TS2732: resolveJsonModule is off in the frozen tsconfig; vitest/vite load JSON at runtime.
+import catalogDays from "../fixtures/catalog-days.json";
 import App from "../App";
 import Replay from "./Replay";
 
@@ -166,4 +168,89 @@ describe("S71 Replay page (fixture: replay.json)", () => {
     });
     expect(await screen.findByRole("heading", { name: /^replay$/i })).toBeTruthy();
   });
+
+  describe("X2b Day picker", () => {
+    // @ts-ignore TS2732
+    const multiDays = catalogDays as { days: Array<{ day: string; gaps: string[]; peak_rt_price: { value: number; point: string } }> };
+
+    beforeEach(() => {
+      // Return the full 6-day catalog for X2b tests
+      const originalFetch = fetchMock;
+      fetchMock = vi.fn(async (input: string, init?: { method?: string; body?: string }) => {
+        const path = (input.startsWith("http") ? new URL(input).pathname : input).split("?")[0];
+        if (path === "/v1/replay/days") {
+          return { ok: true, status: 200, json: async () => multiDays };
+        }
+        return originalFetch(input, init);
+      });
+      vi.stubGlobal("fetch", fetchMock);
+    });
+
+    it("lists each catalogued day with date, weekday, peak real-time price, location, and data gaps in the day picker", async () => {
+      render(<Replay />);
+      const header = await screen.findByRole("region", { name: /replay day/i });
+      const table = await within(header).findByRole("table", { name: /catalogued replay days/i });
+
+      // Verify each catalogued day is listed with expected details
+      for (const item of multiDays.days) {
+        const row = await within(table).findByRole("row", { name: new RegExp(item.day) });
+        expect(row).toBeTruthy();
+        // Peak price formatted
+        expect(within(row).getByText(new RegExp(`\\$${item.peak_rt_price.value.toFixed(2)}`))).toBeTruthy();
+        // Location (either LZ point or human name)
+        expect(within(row).getByText(new RegExp(item.peak_rt_price.point))).toBeTruthy();
+        // Gaps
+        const gapsExpected = item.gaps.length ? item.gaps.join(", ") : "None";
+        expect(within(row).getByText(new RegExp(gapsExpected, "i"))).toBeTruthy();
+      }
+
+      // Check weekdays specifically for key days
+      const wedRow = await within(table).findByRole("row", { name: /2026-08-26/ });
+      expect(within(wedRow).getByText(/Wednesday/i)).toBeTruthy();
+      const sunRow = await within(table).findByRole("row", { name: /2026-08-23/ });
+      expect(within(sunRow).getByText(/Sunday/i)).toBeTruthy();
+    });
+
+    it("defaults to 2026-08-26 when no day parameter is in the URL", async () => {
+      window.location.hash = "#/replay";
+      render(<Replay />);
+      const header = await screen.findByRole("region", { name: /replay day/i });
+      const table = await within(header).findByRole("table", { name: /catalogued replay days/i });
+      const row26 = await within(table).findByRole("row", { name: /2026-08-26/ });
+      // Row or select button is selected
+      expect(row26.className).toContain("selected");
+      // And URL hash updates with ?day=2026-08-26
+      await waitFor(() => expect(window.location.hash).toContain("day=2026-08-26"));
+    });
+
+    it("selecting a day from the picker updates the URL (?day=) and reruns the replay", async () => {
+      window.location.hash = "#/replay?day=2026-08-26";
+      render(<Replay />);
+      const header = await screen.findByRole("region", { name: /replay day/i });
+      const table = await within(header).findByRole("table", { name: /catalogued replay days/i });
+
+      // Click to select 2026-07-20
+      const targetRow = await within(table).findByRole("row", { name: /2026-07-20/ });
+      const selectBtn = within(targetRow).getByRole("button", { name: /replay|select/i });
+      fireEvent.click(selectBtn);
+
+      // URL should update to ?day=2026-07-20
+      await waitFor(() => expect(window.location.hash).toContain("day=2026-07-20"));
+
+      // POST /v1/replay must be called with day: "2026-07-20"
+      await waitFor(() => {
+        const posts = fetchMock.mock.calls.filter(([url, init]) =>
+          String(url).includes("/v1/replay") && init?.method === "POST"
+        );
+        const day20Calls = posts.filter(([, init]) => {
+          try {
+            const body = JSON.parse(String(init?.body ?? "{}"));
+            return body.day === "2026-07-20";
+          } catch { return false; }
+        });
+        expect(day20Calls.length).toBeGreaterThan(0);
+      });
+    });
+  });
 });
+

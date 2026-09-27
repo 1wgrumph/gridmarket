@@ -1,0 +1,11 @@
+{
+  "shape": "GET /v1/signals/history row {interval_start, interval_end, value, unit, published_at, stale} per S81b (gridmarket/lane-esr 2bd168a: CONTRACTS.md, backend/gridmarket_server/ercot.py history(), backend/tests/test_s81b_history.py); 5-minute intervals per parse_snapshot _store(..., 5, ...); stamps at exact 5-minute marks (real polls drift by seconds)",
+  "shape_evidence": "real row from the lane-esr backend store via ercot.signals.history(), /tmp/gm-x4-visual/capture/snap-HB_NORTH.json, sha256 3451ef55d544e167e7efac3f316d0e0e6f35cef87d31a865b357c70f3b2764f1",
+  "values": "SYNTHETIC deterministic walk value(h,q)=round(25+h*0.5+q*0.1+(h%5)*0.33,2), $25.00-$38.59; magnitude band checked against the real HB_NORTH $28.16 in the worker snapshot captured 2026-09-26T22:37:59Z (sha256 4cf468ab2395b4b8789e123757e9f57db6798a05c16175ae10ab72c66e7bd58e)",
+  "stale": "true on all 288 rows, mirroring the real backend: ercot._data_age counts interval age, so every row of the past window [2026-09-25T22:00Z, 2026-09-26T22:00Z) is stale as served at the 2026-09-26T22:58:59Z reference time",
+  "why_synthetic": "lane-esr 2bd168a answers SNAPSHOT history over HTTP with 422 report_id allowlist rejection (captured: /tmp/gm-x4-visual/capture/hubs-422.json), so no real 24-hour capture exists and 24h of 5-minute polls cannot be replayed retroactively",
+  "generator": "/tmp/gm-x4-visual/capture/gen-actuals.py",
+  "generated_at": "2026-09-27T00:45:26Z",
+  "sha256": "b4b6bac42b8d35555b5c0df8271de1909e1035656c929dc1816dbde9df17fa5d",
+  "transformation": "None after generation."
+}
