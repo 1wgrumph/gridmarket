@@ -14,7 +14,7 @@ function ctNow() {
 
 function rows(res) {
   if (!res || !Array.isArray(res.data)) return [];
-  const names = (res.fields || []).map((f) => f.name);
+  const names = (res.fields || []).map((f) => (typeof f === "string" ? f : f?.name?.name || f?.name));
   return res.data.map((r) => (Array.isArray(r) ? Object.fromEntries(names.map((n, i) => [n, r[i]])) : r));
 }
 

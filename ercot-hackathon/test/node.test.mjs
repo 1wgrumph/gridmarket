@@ -8,7 +8,7 @@ const points = [...new Set(plants.plants.flatMap((plant) => plant.nodes))].sort(
 // Committed report rows, using the public API's fields[].name envelope.
 const report = (name) => {
   const data = JSON.parse(readFileSync(new URL(`../../backend/tests/fixtures/ercot/${name}.json`, import.meta.url)));
-  return { ...data, fields: data.fields.map((name) => ({ name })) };
+  return { ...data, fields: data.fields.map((f) => (typeof f === "string" ? { name: f } : f)) };
 };
 const RT = report("np6-905-cd");
 const DA = report("np4-190-cd");
