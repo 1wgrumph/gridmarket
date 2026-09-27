@@ -3,8 +3,7 @@
 **Texas home batteries, paid to help when the grid is tight.**
 A simulated flexibility exchange running on real ERCOT conditions.
 
-Start with the [local setup](../README.md#run-it-locally), then open
-<http://127.0.0.1:8000/>. These three minutes begin with the app running.
+Open <https://came-grace-cycling-ala.trycloudflare.com> (or <http://127.0.0.1:8000/> if running it yourself with the [local setup](../README.md#run-it-locally)). These three minutes begin with the app running.
 
 1. **0:00 — Monitor.** On **Overview**, look at the Texas load zones and
    exchange tape. The population is simulated; the tape records API activity.
@@ -23,7 +22,7 @@ Start with the [local setup](../README.md#run-it-locally), then open
 4. **1:50 — Respond.** Open **Judge sandbox** and click **Get a sandbox key**.
    You receive $1,000 in simulated funds. Keep the page open, copy your key
    privately, then run the [SDK example](../README.md#build-a-trading-bot-or-agent)
-   in a terminal. Enter the key at its prompt. It selects a currently open
+   in a terminal (use `https://came-grace-cycling-ala.trycloudflare.com` as the base URL for the SDK, or `http://127.0.0.1:8000` for a local run). Enter the key at its prompt. It selects a currently open
    product and submits one buy order at 10 simulated cents.
 5. **2:30 — Report.** Return to **Your orders** on the sandbox page. Notice
    the order status; acceptance does not guarantee a fill. Open **Market**
