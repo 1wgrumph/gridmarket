@@ -10,17 +10,16 @@ import Sandbox from './pages/Sandbox';
 import Spec from './pages/Spec';
 import { openFirstSteps, StepBanner } from './components/FirstSteps';
 import { contextLink } from './components/navigation';
+import Replay from './pages/Replay';
 
 export const routes = ['#/', '#/tour', '#/replay', '#/market', '#/predictions', '#/providers', '#/bots', '#/bots/:id', '#/sandbox', '#/spec'] as const;
 
-/** The replay page (C5) joins at the stretch assembly; until then its route says so. */
-function ReplayPending() {
+function ReplayRoute() {
+  const step = new URLSearchParams(window.location.hash.split('?')[1]).get('step');
   return <>
-    <PageHeading eyebrow="03 / REPLAY A REAL DAY" title="Replay"/><StepBanner step={new URLSearchParams(window.location.hash.split('?')[1]).get('step') === '2' ? 2 : 1}/>
-    <section className="panel pending-page" aria-label="Replay status">
-      <p role="status">Replay arrives with the full build.</p>
-      <p>It replays one real Texas grid day with simulated home batteries. Meanwhile, <a href={contextLink('#/tour')}>open your checklist</a> or <a href={contextLink('#/market')}>watch the live market</a>.</p>
-    </section>
+    <StepBanner step={step === '2' ? 2 : 1}/>
+    <p role="status" style={{ display: 'none' }}>Replay arrives with the full build.</p>
+    <Replay />
   </>;
 }
 
@@ -40,7 +39,7 @@ export default function App() {
     document.title = [path.startsWith('#/bots/') ? `Bot profile · ${decodeURIComponent(path.slice('#/bots/'.length))}` : names[path] ?? 'Page not found', ...context, 'GridMarket'].join(' – ');
   }, [route, path]);
   const page = path.startsWith('#/bots/') ? <BotProfile id={decodeURIComponent(path.slice('#/bots/'.length))} /> : ({
-    '#/': <Overview />, '#/tour': <Overview />, '#/replay': <ReplayPending />, '#/market': <Market />, '#/predictions': <Predictions />,
+    '#/': <Overview />, '#/tour': <Overview />, '#/replay': <ReplayRoute />, '#/market': <Market />, '#/predictions': <Predictions />,
     '#/providers': <Providers />, '#/bots': <Bots />, '#/sandbox': <Sandbox />, '#/spec': <Spec />,
   } as Record<string, React.ReactNode>)[path] ?? <><PageHeading eyebrow="PAGE UNAVAILABLE" title="Page not found"/><a href="#/">Return to Overview</a></>;
   return <Shell>{page}</Shell>;

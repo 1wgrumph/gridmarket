@@ -189,7 +189,7 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `#/sandbox` Sandbox | pages | Judge key onboarding |
 | `#/spec` Spec | pages | Specification link |
 | `#/tour` First-run checklist redirect | ui | Opens the first-run checklist and replaces the hash with `#/?start=1` on Overview |
-| `#/replay` Replay deep link | ui | Real-day replay; honest pending page until stretch assembly; carries `?day=`, `?zone=`, `?hour=` |
+| `#/replay` Replay | replay-ui | Historical day replay, scoreboard, lanes; carries `?day=`, `?zone=`, `?hour=` |
 | `?zone=`, `?hour=`, `?day=` view context | ui | Carried across Overview/Market/Predictions/Replay links; closing a zone keeps the carried hour |
 | `VITE_GODSEYE_URL` (renames `VITE_VIEWS_URL`) | ui | Complete God's Eye Worker URL; the link is hidden when unset |
 | `useResource` | foundation | Two-second polling, loading and error state |
@@ -208,3 +208,156 @@ Each row is a name frozen for the listed owning lane. A change requires a dated 
 | `NOT_FOUND`, `BAD_REQUEST`, `INTERNAL_ERROR` | market | General HTTP errors |
 | `VALIDATION_ERROR`, `SANDBOX_CAP` | market | 422 / 503 sandbox rejection |
 | `BOT_CAP` | bots | 200-bot cap |
+
+## Flex core (C2, DEC-GM-113)
+
+`gridmarket_server.flex` exports `Battery`, `StepResult`, `Observation`,
+`FeedWindow`, `InformationSet`, `InformationView`, `Decision`, `DecisionInput`,
+`FixedSchedule`, `PriceBased`, and `EsrInformed`. This is simulated dispatch,
+not ERCOT clearing or a live order executor.
+
+- Amendment 5: stored SoC/reservations are DC kWh; power and household load are
+  AC kW. `Battery.transition(...)` is pure; `step(...)` applies its result only
+  to the caller-owned battery. Both use `E_next = E + sqrt(eta)*C*h - D*h/sqrt(eta)`.
+  Commercial discharge subtracts `reserved_dc_kwh` before computing feasibility.
+  The engine owns reservation creation/release; release the reservation being
+  delivered before its transition, retaining all other outstanding reservations.
+  `forced=True` is diagnostic only: any actual reserve breach invalidates the result.
+  Household load affects import/export, never implicitly depletes the battery.
+  No solar, standby loss or degradation is modelled. No money or monetary
+  rounding is performed in this layer.
+- Amendments 3/9: `InformationSet.at(time, feed_interrupts=...)` returns immutable,
+  deduplicated observations with known publication and availability and
+  `available_at <= time`. Unknown availability and retrospective/settlement-only
+  quality are excluded. The latest eligible version wins; conflicting versions
+  at identical timestamps are rejected. Active source interruptions suppress new
+  arrivals and expire known actuals at 30 minutes from interval end; known DAM
+  remains visible. Recovery restores then-available observations. The returned
+  view exposes neither the backing dataset nor future disruption windows.
+- Amendment 6: each policy exposes keyword-only `decide(battery, information,
+  household_load_kw, config, decision_time, feed_interrupts=())`; time must open
+  a UTC quarter. `config.zone` defaults to `LZ_HOUSTON` and
+  `config.current_commitment_kw` defaults to zero; a current delivery suppresses
+  charging. Policies do not mutate battery state or read clocks, RNG, live
+  stores or the network. Reasons describe requests, with acceptance/delivery
+  pending. `hold` and `preserve_backup` neither dispatch nor cancel commitments.
+  Returned config includes a complete `state_snapshot` (including zero load and
+  reservations); decision inputs carry all DAM observations used by thresholds.
+- FixedSchedule charges 00:00–06:00 Central, offers for next-quarter delivery
+  into the DAM procurement schedule, and self-supplies 17:00–21:00 when not
+  delivering. PriceBased requires a complete eligible local-day hourly DAM
+  vector (23/24/25 hours), uses nearest-rank Q25/Q75, offers only into
+  procurement quarters at delivery-hour DAM >= Q75, self-supplies at latest
+  eligible RT >= Q75, charges at current-hour DAM <= Q25, and holds for
+  overlapping quantiles or unavailable DAM. EsrInformed (Battery-aware, A16 as
+  amended by DEC-GM-136) keeps the PriceBased offer rule with full feasible
+  offers, never offers or self-supplies below reserve plus the
+  remaining-procurement budget (the home's 25%-of-rated share per remaining
+  quarter, from D-1 DAM), self-supplies only surplus at RT >= Q75, and charges
+  at current-hour DAM <= median. Missing RT/ESR explicitly records a PriceBased
+  fallback. This is a simulated heuristic, not an ERCOT scarcity declaration.
+  Offers cannot cross the local day boundary.
+
+S69 owns procurement, accepted commitments, settlement, breach counting, and the
+Decimal day-component ledger with HALF_EVEN posting. C2 does not implement those
+APIs or claim independent review, real-source qualification, or replay acceptance.
+
+## Replay engine and API (C3, DEC-GM-113; A16 DEC-GM-127, amended DEC-GM-136)
+
+`gridmarket_server.replay` runs a labelled simulated peak-flex procurement
+programme on captured ERCOT observations; it is not ERCOT clearing. One
+catalogued day per run, stepped at local-day 15-minute quarters (92/96/100).
+Each strategy gets an independently cloned fleet; demand per procurement
+quarter is 25% of the fleet's initial rated AC discharge kW, fixed across
+strategy copies. Under A16 (DEC-GM-127, Orchestrator as planning owner), the
+programme uses all quarters of the zone's four highest DAM hours for D,
+selected from the complete eligible vector at day start (published D−1);
+ties use the earlier UTC hour, including repeated DST hours. The schedule
+is frozen for the run and returned as `procurement_hours` (UTC hour starts).
+Demand is zero outside these hours. Offers
+target the next quarter; acceptance is pro rata with deterministic
+0.000001-kWh floor and lexicographic residual; accepted energy is reserved
+immediately (AC kWh / eta_d) and released exactly once after settlement.
+Settlement truth is independent of interrupted agent feeds. Money posts once
+per strategy/day ledger component in integer cents (HALF_EVEN); net =
+energy − charging + bonus − penalty + terminal mark − opening mark; a
+no-action run scores zero. Breaches invalidate the run; shortfalls above
+0.000001 kWh are failed commitments with cause. `provider_offline` blocks new
+commitments and dispatch while retaining SoC and liabilities;
+`feed_interrupt` hides new observations (actuals expire 30 minutes after
+interval end; published DAM stays valid) and never erases settled state.
+
+A16 policies use the same parameters on every day, with no future RT inputs:
+
+- `fixed_schedule`: offer for next-quarter procurement; otherwise charge
+  00:00–06:00 Central and self-supply 17:00–21:00 when not delivering.
+- `price_based`: retain A6 nearest-rank DAM Q25/Q75 (overlap means hold).
+  `offer_flex` is issued only when the target quarter is a procurement
+  quarter, at next-quarter delivery-hour DAM >= Q75; in every other quarter
+  the policy evaluates self-supply, charge or hold, so an unacceptable
+  offer never blocks self-supply. When no offer is made, self-supply at
+  latest eligible RT >= Q75, otherwise charge at current-hour DAM <= Q25.
+  Offer has precedence over self-supply and charge.
+- `esr_informed`, displayed as **Battery-aware** (A16 as amended by DEC-GM-136):
+  the PriceBased offer rule (procurement quarters only, delivery-hour
+  DAM >= Q75) with the full feasible offer each procurement quarter, capped by
+  rated power; offers and self-supply never leave less than reserve plus the
+  remaining-procurement budget (the home's 25%-of-rated share per remaining
+  quarter, from D-1 DAM). Self-supply only from surplus above reserve plus
+  budget at latest eligible RT >= DAM Q75; charge at current-hour DAM <= DAM
+  median (Q50, nearest rank). Q25 >= Q75 overlap holds, as PriceBased. ESR
+  trends do not add offers. Missing eligible ESR/RT records a PriceBased
+  fallback. Each run returns these rules under `strategy_rules`.
+
+`self_supply` serves at most the current home's simulated AC load and never
+exports. Current commitments settle first and block self-supply and charging
+in that quarter; outstanding energy reservations also constrain feasibility.
+Its avoided-import value is included once in `energy_value_cents` at RT
+SPP/10 cents per kWh; it earns no flexibility bonus. `self_supply_kwh` is
+separate from committed `delivered_kwh`/`energy_delivered_kwh`.
+
+`fleet.household_load` is a timestamped AC kW profile shared by **each home**,
+not a fleet total or measured ERCOT consumption. Explicit profiles remain
+supported. If omitted, the materialized simulated Texas summer profile is
+0.7 kW 00–06, 1.0 kW 06–10, 1.2 kW 10–17, 2.0 kW 17–21, and 1.4 kW
+21–24 Central: 28.8 kWh / 24 h = 1.2 kW average, evening peak 2 kW.
+DST days repeat/omit local quarters; the profile is labelled simulated and
+returned with timestamps in the binding. No population weights are used.
+
+- `POST /v1/replay` (day, 1–3 distinct strategies, 1–1000 assets, 0–20
+  disruptions, 2 MiB, 6 runs/minute/client, 2 concurrent computations) returns
+  canonical JSON: `run_id` (SHA-256 of the binding), binding, scoreboard and
+  timeline. Existing keys remain; `timeline[].decisions` and `settlements`
+  now contain only `sample_asset_id` (the first request asset). Full decisions
+  include state/config and eligible inputs; `dam_vector` is a comma-separated
+  hourly vector from `interval_start`, with conservative latest publication
+  and availability timestamps for the vector. `fleet_timeline[strategy]`
+  contains each quarter's closing `soc_kwh`, `charge_kw`, `offered_kwh`,
+  `accepted_kwh`, `delivered_kwh`, `self_supply_kwh`, `shortfall_kwh`,
+  `failed_commitments`, and settlement `spp` (USD/MWh). Offers/acceptances
+  belong to the decision quarter and target the next; delivery belongs to
+  the current quarter. Scoreboard ledger totals and per-asset start/end SoC
+  remain. The 1,000-home three-strategy run body is under 2 MB.
+  Identical requests return byte-identical bodies without timing
+  keys; the latest 20 completed runs are retained. Oversize is 413, invalid
+  422, rate/concurrency 429, unknown day or run 404.
+- `GET /v1/replay/{run_id}` returns the stored immutable body. Reset clears
+  playback state; rerun reuses the same inputs.
+- `GET /v1/replay/{run_id}/decisions?strategy=&asset=&start=&end=` returns
+  `{run_id, decisions}` for one known strategy/home, filtered by decision
+  time in UTC `[start,end)`. All four parameters are required; offset-aware
+  bounds must lie within D and be increasing. At most 500 rows (a local day
+  has at most 100). Invalid selection/range is 422; evicted/unknown run is
+  404. Other homes are deterministically recomputed from retained immutable
+  inputs under the two-computation concurrency bound; this costs a replay
+  of that strategy. No silent truncation or separate unbounded trace store.
+- `GET /v1/replay/days` lists catalogued days with quarters, gaps, synthetic
+  flags, availability status and `peak_rt_price` (point, interval, value).
+- Availability: `strict` when every series carries real `available_at`;
+  otherwise labelled `assumed` (DAM 13:30 Central D−1, RT 5 minutes after
+  interval end, load 20 minutes after). Every run carries
+  `availability_mode` plus the assumption text; the S67 2026-08-26 dataset is
+  assumed-mode because ERCOT archives do not record original publication
+  times. Datasets use `$/MWh` archive labels normalized to the `USD/MWh`
+  policy contract. Every run and day states: "Historical ERCOT observations;
+  simulated households, batteries, procurement and outcomes."
