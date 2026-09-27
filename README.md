@@ -38,6 +38,9 @@ Start the app below, then follow [Your first 3 minutes](docs/judges.md) to monit
 - **The real day, one click:** <https://ercot-hackathon.1wgrumph.workers.dev/replay/#start> replays 26 Aug 2026 and stops on Houston's $780.46/MWh spike.
 - The team Worker at <https://ercot-hackathon.1wgrumph.workers.dev> runs this repository's `main` branch (v1.0.0 Worker, God's Eye with the help-the-grid layer and past range, and the `/replay/` real-day tour added from Jordan Hill's replay page); only the replay page's help windows still read `/api/help` from the demo Worker at `ercot-hackathon.jordan-691.workers.dev`, whose source is on the [`jordaaan` branch](https://github.com/1wgrumph/gridmarket/tree/jordaaan/ercot-hackathon).
 - **ERCOT data edge (Worker API):** <https://ercot-hackathon.1wgrumph.workers.dev/api/snapshot>
+- **Project hub (demo video, 3D map, the loop, stack, docs, submission status):** <https://hack.organizedai.vip/gridmarket/>
+- **Grid Planet, ERCOT on real data:** <https://ercot-hackathon.jordan-691.workers.dev/planet/> puts all 643 ERCOT plants of 10 MW and up from EIA-860 on a real Texas outline, with live hub prices, help-the-grid zones, weather-zone temperatures, wind and solar output, and the sun where it is over Texas right now. Click any plant for its units and ERCOT node.
+- **Field guide:** <https://guide.organizedai.vip/gridmarket/> walks the evening price pattern, the order boundary, the data, the score, the replay and the bot, with a beginners edition.
 
 The market runs on the team's machine through a Cloudflare tunnel during judging; if it is unreachable, the 3-minute local run below gives the same product.
 
@@ -269,6 +272,12 @@ hostname. The Compose `tunnel` profile runs `cloudflared` with
 `GM_TUNNEL_UID` set to your user ID and mounts
 `${GM_TUNNEL_DIR:-~/.cloudflared}` read-only. It forwards to `http://app:8000`;
 no inbound public port is opened.
+
+## Mascot
+
+<img src="docs/images/nsrs.svg" alt="NSRS, a cartoon night-shift dinosaur with a flashing battery belly" width="180" align="right">
+
+**NSRS wakes up when the sun goes down.** Named for ERCOT's Non-Spinning Reserve Service, the capacity that has to be ready within 30 minutes. NSRS keeps his battery three-quarters full for the evening, because that's when Texas needs him.
 
 ## Design
 
