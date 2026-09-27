@@ -633,3 +633,7 @@ thead th{font-weight:500;letter-spacing:.02em}
 
 .performance-summary{min-height:80px}
 @media(max-width:760px){.performance-summary{min-height:112px}}
+.export-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:0 18px 12px}
+.export-actions>.action-secondary{padding:8px 14px;font-size:13px}
+.export-actions>[role=status]{flex-basis:100%;margin:0;min-height:1lh;font-size:12px;overflow-wrap:anywhere}
+@media(max-width:760px){.export-actions{padding-inline:14px}}

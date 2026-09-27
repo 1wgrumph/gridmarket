@@ -7,10 +7,14 @@ import { useMarket, useResource } from '../hooks';
 import Panel from '../components/Panel';
 import { get, send, type ApiError, type MarketProduct } from '../api';
 import { FeedBody, PageHeading, Stale } from './Market';
+import { centralStamp, csvName, ExportActions, money, toCsv, utcStamp } from '../csv';
 
 type SandboxKey = { account_id: string; api_key: string; label: string };
 type Order = { id: string; product_id: string; side: string; quantity: number; remaining_qty: number; price_cents: number; status: string; created_at: string };
 
+const ORDER_COLUMNS = ['order_id', 'product_id', 'side', 'quantity', 'remaining_qty', 'price_cents', 'price_usd', 'status', 'placed_at_utc', 'placed_at_central', 'source'];
+const orderCsv = (orders: Order[]) => toCsv(ORDER_COLUMNS, orders.map(o => [o.id, o.product_id, o.side, o.quantity, o.remaining_qty, ...money(o.price_cents), o.status,
+  utcStamp(o.created_at), centralStamp(o.created_at), 'GridMarket Judge sandbox, simulated funds (GET /v1/orders)']));
 const reason = (e: unknown) => (e as ApiError)?.error?.message ?? (e instanceof Error ? e.message : String(e));
 // 44px touch targets at every width; the custom property inherits into the Astryx buttons.
 const tall = { '--size-element-md': '44px' } as CSSProperties;
@@ -65,6 +69,8 @@ function Orders({ apiKey, label, refresh, index }: { apiKey: string; label: stri
   const feed = { data: orders, error, loading: orders === null && error === null };
   return <Panel title="Your orders" index={index} className="span-all" busy={feed.loading} meta={<><Stale feed={feed}/><span>UPDATES EVERY 2 SECONDS</span></>}>
     <p className="panel-copy">Orders placed with the key labelled <strong>{label}</strong>.</p>
+    <ExportActions query={`curl -s -H "Authorization: Bearer $GRIDMARKET_API_KEY" '${window.location.origin}/v1/orders'`}
+      exports={[{ label: 'Download CSV', disabled: !orders?.length, name: () => csvName('sandbox-orders'), csv: () => orderCsv(orders ?? []) }]}/>
     <FeedBody feed={feed}>
       {orders?.length ? <div className="table-scroll"><table className="data-table">
         <thead><tr><th scope="col">Order</th><th scope="col">Placed</th><th scope="col">Product</th><th scope="col" className="end">Details</th><th scope="col">Status</th></tr></thead>
