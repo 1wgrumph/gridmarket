@@ -3,6 +3,7 @@
 
 import { buildSnapshot } from "./snapshot.js";
 import { buildNodes, SP_PATTERN } from "./node.js";
+import { buildHelp } from "./help.js";
 
 const TOKEN_URL =
   "https://ercotb2c.b2clogin.com/ercotb2c.onmicrosoft.com/B2C_1_PUBAPI-ROPC-FLOW/oauth2/v2.0/token";
@@ -136,6 +137,15 @@ export default {
         if (missing.length) {
           return json({ error: "Worker secrets not set", secretsMissing: missing }, 503);
         }
+      }
+
+      // Help the grid: demand now and upcoming help windows per zone (ERCOT data only)
+      if (p === "/api/help") {
+        const hit = url.searchParams.has("fresh") ? null : await env.CACHE.get("help:v1");
+        if (hit) return json(JSON.parse(hit), 200, { "x-cache": "HIT" });
+        const out = await buildHelp((path, params) => ercotJSON(env, path, params));
+        await env.CACHE.put("help:v1", JSON.stringify(out), { expirationTtl: 900 });
+        return json(out, 200, { "x-cache": "MISS" });
       }
 
       // Live price at one or more settlement points, for the plant drill-down
