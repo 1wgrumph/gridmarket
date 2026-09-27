@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.0] - 2026-09-27
+
+### Improvements (1)
+- GridMarket now provides a simulated flexibility exchange on real ERCOT conditions: replay of real Texas grid days with simulated home batteries, the live market with bots and a judge sandbox, the God's Eye grid map, the Python SDK and MCP server, and real ERCOT responses verified through the parsers.
+
+### Fixes (1)
+- Fixed the adversary burst test so it now verifies the rate limit on the limiter's own clock, so the test suite gives the same result on fast and busy machines.
+
 ## [0.5.0] - 2026-09-27
 
 ### Improvements (6)

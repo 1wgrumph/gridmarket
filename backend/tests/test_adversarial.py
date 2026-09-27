@@ -11,6 +11,7 @@ import threading
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -129,8 +130,14 @@ def test_seit_gm_adv_01_idempotent_replay(market) -> None:
     assert len(after_first[1]) == 1
 
 
-def test_seit_gm_adv_01_burst_rate_limit(market) -> None:
+def test_seit_gm_adv_01_burst_rate_limit(market, monkeypatch: pytest.MonkeyPatch) -> None:
+    from gridmarket_server import api
+
     client, db_path = market
+    # Hold the limiter's clock still (DEC-GM-153): all 50 orders land in the same
+    # instant of limiter time, so the result never depends on machine speed.
+    frozen = time.monotonic()
+    monkeypatch.setattr(api, "time", SimpleNamespace(monotonic=lambda: frozen))
 
     async def burst() -> list[httpx.Response]:
         async with httpx.AsyncClient(base_url=client.base_url, timeout=5) as sender:
@@ -153,16 +160,14 @@ def test_seit_gm_adv_01_burst_rate_limit(market) -> None:
                 )
             )
 
-    start = time.monotonic()
     responses = asyncio.run(burst())
-    assert time.monotonic() - start < 1, "burst must contain 50 orders in one second"
+    accepted = [response for response in responses if response.status_code in (200, 201)]
     limited = [response for response in responses if response.status_code == 429]
-    assert limited
+    # A member key has burst 40 and no refill at a frozen clock: exactly 40 pass.
+    assert (len(accepted), len(limited)) == (40, 10)
     assert all(response.json()["error"]["code"] == "RATE_LIMITED" for response in limited)
-    assert all("Retry-After" in response.headers for response in limited)
-    assert len(account_state(db_path)[1]) == sum(
-        response.status_code in (200, 201) for response in responses
-    )
+    assert all(response.headers.get("Retry-After") == "1" for response in limited)
+    assert len(account_state(db_path)[1]) == len(accepted)
     assert rows(db_path, "SELECT cash_cents, flex_credits FROM accounts WHERE id='adversary'") == [
         (100000, 0)
     ]
