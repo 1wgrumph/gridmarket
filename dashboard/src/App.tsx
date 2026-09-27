@@ -34,7 +34,9 @@ export default function App() {
     if (path === '#/tour') { openFirstSteps(); window.location.replace(contextLink('#/', { start: '1' })); return; }
     const names: Record<string, string> = { '#/': 'Overview', '#/replay': 'Replay', '#/market': 'Market', '#/predictions': 'Predictions', '#/providers': 'Providers', '#/bots': 'Bots', '#/sandbox': 'Judge sandbox', '#/spec': 'Specification' };
     const params = new URLSearchParams(route.split('?')[1]);
-    const context: string[] = []; params.forEach((value, key) => context.push(`${key}: ${value}`));
+    const context: string[] = [];
+    // Replay keeps scenario controls in its URL; its title names only the day and zone.
+    params.forEach((value, key) => { if (path !== '#/replay' || key === 'day' || key === 'zone') context.push(`${key}: ${value}`); });
     document.title = [path.startsWith('#/bots/') ? `Bot profile · ${decodeURIComponent(path.slice('#/bots/'.length))}` : names[path] ?? 'Page not found', ...context, 'GridMarket'].join(' – ');
   }, [route, path]);
   const page = path.startsWith('#/bots/') ? <BotProfile id={decodeURIComponent(path.slice('#/bots/'.length))} /> : ({

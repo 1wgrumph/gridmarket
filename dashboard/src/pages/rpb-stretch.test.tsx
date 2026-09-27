@@ -121,16 +121,24 @@ describe('RP-B Replay (fixture: replay.json)', () => {
   });
 
   it('RPB-F1d an unchanged Rerun the day does not mark step 2', async () => {
+    // ORC-8 (DEC-GM-152): each wait keys on observable state (the nth one-home value
+    // POST answered and the panel idle again), never on elapsed time. The ceiling only
+    // bounds a genuine hang; a loaded machine just takes longer to reach the state.
+    const HANG = { timeout: 30_000 };
+    const valuePosts = () => replayPosts().filter(p => (p.fleet.assets as unknown[]).length === 1).length;
     render(<Replay />);
-    const panel = await screen.findByRole('region', { name: /your turn/i });
-    await within(panel).findByText(/\+\$0\.81/);
+    const panel = await screen.findByRole('region', { name: /your turn/i }, HANG);
+    const settled = (posts: number) => waitFor(() => {
+      expect(valuePosts()).toBe(posts);
+      expect(panel.getAttribute('aria-busy')).toBe('false');
+      expect(within(panel).getByText(/\+\$0\.81/)).toBeTruthy();
+    }, HANG);
+    await settled(1);
     expect(completed()).not.toContain(2);
-    const postsBefore = replayPosts().length;
     fireEvent.click(within(panel).getByRole('button', { name: /rerun the day/i }));
-    await waitFor(() => expect(replayPosts().length).toBeGreaterThan(postsBefore));
-    await within(panel).findByText(/\+\$0\.81/);
+    await settled(2);
     expect(completed()).not.toContain(2);
-  });
+  }, 70_000);
 
   it('RPB-F1e Rerun baseline alone does not mark step 2', async () => {
     await loaded();

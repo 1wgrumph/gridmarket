@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -10,44 +10,41 @@ import {
   YAxis,
 } from 'recharts';
 import { get, type SignalHistoryRow } from '../api';
+import { centralStamp, csvName, ExportActions, toCsv, utcStamp } from '../csv';
 import { centralTime, parseTime } from '../format';
-import { contextLink } from './navigation';
+import { contextLink, setViewQuery, useViewQuery } from './navigation';
 import Panel from './Panel';
 
 type Props = {
   index?: string;
   marketProducts?: { zone: string }[];
+  /** False until the page's first polls have answered; history reads wait for it. */
+  ready?: boolean;
 };
 
-type SeriesPoint = {
-  at: number;
-  timeStr: string;
-  HB_HOUSTON?: number | null;
-  HB_NORTH?: number | null;
-  HB_SOUTH?: number | null;
-  HB_WEST?: number | null;
-  lambda?: number | null;
-  daHouston?: number | null;
-  daNorth?: number | null;
-  daSouth?: number | null;
-  daWest?: number | null;
-  daForecast?: number | null;
-};
+/** History keys the backend stores: Worker snapshot hubs, SCED lambda and actual demand,
+    plus the day-ahead price of a polled settlement point (ercot.PRICE_POINTS). */
+const SERIES = [
+  { key: 'HB_HOUSTON', report: 'SNAPSHOT-HUBS', subject: 'HB_HOUSTON', label: 'HB_HOUSTON', unit: '$/MWh', color: 'var(--series-1)' },
+  { key: 'HB_NORTH', report: 'SNAPSHOT-HUBS', subject: 'HB_NORTH', label: 'HB_NORTH', unit: '$/MWh', color: 'var(--series-2)' },
+  { key: 'HB_SOUTH', report: 'SNAPSHOT-HUBS', subject: 'HB_SOUTH', label: 'HB_SOUTH', unit: '$/MWh', color: 'var(--series-3)' },
+  { key: 'HB_WEST', report: 'SNAPSHOT-HUBS', subject: 'HB_WEST', label: 'HB_WEST', unit: '$/MWh', color: 'var(--series-4)' },
+  { key: 'lambda', report: 'SNAPSHOT-SCED', subject: 'lambda', label: 'system lambda', unit: '$/MWh', color: 'var(--text)' },
+  { key: 'da', report: 'NP4-190-CD', subject: 'HB_HUBAVG', label: 'HB_HUBAVG day-ahead', unit: '$/MWh', color: 'var(--muted)' },
+  { key: 'demand', report: 'SNAPSHOT-DEMAND', subject: 'ERCOT', label: 'ERCOT actual demand', unit: 'MW', color: 'var(--accent)' },
+] as const;
+type Key = typeof SERIES[number]['key'];
+const HUBS = SERIES.slice(0, 4);
+const CSV_COLUMNS = ['interval_start_utc', 'interval_start_central', 'series', 'report_id', 'subject', 'value', 'unit', 'published_at_utc', 'source'];
+const SOURCE = 'ERCOT via GridMarket (GET /v1/signals/history)';
 
-type DemandPoint = {
-  at: number;
-  timeStr: string;
-  demand?: number | null;
-};
+// The anonymous per-IP bucket is shared with the page's first polls, and any
+// non-public request clamps it to 20 tokens: wait for those polls, then space reads.
+const START_WAIT_MS = 1000;
+const SPACING_MS = 400;
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-type ExportItem = {
-  timestamp_utc: string;
-  timestamp_ct: string;
-  series: string;
-  value: number;
-  unit: string;
-  published_at: string;
-};
+type SeriesPoint = { at: number } & Partial<Record<Key, number>>;
 
 const centralClock = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/Chicago',
@@ -73,11 +70,16 @@ const centralDateOnly = new Intl.DateTimeFormat('en-US', {
 });
 
 const tickStyle = { fill: 'var(--muted)', fontSize: 11 };
+const tooltipStyle = {
+  background: 'var(--surface)',
+  border: '1px solid var(--line)',
+  color: 'var(--text)',
+  fontSize: 12,
+  borderRadius: 'var(--r-2)',
+};
 
-// Shared in-flight history reads: StrictMode double-mounts (and remounts)
-// reuse one request per URL instead of doubling the Overview burst (429s).
-// Entries are removed on settle, so refreshes always refetch.
-const inflight = new Map<string, Promise<SignalHistoryRow[]>>();
+/** Way forward for an empty ERCOT feed (the battery panel's line). */
+export const WorkerHint = () => <> · Live ERCOT data needs the Worker: set GRIDMARKET_WORKER_URL. <a href="#/spec">Setup docs</a></>;
 
 export function hubToZone(hub: string, marketProducts?: { zone: string }[]): string {
   if (marketProducts?.some(p => p.zone === hub)) return hub;
@@ -88,309 +90,125 @@ export function hubToZone(hub: string, marketProducts?: { zone: string }[]): str
   return hub;
 }
 
-export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props) {
-  const [range, setRange] = useState<24 | 48>(24);
-  const [loading, setLoading] = useState(true);
+async function fetchSeries(url: string, active: () => boolean): Promise<SignalHistoryRow[]> {
+  // One retry: a 429 carries Retry-After.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await get<SignalHistoryRow[]>(url);
+    } catch (err) {
+      if (attempt === 1 || !active()) return [];
+      const waitS = Number((err as { retryAfter?: string })?.retryAfter ?? 1);
+      await sleep(1000 * Math.min(5, Number.isFinite(waitS) && waitS > 0 ? waitS : 1));
+    }
+  }
+  return [];
+}
 
-  // Raw series data
-  const [rtHouston, setRtHouston] = useState<SignalHistoryRow[]>([]);
-  const [rtNorth, setRtNorth] = useState<SignalHistoryRow[]>([]);
-  const [rtSouth, setRtSouth] = useState<SignalHistoryRow[]>([]);
-  const [rtWest, setRtWest] = useState<SignalHistoryRow[]>([]);
-  const [rtLambda, setRtLambda] = useState<SignalHistoryRow[]>([]);
-  const [daHouston, setDaHouston] = useState<SignalHistoryRow[]>([]);
-  const [daNorth, setDaNorth] = useState<SignalHistoryRow[]>([]);
-  const [daSouth, setDaSouth] = useState<SignalHistoryRow[]>([]);
-  const [daWest, setDaWest] = useState<SignalHistoryRow[]>([]);
-  const [demandRows, setDemandRows] = useState<SignalHistoryRow[]>([]);
+export default function LiveGridPanel({ index = 'LIVE', marketProducts, ready = true }: Props) {
+  const params = useViewQuery();
+  const range: 24 | 48 = params.get('range') === '48' ? 48 : 24;
+  const setRange = (hours: 24 | 48) => setViewQuery({ range: hours === 48 ? '48' : undefined });
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<Partial<Record<Key, SignalHistoryRow[]>>>({});
+  const [span, setSpan] = useState({ start: '', end: '' });
+  const warm = useRef(false);
 
   useEffect(() => {
+    if (!warm.current && !ready) return;
     let active = true;
+    const isActive = () => active;
 
     async function fetchAll() {
-      // Minute-floored window: concurrent mounts share URLs, so the
-      // in-flight dedupe collapses them to one request each.
+      if (!warm.current) await sleep(START_WAIT_MS);
+      // Minute-floored window.
       const nowMs = Math.floor(Date.now() / 60_000) * 60_000;
       const end = new Date(nowMs).toISOString();
       const start = new Date(nowMs - range * 3600_000).toISOString();
-
-      // One retry: the Overview burst can exhaust the shared IP bucket (429).
-      const fetchSeries = async (reportId: string, zone: string): Promise<SignalHistoryRow[]> => {
-        const url = `/v1/signals/history?${new URLSearchParams({ report_id: reportId, zone, start, end })}`;
-        for (let attempt = 0; attempt < 2; attempt++) {
-          try {
-            let req = inflight.get(url);
-            if (!req) {
-              req = get<SignalHistoryRow[]>(url);
-              inflight.set(url, req);
-            }
-            const rows = await req;
-            inflight.delete(url);
-            return rows;
-          } catch (err) {
-            inflight.delete(url);
-            if (attempt === 1 || !active) return [];
-            const waitS = Number((err as { retryAfter?: string })?.retryAfter ?? 1);
-            await new Promise(r => setTimeout(r, 1000 * Math.min(5, Number.isFinite(waitS) && waitS > 0 ? waitS : 1)));
-          }
-        }
-        return [];
-      };
-
-      // Sequential, one history request at a time: Overview mounts ~10 polls
-      // at once, and a 13-wide burst on top overflows the shared per-IP
-      // bucket, 429ing the last polls for a normal single user.
-      // ponytail: sequential reads; batch if round trips dominate.
-      const specs: [string, string][] = [
-        ['NP6-905-CD', 'HB_HOUSTON'],
-        ['NP6-905-CD', 'HB_NORTH'],
-        ['NP6-905-CD', 'HB_SOUTH'],
-        ['NP6-905-CD', 'HB_WEST'],
-        ['NP6-905-CD', 'lambda'],
-        ['NP4-190-CD', 'HB_HOUSTON'],
-        ['NP4-190-CD', 'HB_NORTH'],
-        ['NP4-190-CD', 'HB_SOUTH'],
-        ['NP4-190-CD', 'HB_WEST'],
-        // NP3-565-CD stores no ERCOT total; the four LZ rollups sum to it.
-        ['NP3-565-CD', 'LZ_HOUSTON'],
-        ['NP3-565-CD', 'LZ_NORTH'],
-        ['NP3-565-CD', 'LZ_SOUTH'],
-        ['NP3-565-CD', 'LZ_WEST'],
-      ];
-      const fetched: SignalHistoryRow[][] = [];
-      for (const [reportId, zone] of specs) {
+      const next: Partial<Record<Key, SignalHistoryRow[]>> = {};
+      // ponytail: seven spaced reads; one batched history route would replace them.
+      for (const s of SERIES) {
         if (!active) return;
-        fetched.push(await fetchSeries(reportId, zone));
+        next[s.key] = await fetchSeries(`/v1/signals/history?${new URLSearchParams({ report_id: s.report, zone: s.subject, start, end })}`, isActive);
+        await sleep(SPACING_MS);
       }
-      const [
-        houston,
-        north,
-        south,
-        west,
-        lam,
-        daH,
-        daN,
-        daS,
-        daW,
-        demH,
-        demN,
-        demS,
-        demW,
-      ] = fetched;
-
       if (!active) return;
-
-      const demandByStart = new Map<string, SignalHistoryRow[]>();
-      for (const r of [...demH, ...demN, ...demS, ...demW]) {
-        if (!r.interval_start || !Number.isFinite(r.value)) continue;
-        const list = demandByStart.get(r.interval_start) ?? [];
-        list.push(r);
-        demandByStart.set(r.interval_start, list);
-      }
-      const demTotal: SignalHistoryRow[] = [...demandByStart.entries()].map(([start, rows]) => ({
-        interval_start: start,
-        interval_end: rows[0].interval_end,
-        value: rows.reduce((sum, r) => sum + r.value, 0),
-        unit: 'MW',
-        published_at: rows.reduce((m, r) => (r.published_at > m ? r.published_at : m), ''),
-        stale: rows.some(r => r.stale),
-      }));
-
-      setRtHouston(houston);
-      setRtNorth(north);
-      setRtSouth(south);
-      setRtWest(west);
-      setRtLambda(lam);
-      setDaHouston(daH);
-      setDaNorth(daN);
-      setDaSouth(daS);
-      setDaWest(daW);
-      setDemandRows(demTotal);
+      warm.current = true;
+      setData(next);
+      setSpan({ start, end });
       setLoading(false);
     }
 
-    fetchAll();
-    // Refreshed every 5 minutes (300,000 ms)
-    let timerId: number;
-    const scheduleNext = () => {
-      timerId = window.setTimeout(async () => {
-        if (!active) return;
-        await fetchAll();
-        scheduleNext();
-      }, 300_000);
+    let timerId = 0;
+    const cycle = async () => {
+      await fetchAll();
+      // Refreshed every 5 minutes.
+      if (active) timerId = window.setTimeout(cycle, 300_000);
     };
-    scheduleNext();
+    cycle();
     return () => {
       active = false;
       window.clearTimeout(timerId);
     };
-  }, [range]);
+  }, [range, ready]);
 
-  // Find latest published time across all observations
-  const allRows = useMemo(() => [
-    ...rtHouston,
-    ...rtNorth,
-    ...rtSouth,
-    ...rtWest,
-    ...rtLambda,
-    ...daHouston,
-    ...daNorth,
-    ...daSouth,
-    ...daWest,
-    ...demandRows,
-  ], [rtHouston, rtNorth, rtSouth, rtWest, rtLambda, daHouston, daNorth, daSouth, daWest, demandRows]);
+  const rows = (key: Key) => data[key] ?? [];
 
   const latestPublished = useMemo(() => {
     let latest = '';
-    for (const r of allRows) {
-      if (r.published_at && r.published_at > latest) {
-        latest = r.published_at;
-      }
+    for (const key of ['HB_HOUSTON', 'HB_NORTH', 'HB_SOUTH', 'HB_WEST', 'lambda', 'demand'] as const) {
+      for (const r of data[key] ?? []) if (r.published_at && r.published_at > latest) latest = r.published_at;
     }
     return latest;
-  }, [allRows]);
+  }, [data]);
 
-  const publishedDisplay = useMemo(() => {
-    if (!latestPublished) return 'Awaiting signal';
-    return centralTime(latestPublished);
-  }, [latestPublished]);
-
-  // Combine real-time price series into points by timestamp
+  // Real-time hubs and lambda share snapshot stamps. The day-ahead hour's price is
+  // carried onto every real-time point inside that hour, so it draws as a line.
   const priceChartData = useMemo<SeriesPoint[]>(() => {
-    const map = new Map<string, SeriesPoint>();
-
-    const insert = (rows: SignalHistoryRow[], key: keyof SeriesPoint) => {
-      for (const r of rows) {
-        if (!r.interval_start) continue;
+    const map = new Map<number, SeriesPoint>();
+    for (const key of ['HB_HOUSTON', 'HB_NORTH', 'HB_SOUTH', 'HB_WEST', 'lambda'] as const) {
+      for (const r of data[key] ?? []) {
         const at = parseTime(r.interval_start);
-        if (!Number.isFinite(at)) continue;
-        let pt = map.get(r.interval_start);
-        if (!pt) {
-          pt = { at, timeStr: r.interval_start };
-          map.set(r.interval_start, pt);
-        }
-        (pt[key] as any) = r.value;
-      }
-    };
-
-    insert(rtHouston, 'HB_HOUSTON');
-    insert(rtNorth, 'HB_NORTH');
-    insert(rtSouth, 'HB_SOUTH');
-    insert(rtWest, 'HB_WEST');
-    insert(rtLambda, 'lambda');
-
-    // Day-ahead series
-    insert(daHouston, 'daHouston');
-    insert(daNorth, 'daNorth');
-    insert(daSouth, 'daSouth');
-    insert(daWest, 'daWest');
-
-    // Also populate a general daForecast line if any DA is available
-    for (const pt of map.values()) {
-      const daVal = pt.daHouston ?? pt.daNorth ?? pt.daSouth ?? pt.daWest ?? null;
-      if (daVal !== null) {
-        pt.daForecast = daVal;
+        if (!Number.isFinite(at) || !Number.isFinite(r.value)) continue;
+        const pt = map.get(at) ?? { at };
+        pt[key] = r.value;
+        map.set(at, pt);
       }
     }
+    const da = (data.da ?? []).map(r => ({ from: parseTime(r.interval_start), to: parseTime(r.interval_end), value: r.value }));
+    for (const pt of map.values()) {
+      const hour = da.find(d => d.from <= pt.at && pt.at < d.to);
+      if (hour) pt.da = hour.value;
+    }
+    return [...map.values()].sort((a, b) => a.at - b.at);
+  }, [data]);
 
-    return Array.from(map.values()).sort((a, b) => a.at - b.at);
-  }, [rtHouston, rtNorth, rtSouth, rtWest, rtLambda, daHouston, daNorth, daSouth, daWest]);
+  const hasDayAhead = priceChartData.some(p => p.da !== undefined);
+  const hasLambda = rows('lambda').length > 0;
 
-  const hasDayAhead = useMemo(() => (
-    daHouston.length > 0 || daNorth.length > 0 || daSouth.length > 0 || daWest.length > 0
-  ), [daHouston, daNorth, daSouth, daWest]);
+  const demandChartData = useMemo(() => rows('demand')
+    .filter(r => Number.isFinite(parseTime(r.interval_start)) && Number.isFinite(r.value))
+    .map(r => ({ at: parseTime(r.interval_start), demand: r.value }))
+    .sort((a, b) => a.at - b.at), [data]);
 
-  const hasLambda = useMemo(() => rtLambda.length > 0, [rtLambda]);
-
-  // Combine demand series into points
-  const demandChartData = useMemo<DemandPoint[]>(() => {
-    return demandRows
-      .filter(r => r.interval_start && Number.isFinite(r.value))
-      .map(r => ({
-        at: parseTime(r.interval_start),
-        timeStr: r.interval_start,
-        demand: r.value,
-      }))
-      .sort((a, b) => a.at - b.at);
-  }, [demandRows]);
-
-  // Compute today's peak demand in Central Time
+  // Today's peak demand in Central Time.
   const todayPeak = useMemo(() => {
     if (!demandChartData.length) return null;
     const todayCt = centralDateOnly.format(Date.now());
-    const todayPoints = demandChartData.filter(d => {
-      try {
-        return centralDateOnly.format(d.at) === todayCt && Number.isFinite(d.demand);
-      } catch {
-        return false;
-      }
-    });
-    const pool = todayPoints.length ? todayPoints : demandChartData;
-    const values = pool.map(p => p.demand ?? 0).filter(v => v > 0);
+    const todayPoints = demandChartData.filter(d => centralDateOnly.format(d.at) === todayCt);
+    const values = (todayPoints.length ? todayPoints : demandChartData).map(p => p.demand).filter(v => v > 0);
     return values.length ? Math.max(...values) : null;
   }, [demandChartData]);
 
-  // CSV export handler
-  const handleDownloadCsv = () => {
-    const items: ExportItem[] = [];
-
-    const addRows = (rows: SignalHistoryRow[], seriesName: string, unit: string) => {
-      for (const r of rows) {
-        if (!r.interval_start || r.value === null || r.value === undefined) continue;
-        items.push({
-          timestamp_utc: r.interval_start,
-          timestamp_ct: centralTime(r.interval_start),
-          series: seriesName,
-          value: r.value,
-          unit: r.unit || unit,
-          published_at: r.published_at || '',
-        });
-      }
-    };
-
-    addRows(rtHouston, 'HB_HOUSTON', '$/MWh');
-    addRows(rtNorth, 'HB_NORTH', '$/MWh');
-    addRows(rtSouth, 'HB_SOUTH', '$/MWh');
-    addRows(rtWest, 'HB_WEST', '$/MWh');
-    addRows(rtLambda, 'system lambda', '$/MWh');
-    if (daHouston.length) addRows(daHouston, 'HB_HOUSTON (DA)', '$/MWh');
-    if (daNorth.length) addRows(daNorth, 'HB_NORTH (DA)', '$/MWh');
-    if (daSouth.length) addRows(daSouth, 'HB_SOUTH (DA)', '$/MWh');
-    if (daWest.length) addRows(daWest, 'HB_WEST (DA)', '$/MWh');
-    addRows(demandRows, 'ERCOT Total Demand', 'MW');
-
-    // Sort by timestamp_utc, then series
-    items.sort((a, b) => {
-      const cmp = a.timestamp_utc.localeCompare(b.timestamp_utc);
-      return cmp !== 0 ? cmp : a.series.localeCompare(b.series);
-    });
-
-    const cell = (v: string | number) => {
-      const s = String(v);
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    };
-    const header = 'timestamp_utc,timestamp_ct,series,value,unit,published_at';
-    const lines = [header];
-    for (const item of items) {
-      lines.push([item.timestamp_utc, item.timestamp_ct, item.series, item.value, item.unit, item.published_at].map(cell).join(','));
-    }
-
-    const csvContent = lines.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ercot-live-grid-${range}h.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+  const csvRows = useMemo(() => SERIES
+    .flatMap(s => rows(s.key).map(r => [utcStamp(r.interval_start), centralStamp(r.interval_start), s.label, s.report, s.subject, r.value, r.unit || s.unit, utcStamp(r.published_at), SOURCE]))
+    .sort((a, b) => String(a[0]).localeCompare(String(b[0])) || String(a[2]).localeCompare(String(b[2]))), [data]);
+  const query = `curl -s '${window.location.origin}/v1/signals/history?${new URLSearchParams({ report_id: 'SNAPSHOT-HUBS', zone: 'HB_HOUSTON', start: span.start, end: span.end })}'`;
 
   const openMarketForHub = (hub: string) => {
-    const zone = hubToZone(hub, marketProducts);
-    window.location.hash = contextLink('#/market', { zone });
+    window.location.hash = contextLink('#/market', { zone: hubToZone(hub, marketProducts) });
   };
+
+  const empty = (what: string) => <div className="empty">{loading ? 'Connecting to ERCOT live grid…' : <span>No ERCOT {what} observations yet<WorkerHint/></span>}</div>;
 
   return (
     <Panel
@@ -402,77 +220,67 @@ export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props)
         <div className="live-grid-header-meta">
           <span className="source-tag">Real ERCOT data</span>
           <span className="source-label">Source: ERCOT MIS</span>
-          <span className="published-label">Published: <time className="num">{publishedDisplay}</time></span>
+          <span className="published-label">Published: <time className="num">{latestPublished ? centralTime(latestPublished) : 'Awaiting signal'}</time></span>
         </div>
       }
     >
       <div className="live-grid-controls">
         <div className="range-picker" role="group" aria-label="Time range">
-          <button
-            type="button"
-            className={`range-btn ${range === 24 ? 'active' : ''}`}
-            aria-pressed={range === 24}
-            onClick={() => setRange(24)}
-          >
-            24 h
-          </button>
-          <button
-            type="button"
-            className={`range-btn ${range === 48 ? 'active' : ''}`}
-            aria-pressed={range === 48}
-            onClick={() => setRange(48)}
-          >
-            48 h
-          </button>
+          {([24, 48] as const).map(hours => (
+            <button
+              key={hours}
+              type="button"
+              className={`range-btn ${range === hours ? 'active' : ''}`}
+              aria-pressed={range === hours}
+              onClick={() => setRange(hours)}
+            >
+              {hours} h
+            </button>
+          ))}
         </div>
-        <button
-          type="button"
-          className="download-csv-btn action-secondary"
-          onClick={handleDownloadCsv}
-        >
-          Download CSV
-        </button>
+        <ExportActions query={query} exports={[{
+          label: 'Download CSV',
+          disabled: !csvRows.length,
+          name: () => csvName(`live-grid-${range}h`),
+          csv: () => toCsv(CSV_COLUMNS, csvRows),
+        }]}/>
       </div>
 
-      <div className="live-grid-legend" role="navigation" aria-label="Grid series filter">
-        <span className="legend-title">Real-time Hubs:</span>
-        {(['HB_HOUSTON', 'HB_NORTH', 'HB_SOUTH', 'HB_WEST'] as const).map(hub => {
-          const zone = hubToZone(hub, marketProducts);
-          const colorClass = hub === 'HB_HOUSTON' ? 'houston' : hub === 'HB_NORTH' ? 'north' : hub === 'HB_SOUTH' ? 'south' : 'west';
-          return (
-            <a
-              key={hub}
-              href={contextLink('#/market', { zone })}
-              className={`legend-item ${colorClass}`}
-              onClick={(e) => {
-                e.preventDefault();
-                openMarketForHub(hub);
-              }}
-              title={`View ${hub} in Market`}
-            >
-              <i className={`legend-line ${colorClass}`} />
-              <span>{hub}</span>
-            </a>
-          );
-        })}
+      <div className="live-grid-legend" role="group" aria-label="Grid series">
+        <span className="legend-title">Real-time hubs:</span>
+        {HUBS.map(hub => (
+          <a
+            key={hub.key}
+            href={contextLink('#/market', { zone: hubToZone(hub.key, marketProducts) })}
+            className="legend-item"
+            onClick={(e) => {
+              e.preventDefault();
+              openMarketForHub(hub.key);
+            }}
+            title={`View ${hub.key} in Market`}
+          >
+            <i className="legend-line" style={{ borderColor: hub.color }} />
+            <span>{hub.label}</span>
+          </a>
+        ))}
         {hasLambda && (
-          <span className="legend-item lambda">
-            <i className="legend-line lambda" />
+          <span className="legend-item">
+            <i className="legend-line" style={{ borderColor: SERIES[4].color }} />
             <span>system lambda</span>
           </span>
         )}
         {hasDayAhead && (
-          <span className="legend-item forecast">
-            <i className="legend-line forecast" />
-            <span>Day-ahead (DA)</span>
+          <span className="legend-item">
+            <i className="legend-line forecast" style={{ borderColor: SERIES[5].color }} />
+            <span>HB_HUBAVG day-ahead (DA)</span>
           </span>
         )}
       </div>
 
       <div className="live-grid-charts">
-        <div className="live-grid-main-chart" role="img" aria-label="Real-time ERCOT hub prices and system lambda">
+        <div className="live-grid-main-chart" role="img" aria-label="Real-time ERCOT hub prices, system lambda and HB_HUBAVG day-ahead price">
           <div className="chart-header">
-            <h4>Hub Prices & System Lambda <span className="unit-label">($/MWh)</span></h4>
+            <h4>Hub prices & system lambda <span className="unit-label">($/MWh)</span></h4>
           </div>
           <div className="chart-wrapper">
             {priceChartData.length > 0 ? (
@@ -499,75 +307,32 @@ export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props)
                   />
                   <Tooltip
                     labelFormatter={at => `${centralExact.format(Number(at))} CT`}
-                    formatter={(val, name) => {
-                      if (val === null || val === undefined) return ['—', name];
-                      const label = name === 'daForecast' ? 'Day-ahead' : name === 'lambda' ? 'System lambda' : String(name);
-                      return [`$${Number(val).toFixed(2)} $/MWh`, label];
-                    }}
-                    contentStyle={{
-                      background: 'var(--surface)',
-                      border: '1px solid var(--line)',
-                      color: 'var(--text)',
-                      fontSize: 12,
-                      borderRadius: 'var(--r-2)',
-                    }}
+                    formatter={(val, name) => [val == null ? '—' : `$${Number(val).toFixed(2)} $/MWh`, name]}
+                    contentStyle={tooltipStyle}
                     isAnimationActive={false}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="HB_HOUSTON"
-                    name="HB_HOUSTON"
-                    stroke="var(--accent)"
-                    strokeWidth={2}
-                    dot={false}
-                    connectNulls={false}
-                    isAnimationActive={false}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => openMarketForHub('HB_HOUSTON')}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="HB_NORTH"
-                    name="HB_NORTH"
-                    stroke="var(--info)"
-                    strokeWidth={2}
-                    dot={false}
-                    connectNulls={false}
-                    isAnimationActive={false}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => openMarketForHub('HB_NORTH')}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="HB_SOUTH"
-                    name="HB_SOUTH"
-                    stroke="var(--down)"
-                    strokeWidth={2}
-                    dot={false}
-                    connectNulls={false}
-                    isAnimationActive={false}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => openMarketForHub('HB_SOUTH')}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="HB_WEST"
-                    name="HB_WEST"
-                    stroke="var(--muted)"
-                    strokeWidth={2}
-                    dot={false}
-                    connectNulls={false}
-                    isAnimationActive={false}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => openMarketForHub('HB_WEST')}
-                  />
+                  {HUBS.map(hub => (
+                    <Line
+                      key={hub.key}
+                      type="monotone"
+                      dataKey={hub.key}
+                      name={hub.label}
+                      stroke={hub.color}
+                      strokeWidth={2}
+                      dot={false}
+                      connectNulls={false}
+                      isAnimationActive={false}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => openMarketForHub(hub.key)}
+                    />
+                  ))}
                   {hasLambda && (
                     <Line
                       type="monotone"
                       dataKey="lambda"
                       name="system lambda"
-                      stroke="var(--map-border)"
-                      strokeWidth={2}
+                      stroke={SERIES[4].color}
+                      strokeWidth={1.5}
                       dot={false}
                       connectNulls={false}
                       isAnimationActive={false}
@@ -575,10 +340,10 @@ export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props)
                   )}
                   {hasDayAhead && (
                     <Line
-                      type="monotone"
-                      dataKey="daForecast"
-                      name="Day-ahead"
-                      stroke="var(--info)"
+                      type="stepAfter"
+                      dataKey="da"
+                      name="HB_HUBAVG day-ahead"
+                      stroke={SERIES[5].color}
                       strokeWidth={2}
                       strokeDasharray="4 4"
                       dot={false}
@@ -588,20 +353,18 @@ export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props)
                   )}
                 </LineChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="empty">{loading ? 'Connecting to ERCOT live grid…' : 'No ERCOT price observations yet'}</div>
-            )}
+            ) : empty('price')}
           </div>
         </div>
 
-        <div className="live-grid-demand-chart" role="img" aria-label="ERCOT Total Demand and today's peak">
+        <div className="live-grid-demand-chart" role="img" aria-label="ERCOT actual demand and today's peak">
           <div className="chart-header">
-            <h4>ERCOT Total Demand <span className="unit-label">(MW)</span></h4>
+            <h4>ERCOT actual demand <span className="unit-label">(MW)</span></h4>
             {todayPeak !== null && (
               <span className="peak-badge">Today's peak: <strong className="num">{todayPeak.toLocaleString('en-US', { maximumFractionDigits: 0 })} MW</strong></span>
             )}
           </div>
-          <div className="series-note">NP3-565-CD LZ rollup</div>
+          <div className="series-note">System load, Worker snapshot</div>
           <div className="chart-wrapper">
             {demandChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={240} minWidth={0}>
@@ -627,17 +390,8 @@ export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props)
                   />
                   <Tooltip
                     labelFormatter={at => `${centralExact.format(Number(at))} CT`}
-                    formatter={(val) => {
-                      if (val === null || val === undefined) return ['—', 'Demand'];
-                      return [`${Number(val).toLocaleString('en-US', { maximumFractionDigits: 1 })} MW`, 'Demand'];
-                    }}
-                    contentStyle={{
-                      background: 'var(--surface)',
-                      border: '1px solid var(--line)',
-                      color: 'var(--text)',
-                      fontSize: 12,
-                      borderRadius: 'var(--r-2)',
-                    }}
+                    formatter={val => [val == null ? '—' : `${Number(val).toLocaleString('en-US', { maximumFractionDigits: 1 })} MW`, 'Actual demand']}
+                    contentStyle={tooltipStyle}
                     isAnimationActive={false}
                   />
                   {todayPeak !== null && (
@@ -650,8 +404,8 @@ export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props)
                   <Line
                     type="monotone"
                     dataKey="demand"
-                    name="Demand"
-                    stroke="var(--accent)"
+                    name="Actual demand"
+                    stroke={SERIES[6].color}
                     strokeWidth={2}
                     dot={false}
                     connectNulls={false}
@@ -659,9 +413,7 @@ export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props)
                   />
                 </LineChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="empty">{loading ? 'Connecting to ERCOT live grid…' : 'No ERCOT demand observations yet'}</div>
-            )}
+            ) : empty('demand')}
           </div>
         </div>
       </div>
