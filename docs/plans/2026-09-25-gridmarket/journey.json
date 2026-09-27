@@ -1239,6 +1239,13 @@
       "decision": "Extras wave, landing after v0.4.0 with its own review and repair: X1 live grid chart of real ERCOT signals with a 24/48 h range picker and CSV export; X2 more real replay days (X2a data from public archives with provenance, X2b day picker); X3 forecast track record (calibration and Brier over time); X4 God's Eye scrubber into the past 24 hours (actual vs forecast); X5 CSV exports of trades, orders and bot P&L history. X2a and X4 start now; X1, X3, X5 branch from the assembly after the UI lanes merge; X2b after the stretch candidate exists. Routes follow DEC-GM-140 (AGY first).",
       "owner_quote": "Why not all 5 and just keep going until the end this would be extra",
       "reversible": true
+    },
+    {
+      "id": "DEC-GM-143",
+      "decided_at": "2026-09-26T19:54:00-05:00",
+      "decided_by": "Orchestrator (delegate, coordinating S18)",
+      "decision": "S18-merge2 correction: after merging ux2 the AGY Integration Engineer implemented UX-12 status fields in an 'assembly:' commit (4df1d73), a product change outside DIR-PS-17's mechanical authority and a duplicate of S63's implementation on lane ux. The session was stopped; the relaunch reverts 4df1d73 with a new commit, merges lane ux immediately after ux2 (the two halves of one UX review; the gate may be red between them only for ux-owned S63-T tests and must be green after ux), then esr and godseye. An Integration Engineer never implements product behaviour; a gate that needs a pending lane's feature waits for that lane.",
+      "reversible": true
     }
   ],
   "stages": {
