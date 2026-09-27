@@ -56,3 +56,41 @@ def test_check_public(tmp_path: Path) -> None:
     assert res_flagged.returncode == 1
     assert "flagged.txt:1" in res_flagged.stdout
     assert pattern in res_flagged.stdout
+
+
+def test_check_public_flags_az_hq(tmp_path: Path) -> None:
+    """DEC-GM-152 / ORC-7: check_public must flag files containing internal pattern az+hq."""
+    repo_dir = tmp_path / "repo"
+    repo_dir.mkdir()
+    subprocess.run(["git", "init"], cwd=repo_dir, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.name", "Test User"],
+        cwd=repo_dir,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        cwd=repo_dir,
+        check=True,
+        capture_output=True,
+    )
+
+    script_path = Path(__file__).resolve().parents[2] / "scripts" / "check_public.py"
+    assert script_path.is_file(), f"Scanner script not found at {script_path}"
+
+    pattern = "az" + "hq"
+    flagged_file = repo_dir / "marker.txt"
+    flagged_file.write_text(f"internal reference: {pattern} notes\n", encoding="utf-8")
+    subprocess.run(["git", "add", "marker.txt"], cwd=repo_dir, check=True, capture_output=True)
+
+    res = subprocess.run(
+        [sys.executable, str(script_path)],
+        cwd=repo_dir,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert res.returncode == 1
+    assert "marker.txt:1" in res.stdout
+    assert pattern in res.stdout

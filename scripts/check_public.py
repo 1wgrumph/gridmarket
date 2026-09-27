@@ -17,6 +17,7 @@ PATTERNS = [
     "bearing-" + "lite",
     "claude.ai/code/" + "session",
     "1wgrumph" + "+",
+    "az" + "hq",
 ]
 
 
