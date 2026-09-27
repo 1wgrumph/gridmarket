@@ -218,4 +218,34 @@ describe('Live grid panel (X1 extras wave, DEC-GM-142)', () => {
     expect(csvText).toContain('ERCOT Total Demand');
     expect(csvText).toContain('68138');
   });
+
+  it('6. fetches history series one at a time so the Overview burst stays under the per-IP bucket', async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    let historyCalls = 0;
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const urlStr = String(input);
+      const parsed = new URL(urlStr, 'http://localhost');
+      if (parsed.pathname === '/v1/signals/history') {
+        historyCalls++;
+        inFlight++;
+        maxInFlight = Math.max(maxInFlight, inFlight);
+        await Promise.resolve();
+        const key = `${parsed.searchParams.get('report_id')}:${parsed.searchParams.get('zone')}`;
+        const data = mockHistoryData[key] ?? [];
+        inFlight--;
+        return { ok: true, status: 200, json: async () => data };
+      }
+      const body = (fixture as Record<string, unknown>)[parsed.pathname];
+      if (body === undefined) {
+        return { ok: false, status: 404, json: async () => ({ error: { code: 'NOT_FOUND', message: parsed.pathname } }) };
+      }
+      return { ok: true, status: 200, json: async () => body };
+    }));
+    render(<Overview />);
+    // Loaded: the demand peak needs all four LZ rollups summed.
+    await screen.findByText(/68,138\s*MW/i, {}, { timeout: 5000 });
+    expect(historyCalls).toBe(13);
+    expect(maxInFlight).toBe(1);
+  });
 });

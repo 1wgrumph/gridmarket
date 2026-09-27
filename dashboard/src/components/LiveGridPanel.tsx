@@ -137,6 +137,31 @@ export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props)
         return [];
       };
 
+      // Sequential, one history request at a time: Overview mounts ~10 polls
+      // at once, and a 13-wide burst on top overflows the shared per-IP
+      // bucket, 429ing the last polls for a normal single user.
+      // ponytail: sequential reads; batch if round trips dominate.
+      const specs: [string, string][] = [
+        ['NP6-905-CD', 'HB_HOUSTON'],
+        ['NP6-905-CD', 'HB_NORTH'],
+        ['NP6-905-CD', 'HB_SOUTH'],
+        ['NP6-905-CD', 'HB_WEST'],
+        ['NP6-905-CD', 'lambda'],
+        ['NP4-190-CD', 'HB_HOUSTON'],
+        ['NP4-190-CD', 'HB_NORTH'],
+        ['NP4-190-CD', 'HB_SOUTH'],
+        ['NP4-190-CD', 'HB_WEST'],
+        // NP3-565-CD stores no ERCOT total; the four LZ rollups sum to it.
+        ['NP3-565-CD', 'LZ_HOUSTON'],
+        ['NP3-565-CD', 'LZ_NORTH'],
+        ['NP3-565-CD', 'LZ_SOUTH'],
+        ['NP3-565-CD', 'LZ_WEST'],
+      ];
+      const fetched: SignalHistoryRow[][] = [];
+      for (const [reportId, zone] of specs) {
+        if (!active) return;
+        fetched.push(await fetchSeries(reportId, zone));
+      }
       const [
         houston,
         north,
@@ -151,22 +176,7 @@ export default function LiveGridPanel({ index = 'LIVE', marketProducts }: Props)
         demN,
         demS,
         demW,
-      ] = await Promise.all([
-        fetchSeries('NP6-905-CD', 'HB_HOUSTON'),
-        fetchSeries('NP6-905-CD', 'HB_NORTH'),
-        fetchSeries('NP6-905-CD', 'HB_SOUTH'),
-        fetchSeries('NP6-905-CD', 'HB_WEST'),
-        fetchSeries('NP6-905-CD', 'lambda'),
-        fetchSeries('NP4-190-CD', 'HB_HOUSTON'),
-        fetchSeries('NP4-190-CD', 'HB_NORTH'),
-        fetchSeries('NP4-190-CD', 'HB_SOUTH'),
-        fetchSeries('NP4-190-CD', 'HB_WEST'),
-        // NP3-565-CD stores no ERCOT total; the four LZ rollups sum to it.
-        fetchSeries('NP3-565-CD', 'LZ_HOUSTON'),
-        fetchSeries('NP3-565-CD', 'LZ_NORTH'),
-        fetchSeries('NP3-565-CD', 'LZ_SOUTH'),
-        fetchSeries('NP3-565-CD', 'LZ_WEST'),
-      ]);
+      ] = fetched;
 
       if (!active) return;
 
