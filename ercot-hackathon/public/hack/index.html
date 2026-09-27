@@ -1,0 +1,415 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="GridMarket: Texas home batteries, paid to help when the grid is tight. A simulated flexibility exchange on real ERCOT data. Base x AITX Talent Hackathon."><title>GridMarket &mdash; Base &#215; AITX Talent Hackathon</title>
+<link rel="icon" href="/hack/assets/nsrs.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0d09;--s1:#1a1914;--s2:#111009;--border:#2e2d28;
+  --yellow:#f2c000;--ydim:#b38a00;--teal:#1d9e75;--teal2:#0f6e56;
+  --amber:#ef9f27;--green:#639922;--coral:#d85a30;--red:#e24b4a;
+  --purple:#7f77dd;--blue:#378add;
+  --text:#d4d2c8;--muted:#888780;--dim:#444441;
+  --mono:'Space Mono','Courier New',monospace;--sans:system-ui,-apple-system,sans-serif;--sidebar:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.7;display:flex;flex-direction:column;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:200;background:rgba(14,13,9,.97);border-bottom:1px solid var(--border);height:48px;display:flex;align-items:center;padding:0 24px;gap:24px;flex-shrink:0}
+.topbar-logo{font-family:var(--mono);font-size:13px;color:var(--yellow);display:flex;align-items:center;gap:10px;text-decoration:none}
+.topbar-logo .initials{font-size:17px;font-weight:700;letter-spacing:.05em}
+.topbar-logo .slash{color:var(--dim)}
+.topbar-links{display:flex;gap:2px;margin-left:auto}
+.topbar-links a{font-size:12px;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:4px;transition:color .15s}
+.topbar-links a:hover{color:var(--text)}
+.body-wrap{display:flex;flex:1;max-width:1140px;margin:0 auto;width:100%}
+.sidebar{width:var(--sidebar);flex-shrink:0;position:sticky;top:48px;height:calc(100vh - 48px);overflow-y:auto;padding:32px 0;border-right:1px solid var(--border)}
+.sidebar-section{padding:0 20px 24px}
+.sidebar-heading{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.nav-link{display:block;font-size:12px;color:var(--muted);text-decoration:none;padding:4px 8px;border-radius:4px;transition:all .15s;margin-bottom:1px}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.nav-link.active{color:var(--yellow);background:rgba(242,192,0,.06)}
+.sidebar-divider{border:none;border-top:1px solid var(--border);margin:4px 20px 20px}
+.sidebar-meta{padding:0 20px}
+.sidebar-meta a{display:block;font-size:11px;color:var(--dim);text-decoration:none;padding:3px 0;transition:color .15s}
+.sidebar-meta a:hover{color:var(--muted)}
+.sidebar-meta span{display:block;font-size:11px;color:var(--dim);padding:3px 0}
+main{flex:1;padding:0 48px 80px;min-width:0}
+.hero{padding:48px 0 40px;border-bottom:1px solid var(--border);margin-bottom:56px}
+.hero-eyebrow{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px}
+.hero h1{font-family:var(--mono);font-size:38px;font-weight:700;color:var(--yellow);line-height:1.15;margin-bottom:16px}
+.hero-sub{font-size:15px;color:var(--muted);max-width:660px;line-height:1.8;margin-bottom:24px}
+.hero-sub strong{color:var(--text)}
+.pills{display:flex;flex-wrap:wrap;gap:10px}
+.pill{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:3px;padding:3px 10px}
+.pill strong{color:var(--text);font-weight:600}
+.section{margin-bottom:72px;scroll-margin-top:72px}
+.section-comment{font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:10px}
+.section h1{font-size:26px;font-weight:700;color:#fff;margin-bottom:12px;line-height:1.2}
+.section .lead{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:28px;max-width:680px}
+h2{font-size:15px;font-weight:600;color:var(--text);margin:32px 0 10px}
+h3{font-family:var(--mono);font-size:12px;color:var(--teal);margin:24px 0 8px;letter-spacing:.04em}
+p{color:var(--muted);line-height:1.8;margin-bottom:12px;font-size:13px}
+strong{color:var(--text);font-weight:600}
+code{font-family:var(--mono);font-size:11px;background:#1a1914;color:var(--amber);padding:1px 5px;border-radius:3px}
+a{color:var(--teal);text-decoration:none}a:hover{text-decoration:underline}
+pre{background:#070b05;border:1px solid #1c2e18;border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:12px;color:#8dc870;line-height:1.7;overflow-x:auto;margin:12px 0;white-space:pre}
+pre.ascii{color:var(--muted);font-size:11px;line-height:1.5}
+pre.ascii .hi{color:var(--yellow)}pre.ascii .ht{color:var(--teal)}pre.ascii .ha{color:var(--amber)}pre.ascii .hg{color:var(--green)}pre.ascii .hp{color:var(--purple)}pre.ascii .hr{color:var(--red)}pre.ascii .hb{color:var(--blue)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--s2);color:var(--muted);font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:9px 14px;border-bottom:1px solid rgba(46,45,40,.4);color:var(--text);vertical-align:top}
+tr:last-child td{border-bottom:none}tr:hover td{background:rgba(255,255,255,.015)}
+.yes{color:var(--teal);font-weight:600}.no{color:var(--coral)}.win{color:var(--teal);font-weight:600}.feat{color:var(--muted);font-size:12px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:16px 18px}
+.card h3{margin:0 0 6px;font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:.06em;text-transform:uppercase}
+.card p{font-size:12px;margin:0;line-height:1.7}
+.steps{counter-reset:step;list-style:none;margin:12px 0}
+.steps li{counter-increment:step;display:flex;gap:14px;margin-bottom:10px;font-size:13px;color:var(--muted)}
+.steps li::before{content:counter(step);font-family:var(--mono);font-size:10px;color:var(--yellow);border:1px solid var(--ydim);border-radius:3px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.steps li strong{color:var(--text)}
+.kicker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}
+.kicker{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:14px 16px}
+.kicker-val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--yellow);margin-bottom:4px}
+.kicker-lbl{font-size:11px;color:var(--muted)}
+.nav-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:24px 0}
+.nav-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:18px 20px;transition:border-color .15s,transform .15s;text-decoration:none;display:block}
+.nav-card:hover{border-color:#3e3d38;text-decoration:none;transform:translateY(-2px)}
+.nav-card-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:4px}
+.nav-card-sub{font-size:12px;color:var(--muted);margin-bottom:8px}
+.nav-card-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-family:var(--mono);font-size:10px;color:var(--dim);border:1px solid var(--border);padding:1px 6px;border-radius:2px}
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.badge{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px}
+.by{background:#201a00;color:var(--yellow);border:1px solid #3a3000}.bt{background:#071510;color:var(--teal);border:1px solid #0d3022}
+.ba{background:#1c1100;color:var(--amber);border:1px solid #3a2200}.bg{background:#0f1a06;color:var(--green);border:1px solid #1e3a0a}
+.bp{background:#100f20;color:var(--purple);border:1px solid #2a2860}.bc{background:#1e0a04;color:var(--coral);border:1px solid #3e1408}
+.br{background:#1e0808;color:var(--red);border:1px solid #3e1010}.bb{background:#07131e;color:var(--blue);border:1px solid #0d2540}.bm{background:var(--s1);color:var(--muted);border:1px solid var(--border)}
+.verdict{background:#080f07;border:1px solid var(--teal2);border-radius:8px;padding:22px 26px;margin:20px 0}
+.verdict-row{display:flex;gap:14px;margin-bottom:8px;font-size:13px}.verdict-row:last-child{margin-bottom:0}
+.vkey{font-family:var(--mono);font-size:10px;color:var(--ydim);min-width:110px;padding-top:2px}
+.vval{color:var(--muted);line-height:1.7}
+footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--dim)}
+footer a{color:var(--muted);text-decoration:none}footer a:hover{color:var(--yellow)}
+@media(max-width:800px){.body-wrap{flex-direction:column}.sidebar{display:none}main{padding:0 20px 60px}.cards,.kicker-grid,.nav-cards{grid-template-columns:1fr}.hero h1{font-size:28px}}
+
+.hbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+.hbtn{font-family:var(--mono);font-size:12px;padding:9px 16px;border-radius:6px;text-decoration:none;border:1px solid var(--border);color:var(--muted);transition:all .15s}
+.hbtn:hover{text-decoration:none;border-color:var(--yellow);color:var(--yellow)}
+.hbtn.p{background:#201a00;color:var(--yellow);border-color:#3a3000}
+.videobox{border:1px solid var(--border);border-radius:12px;background:#000;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.videobox .ph{text-align:center;font-family:var(--mono);color:var(--dim);font-size:12px}
+.videobox .play{width:60px;height:60px;border-radius:50%;border:1px solid var(--ydim);display:flex;align-items:center;justify-content:center;color:var(--yellow);font-size:20px;margin:0 auto 12px}
+.diagram-embed{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#0f1216;height:clamp(440px,64vh,700px)}
+.diagram-embed iframe{width:100%;height:100%;border:0;display:block}
+.isoctrl{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.pipe{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.pstage{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:16px 18px}
+.pstage .pn{font-family:var(--mono);font-size:10px;color:var(--ydim);letter-spacing:.1em}
+.pstage .pt{font-family:var(--mono);font-size:11px;color:var(--teal);margin:8px 0 6px;text-transform:uppercase;letter-spacing:.05em}
+.pstage h4{font-size:13px;color:#fff;margin:0 0 6px}
+.pstage p{font-size:12px;margin:0;line-height:1.6}
+.axes{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:20px 0}
+.axis{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:14px 12px;text-align:center}
+.axis .s{font-family:var(--mono);font-size:11px;color:var(--ydim)}
+.axis .n{font-size:12px;color:var(--text);margin-top:6px}
+.builtby{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:20px 0}
+.bcard{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:16px 20px;display:flex;gap:12px;align-items:center}
+.bcard .in{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:13px}
+.bcard .bt{font-size:13px;color:#fff;font-weight:600}.bcard .bs{font-size:11px;color:var(--muted)}
+.bx{color:var(--dim);font-size:20px}
+
+.iso-layout{display:flex;gap:18px;align-items:flex-start;margin:16px 0}
+.iso-stage{flex:1;min-width:0;border:1px solid var(--border);border-radius:12px;background:var(--s2);padding:10px}
+.iso-info{width:270px;flex-shrink:0;border:1px solid var(--border);border-radius:12px;background:var(--s1);padding:20px 22px;position:sticky;top:64px}
+.iso-info .ii-tag{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.1em}
+.iso-info .ii-bar{height:3px;width:40px;border-radius:2px;margin:12px 0}
+.iso-info h4{font-family:var(--mono);font-size:15px;color:#fff;margin:0 0 4px}
+.iso-info .ii-sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:14px}
+.iso-info .ii-desc{font-size:12.5px;color:var(--muted);line-height:1.7;margin:0}
+.iso-info .ii-hint{font-size:11px;color:var(--dim);margin-top:14px;font-family:var(--mono)}
+.iso-stage{position:relative;height:460px;overflow:hidden}#isoCanvas{position:absolute;inset:0}#isoCanvas canvas{display:block}.iso-dtype{position:absolute;left:12px;bottom:10px;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.08em;pointer-events:none}.floor-label{font-family:var(--mono);font-size:11px;color:#d4d2c8;background:rgba(10,10,8,.72);border:1px solid #2e2d28;border-radius:5px;padding:2px 7px;white-space:nowrap;pointer-events:none;transition:opacity .2s}@media(max-width:800px){.iso-stage{height:380px}}@media(max-width:800px){.iso-layout{flex-direction:column}.iso-info{width:100%;position:static}}
+@media(max-width:800px){.pipe,.axes{grid-template-columns:1fr}}
+.rubric{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:22px 0}
+.rcat{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.rcat .rhead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:8px}
+.rcat .rname{font-size:13.5px;color:#fff;font-weight:600}
+.rcat .rpts{font-family:var(--mono);font-size:12px;color:var(--yellow)}
+.rcat .rrow{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;margin-top:8px}
+.rcat .rk{color:var(--teal);text-transform:uppercase;letter-spacing:.04em}
+.rcat .rp{color:var(--muted)}
+.rcat .rq{font-size:12px;color:var(--muted);margin:3px 0 0;line-height:1.5}
+.rcat .rus{font-size:11.5px;color:#c9d6ea;margin:12px 0 0;padding-top:10px;border-top:1px dashed var(--border);line-height:1.55}
+.rcat .rus b{color:var(--yellow);font-weight:600}
+@media(max-width:800px){.rubric{grid-template-columns:1fr}}
+.dstage{display:flex;gap:14px;align-items:stretch;margin:16px 0}
+.dkey{flex:0 0 212px;display:flex;flex-direction:column;gap:9px;padding:15px 15px;background:var(--s1);border:1px solid var(--border);border-radius:12px}
+.dkey-h{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.12em;margin-bottom:2px}
+.dk{display:flex;gap:9px;align-items:flex-start}
+.dk .dot{width:9px;height:9px;border-radius:50%;margin-top:4px;flex:0 0 auto}
+.dk .dn{font-family:var(--mono);font-size:11px;color:#e8eef8;font-weight:600;line-height:1.3}
+.dk .dr{font-size:10px;color:var(--muted);line-height:1.35;margin-top:2px}
+.dstage .diagram-embed{flex:1;margin:0}
+@media(max-width:800px){.dstage{flex-direction:column}.dkey{flex-basis:auto}}
+.dk{cursor:pointer;transition:opacity .15s}
+.dk:hover .dn{color:#fff}
+.dkb{flex:1;min-width:0}
+.dk .chev{color:var(--dim);font-size:8px;display:inline-block;transition:transform .25s;margin-left:2px}
+.dk.open .chev{transform:rotate(90deg)}
+.dk .dm{max-height:0;overflow:hidden;opacity:0;transition:max-height .32s ease,opacity .25s ease,margin-top .32s ease;font-size:10.5px;color:#c9d6ea;line-height:1.5}
+.dk.open .dm{max-height:260px;opacity:1;margin-top:7px}
+.videowrap{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#000;aspect-ratio:16/9;margin-top:4px}
+.videowrap video{width:100%;height:100%;object-fit:contain;display:block}
+.reportshot{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#0d0f13;margin-top:6px}
+.reportshot img{width:100%;height:auto;display:block}
+
+.mascot{display:flex;gap:22px;align-items:center;flex-wrap:wrap}.mascot img{width:220px;max-width:60%;background:#fff;border-radius:12px;border:1px solid var(--border)}
+.floor-label{font-family:var(--mono);font-size:11px;color:#d4d2c8;background:rgba(14,13,9,.85);padding:2px 6px;border-radius:3px;white-space:nowrap}
+</style></head><body>
+<div class="topbar">
+  <a class="topbar-logo" href="/hack/"><span class="initials">GM</span><span class="slash">/</span><span>GridMarket</span></a>
+  <div class="topbar-links"><a href="#watch">Demo</a><a href="#building">Building</a><a href="#problem">Problem</a><a href="#pipeline">Loop</a><a href="#stack">Stack</a><a href="#docs">Docs</a><a href="#judging">Submission</a><a href="https://github.com/1wgrumph/gridmarket" style="margin-left:8px;color:var(--teal)">GitHub</a><a href="https://organizedai.vip" style="color:var(--muted)">organizedai.vip</a></div>
+</div>
+<div class="body-wrap"><main style="max-width:900px;margin:0 auto">
+
+<div class="hero" id="home">
+  <div class="hero-eyebrow">OPEN GRID DATA TRACK // BASE &#215; AITX TALENT HACKATHON</div>
+  <h1>GridMarket</h1>
+  <p class="hero-sub">Texas home batteries, paid to help when the grid is tight. A <strong>simulated flexibility exchange</strong> running on <strong>real ERCOT conditions</strong>: live prices, weather and forecasts from the ERCOT Public API decide where and when stored power is worth the most, and people and bots trade <strong>Flex Credits</strong> for those hours through one order API.</p>
+  <div class="pills">
+    <div class="pill"><strong>$780.46</strong> Houston, 26 Aug 10:15 PM</div><div class="pill"><strong>1,023</strong> EIA-860 plants</div><div class="pill"><strong>1,000</strong> simulated batteries</div><div class="pill"><strong>60</strong> bots</div><div class="pill">Cloudflare Worker Assets</div>
+  </div>
+  <div class="hbtns">
+    <a class="hbtn p" href="/replay/#start">&#9654; Replay 26 Aug</a>
+    <a class="hbtn" href="#watch">Watch Demo</a>
+    <a class="hbtn" href="https://guide.organizedai.vip/gridmarket/">Open Guide</a>
+    <a class="hbtn" href="/godseye/">Live God&#39;s Eye</a>
+  </div>
+</div>
+
+<div class="section" id="watch">
+  <div class="section-comment">// WATCH THE GRID</div>
+  <h1>Every Texas power plant, live prices, and the night the grid got expensive.</h1>
+  <p class="lead">A walk through God&#39;s Eye: 1,023 real plants on a 3D globe, a click into any plant for its live ERCOT node price, the help-the-grid layer by zone, and the 26 August replay that stops on Houston&#39;s $780.46 spike.</p>
+  <div class="videowrap">
+    <video controls preload="metadata" playsinline style="width:100%;height:100%">
+      <source src="/hack/assets/walkthrough.mp4" type="video/mp4">
+      Your browser can&#39;t play embedded video &mdash; <a href="/hack/assets/walkthrough.mp4">download the MP4</a>.
+    </video>
+  </div>
+</div>
+
+<div class="section" id="demo">
+  <div class="section-comment">// GRID DIAGRAM</div>
+  <h1>ERCOT as a planet. Every plant where it really is, live.</h1>
+  <p class="lead">Texas drawn from its real outline, with all 643 ERCOT plants of 10 MW and up placed from EIA-860 and coloured by fuel. Hub prices, zone help windows, weather, wind and solar all come live from the ERCOT Public API, and the sun sits where it is over Texas right now. Drag to spin, click a plant, or open it full-screen at <a href="/planet/">/planet</a>.</p>
+  <div class="dstage">
+    <aside class="dkey">
+      <div class="dkey-h">// LAYERS &middot; tap to expand</div>
+      <div class="dk"><span class="dot" style="background:#e56f3f"></span><div class="dkb"><div class="dn">Hub price towers <span class="chev">&#9656;</span></div><div class="dr">Houston, North, South, West</div><div class="dm">A tower at each hub&#39;s home region grows with its 15-minute real-time settlement price and turns red as it climbs toward $200/MWh.</div></div></div>
+      <div class="dk"><span class="dot" style="background:#58c47a"></span><div class="dkb"><div class="dn">Help-the-grid rings <span class="chev">&#9656;</span></div><div class="dr">The four ERCOT load zones</div><div class="dm">Each ring scores its zone 0&ndash;100 from net load and day-ahead price. It pulses green inside a help window, the hours when stored battery power helps most.</div></div></div>
+      <div class="dk"><span class="dot" style="background:#f3efdf;border:1px solid #444"></span><div class="dkb"><div class="dn">Real plants <span class="chev">&#9656;</span></div><div class="dr">643 plants &middot; EIA-860</div><div class="dm">198 wind, 172 solar, 132 gas, 110 battery, plus coal, nuclear and hydro, at their real locations and sized by capacity. Click one for its operator, units and ERCOT node.</div></div></div>
+      <div class="dk"><span class="dot" style="background:#8fd0ea"></span><div class="dkb"><div class="dn">Weather and renewables <span class="chev">&#9656;</span></div><div class="dr">Eight weather zones, live wind and solar</div><div class="dm">Clouds sit over ERCOT&#39;s eight weather zones, tinted by temperature. The big turbines spin with live wind output and solar tiles glow with live solar output.</div></div></div>
+      <div class="dk"><span class="dot" style="background:#7f77dd"></span><div class="dkb"><div class="dn">Jev lighthouse <span class="chev">&#9656;</span></div><div class="dr">Calibrated checks in the Gulf</div><div class="dm">The beam takes the colour of the strongest check, and the router flags beside it rise with how many checks are logged, in review or alerting.</div></div></div>
+    </aside>
+    <div class="diagram-embed"><iframe src="/planet/?embed" title="Grid Planet: ERCOT on real data" loading="lazy"></iframe></div>
+  </div>
+  <p style="margin-top:10px;color:var(--dim);font-size:11px;font-family:var(--mono)">interactive &middot; drag to spin &middot; click a plant &middot; <a href="/planet/">open full &#8594;</a> &middot; <a href="/diagram/">district view &#8594;</a></p>
+</div>
+
+<div class="section" id="building">
+  <div class="section-comment">// INTERACTIVE PROCESS MAP</div>
+  <h1>GridMarket, floor by floor</h1>
+  <p class="lead">Drag to rotate &middot; click a floor. From the top: the exchange takes orders; simulated battery fleets fill them; the help score says which hours matter; the Worker pulls live ERCOT data; underneath sits the real Texas grid.</p>
+  <div class="isoctrl">
+    <button class="btn hbtn" id="btnRotate">Auto rotate</button>
+    <button class="btn hbtn" id="btnFlow">Flow</button>
+    <button class="btn hbtn" id="btnExplode">Explode</button>
+    <button class="btn hbtn" id="btnReset">Reset zoom</button>
+  </div>
+  <div class="iso-layout">
+    <div class="iso-stage" id="isoStage"><div id="isoCanvas"></div><span class="iso-dtype">Monochrome Axonometric Workflow</span></div>
+    <aside class="iso-info" id="isoInfo">
+      <div class="ii-tag">// FLOOR 01</div>
+      <div class="ii-bar" style="background:#f2c000"></div>
+      <h4>exchange</h4>
+      <div class="ii-sub">one order boundary</div>
+      <p class="ii-desc">Flex Credits for a zone and hour. People, the Judge sandbox and 60 bots all place orders through the same API.</p>
+      <div class="ii-hint">drag to rotate &middot; click a floor</div>
+    </aside>
+  </div>
+  <div style="font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:10px;display:flex;gap:18px;flex-wrap:wrap">
+    <span style="color:#f2c000">&#9632; exchange</span><span style="color:#1d9e75">&#9632; batteries</span><span style="color:#ef9f27">&#9632; scoring</span><span style="color:#7f77dd">&#9632; live data</span><span style="color:#378add">&#9632; the grid</span>
+  </div>
+</div>
+
+<div class="section" id="problem">
+  <div class="section-comment">// THE PROBLEM</div>
+  <h1>Texas doesn&#39;t get into trouble at the peak. It gets into trouble after sunset.</h1>
+  <p class="lead">On 26 August 2026, demand peaked at 90.5 GW at 4:30 PM and prices stayed calm. At 10:15 PM, with demand down to 73.5 GW, the Houston hub cleared at <strong>$780.46/MWh</strong>, about eight times its day-ahead price. Solar had gone from 16.9 GW to zero. Every big Houston spike from June to September landed between 8 and 11 PM.</p>
+  <div class="kicker-grid">
+    <div class="kicker"><div class="kicker-val">$780.46</div><div class="kicker-lbl">Houston hub, 26 Aug, 10:15&ndash;10:30 PM</div></div>
+    <div class="kicker"><div class="kicker-val">8&ndash;11 PM</div><div class="kicker-lbl">When every big summer spike landed</div></div>
+    <div class="kicker"><div class="kicker-val">8:30 PM</div><div class="kicker-lbl">When the simulated fleet hit its 20% reserve</div></div>
+  </div>
+  <div class="cards">
+    <div class="card"><h3>01 &middot; the peak is the wrong target</h3><p>Batteries that discharge at the afternoon peak spend themselves before the hours that actually cost money.</p></div>
+    <div class="card"><h3>02 &middot; timing beats size</h3><p>In the replay, 1,000 batteries ran down to reserve nearly two hours before the spike. More capacity wouldn&#39;t have fixed that; better timing would.</p></div>
+    <div class="card"><h3>03 &middot; the data is public, the market isn&#39;t</h3><p>Trading ERCOT takes QSE registration and credit. GridMarket lets anyone test strategies on real conditions with nothing real at stake.</p></div>
+    <div class="card"><h3>04 &middot; people and bots need one rulebook</h3><p>Every order goes through the same boundary and the same checks, whether a person or a bot places it.</p></div>
+  </div>
+  <div class="reportshot" style="margin-top:20px"><img src="/hack/assets/spike.jpg" alt="God&#39;s Eye stopped on the 26 August Houston spike at 10:15 PM" loading="lazy"></div>
+</div>
+
+<div class="section" id="pipeline">
+  <div class="section-comment">// THE LOOP</div>
+  <h1>Six steps. One day on the grid.</h1>
+  <p class="lead">Solar charges the fleet at midday, the evening ramp creates the need, the score finds the hours, credits price them, orders fill them, and settlement pays out. Replay any day and break it.</p>
+  <div class="pipe">
+    <div class="pstage"><div class="pn">01 &middot; MIDDAY</div><div class="pt">solar charges</div><h4>Fill up cheap</h4><p>Batteries charge 10 AM&ndash;4 PM while prices sit under $60 and solar is at its highest.</p></div>
+    <div class="pstage"><div class="pn">02 &middot; EVENING</div><div class="pt">net-load ramp</div><h4>The sun sets</h4><p>Solar drops toward zero, load stays high, and net load climbs into the hours ERCOT struggles with.</p></div>
+    <div class="pstage"><div class="pn">03 &middot; SCORE</div><div class="pt">zone scarcity</div><h4>Find the hours</h4><p>Each zone-hour gets a 0&ndash;100 score from net load and day-ahead price. Runs of 70+ are help windows.</p></div>
+    <div class="pstage"><div class="pn">04 &middot; FLEX CREDIT</div><div class="pt">zone + hour</div><h4>Price it</h4><p>Credits are tied to a zone and an hour, so the exchange prices the evening, not the day.</p></div>
+    <div class="pstage"><div class="pn">05 &middot; ORDER</div><div class="pt">same API for all</div><h4>Trade it</h4><p>People, the Judge sandbox and 60 bots go through one order boundary with the same risk checks.</p></div>
+    <div class="pstage"><div class="pn">06 &middot; SETTLE</div><div class="pt">simulated payout</div><h4>Pay it out</h4><p>Delivered flexibility settles against what the grid actually did. No real money or energy moves.</p></div>
+  </div>
+</div>
+
+<div class="section" id="stack">
+  <div class="section-comment">// TECHNOLOGY STACK</div>
+  <h1>Real data in, simulated money out.</h1>
+  <p class="lead">Everything the market reacts to is real ERCOT data. Everything tradable is simulated and labelled that way.</p>
+  <div class="cards">
+    <div class="card"><h3>ERCOT Public API &middot; the truth</h3><p>Hub and zone prices, day-ahead prices, SCED lambda, demand, wind and solar forecasts, weather assumptions and zone load forecasts.</p></div>
+    <div class="card"><h3>Cloudflare Workers &middot; the data edge</h3><p>Token cached in KV, sequential calls with 429 backoff, cached snapshots. Worker Assets serve God&#39;s Eye and the diagrams from the same URL as the API.</p></div>
+    <div class="card"><h3>EIA-860 &middot; the map</h3><p>1,023 Texas plants from the 2025 early release, with LMP node designations matched to ERCOT settlement points.</p></div>
+    <div class="card"><h3>CesiumJS &middot; the globe</h3><p>Keyless Esri imagery, fuel-type silhouettes, battery point clouds and zone help rings. GSAP drives the replay and tour.</p></div>
+    <div class="card"><h3>FastAPI + SQLite &middot; the exchange</h3><p>Orders, providers, credits and settlement, with a React dashboard, Docker Compose and around 350 tests.</p></div>
+    <div class="card"><h3>Jev &middot; the decisions</h3><p>Calibrated checks over structured ERCOT data, routed by confidence to alert, review or log, and scored against outcomes.</p></div>
+  </div>
+</div>
+
+<div class="section" id="docs">
+  <div class="section-comment">// DOCUMENTATION</div>
+  <h1>Guide, God&#39;s Eye, diagrams, decision map.</h1>
+  <p class="lead">Everything a judge needs, one click from here.</p>
+  <div class="nav-cards">
+    <a class="nav-card" href="https://guide.organizedai.vip/gridmarket/"><div class="nav-card-title">G &middot; Field Guide</div><div class="nav-card-sub">Seven chapters: the evening hours, the order boundary, the data, the score, the replay, the bot, God&#39;s Eye.</div><div class="nav-card-tags"><span class="tag">guide</span><span class="tag">beginners</span></div></a>
+    <a class="nav-card" href="/replay/#start"><div class="nav-card-title">E &middot; God&#39;s Eye</div><div class="nav-card-sub">1,023 plants on a 3D globe, live node prices, help-the-grid layer, 26 Aug replay.</div><div class="nav-card-tags"><span class="tag">interactive</span><span class="tag">live</span></div></a>
+    <a class="nav-card" href="/planet/"><div class="nav-card-title">P &middot; Grid Planet</div><div class="nav-card-sub">ERCOT on a toon planet: 643 real plants, live hub prices, help windows and weather. Also the district view at /diagram.</div><div class="nav-card-tags"><span class="tag">3d</span></div></a>
+    <a class="nav-card" href="https://github.com/1wgrumph/gridmarket"><div class="nav-card-title">R &middot; Repository</div><div class="nav-card-sub">Exchange, Worker, God&#39;s Eye, tests, provenance, and the Jev decision map as markdown.</div><div class="nav-card-tags"><span class="tag">source</span></div></a>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>Endpoint</th><th>What it returns</th></tr></thead><tbody>
+    <tr><td><a href="/api/snapshot"><code>/api/snapshot</code></a></td><td>Demand, hub prices, day-ahead and DART, SCED lambda and headroom, wind, solar, weather, baseline checks</td></tr>
+    <tr><td><a href="/api/help"><code>/api/help</code></a></td><td>Help score for each ERCOT zone for the next 24 hours, with help windows</td></tr>
+    <tr><td><code>/api/node?sp=HB_HOUSTON</code></td><td>Live real-time and day-ahead price at up to four settlement points</td></tr>
+    <tr><td><a href="/api/health"><code>/api/health</code></a></td><td>Token and API status</td></tr>
+  </tbody></table></div>
+</div>
+
+<div class="section" id="judging">
+  <div class="section-comment">// SUBMISSION</div>
+  <h1>A real, working system on real data.</h1>
+  <p class="lead">Where the build stands against the submission checklist.</p>
+  <div class="tbl-wrap"><table><thead><tr><th>Item</th><th>Status</th><th>What backs it</th></tr></thead><tbody>
+    <tr><td class="win">Open Grid Data</td><td class="yes">&#10003; Demonstrated</td><td>Every price, forecast and weather input comes from the ERCOT Public API through the Worker; the 26 Aug finding is the project&#39;s own analysis of that data.</td></tr>
+    <tr><td class="win">Deployed URL</td><td class="yes">&#10003; Live</td><td>God&#39;s Eye, the diagrams and the API run on Cloudflare Workers from this domain.</td></tr>
+    <tr><td class="win">Core loop</td><td class="yes">&#10003; Demonstrated</td><td>Score &#8594; credit &#8594; order &#8594; settle, with the 26 Aug replay and 1,000 simulated batteries.</td></tr>
+    <tr><td class="win">Provenance</td><td class="yes">&#10003; Documented</td><td>What is real and what is simulated is labelled in the README, the guide and <code>PROVENANCE.md</code>.</td></tr>
+    <tr><td class="feat">Most Commercializable</td><td class="feat">&#9675; Narrative</td><td>A paper-trading and strategy-testing venue for residential storage aggregators, before they commit real capacity to ERCOT.</td></tr>
+  </tbody></table></div>
+</div>
+
+<div class="section" id="mascot">
+  <div class="section-comment">// MEET NSRS</div>
+  <div class="mascot"><img src="/hack/assets/nsrs.svg" alt="NSRS, a cartoon night-shift dinosaur with a flashing battery belly"><div><h1>NSRS wakes up when the sun goes down.</h1><p class="lead">Named for ERCOT&#39;s Non-Spinning Reserve Service, the capacity that has to be ready within 30 minutes. NSRS keeps his battery three-quarters full for the evening, because that&#39;s when Texas needs him.</p></div></div>
+</div>
+
+<div class="section" id="builtby">
+  <div class="section-comment">// BUILT BY</div>
+  <h1>William Rumph &amp; Jordan Hill. Austin, TX.</h1>
+  <div class="builtby">
+    <div class="bcard"><div class="in" style="background:#201a00;color:#f2c000">WR</div><div><div class="bt">William Rumph</div><div class="bs">Exchange, bots, dashboard &middot; @1wgrumph</div></div></div>
+    <span class="bx">&#215;</span>
+    <div class="bcard"><div class="in" style="background:#07131e;color:#378add">JH</div><div><div class="bt">Jordan Hill</div><div class="bs">ERCOT data edge, God&#39;s Eye &middot; @jhillbht</div></div></div>
+    <span class="bx">&#215;</span>
+    <div class="bcard"><div class="in" style="background:#0a1a13;color:#1d9e75">OA</div><div><div class="bt">Organized AI</div><div class="bs">organizedai.vip</div></div></div>
+  </div>
+</div>
+
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script><script>
+if(window.gsap&&window.ScrollTrigger){gsap.registerPlugin(ScrollTrigger);
+gsap.utils.toArray('.section').forEach(function(el){gsap.from(el,{opacity:0,y:24,duration:.6,ease:'power2.out',scrollTrigger:{trigger:el,start:'top 85%'}});});}
+
+(function(){
+  var host=document.getElementById('isoCanvas'), info=document.getElementById('isoInfo');
+  var FL=[
+   {t:'exchange',s:'one order boundary',d:'Flex Credits for a zone and hour. People, the Judge sandbox and 60 bots all place orders through the same API and the same risk checks.',c:0xf2c000},
+   {t:'providers',s:'Base Sim \u00b7 LoneStar Storage',d:'Simulated home-battery fleets: 1,000 batteries, 13.5 kWh / 5 kW each, 20% reserve. They charge midday and discharge when the grid is tight.',c:0x1d9e75},
+   {t:'help score',s:'zone scarcity, hour by hour',d:'0\u2013100 per zone-hour: half net load (load forecast minus wind and solar), half day-ahead price. A hint, not a probability; the Jev decision map routes it to alert, review or log.',c:0xef9f27},
+   {t:'ERCOT data edge',s:'Cloudflare Worker',d:'Live ERCOT Public API: hub and zone prices, SCED lambda, demand, wind and solar forecasts, weather. Token cached in KV, calls sequential with 429 backoff.',c:0x7f77dd},
+   {t:'the grid',s:'1,023 plants \u00b7 EIA-860',d:'Every Texas power plant at its real location, coloured by fuel, 155 tied to their ERCOT settlement point for live node prices.',c:0x378add}
+  ];
+  function hex(n){return '#'+('000000'+n.toString(16)).slice(-6);}
+  function fill(i){var f=FL[i];info.querySelector('.ii-tag').textContent='// FLOOR 0'+(i+1);info.querySelector('.ii-bar').style.background=hex(f.c);info.querySelector('h4').textContent=f.t;info.querySelector('.ii-sub').textContent=f.s;info.querySelector('.ii-desc').textContent=f.d;}
+  if(!host||!window.THREE||!THREE.OrbitControls||!THREE.CSS2DRenderer){return;}
+  var Wf=function(){return host.clientWidth||700;}, Hf=function(){return host.clientHeight||460;};
+  var scene=new THREE.Scene(), d=4.6, asp=Wf()/Hf();
+  var cam=new THREE.OrthographicCamera(-d*asp,d*asp,d,-d,0.1,200);
+  cam.position.set(10,8.5,10); cam.lookAt(0,0,0);
+  var rnd=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  rnd.setPixelRatio(Math.min(window.devicePixelRatio,2)); rnd.setSize(Wf(),Hf()); host.appendChild(rnd.domElement);
+  var lr=new THREE.CSS2DRenderer(); lr.setSize(Wf(),Hf());
+  lr.domElement.style.position='absolute'; lr.domElement.style.top='0'; lr.domElement.style.left='0'; lr.domElement.style.pointerEvents='none'; host.appendChild(lr.domElement);
+  scene.add(new THREE.AmbientLight(0xffffff,0.78));
+  var dl=new THREE.DirectionalLight(0xffffff,0.55); dl.position.set(6,12,8); scene.add(dl);
+  var controls=new THREE.OrbitControls(cam,rnd.domElement);
+  controls.enablePan=false; controls.minZoom=0.55; controls.maxZoom=2.4; controls.minPolarAngle=0.6; controls.maxPolarAngle=1.35;
+  controls.autoRotateSpeed=1.1; controls.enableDamping=true; controls.dampingFactor=0.08; controls.saveState();
+  var N=FL.length, GAP=1.18, EGAP=1.9, exploded=false, focus=0, groups=[], slabs=[];
+  function baseY(i){return ((N-1)/2 - i)*(exploded?EGAP:GAP);}
+  for(var i=0;i<N;i++){
+    var g=new THREE.Group();
+    var slab=new THREE.Mesh(new THREE.BoxGeometry(3.1,0.34,3.1),new THREE.MeshStandardMaterial({color:0x1a1914,metalness:0.15,roughness:0.85}));
+    slab.userData.i=i; g.add(slab); slabs.push(slab);
+    var edg=new THREE.LineSegments(new THREE.EdgesGeometry(slab.geometry),new THREE.LineBasicMaterial({color:FL[i].c,transparent:true,opacity:0.85}));
+    g.add(edg); g.userData.edge=edg;
+    var el=document.createElement('div'); el.className='floor-label';
+    el.innerHTML='<b style="color:'+hex(FL[i].c)+'">0'+(i+1)+'</b> \u00b7 '+FL[i].t;
+    var lbl=new THREE.CSS2DObject(el); lbl.position.set(-2.2,0.15,0); g.add(lbl);
+    g.position.set(0,baseY(i),0); scene.add(g); groups.push(g);
+  }
+  function layout(){for(var i=0;i<N;i++){gsap.to(groups[i].position,{y:baseY(i)+(i===focus?0.32:0),duration:.5,ease:'power2.inOut'});groups[i].userData.edge.material.opacity=(i===focus?1:0.85);}}
+  function setFocus(i){focus=i;fill(i);layout();}
+  layout(); fill(0);
+  var ray=new THREE.Raycaster(), mv=new THREE.Vector2(), dx=0,dy=0,dt=0;
+  rnd.domElement.addEventListener('pointerdown',function(e){dx=e.clientX;dy=e.clientY;dt=Date.now();});
+  rnd.domElement.addEventListener('pointerup',function(e){
+    if(Date.now()-dt>420||Math.abs(e.clientX-dx)>5||Math.abs(e.clientY-dy)>5)return;
+    var r=rnd.domElement.getBoundingClientRect();
+    mv.x=((e.clientX-r.left)/r.width)*2-1; mv.y=-((e.clientY-r.top)/r.height)*2+1;
+    ray.setFromCamera(mv,cam); var hit=ray.intersectObjects(slabs,false);
+    if(hit.length){setFocus(hit[0].object.userData.i);}
+  });
+  var bRot=document.getElementById('btnRotate');
+  bRot.onclick=function(){controls.autoRotate=!controls.autoRotate; bRot.style.color=controls.autoRotate?'#f2c000':''; bRot.style.borderColor=controls.autoRotate?'#3a3000':'';};
+  var bExp=document.getElementById('btnExplode');
+  bExp.onclick=function(){exploded=!exploded; bExp.style.color=exploded?'#f2c000':''; bExp.style.borderColor=exploded?'#3a3000':''; layout();};
+  document.getElementById('btnReset').onclick=function(){controls.reset();};
+  var bFlow=document.getElementById('btnFlow'), flowing=false;
+  bFlow.onclick=function(){ if(flowing)return; flowing=true; bFlow.style.color='#f2c000';
+    var tl=gsap.timeline({onComplete:function(){flowing=false;bFlow.style.color='';}});
+    for(var i=0;i<N;i++){(function(i){tl.to(groups[i].userData.edge.material,{opacity:0.2,duration:.14,yoyo:true,repeat:1,onStart:function(){setFocus(i);}},i*0.28);})(i);}
+  };
+  function resize(){var a=Wf()/Hf(); cam.left=-d*a; cam.right=d*a; cam.top=d; cam.bottom=-d; cam.updateProjectionMatrix(); rnd.setSize(Wf(),Hf()); lr.setSize(Wf(),Hf());}
+  window.addEventListener('resize',resize);
+  (function loop(){requestAnimationFrame(loop); controls.update(); rnd.render(scene,cam); lr.render(scene,cam);})();
+})();
+</script><script>document.querySelectorAll('.dkey .dk').forEach(function(c){c.addEventListener('click',function(){var o=c.classList.contains('open');document.querySelectorAll('.dkey .dk').forEach(function(x){x.classList.remove('open')});if(!o)c.classList.add('open');});});</script><footer>GridMarket &middot; Base &#215; AITX Talent Hackathon &middot; <a href="https://organizedai.vip">Organized AI</a> &middot; Austin, TX &middot; <a href="https://guide.organizedai.vip/gridmarket/">guide</a> &middot; <a href="/godseye/">god&#39;s eye</a> &middot; <a href="/diagram/">diagram</a> &middot; <a href="https://github.com/1wgrumph/gridmarket">github</a></footer>
+</body></html>

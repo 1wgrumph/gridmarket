@@ -4,6 +4,7 @@
 import { buildSnapshot } from "./snapshot.js";
 import { buildNodes, SP_PATTERN } from "./node.js";
 import { SP_ALLOWLIST } from "./sp-allowlist.js";
+import { buildHelp } from "./help.js";
 
 const TOKEN_URL =
   "https://ercotb2c.b2clogin.com/ercotb2c.onmicrosoft.com/B2C_1_PUBAPI-ROPC-FLOW/oauth2/v2.0/token";
@@ -43,8 +44,10 @@ async function nodeBudget(limiter, ip) {
   return limiter.limit({ key: "node" });
 }
 
-// Coalesce concurrent snapshot builds per isolate.
+// Coalesce concurrent snapshot and help builds per isolate.
 let snapshotInflight = null;
+let helpInflight = null;
+const HELP_INPUTS = 7; // buildHelp's ERCOT calls: load, wind, solar, 4 zone day-ahead prices
 
 const json = (body, status = 200, extra = {}) =>
   new Response(JSON.stringify(body, null, 2), {
@@ -204,7 +207,7 @@ export default {
       const needsKey =
         p.startsWith("/api/report/") ||
         p === "/api/products" ||
-        (p === "/api/snapshot" && url.searchParams.has("fresh"));
+        ((p === "/api/snapshot" || p === "/api/help") && url.searchParams.has("fresh"));
       if (needsKey && request.headers.get("x-gridmarket-key") !== env.MARKET_KEY) {
         return json({ error: "Unauthorized" }, 401);
       }
@@ -268,6 +271,32 @@ export default {
         if (missing.length) {
           return json({ error: "Worker secrets not set", secretsMissing: missing }, 503);
         }
+      }
+
+      // Help the grid: demand now and upcoming help windows per zone (ERCOT data only).
+      // Keyless like the cached snapshot: one shared cache entry, coalesced builds, ?fresh needs the key.
+      if (p === "/api/help") {
+        const cached = url.searchParams.has("fresh") ? null : await env.CACHE.get("help:v1");
+        if (cached) {
+          const { status, out } = JSON.parse(cached);
+          return json(out, status, { "x-cache": "HIT" });
+        }
+        if (!helpInflight) {
+          helpInflight = (async () => {
+            try {
+              const out = await buildHelp((path, params) => ercotJSON(env, path, params));
+              const failed = Object.keys(out.unavailable).length;
+              // Every input failed (budget or upstream): 502, cached briefly like the snapshot.
+              const status = failed >= HELP_INPUTS ? 502 : 200;
+              await env.CACHE.put("help:v1", JSON.stringify({ status, out }), { expirationTtl: failed ? 30 : 900 });
+              return { status, out };
+            } finally {
+              helpInflight = null;
+            }
+          })();
+        }
+        const { status, out } = await helpInflight;
+        return json(out, status, { "x-cache": "MISS" });
       }
 
       // Live price at one or more settlement points, for the plant drill-down
