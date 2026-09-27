@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { contextLink, setViewQuery, useViewQuery } from '../components/navigation';
 import Panel from '../components/Panel';
 import { missingInputs } from '../components/predictionInputs';
+import { forecastAvailable, round1 } from '../format';
 import { usePredictions, useResource } from '../hooks';
 import type { Prediction, RouterCheck, Signal } from '../api';
 import { FeedBody, PageHeading, Stale } from './Market';
@@ -29,7 +30,7 @@ function Zone({ p, signals, expanded, onToggle }: { p: Prediction; signals: Sign
     <header>
       <h3>{p.zone}<time dateTime={p.delivery_hour}>{time(p.delivery_hour)}</time></h3>
       <span className="zone-score">
-        <strong>{p.score}%</strong>
+        <strong>{forecastAvailable(p.level) ? `${round1(p.score)}%` : '—'}</strong>
         <span className={`tag ${levelTone[p.level.toLowerCase() as keyof typeof levelTone] ?? ''}`}>{p.level}</span>
       </span>
     </header>

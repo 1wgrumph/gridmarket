@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { completeFirstStep } from '../components/FirstSteps';
 import Panel from '../components/Panel';
 import { get, send } from '../api';
 import type { ReplayDecision, ReplayRun, ReplayScore } from '../api';
@@ -28,6 +29,22 @@ const fmtShort = (day: string) => new Intl.DateTimeFormat('en-GB', { timeZone: '
 // True minus (U+2212) for negatives, per docs/design/DESIGN.md.
 const money = (cents: number) => `${cents < 0 ? '−' : cents > 0 ? '+' : ''}$${(Math.abs(cents) / 100).toFixed(2)}`;
 const messageOf = (reason: unknown) => (reason as { error?: { message?: string } })?.error?.message ?? String(reason);
+const inputFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
+/** Round numeric inputs, truncate comma vectors to 3 values, cap long text. */
+const fmtInput = (value: string | number): string => {
+  if (Array.isArray(value)) {
+    const items = (value as unknown[]).map(String);
+    return items.slice(0, 3).join(', ') + (items.length > 3 ? ', …' : '');
+  }
+  if (typeof value === 'number') return Number.isFinite(value) ? inputFmt.format(value) : String(value);
+  const text = value.trim();
+  if (text !== '' && Number.isFinite(Number(text))) return inputFmt.format(Number(text));
+  if (text.includes(',')) {
+    const parts = text.split(',').map(part => part.trim()).filter(Boolean);
+    return parts.slice(0, 3).join(', ') + (parts.length > 3 ? ', …' : '');
+  }
+  return text.length > 80 ? `${text.slice(0, 80)}…` : text;
+};
 const hashParams = () => new URLSearchParams(window.location.hash.split('?')[1] ?? '');
 const hashDay = () => hashParams().get('day') ?? '';
 const hashInt = (key: string, fallback: number, min: number, max: number) => {
@@ -42,10 +59,9 @@ const writeHash = (mutate: (p: URLSearchParams) => void) => {
   window.history.replaceState(null, '', `${path}?${params.toString()}`);
 };
 
-/** Simulated fleet on one provider; the load interval covers any Chicago day without DST arithmetic. */
-const fleetFor = (zone: string, day: string, count: number, reserveKwh: string) => {
-  const noon = new Date(`${day}T00:00:00Z`).getTime();
-  const iso = (at: number) => new Date(at).toISOString().replace('.000Z', 'Z');
+/** Simulated fleet on one provider; household load is omitted so the engine supplies
+    the contract Texas summer profile (averages 1.2 kW, the stated backup load). */
+const fleetFor = (zone: string, count: number, reserveKwh: string) => {
   return {
     zone,
     assets: Array.from({ length: count }, (_, i) => ({
@@ -53,7 +69,6 @@ const fleetFor = (zone: string, day: string, count: number, reserveKwh: string) 
       capacity_kwh: '13.5', initial_soc_kwh: '6.75', min_reserve_kwh: reserveKwh,
       max_charge_kw: '5', max_discharge_kw: '5', eta_round_trip: '0.9',
     })),
-    household_load: { unit: 'kW', intervals: [{ interval_start: iso(noon - 12 * 3600 * 1000), interval_end: iso(noon + 36 * 3600 * 1000), kw: '0.8' }] },
   };
 };
 
@@ -143,7 +158,10 @@ export default function Replay() {
   const [days, setDays] = useState<DayInfo[] | null>(null);
   const [daysError, setDaysError] = useState<string | null>(null);
   const [day, setDay] = useState(hashDay());
-  const [zone, setZone] = useState('LZ_HOUSTON');
+  const [zone, setZone] = useState(() => {
+    const fromUrl = hashParams().get('zone');
+    return fromUrl && ZONES.includes(fromUrl) ? fromUrl : 'LZ_HOUSTON';
+  });
   const [base, setBase] = useState<ReplayRun | null>(null);
   const [baseError, setBaseError] = useState<string | null>(null);
   const [baseLoading, setBaseLoading] = useState(true);
@@ -173,6 +191,9 @@ export default function Replay() {
   const [valueNonce, setValueNonce] = useState(0);
   const yourRef = useRef<HTMLDivElement>(null);
   const scoreRef = useRef<HTMLDivElement>(null);
+  const mountControls = useRef({ reserve, homes, zone, day });
+  const headRestored = useRef(false);
+  const windowInit = useRef(false);
   const reduced = useMemo(() => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches, []);
 
   useEffect(() => {
@@ -194,7 +215,7 @@ export default function Replay() {
     let live = true;
     setBaseLoading(true);
     setBaseError(null);
-    send<ReplayRun>('POST', '/v1/replay', { day, strategies: STRATEGIES.map(s => s.id), fleet: fleetFor(zone, day, HOMES, '5.4'), seed: 0, disruptions: [] })
+    send<ReplayRun>('POST', '/v1/replay', { day, strategies: STRATEGIES.map(s => s.id), fleet: fleetFor(zone, HOMES, '5.4'), seed: 0, disruptions: [] })
       .then(run => {
         if (!live) return;
         setFirstId(id => id ?? run.run_id);
@@ -220,19 +241,33 @@ export default function Replay() {
   useEffect(() => {
     writeHash(p => {
       p.set('day', day);
+      // Back the zone only once it is explicit (URL or user choice); the fallback stays out of links.
+      if (zone !== 'LZ_HOUSTON' || hashParams().get('zone') !== null) p.set('zone', zone);
       p.set('reserve', String(reserve));
       p.set('homes', String(homes));
       p.set('dtype', dtype);
       if (dtype === 'feed_interrupt') p.set('source', source); else p.delete('source');
-      if (startIdx >= 0 && endIdx > startIdx && quarters[endIdx - 1]) {
-        p.set('dstart', quarters[startIdx].start);
-        p.set('dend', quarters[endIdx - 1].end);
-      } else {
-        p.delete('dstart');
-        p.delete('dend');
+      // Head and window restore from the URL after the run loads; leave the params alone until then.
+      if (windowInit.current) {
+        if (startIdx >= 0 && endIdx > startIdx && quarters[endIdx - 1]) {
+          p.set('dstart', quarters[startIdx].start);
+          p.set('dend', quarters[endIdx - 1].end);
+        } else {
+          p.delete('dstart');
+          p.delete('dend');
+        }
+      }
+      if (headRestored.current) {
+        if (head > 0) p.set('head', String(head)); else p.delete('head');
       }
     });
-  }, [day, reserve, homes, dtype, source, startIdx, endIdx, quarters]);
+  }, [day, zone, reserve, homes, dtype, source, startIdx, endIdx, head, quarters]);
+  useEffect(() => {
+    if (!view || headRestored.current) return;
+    headRestored.current = true;
+    const at = hashInt('head', 0, 0, Math.max(0, view.quarters.length - 1));
+    if (at > 0) setHead(at);
+  }, [view]);
   useEffect(() => {
     if (view && startIdx < 0) {
       const at = (iso: string | null) => iso && view.quarters.findIndex(q => q.start === iso);
@@ -244,6 +279,7 @@ export default function Replay() {
       const picked = start >= 0 ? start : Math.max(fallback, 0);
       setStartIdx(picked);
       setEndIdx(start >= 0 ? endAt : Math.min(picked + 4, view.quarters.length));
+      windowInit.current = true;
     }
   }, [view, startIdx]);
   useEffect(() => {
@@ -286,8 +322,13 @@ export default function Replay() {
     setValueError(null);
     const reserveKwh = String(Number(estimate.reserveKwh.toFixed(6)));
     const timer = window.setTimeout(() => {
-      send<ReplayRun>('POST', '/v1/replay', { day, strategies: ['esr_informed'], fleet: fleetFor(zone, day, 1, reserveKwh), seed: 0, disruptions: [] })
-        .then(run => live && setValueRun(run))
+      send<ReplayRun>('POST', '/v1/replay', { day, strategies: ['esr_informed'], fleet: fleetFor(zone, 1, reserveKwh), seed: 0, disruptions: [] })
+        .then(run => {
+          if (!live) return;
+          setValueRun(run);
+          const first = mountControls.current;
+          if (reserve !== first.reserve || homes !== first.homes || zone !== first.zone || day !== first.day) completeFirstStep(2);
+        })
         .catch(reason => live && setValueError(messageOf(reason)))
         .finally(() => live && setValueLoading(false));
     }, 500);
@@ -311,8 +352,11 @@ export default function Replay() {
     });
     return out;
   }, [view]);
+  /** User-driven playback moves mark checklist step 1; programmatic sets (load, reset, URL restore) do not. */
+  const userHead = (next: number) => { completeFirstStep(1); setHead(next); };
   const moveHead = (lane: HTMLElement, next: number) => {
     const clamped = Math.max(0, Math.min(quarters.length - 1, next));
+    completeFirstStep(1);
     setHead(clamped);
     (lane.querySelector(`[data-q="${clamped}"]`) as HTMLElement | null)?.focus();
   };
@@ -328,8 +372,8 @@ export default function Replay() {
       ? { type: dtype, provider_id: base.binding.fleet.assets[0].provider_id, start: quarters[startIdx].start, end: quarters[endIdx]?.start ?? quarters[quarters.length - 1].end }
       : { type: dtype, source, start: quarters[startIdx].start, end: quarters[endIdx]?.start ?? quarters[quarters.length - 1].end };
     setScenLoading(true);
-    send<ReplayRun>('POST', '/v1/replay', { day, strategies: base.binding.strategies, fleet: fleetFor(zone, day, HOMES, '5.4'), seed: 0, disruptions: [window] })
-      .then(run => setScen(run))
+    send<ReplayRun>('POST', '/v1/replay', { day, strategies: base.binding.strategies, fleet: fleetFor(zone, HOMES, '5.4'), seed: 0, disruptions: [window] })
+      .then(run => { setScen(run); completeFirstStep(2); })
       .catch(reason => setScenError(messageOf(reason)))
       .finally(() => setScenLoading(false));
   };
@@ -359,12 +403,12 @@ export default function Replay() {
   const homeCount = base ? base.binding.fleet.assets.length : HOMES;
 
   return <>
-    <PageHeading eyebrow="08 / HISTORICAL REPLAY" title="Replay" />
+    <PageHeading eyebrow="03 / HISTORICAL REPLAY" title="Replay" />
     {(daysError ?? baseError) && <p className="connection-line has-error" role="alert">{daysError ?? baseError}</p>}
 
     <div className="page-grid"><Panel title="Replay day" index="01" className="span-all" busy={baseLoading} meta={<span>{base ? `RUN ${base.run_id.slice(0, 12)}` : 'NO RUN'}</span>}>
       <div className="replay-head">
-        <label>Day <select aria-label="Replay day" value={day} onChange={e => { setDay(e.target.value); window.location.hash = `#/replay?day=${e.target.value}` }}>
+        <label>Day <select aria-label="Replay day" value={day} onChange={e => { setDay(e.target.value); const params = hashParams(); params.set('day', e.target.value); window.location.hash = `#/replay?${params.toString()}`; }}>
           {(days ?? []).map(d => <option key={d.day} value={d.day}>{d.day}</option>)}
         </select></label>
         <label>Zone <select aria-label="Zone" value={zone} onChange={e => setZone(e.target.value)}>
@@ -388,12 +432,12 @@ export default function Replay() {
             {view && <>
               <div className="transport">
                 {reduced
-                  ? <button type="button" className="show-book" onClick={() => setHead(h => Math.min(h + 1, quarters.length - 1))} disabled={head >= quarters.length - 1}>Step</button>
-                  : <button type="button" className="show-book" aria-pressed={playing} onClick={() => setPlaying(p => !p)}>{playing ? 'Pause' : 'Play'}</button>}
+                  ? <button type="button" className="show-book" onClick={() => userHead(Math.min(head + 1, quarters.length - 1))} disabled={head >= quarters.length - 1}>Step</button>
+                  : <button type="button" className="show-book" aria-pressed={playing} onClick={() => { if (!playing) completeFirstStep(1); setPlaying(!playing); }}>{playing ? 'Pause' : 'Play'}</button>}
                 <label>Speed <select aria-label="Speed" value={speed} onChange={e => setSpeed(Number(e.target.value))} disabled={reduced}>
                   {SPEEDS.map(s => <option key={s} value={s}>{s}×</option>)}
                 </select></label>
-                <label className="head-slider">Playback position <input type="range" aria-label="Playback position" min={0} max={quarters.length - 1} value={Math.min(head, quarters.length - 1)} onChange={e => setHead(Number(e.target.value))} /></label>
+                <label className="head-slider">Playback position <input type="range" aria-label="Playback position" min={0} max={quarters.length - 1} value={Math.min(head, quarters.length - 1)} onChange={e => userHead(Number(e.target.value))} /></label>
               </div>
               <div className="chart" role="img" aria-label={view.prices.length
                 ? `${view.priceKind} ${base?.binding.fleet.zone.replace(/^LZ_/, '')} prices, ${view.prices.length} points; procurement ${view.procurementLabel}; playback ${quarters[head] ? fmtTime(quarters[head].start) : 'at start'}.`
@@ -428,7 +472,7 @@ export default function Replay() {
                     {lane.cells.map((c, i) => <button key={i} type="button" data-q={i} tabIndex={i === head ? 0 : -1}
                       className={`lane-cell${c.delivered > 0.000001 ? ' is-deliver' : c.action === 'charge' ? ' is-charge' : c.action === 'self_supply' ? ' is-self' : ''}${i === head ? ' is-head' : ''}`}
                       aria-label={`${strategyLabel(lane.strategy)}, ${fmtTime(quarters[i].start)}: ${c.delivered > 0.000001 ? 'delivering' : actionWord(c.action)}${c.soc !== null && view.capacity ? `, fleet SoC ${(c.soc / view.capacity * 100).toFixed(0)}%` : ''}`}
-                      onClick={() => { setHead(i); setSelStrategy(lane.strategy); }} />)}
+                      onClick={() => { userHead(i); setSelStrategy(lane.strategy); }} />)}
                   </div>
                   <span className="lane-soc num">SoC {pct === null ? '—' : `${pct.toFixed(0)}%`}</span>
                 </div>;
@@ -479,7 +523,7 @@ export default function Replay() {
                 <thead><tr><th scope="col">Input</th><th scope="col">Value</th><th scope="col">Source</th><th scope="col">Published</th><th scope="col">Available</th></tr></thead>
                 <tbody>{(why.inputs ?? []).map((input, i) => <tr key={`${input.name}-${i}`}>
                   <td>{input.name}</td>
-                  <td className="num">{String(input.value)} {input.unit}</td>
+                  <td className="num">{fmtInput(input.value)} {input.unit}</td>
                   <td>{input.source}</td>
                   <td><time dateTime={input.published_at}>{fmtTime(input.published_at)}</time></td>
                   <td><time dateTime={input.available_at}>{fmtTime(input.available_at)}</time></td>

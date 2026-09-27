@@ -369,7 +369,7 @@ describe("S52a design v2 Overview and rail", () => {
   it("God's Eye link appears only with VITE_GODSEYE_URL", async () => {
     vi.stubEnv("VITE_GODSEYE_URL", "");
     const view = render(<Overview />);
-    expect(await screen.findByText(new RegExp(predictions[0].zone))).toBeTruthy();
+    expect(await screen.findByRole("region", { name: /trade it yourself/i })).toBeTruthy();
     expect(screen.queryByRole("link", { name: /god's eye/i })).toBeNull();
     vi.stubEnv("VITE_GODSEYE_URL", VIEWS_URL);
     view.unmount();

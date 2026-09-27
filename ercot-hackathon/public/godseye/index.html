@@ -423,7 +423,7 @@ let helpHistory=null, helpPredictions=null, batteryDashboard=null, batteryStale=
 const helpHour=document.getElementById('helpHour');
 // Representative areas, not electrical boundaries; same approximation as the backend roll-up.
 const loadAreas={LZ_NORTH:[-97.3,33.0,160000],LZ_HOUSTON:[-95.2,29.3,95000],LZ_SOUTH:[-98.2,27.8,130000],LZ_WEST:[-102,31.8,200000]};
-const helpAreas={}, narrow=matchMedia('(max-width:900px)'); // Phones: the list names each peak hour.
+const helpAreas={}, narrow=matchMedia('(max-width:900px)'), compact=matchMedia('(max-width:600px)'); // Phones: the list names each peak hour.
 for(const [zone,[lon,lat,radius]] of Object.entries(loadAreas)){
   helpAreas[zone]=G.help.entities.add({position:C.Cartesian3.fromDegrees(lon,lat),
     ellipse:{semiMajorAxis:radius,semiMinorAxis:radius,material:ACC.withAlpha(0),outline:true,outlineColor:ACC.withAlpha(.6)},
@@ -459,7 +459,7 @@ function renderHelp(){
     const t=shade(value,data);
     if(area){area.ellipse.material=t===null?ACC.withAlpha(0):C.Color.lerp(C.Color.fromCssColorString('#b8dbd9'),C.Color.fromCssColorString('#04724d'),t,new C.Color()).withAlpha(.15+t*.45);
       area.ellipse.outlineColor=atPeak?C.Color.fromCssColorString('#f4f4f9'):ACC.withAlpha(.6);
-      area.label.text=zoneName(zone)+' · '+(ratio===null?waiting:(atPeak?'Peak hour · ':'')+fmt(ratio*100)+'% of peak'+(narrow.matches?'':'\nPeak '+peakLabel(data.peakHour)));}
+      area.label.text=zoneName(zone)+(ratio===null?(compact.matches?'':' · '+waiting):' · '+(atPeak?'Peak hour · ':'')+fmt(ratio*100)+'% of peak'+(narrow.matches?'':'\nPeak '+peakLabel(data.peakHour)));}
     return `<li>${esc(text)}${atPeak?' <span class="badge">Peak hour</span>':''}</li>`;
   }).join('');
   const published=publishedText(Object.values(forecast.zones).map(z=>z.published).filter(Boolean).sort().pop());

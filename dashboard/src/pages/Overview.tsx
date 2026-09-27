@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { Activity, Bot, MarketProduct, MarketStatus, Prediction, ProductDetail, Provider, RouterCheck, Signal, Trade } from '../api';
-import { parseTime } from '../format';
+import { forecastAvailable, parseTime, round1 } from '../format';
 import { useBots, useResource } from '../hooks';
 import { Disclosures } from '../components/Shell';
 import Icon from '../components/Icon';
@@ -107,11 +107,12 @@ export default function Overview() {
   };
   const hasPrices = signals.data?.some(s => s.report_id === 'NP6-905-CD' && mapZones.includes(s.zone));
   const nextWindow = params.get('hour') || predictions.data?.map(p => p.delivery_hour).sort()[0];
-  const lead = predictions.data?.filter(p => p.delivery_hour === nextWindow && (!params.get('zone') || p.zone === params.get('zone'))).reduce<Prediction | undefined>((best, p) => !best || p.score > best.score ? p : best, undefined);
+  const lead = predictions.data?.filter(p => p.delivery_hour === nextWindow && (!params.get('zone') || p.zone === params.get('zone')) && forecastAvailable(p.level)).reduce<Prediction | undefined>((best, p) => !best || p.score > best.score ? p : best, undefined);
   const delivery = lead ? hourFormat.format(new Date(lead.delivery_hour)) : '—';
   const product = market.data?.find(p => p.zone === lead?.zone && p.delivery_hour === lead?.delivery_hour && p.symbol.startsWith('FLEX-')) ?? market.data?.find(p => p.zone === lead?.zone && p.delivery_hour === lead?.delivery_hour) ?? market.data?.[0];
   const marketLink = contextLink('#/market', { symbol: product?.symbol, zone: product?.zone, hour: product?.delivery_hour });
-  const scoreOf = (zone: string) => predictions.data?.find(p => p.zone === zone && p.delivery_hour === lead?.delivery_hour)?.score;
+  const scoreOf = (zone: string) => predictions.data?.find(p => p.zone === zone && p.delivery_hour === lead?.delivery_hour && forecastAvailable(p.level))?.score;
+  const leadScore = hasPrices && lead && forecastAvailable(lead.level) ? round1(lead.score) : null;
   const zones = [...new Set([...(predictions.data ?? []).map(p => p.zone), ...(signals.data ?? []).map(s => s.zone)])]
     .filter(zone => mapZones.includes(zone))
     .sort((a, b) => (scoreOf(b) ?? -1) - (scoreOf(a) ?? -1));
@@ -176,7 +177,7 @@ export default function Overview() {
           <h2>{lead ? zoneTitle(lead.zone) : 'Awaiting predictions'}{lead && <span className="delivery"> / {delivery}</span>}</h2>
           <div className="hero-actions"><a className="judge-button" href={marketLink}>View this market</a><a href={contextLink('#/sandbox')}>Try sandbox</a></div>
           <div className="prediction-numbers">
-            <div className="scarcity-number"><strong>{hasPrices ? lead?.score ?? '—' : '—'}{hasPrices && lead && <span>%</span>}</strong><span>predicted scarcity</span></div>
+            <div className="scarcity-number"><strong>{leadScore ?? '—'}{leadScore != null && <span>%</span>}</strong><span>predicted scarcity</span></div>
             <div className="value-comparison">
               <div><span>Expected value</span><strong>{lead ? usd(lead.expected_value) : '—'}</strong></div>
               <span className="value-divider">/</span>
@@ -192,7 +193,7 @@ export default function Overview() {
         </div>
         <div className="map-panel">
           <div className="map-heading"><span className="eyebrow">SCARCITY ACROSS TEXAS</span><button className="motion-toggle" aria-pressed={paused} onClick={() => setPaused(!paused)} aria-label={paused ? 'Resume map motion' : 'Pause map motion'}>{paused ? 'Play' : 'Pause'}</button></div>
-          <ZoneMap selectedZone={selectedZone} deliveryHour={lead?.delivery_hour} predictions={hasPrices ? (predictions.data ?? []).filter(p => p.delivery_hour === lead?.delivery_hour) : []} paused={paused || !!firstError} onSelect={(zone, trigger) => { zoneTrigger.current = trigger; setSelectedZone(zone); setViewQuery({ zone, hour: nextWindow }); }}/>
+          <ZoneMap selectedZone={selectedZone} deliveryHour={lead?.delivery_hour} predictions={hasPrices ? (predictions.data ?? []).filter(p => p.delivery_hour === lead?.delivery_hour && forecastAvailable(p.level)) : []} paused={paused || !!firstError} onSelect={(zone, trigger) => { zoneTrigger.current = trigger; setSelectedZone(zone); setViewQuery({ zone, hour: nextWindow }); }}/>
           <div className="map-data-status">{hasPrices ? `Grid feed connected${!systemLoad.length ? ' · pending inputs: system load' : ''}` : 'Grid feed pending · ERCOT price inputs not yet received'}</div>
           <div className="map-footer"><span>Schematic · ERCOT load zones</span>{views && <a href={views} target="_blank" rel="noreferrer">Open God's Eye <Icon name="up-right"/></a>}</div>
         </div>
@@ -235,7 +236,7 @@ export default function Overview() {
               <th scope="row"><a href={contextLink('#/', { zone, hour: nextWindow })}>{zoneTitle(zone)}</a>{zone === lead?.zone && <span className="zone-focus" aria-label="Highest scarcity"> <Icon name="up-right"/></span>}</th>
               <td><strong className="num">{rt ? usd(rt.value) : '—'}</strong></td>
               <td className="trend-column muted">—</td>
-              <td className="num">{score == null ? '—' : `${score}%`}</td>
+              <td className="num">{score == null ? '—' : `${round1(score)}%`}</td>
               <td>{zoneSignals.some(s => s.stale) && <span className="stale">Stale</span>} {latest ? <time className="num" dateTime={latest.published_at} title={new Date(latest.published_at).toLocaleString()}>{clockFormat.format(new Date(latest.published_at))}</time> : '—'}</td>
             </tr>;
           })}</tbody>
@@ -277,14 +278,14 @@ export default function Overview() {
             <span>{latestEsr.value < 0 ? 'discharging to the grid' : latestEsr.value > 0 ? 'charging from the grid' : 'idle'}{latestEsr.stale && <> · <span className="stale">Stale</span></>}</span>
           </div>
           <span>Grid-scale batteries · negative MW = discharging</span>
-        </div> : <div className="esr-body"><Empty loading={signals.loading} label="Battery data not yet available"/></div>}
+        </div> : <div className="esr-body">{signals.loading ? <Empty loading label="Battery data not yet available"/> : <div className="empty">Battery data not yet available · Live ERCOT data needs the Worker: set GRIDMARKET_WORKER_URL. <a href="#/spec">Setup docs</a></div>}</div>}
         <div className="panel-end"><span>System-wide · ERCOT</span><span>{latestEsr ? <time className="num" dateTime={latestEsr.interval_start} title={new Date(latestEsr.published_at).toLocaleString()}>{clockFormat.format(new Date(latestEsr.interval_start))} CT</time> : 'Awaiting first poll'}</span></div>
       </Panel>
       <section className="panel judge-panel" aria-labelledby="judge-title">
         <p className="eyebrow">09 / SANDBOX</p>
         <h2 id="judge-title">Trade it yourself<span className="title-period">.</span></h2>
         <p>Developers get a sandbox key and <strong>$1,000</strong> of simulated funds. Orders show up on this page within 2 s.</p>
-        <code className="judge-code">client.buy("FLEX-LZ_HOUSTON-18", 2)</code>
+        <code className="judge-code">product = next(p for p in client.market() if p["status"] == "open" and p["symbol"].startswith("FLEX-"))<br/>client.buy(product["id"], quantity=1, price_cents=10)</code>
         <a className="judge-button" href={contextLink('#/sandbox')}>Get API key <Icon name="up-right"/></a>
       </section>
     </div>

@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import type { Prediction } from '../api';
+import { round1 } from '../format';
 
 // Schematic geography: boundaries are illustrative, not survey data.
 const outline = 'M83 17H154V69L176 73 190 69 208 77 227 73 242 83 249 113 246 132 260 151 246 169 219 182 202 195 186 218 180 235 154 221 141 195 126 186 116 164 96 154 79 174 61 157 49 136 24 119 19 105H83Z';
@@ -20,7 +21,7 @@ export const zoneName = (zone: string) => zone.replace(/^LZ_|^HB_/, '');
 export default function ZoneMap({ predictions, deliveryHour, selectedZone, paused, onSelect }: { selectedZone?: string | null; deliveryHour?: string; predictions: Prediction[]; paused: boolean; onSelect: (zone: string, trigger: SVGElement | HTMLElement) => void }) {
   const controls = useRef<Record<string, SVGGElement | null>>({});
   const score = (zone: string) => predictions.find(p => zoneName(p.zone) === zone)?.score;
-  const label = zones.map(z => `${z.zone} ${score(z.zone) == null ? 'not reported' : `${score(z.zone)}% scarcity`}`).join(', ');
+  const label = zones.map(z => `${z.zone} ${score(z.zone) == null ? 'not reported' : `${round1(score(z.zone) as number)}% scarcity`}`).join(', ');
   return <><svg className={`zone-map ${paused ? 'motion-paused' : ''}`} viewBox="0 0 280 252" role="group" aria-label="ERCOT zone controls">
     <g role="img" aria-label={`Schematic ERCOT load zones. ${label}. Geographic boundaries are illustrative.`}>
     <defs><clipPath id="texas-clip"><path d={outline}/></clipPath><pattern id="map-dots" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="0.6" fill="currentColor" opacity="0.3"/></pattern></defs>
@@ -35,7 +36,7 @@ export default function ZoneMap({ predictions, deliveryHour, selectedZone, pause
       {s != null && s >= 70 && <circle className="scarcity-pulse" cx={z.x} cy={z.y - 7} r={s >= 80 ? 13 : 9}/>}
       <circle cx={z.x} cy={z.y - 7} r="2.5" fill="var(--text)"/>
       <text x={z.x} y={z.y + 6} textAnchor="middle">{z.zone}</text>
-      <text className="map-score" x={z.x} y={z.y + 20} textAnchor="middle">{s == null ? '—' : `${s}%`}</text>
+      <text className="map-score" x={z.x} y={z.y + 20} textAnchor="middle">{s == null ? '—' : `${round1(s)}%`}</text>
     </g>; })}
     <text x="19" y="236" className="map-coordinate">TEXAS / ERCOT</text>
   </svg><p className="map-legend">Scarcity scale: low &lt;50% · medium 50–79% · high ≥80%. Unreported values have no score. Simulation estimates.</p><p className="map-legend">Delivery window: {deliveryHour ? new Date(deliveryHour).toLocaleString('en-US', { timeZone: 'America/Chicago' }) + ' CT' : 'not reported'}</p>
