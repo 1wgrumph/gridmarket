@@ -1279,6 +1279,16 @@
         "packets/RP/RP-B.md",
         "packets/RP/RP-C.md"
       ]
+    },
+    {
+      "id": "DEC-GM-148",
+      "at": "2026-09-27T03:49:35Z",
+      "by": "Orchestrator (delegate, DEC-GM-043)",
+      "decision": "RP-A (AGY) ended without committing: it backgrounded make mutation and the session killed it on exit. RP-A2 finishes the uncommitted draft in the same worktree on the implementer route, without mutation; the Orchestrator runs mutation on the merged candidate as deterministic verification. The first real ERCOT capture (owner's Worker, keyless because the deployed Worker predates the MARKET_KEY gate) exposed fixable defects added to this repair round: ORC-2 NP3-565 hourEnding '1:00' crash, ORC-3 per-value sqlite connection (43 s per 1,000 rows), ORC-4 capture script User-Agent/429/sidecar note, ORC-5 commit first-page captured fixtures. Owner-only follow-up: redeploy the Worker so report routes require MARKET_KEY (owner creates the key; no key exists today).",
+      "refs": [
+        "packets/RP/RP-A2.md",
+        "evidence/live-capture-20260927/"
+      ]
     }
   ],
   "stages": {
