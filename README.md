@@ -4,6 +4,8 @@
 
 *A simulated flexibility exchange running on real ERCOT conditions.*
 
+**3rd place, Open Grid Data track** at the Base Power × AITX Talent Hackathon (Austin, TX, September 25–27, 2026). [Project page](https://aitx-base-hackathon-showcase.vercel.app/projects/gridmarket) · [Showcase](https://aitx-base-hackathon-showcase.vercel.app/)
+
 GridMarket explores how households could earn money by making spare battery
 capacity available when Texas needs it. Watch grid conditions, inspect the
 scarcity forecast, and place a simulated order for a Flex Credit: a contract
@@ -32,17 +34,12 @@ Start the app below, then follow [Your first 3 minutes](docs/judges.md) to monit
 
 ## Live links
 
-- **Dashboard and market (live exchange, 60 bots, judge sandbox):** <https://came-grace-cycling-ala.trycloudflare.com>
-- **API docs:** <https://came-grace-cycling-ala.trycloudflare.com/docs>
-- **God's Eye, 3D Texas grid on live ERCOT data:** <https://ercot-hackathon.1wgrumph.workers.dev/godseye/>
-- **The real day, one click:** <https://ercot-hackathon.1wgrumph.workers.dev/replay/#start> replays 26 Aug 2026 and stops on Houston's $780.46/MWh spike.
-- The team Worker at <https://ercot-hackathon.1wgrumph.workers.dev> runs this repository's `main` branch (v1.0.0 Worker, God's Eye with the help-the-grid layer and past range, and the `/replay/` real-day tour added from Jordan Hill's replay page); only the replay page's help windows still read `/api/help` from the demo Worker at `ercot-hackathon.jordan-691.workers.dev`, whose source is on the [`jordaaan` branch](https://github.com/1wgrumph/gridmarket/tree/jordaaan/ercot-hackathon).
-- **ERCOT data edge (Worker API):** <https://ercot-hackathon.1wgrumph.workers.dev/api/snapshot>
+The hosted dashboard and team Worker were taken down after judging; everything runs locally with [Try it in 3 minutes](#try-it-in-3-minutes) and the [Worker setup](ercot-hackathon/README.md#setup).
+
+- **Showcase project page:** <https://aitx-base-hackathon-showcase.vercel.app/projects/gridmarket>
 - **Project hub (demo video, 3D map, the loop, stack, docs, submission status):** <https://hack.organizedai.vip/gridmarket/>
 - **Grid Planet, ERCOT on real data:** <https://ercot-hackathon.jordan-691.workers.dev/planet/> puts all 643 ERCOT plants of 10 MW and up from EIA-860 on a real Texas outline, with live hub prices, help-the-grid zones, weather-zone temperatures, wind and solar output, and the sun where it is over Texas right now. Click any plant for its units and ERCOT node.
 - **Field guide:** <https://guide.organizedai.vip/gridmarket/> walks the evening price pattern, the order boundary, the data, the score, the replay and the bot, with a beginners edition.
-
-The market runs on the team's machine through a Cloudflare tunnel during judging; if it is unreachable, the 3-minute local run below gives the same product.
 
 ## Run it locally
 
