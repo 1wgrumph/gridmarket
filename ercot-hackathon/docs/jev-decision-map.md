@@ -1,5 +1,10 @@
 # ERCOT × Jev Decision Map
 
+> **Where Jev runs:** every decision in this map is served by the jev-gateway
+> Cloudflare Worker (`https://jev-gateway.jordan-691.workers.dev`, `POST /v1/systemone`,
+> `Authorization: Bearer $JEV_GATEWAY_TOKEN`). ercot-hackathon never calls TypeSafe directly
+> and holds no Jev key.
+
 Which ERCOT Public API reports can feed calibrated Jev checks, what each check decides, and how the answers are routed. Built from the 116 report products the `ercot-hackathon` Worker can reach.
 
 ## Read this first: what "trading ERCOT" requires
